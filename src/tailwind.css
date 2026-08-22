@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@source "../public";
+
+@theme {
+  --font-sans: "DM Sans", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --color-ink: #18242d;
+  --color-navy: #16323b;
+  --color-mint: #b9e6d2;
+  --color-lime: #d8ee9f;
+  --color-green: #267256;
+}
+
+@layer base {
+  ::selection {
+    background-color: var(--color-lime);
+    color: var(--color-navy);
+  }
+}
+
+@layer components {
+  .tw-surface {
+    background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(239, 248, 242, .92));
+    box-shadow: 0 18px 42px rgba(20, 45, 42, .08);
+  }
+
+  .tw-accent-line {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tw-accent-line::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: linear-gradient(90deg, #d8ee9f, #67bf8f, #efa66d);
+  }
+}

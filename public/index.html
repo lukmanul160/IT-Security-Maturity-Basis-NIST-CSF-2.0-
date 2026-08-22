@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NIST CSF 2.0 | IT Maturity Assessment</title>
+  <link rel="stylesheet" href="tailwind.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="modern.css">
   <style>
     .excel-wrap{background:white;border:1px solid var(--line);border-radius:8px;overflow:auto;box-shadow:var(--shadow)}.excel-table{border-collapse:collapse;min-width:1370px;width:100%;font-size:11px}.excel-table th{position:sticky;top:0;background:var(--navy);color:white;text-align:left;text-transform:uppercase;letter-spacing:.8px;font-size:9px;padding:13px 12px;white-space:nowrap}.excel-table td{border:1px solid #e2e9e5;vertical-align:top;padding:12px;line-height:1.45;min-width:125px}.excel-table td:nth-child(1){font-weight:700;color:var(--green);min-width:90px}.excel-table td:nth-child(2){font-weight:600;min-width:170px}.excel-table td:nth-child(3){min-width:290px;font-weight:600}.excel-table td:nth-child(4),.excel-table td:nth-child(5){min-width:210px;color:var(--muted);white-space:pre-line}.excel-table td:nth-child(6),.excel-table td:nth-child(8){min-width:135px}.excel-table td:nth-child(7),.excel-table td:nth-child(9){min-width:190px}.excel-score{display:flex;gap:3px}.excel-score button{width:22px;height:22px;border:1px solid #d8e3dd;background:#f7faf8;border-radius:3px;color:#667a72;font-size:10px;padding:0}.excel-score button.selected{background:var(--green);border-color:var(--green);color:white}.reasoning-input{width:100%;min-height:48px;border:0;resize:vertical;font:inherit;font-size:11px;outline:0;background:#fbfdfc;padding:5px}.reasoning-input:focus{box-shadow:inset 0 0 0 1px var(--green)}
     .csf-actions{display:flex;align-items:center;gap:8px;position:relative}.csf-actions small{position:absolute;right:0;top:42px;color:var(--muted);font-size:10px}.attachment-control{display:flex;align-items:center;gap:6px;margin-top:7px}.attachment-control input{display:none}.attachment-button{border:1px solid var(--line);background:#f7faf8;border-radius:4px;color:var(--green);padding:4px 7px;font-size:10px;cursor:pointer}.attachment-name{color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px}
@@ -15,11 +17,12 @@
     .assessment-upload-button{margin-bottom:10px}.assessment-progress>span{display:block}.assessment-progress #assessmentUploadFolderState{font-size:10px;color:var(--muted);margin-bottom:10px}
     .upload-progress{display:flex;align-items:center;gap:6px;margin-top:6px;min-height:14px}.upload-progress-track{display:block;width:75px;height:5px;background:#e5eee9;border-radius:5px;overflow:hidden}.upload-progress-track i{display:block;width:0;height:100%;background:var(--green);transition:width .2s ease}.upload-progress small{font-size:9px;color:var(--muted);white-space:nowrap}.upload-progress.success .upload-progress-track i{background:var(--green)}.upload-progress.success small{color:var(--green)}.upload-progress.fail .upload-progress-track i{background:var(--red)}.upload-progress.fail small{color:var(--red)}.attachment-list{display:flex;flex-direction:column;gap:6px;margin-top:7px}.attachment-item{display:flex;align-items:center;gap:7px;padding:6px 7px;background:#f6faf8;border:1px solid #e1ebe5;border-radius:5px;min-width:0}.attachment-name{flex:1;min-width:0;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.attachment-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}.attachment-action-button{border:1px solid #d2e0d8;background:white;color:var(--green);border-radius:4px;padding:4px 6px;font-size:9px;line-height:1;white-space:nowrap;cursor:pointer}.attachment-action-button:hover{background:#eaf5ee;border-color:#9fc4ad}.attachment-action-button.danger{color:#b85f55;border-color:#ebd0cc}.attachment-action-button.danger:hover{background:#fff0ee;border-color:#dda49c}.attachment-action input{display:none}
     @media(max-width:650px){.attachment-item{align-items:flex-start;flex-direction:column}.attachment-name{max-width:100%;width:100%}.attachment-actions{width:100%;flex-wrap:wrap}.attachment-action-button{flex:1;text-align:center;min-width:54px}}
+    .csf-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.csf-form-grid label{display:flex;flex-direction:column;gap:6px;color:var(--navy);font-size:11px;font-weight:700}.csf-form-grid input,.csf-form-grid textarea{width:100%;border:1px solid var(--line);border-radius:5px;background:white;color:var(--ink);padding:9px;font:inherit;font-weight:400;outline:0}.csf-form-grid input:focus,.csf-form-grid textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(38,114,86,.1)}.csf-form-actions{display:flex;align-items:center;gap:10px;margin-top:18px}.csf-form-actions .save-state{margin-left:auto}@media(max-width:650px){.csf-form-grid{grid-template-columns:1fr}.csf-form-actions{flex-wrap:wrap}.csf-form-actions .save-state{width:100%;margin-left:0}}
   </style>
 </head>
-<body>
+<body class="antialiased selection:bg-lime-200 selection:text-slate-900">
   <div class="app-shell">
-    <header class="topbar">
+    <header class="topbar tw-accent-line tw-surface">
       <div class="brand-block">
         <div class="brand-mark">N</div>
         <div>
@@ -29,6 +32,8 @@
       </div>
       <div class="top-actions">
         <span class="save-state" id="saveState">Autosaved</span>
+        <span class="user-session" id="currentUser"></span>
+        <button class="button button-quiet" id="logoutButton" type="button">Logout</button>
         <button class="button button-quiet" id="importButton" type="button">Import JSON</button>
         <input id="importInput" type="file" accept="application/json,.json" hidden>
         <button class="button button-quiet" id="exportButton" type="button">Export JSON</button>
@@ -43,13 +48,14 @@
         <div class="sidebar-label section-label">Framework</div>
         <button class="nav-item" data-view="csf" type="button"><span class="nav-icon">02</span><span>CSF 2.0</span></button>
         <button class="nav-item" data-view="files" type="button"><span class="nav-icon">03</span><span>Uploaded files</span></button>
+        <button class="nav-item" data-view="csf-manage" type="button"><span class="nav-icon">04</span><span>Manage CSF</span></button>
         <div class="sidebar-footer">
           <div class="framework-note"><span class="status-dot"></span><div><strong>Framework</strong><small>NIST CSF 2.0</small></div></div>
           <small>Local workspace<br>v1.0 assessment</small>
         </div>
       </aside>
 
-      <main class="main-content">
+      <main class="main-content motion-safe:animate-[fade-in_.5s_ease-out]">
         <section id="overviewView" class="view active-view">
           <div class="page-heading">
             <div><p class="eyebrow">MATURITY SNAPSHOT</p><h2>Control room</h2><p class="lede">Assess your current cybersecurity posture against the NIST Cybersecurity Framework.</p></div>
@@ -78,9 +84,21 @@
         </section>
 
         <section id="csfView" class="view">
-          <div class="page-heading"><div><p class="eyebrow">NIST CYBERSECURITY FRAMEWORK</p><h2>CSF 2.0 Core</h2><p class="lede">Spreadsheet view of functions, categories, subcategories, references, and maturity scoring.</p></div><div class="csf-actions"><button class="button button-quiet" id="uploadFolderButton" type="button">Choose upload folder</button><button class="button button-accent" id="csfAssessmentButton" type="button">Open assessment <span>-></span></button><small id="uploadFolderState">Folder not selected</small></div></div>
+          <div class="page-heading"><div><p class="eyebrow">NIST CYBERSECURITY FRAMEWORK</p><h2>CSF 2.0 Core</h2><p class="lede">Spreadsheet view of functions, categories, subcategories, references, and maturity scoring.</p></div><div class="csf-actions"><button class="button button-quiet" id="addCsfButton" type="button">Add CSF control</button><button class="button button-accent" id="csfAssessmentButton" type="button">Open assessment <span>-></span></button></div></div>
           <div class="toolbar"><label class="search-box"><span>/</span><input id="csfSearchInput" type="search" placeholder="Search CSF core..." autocomplete="off"></label><select id="csfFunctionFilter" aria-label="Filter function"><option value="all">All functions</option><option value="GV">Govern</option><option value="ID">Identify</option><option value="PR">Protect</option><option value="DE">Detect</option><option value="RS">Respond</option><option value="RC">Recover</option></select></div>
-          <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Function</th><th>Category</th><th>Subcategory</th><th>Implementation examples</th><th>Informative references</th><th>Policy maturity</th><th>Policy score reasoning</th><th>Practice maturity</th><th>Practice score reasoning</th></tr></thead><tbody id="csfTableBody"></tbody></table></div>
+          <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Function</th><th>Category</th><th>Subcategory</th><th>Implementation examples</th><th>Informative references</th><th>Policy maturity</th><th>Policy score reasoning</th><th>Practice maturity</th><th>Practice score reasoning</th><th>Actions</th></tr></thead><tbody id="csfTableBody"></tbody></table></div>
+        </section>
+
+        <section id="csfManageView" class="view">
+          <div class="page-heading"><div><p class="eyebrow">FRAMEWORK ADMINISTRATION</p><h2>Manage CSF 2.0</h2><p class="lede">Create, read, update, and delete CSF controls directly in PostgreSQL.</p></div><span class="file-count" id="csfManageCount">0 controls</span></div>
+          <form id="csfForm" class="tw-surface" style="padding:20px;border:1px solid var(--line);border-radius:8px;margin-bottom:22px">
+            <input id="csfFormOriginalId" type="hidden">
+            <div class="section-heading compact"><div><p class="eyebrow" id="csfFormMode">NEW CONTROL</p><h3 id="csfFormTitle">Create CSF control</h3></div><span class="muted">All fields are saved to PostgreSQL</span></div>
+            <div class="csf-form-grid"><label>Control ID<input id="csfFormId" required placeholder="GV.OC-01"></label><label>Function<input id="csfFormFunction" required placeholder="Govern"></label><label>Category<input id="csfFormCategory" required></label><label>Subcategory<input id="csfFormSubcategory" required></label><label>Implementation examples<textarea id="csfFormImplementation" rows="3"></textarea></label><label>Informative references<textarea id="csfFormReferences" rows="3"></textarea></label></div>
+            <div class="csf-form-actions"><button class="button button-accent" type="submit" id="csfFormSubmit">Create control</button><button class="button button-quiet" type="button" id="csfFormCancel">Clear form</button><span class="save-state" id="csfFormStatus">Ready</span></div>
+          </form>
+          <div class="toolbar"><label class="search-box"><span>/</span><input id="csfManageSearch" type="search" placeholder="Search controls..." autocomplete="off"></label></div>
+          <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Control</th><th>Function</th><th>Category</th><th>Subcategory</th><th>Actions</th></tr></thead><tbody id="csfManageBody"></tbody></table></div>
         </section>
 
         <section id="filesView" class="view">
@@ -90,14 +108,13 @@
         </section>
 
         <section id="assessmentView" class="view">
-          <div class="page-heading assessment-heading"><div><button class="back-link" id="backButton" type="button"><- Back to overview</button><p class="eyebrow" id="assessmentKicker">FUNCTION</p><h2 id="assessmentTitle">Govern</h2><p class="lede" id="assessmentDescription"></p></div><div class="assessment-progress"><button class="button button-quiet assessment-upload-button" id="assessmentUploadFolderButton" type="button">Choose upload folder</button><span id="assessmentUploadFolderState">Folder not selected</span><span id="functionProgress">0 / 4</span><div class="meter"><span id="functionMeter"></span></div></div></div>
+          <div class="page-heading assessment-heading"><div><button class="back-link" id="backButton" type="button"><- Back to overview</button><p class="eyebrow" id="assessmentKicker">FUNCTION</p><h2 id="assessmentTitle">Govern</h2><p class="lede" id="assessmentDescription"></p></div><div class="assessment-progress"><span id="functionProgress">0 / 4</span><div class="meter"><span id="functionMeter"></span></div></div></div>
           <div class="toolbar"><label class="search-box"><span>/</span><input id="searchInput" type="search" placeholder="Search subcategories..." autocomplete="off"></label><select id="statusFilter" aria-label="Filter status"><option value="all">All controls</option><option value="unscored">Unscored</option><option value="scored">Scored</option><option value="gaps">Below target</option></select></div>
           <div class="assessment-table"><div class="table-head"><span>Subcategory</span><span>Policy and Practice maturity</span><span>Policy and Practice Action Notes</span></div><div id="controlList"></div></div>
         </section>
       </main>
     </div>
   </div>
-  <script src="csf-data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

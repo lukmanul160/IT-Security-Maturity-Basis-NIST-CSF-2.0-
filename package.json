@@ -1,0 +1,28 @@
+{
+  "name": "nist-csf-maturity-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NIST CSF 2.0 maturity assessment powered by Node.js",
+  "main": "src/server.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/tailwind.css -o ./public/tailwind.css --minify",
+    "db:setup": "node scripts/provision-db.js",
+    "start": "npm run build:css && node src/server.js",
+    "dev": "npm run build:css && node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "multer": "^2.2.0",
+    "pg": "^8.16.3",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

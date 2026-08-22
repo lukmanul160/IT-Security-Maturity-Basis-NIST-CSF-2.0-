@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | NIST CSF 2.0</title>
+  <style>
+    :root{font-family:'DM Sans',system-ui,sans-serif;color:#17252b;background:#eef4f1}*{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;background:radial-gradient(circle at 10% 10%,#d8ef9d,transparent 25rem),linear-gradient(135deg,#eef4f1,#dcece5)}main{width:min(420px,calc(100% - 32px));padding:36px;background:rgba(255,255,255,.9);border:1px solid #dbe6e4;border-radius:18px;box-shadow:0 24px 60px rgba(18,56,60,.14)}.brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}.mark{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#123f3b;color:#d8ef9d;font:bold 22px Georgia}.eyebrow{margin:0;color:#1e755b;font-size:10px;font-weight:700;letter-spacing:1.5px}.brand h1{margin:3px 0 0;font:700 21px Georgia}h2{margin:0 0 8px;font:700 30px Georgia;letter-spacing:-.8px}p{color:#6f7f83;line-height:1.6}.field{display:grid;gap:7px;margin:18px 0}.field label{font-size:12px;font-weight:700}.field input{width:100%;padding:12px;border:1px solid #dbe6e4;border-radius:9px;font:inherit;outline:0}.field input:focus{border-color:#1e755b;box-shadow:0 0 0 4px rgba(30,117,91,.1)}button{width:100%;padding:13px;border:0;border-radius:9px;background:#123f3b;color:#fff;font-weight:700;cursor:pointer}button:hover{background:#1e755b}.error{min-height:20px;margin:12px 0;color:#c95f58;font-size:12px}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><span class="mark">N</span><div><p class="eyebrow">IT GOVERNANCE WORKSPACE</p><h1>NIST CSF <span style="color:#1e755b">2.0</span></h1></div></div>
+    <h2>Welcome back</h2><p>Login untuk mengakses assessment workspace.</p>
+    <form id="loginForm"><div class="field"><label for="username">Username</label><input id="username" autocomplete="username" required></div><div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div><div class="error" id="loginError"></div><button type="submit">Login</button></form>
+  </main>
+  <script>
+    loginForm.addEventListener('submit', async event => { event.preventDefault(); loginError.textContent = ''; const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); if (response.ok) window.location.href = '/'; else loginError.textContent = (await response.json()).error || 'Login gagal'; });
+  </script>
+</body>
+</html>
