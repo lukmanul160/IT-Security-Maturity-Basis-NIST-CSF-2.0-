@@ -100,4 +100,26 @@ File fisik tidak disimpan di dalam JSON. Ketika berpindah laptop, folder upload 
 - File System Access API
 - HTML Canvas untuk radar chart
 
+## Contoh Tampilan Website
+
+### Dashboard Overview
+
+![Dashboard Overview](img/nist%201.png)
+
+### Assessment CSF 2.0
+
+![Assessment CSF 2.0](img/nist%202.png)
+
+### Tampilan NIST CSF
+
+![Tampilan NIST CSF](img/NIST%203.png)
+
+### Evidence Management
+
+![Evidence Management](img/NIST%204.png)
+
+### Ringkasan Assessment
+
+![Ringkasan Assessment](img/NIST%20CSF%205.png)
+
 ## Catatan Browser
