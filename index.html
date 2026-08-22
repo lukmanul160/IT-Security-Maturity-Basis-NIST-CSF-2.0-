@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NIST CSF 2.0 | IT Maturity Assessment</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .excel-wrap{background:white;border:1px solid var(--line);border-radius:8px;overflow:auto;box-shadow:var(--shadow)}.excel-table{border-collapse:collapse;min-width:1370px;width:100%;font-size:11px}.excel-table th{position:sticky;top:0;background:var(--navy);color:white;text-align:left;text-transform:uppercase;letter-spacing:.8px;font-size:9px;padding:13px 12px;white-space:nowrap}.excel-table td{border:1px solid #e2e9e5;vertical-align:top;padding:12px;line-height:1.45;min-width:125px}.excel-table td:nth-child(1){font-weight:700;color:var(--green);min-width:90px}.excel-table td:nth-child(2){font-weight:600;min-width:170px}.excel-table td:nth-child(3){min-width:290px;font-weight:600}.excel-table td:nth-child(4),.excel-table td:nth-child(5){min-width:210px;color:var(--muted);white-space:pre-line}.excel-table td:nth-child(6),.excel-table td:nth-child(8){min-width:135px}.excel-table td:nth-child(7),.excel-table td:nth-child(9){min-width:190px}.excel-score{display:flex;gap:3px}.excel-score button{width:22px;height:22px;border:1px solid #d8e3dd;background:#f7faf8;border-radius:3px;color:#667a72;font-size:10px;padding:0}.excel-score button.selected{background:var(--green);border-color:var(--green);color:white}.reasoning-input{width:100%;min-height:48px;border:0;resize:vertical;font:inherit;font-size:11px;outline:0;background:#fbfdfc;padding:5px}.reasoning-input:focus{box-shadow:inset 0 0 0 1px var(--green)}
+    .csf-actions{display:flex;align-items:center;gap:8px;position:relative}.csf-actions small{position:absolute;right:0;top:42px;color:var(--muted);font-size:10px}.attachment-control{display:flex;align-items:center;gap:6px;margin-top:7px}.attachment-control input{display:none}.attachment-button{border:1px solid var(--line);background:#f7faf8;border-radius:4px;color:var(--green);padding:4px 7px;font-size:10px;cursor:pointer}.attachment-name{color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px}
+    @media(max-width:1000px){.topbar{padding:0 22px}.main-content{padding-left:28px;padding-right:28px}.hero-grid{grid-template-columns:1.4fr 1fr 1fr}.excel-table{min-width:1200px}.radar-panel{padding-left:12px;padding-right:12px}}
+    @media(max-width:650px){.topbar{height:auto;min-height:78px;gap:12px;flex-wrap:wrap;padding:15px 16px}.brand-block h1{font-size:16px}.top-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}.top-actions .save-state{display:inline-block;margin-right:auto}.top-actions .button{font-size:10px;padding:8px 9px}.workspace{display:block}.sidebar{padding:9px 10px;overflow:hidden}.sidebar>.nav-item{display:inline-flex;width:auto;white-space:nowrap;margin-right:3px;padding:8px 9px;font-size:11px}.sidebar #functionNav{display:inline-flex;vertical-align:middle;max-width:calc(100% - 12px);overflow-x:auto}.sidebar #functionNav .nav-item{display:inline-flex}.main-content{padding:24px 14px 45px}.page-heading{display:block}.page-heading h2{font-size:28px;line-height:1.1}.page-heading .lede{font-size:12px}.csf-actions{margin-top:20px;display:flex;flex-wrap:wrap}.csf-actions small{position:static;width:100%;margin-top:2px}.hero-grid{grid-template-columns:1fr 1fr;gap:9px}.score-panel{grid-column:span 2}.score-panel,.stat-panel{padding:20px 16px;min-height:145px}.score-line strong{font-size:38px}.section-heading h3{font-size:18px}.target-chip{font-size:10px}.function-cards{grid-template-columns:1fr}.lower-grid{grid-template-columns:1fr}.radar-panel{min-height:0;padding:8px}.radar-panel canvas{height:300px;max-height:none}.radar-legend{gap:5px;justify-content:flex-start}.radar-series{font-size:10px;padding:4px}.radar-legend i{width:12px}.toolbar{flex-wrap:wrap}.search-box{min-width:0}.toolbar select{height:38px}.assessment-progress{margin-top:22px}.table-head{display:none}.control-row{display:block;padding:17px 14px}.control-row>div{margin-bottom:15px}.control-row>div:last-child{margin-bottom:0}.excel-table{min-width:1150px}.excel-table th{padding:11px 9px}.excel-table td{padding:10px 9px}.attachment-name{max-width:110px}.summary-table{min-width:650px}}
+    .radar-heading{margin-top:42px}.radar-panel{position:relative;background:white;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:18px 20px 12px;min-height:390px}.radar-chart-wrap{position:relative}.radar-panel canvas{display:block;width:100%;height:auto;max-height:430px;cursor:crosshair}.radar-legend{display:flex;justify-content:center;gap:22px;color:var(--muted);font-size:11px;flex-wrap:wrap}.radar-series{border:0;background:transparent;color:var(--muted);font-size:11px;padding:5px;display:flex;align-items:center;gap:7px;cursor:pointer}.radar-series:not(.active){opacity:.4;text-decoration:line-through}.radar-legend i{display:inline-block;width:18px;height:4px;border-radius:4px}.legend-policy{background:#e89065}.legend-practice{background:var(--green)}.legend-target{background:#d3b55b}.radar-tooltip{position:absolute;display:none;pointer-events:none;background:var(--navy);color:white;border-radius:5px;padding:8px 10px;font-size:10px;line-height:1.5;white-space:nowrap;z-index:2;box-shadow:var(--shadow)}
+    .coverage-scores{display:flex;gap:7px;margin-top:14px}.coverage-score{background:#f1f6f3;border-radius:4px;padding:7px 8px;min-width:66px}.coverage-score small,.coverage-score strong{display:block}.coverage-score small{font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}.coverage-score strong{font:600 17px 'Space Grotesk';color:var(--green);margin-top:3px}.assessment-score-group{margin-bottom:10px}.assessment-score-group:last-child{margin-bottom:0}.assessment-score-group .eyebrow{font-size:9px;margin-bottom:5px}.assessment-score-group.practice .eyebrow{color:#b56d45}.assessment-score-group.practice .score-button.selected{background:#e89065;border-color:#e89065}
+    .assessment-upload-button{margin-bottom:10px}.assessment-progress>span{display:block}.assessment-progress #assessmentUploadFolderState{font-size:10px;color:var(--muted);margin-bottom:10px}
+    .upload-progress{display:flex;align-items:center;gap:6px;margin-top:6px;min-height:14px}.upload-progress-track{display:block;width:75px;height:5px;background:#e5eee9;border-radius:5px;overflow:hidden}.upload-progress-track i{display:block;width:0;height:100%;background:var(--green);transition:width .2s ease}.upload-progress small{font-size:9px;color:var(--muted);white-space:nowrap}.upload-progress.success .upload-progress-track i{background:var(--green)}.upload-progress.success small{color:var(--green)}.upload-progress.fail .upload-progress-track i{background:var(--red)}.upload-progress.fail small{color:var(--red)}.attachment-list{display:flex;flex-direction:column;gap:6px;margin-top:7px}.attachment-item{display:flex;align-items:center;gap:7px;padding:6px 7px;background:#f6faf8;border:1px solid #e1ebe5;border-radius:5px;min-width:0}.attachment-name{flex:1;min-width:0;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.attachment-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}.attachment-action-button{border:1px solid #d2e0d8;background:white;color:var(--green);border-radius:4px;padding:4px 6px;font-size:9px;line-height:1;white-space:nowrap;cursor:pointer}.attachment-action-button:hover{background:#eaf5ee;border-color:#9fc4ad}.attachment-action-button.danger{color:#b85f55;border-color:#ebd0cc}.attachment-action-button.danger:hover{background:#fff0ee;border-color:#dda49c}.attachment-action input{display:none}
+    @media(max-width:650px){.attachment-item{align-items:flex-start;flex-direction:column}.attachment-name{max-width:100%;width:100%}.attachment-actions{width:100%;flex-wrap:wrap}.attachment-action-button{flex:1;text-align:center;min-width:54px}}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">N</div>
+        <div>
+          <p class="eyebrow">IT GOVERNANCE WORKSPACE</p>
+          <h1>NIST CSF <span>2.0</span></h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="save-state" id="saveState">Autosaved</span>
+        <button class="button button-quiet" id="importButton" type="button">Import JSON</button>
+        <input id="importInput" type="file" accept="application/json,.json" hidden>
+        <button class="button button-quiet" id="exportButton" type="button">Export JSON</button>
+        <button class="button button-dark" id="resetButton" type="button">Reset assessment</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-label">Assessment map</div>
+        <button class="nav-item active" data-view="overview" type="button"><span class="nav-icon">01</span><span>Overview</span></button>
+        <div class="sidebar-label section-label">Framework</div>
+        <button class="nav-item" data-view="csf" type="button"><span class="nav-icon">02</span><span>CSF 2.0</span></button>
+        <button class="nav-item" data-view="files" type="button"><span class="nav-icon">03</span><span>Uploaded files</span></button>
+        <div class="sidebar-footer">
+          <div class="framework-note"><span class="status-dot"></span><div><strong>Framework</strong><small>NIST CSF 2.0</small></div></div>
+          <small>Local workspace<br>v1.0 assessment</small>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section id="overviewView" class="view active-view">
+          <div class="page-heading">
+            <div><p class="eyebrow">MATURITY SNAPSHOT</p><h2>Control room</h2><p class="lede">Assess your current cybersecurity posture against the NIST Cybersecurity Framework.</p></div>
+            <button class="button button-accent" id="startButton" type="button">Continue assessment <span>-></span></button>
+          </div>
+
+          <div class="hero-grid">
+            <article class="score-panel">
+              <div class="panel-kicker">Overall maturity</div>
+              <div class="score-line"><strong id="overallScore">0.0</strong><span>/ 4.0</span></div>
+              <p id="overallLabel">Not assessed</p>
+              <div class="meter"><span id="overallMeter"></span></div>
+              <div class="score-foot"><span>0 Initial</span><span>4 Adaptive</span></div>
+            </article>
+            <article class="stat-panel"><span class="stat-label">Completion</span><strong id="completionValue">0%</strong><span class="stat-detail" id="completionDetail">0 of 24 controls scored</span><div class="mini-ring" id="completionRing"></div></article>
+            <article class="stat-panel"><span class="stat-label">Priority gaps</span><strong id="gapValue">24</strong><span class="stat-detail">controls below target level 3</span><div class="gap-bars"><i></i><i></i><i></i><i></i><i></i></div></article>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">FRAMEWORK COVERAGE</p><h3>NIST CSF 2.0</h3></div><span class="target-chip">Target maturity <b>3.0</b></span></div>
+          <div class="function-cards" id="functionCards"></div>
+          <div class="section-heading"><div><p class="eyebrow">NIST CSF SUMMARY</p><h3>Category maturity</h3></div><span class="muted">Policy and Practice average by Category</span></div>
+          <div class="excel-wrap summary-wrap"><table class="excel-table summary-table"><thead><tr><th>Function</th><th>Category</th><th># Controls</th><th>Target Score</th><th>Policy Maturity</th><th>Practice Maturity</th></tr></thead><tbody id="csfSummaryBody"></tbody></table></div>
+          <div class="section-heading radar-heading"><div><p class="eyebrow">CATEGORY MATURITY PROFILE</p><h3>Policy and practice by category</h3></div><span class="muted">Average of subcategories · Scale 0 to 4</span></div>
+          <article class="radar-panel"><div class="radar-chart-wrap"><canvas id="maturityRadar" width="700" height="430" aria-label="Spider diagram NIST CSF Summary"></canvas><div class="radar-tooltip" id="radarTooltip"></div></div><div class="radar-legend"><button type="button" class="radar-series active" data-series="policy"><i class="legend-policy"></i>Policy Score</button><button type="button" class="radar-series active" data-series="practice"><i class="legend-practice"></i>Practice Score</button><button type="button" class="radar-series active" data-series="target"><i class="legend-target"></i>Target Score</button></div></article>
+          <div class="lower-grid"><article class="insight-panel"><div class="section-heading compact"><div><p class="eyebrow">NEXT MOVES</p><h3>Recommended focus</h3></div><span class="muted">Based on lowest scores</span></div><div id="recommendations"></div></article><article class="legend-panel"><p class="eyebrow">MATURITY SCALE</p><h3>What the levels mean</h3><div class="legend-list"><div><b>0</b><span><strong>Incomplete</strong><small>Practice is absent or unknown.</small></span></div><div><b>1</b><span><strong>Initial</strong><small>Ad hoc and reactive practices.</small></span></div><div><b>2</b><span><strong>Developing</strong><small>Practices exist but vary.</small></span></div><div><b>3</b><span><strong>Defined</strong><small>Documented and repeatable.</small></span></div><div><b>4</b><span><strong>Adaptive</strong><small>Continuously improving.</small></span></div></div></article></div>
+        </section>
+
+        <section id="csfView" class="view">
+          <div class="page-heading"><div><p class="eyebrow">NIST CYBERSECURITY FRAMEWORK</p><h2>CSF 2.0 Core</h2><p class="lede">Spreadsheet view of functions, categories, subcategories, references, and maturity scoring.</p></div><div class="csf-actions"><button class="button button-quiet" id="uploadFolderButton" type="button">Choose upload folder</button><button class="button button-accent" id="csfAssessmentButton" type="button">Open assessment <span>-></span></button><small id="uploadFolderState">Folder not selected</small></div></div>
+          <div class="toolbar"><label class="search-box"><span>/</span><input id="csfSearchInput" type="search" placeholder="Search CSF core..." autocomplete="off"></label><select id="csfFunctionFilter" aria-label="Filter function"><option value="all">All functions</option><option value="GV">Govern</option><option value="ID">Identify</option><option value="PR">Protect</option><option value="DE">Detect</option><option value="RS">Respond</option><option value="RC">Recover</option></select></div>
+          <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Function</th><th>Category</th><th>Subcategory</th><th>Implementation examples</th><th>Informative references</th><th>Policy maturity</th><th>Policy score reasoning</th><th>Practice maturity</th><th>Practice score reasoning</th></tr></thead><tbody id="csfTableBody"></tbody></table></div>
+        </section>
+
+        <section id="filesView" class="view">
+          <div class="page-heading"><div><p class="eyebrow">EVIDENCE LIBRARY</p><h2>Uploaded files</h2><p class="lede">Daftar file yang sudah diupload beserta lokasi fungsi, kategori, dan subkategori.</p></div><span class="file-count" id="uploadedFileCount">0 files</span></div>
+          <div class="toolbar"><label class="search-box"><span>/</span><input id="uploadedFileSearch" type="search" placeholder="Search uploaded files..." autocomplete="off"></label><select id="uploadedFileKindFilter" aria-label="Filter file type"><option value="all">Policy & Practice</option><option value="policy">Policy</option><option value="practice">Practice</option></select></div>
+          <div class="uploaded-files-wrap"><table class="uploaded-files-table"><thead><tr><th>File</th><th>Function</th><th>Category</th><th>Subcategory</th><th>Type</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="uploadedFilesBody"></tbody></table></div>
+        </section>
+
+        <section id="assessmentView" class="view">
+          <div class="page-heading assessment-heading"><div><button class="back-link" id="backButton" type="button"><- Back to overview</button><p class="eyebrow" id="assessmentKicker">FUNCTION</p><h2 id="assessmentTitle">Govern</h2><p class="lede" id="assessmentDescription"></p></div><div class="assessment-progress"><button class="button button-quiet assessment-upload-button" id="assessmentUploadFolderButton" type="button">Choose upload folder</button><span id="assessmentUploadFolderState">Folder not selected</span><span id="functionProgress">0 / 4</span><div class="meter"><span id="functionMeter"></span></div></div></div>
+          <div class="toolbar"><label class="search-box"><span>/</span><input id="searchInput" type="search" placeholder="Search subcategories..." autocomplete="off"></label><select id="statusFilter" aria-label="Filter status"><option value="all">All controls</option><option value="unscored">Unscored</option><option value="scored">Scored</option><option value="gaps">Below target</option></select></div>
+          <div class="assessment-table"><div class="table-head"><span>Subcategory</span><span>Policy and Practice maturity</span><span>Policy and Practice Action Notes</span></div><div id="controlList"></div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="csf-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
