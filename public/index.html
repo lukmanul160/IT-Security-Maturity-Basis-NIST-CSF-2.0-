@@ -27,28 +27,27 @@
         <div class="brand-mark">N</div>
         <div>
           <p class="eyebrow">IT GOVERNANCE WORKSPACE</p>
-          <h1>NIST CSF <span>2.0</span></h1>
         </div>
       </div>
       <div class="top-actions">
         <span class="save-state" id="saveState">Autosaved</span>
         <span class="user-session" id="currentUser"></span>
+        <button class="button button-quiet" id="accountButton" type="button">Account Management</button>
         <button class="button button-quiet" id="logoutButton" type="button">Logout</button>
-        <button class="button button-quiet" id="importButton" type="button">Import JSON</button>
-        <input id="importInput" type="file" accept="application/json,.json" hidden>
-        <button class="button button-quiet" id="exportButton" type="button">Export JSON</button>
-        <button class="button button-dark" id="resetButton" type="button">Reset assessment</button>
       </div>
     </header>
 
     <div class="workspace">
       <aside class="sidebar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Minimize sidebar" title="Minimize sidebar"><span>&lt;</span></button>
         <div class="sidebar-label">Assessment map</div>
-        <button class="nav-item active" data-view="overview" type="button"><span class="nav-icon">01</span><span>Overview</span></button>
+        <button class="nav-item active" data-view="framework" type="button"><span class="nav-icon">01</span><span>Choose framework</span></button>
         <div class="sidebar-label section-label">Framework</div>
-        <button class="nav-item" data-view="csf" type="button"><span class="nav-icon">02</span><span>CSF 2.0</span></button>
-        <button class="nav-item" data-view="files" type="button"><span class="nav-icon">03</span><span>Uploaded files</span></button>
-        <button class="nav-item" data-view="csf-manage" type="button"><span class="nav-icon">04</span><span>Manage CSF</span></button>
+        <button class="nav-item" data-view="csf" type="button"><span class="nav-icon">03</span><span>CSF 2.0</span></button>
+        <button class="nav-item" data-view="privacy" type="button"><span class="nav-icon">03</span><span>Privacy Framework</span></button>
+        <button class="nav-item" data-view="privacy-manage" type="button"><span class="nav-icon">04</span><span>Manage Privacy</span></button>
+        <button class="nav-item" data-view="csf-manage" type="button"><span class="nav-icon">05</span><span>Manage CSF</span></button>
+        <button class="nav-item" data-view="files" type="button"><span class="nav-icon">06</span><span>Uploaded files</span></button>
         <div class="sidebar-footer">
           <div class="framework-note"><span class="status-dot"></span><div><strong>Framework</strong><small>NIST CSF 2.0</small></div></div>
           <small>Local workspace<br>v1.0 assessment</small>
@@ -56,37 +55,44 @@
       </aside>
 
       <main class="main-content motion-safe:animate-[fade-in_.5s_ease-out]">
-        <section id="overviewView" class="view active-view">
-          <div class="page-heading">
-            <div><p class="eyebrow">MATURITY SNAPSHOT</p><h2>Control room</h2><p class="lede">Assess your current cybersecurity posture against the NIST Cybersecurity Framework.</p></div>
-            <button class="button button-accent" id="startButton" type="button">Continue assessment <span>-></span></button>
+        <section id="frameworkView" class="view active-view">
+          <div class="framework-chooser-heading"><p class="eyebrow">ASSESSMENT WORKSPACE</p><h2>Choose your framework</h2><p class="lede">Pilih kerangka kerja yang ingin digunakan untuk memulai assessment.</p></div>
+          <div class="framework-choices">
+            <article class="framework-choice framework-choice-csf"><div class="choice-number">01</div><p class="eyebrow">CYBERSECURITY</p><h3>NIST CSF 2.0</h3><p>Ukur maturity keamanan siber berdasarkan Function, Category, dan Subcategory pada NIST Cybersecurity Framework 2.0.</p><div class="choice-meta"><span>6 Functions</span><span>Policy + Practice</span></div><button class="button button-dark" id="chooseCsfButton" type="button">Open CSF 2.0 <span>-></span></button></article>
+            <article class="framework-choice framework-choice-privacy"><div class="choice-number">02</div><p class="eyebrow">DATA PRIVACY</p><h3>NIST Privacy Framework</h3><p>Nilai pengelolaan risiko privasi berdasarkan Privacy Framework Core dan Privacy Summary dari workbook.</p><div class="choice-meta"><span>5 Functions</span><span>100 Controls</span></div><button class="button button-accent" id="choosePrivacyButton" type="button">Open Privacy Framework <span>-></span></button></article>
           </div>
-
-          <div class="hero-grid">
-            <article class="score-panel">
-              <div class="panel-kicker">Overall maturity</div>
-              <div class="score-line"><strong id="overallScore">0.0</strong><span>/ 4.0</span></div>
-              <p id="overallLabel">Not assessed</p>
-              <div class="meter"><span id="overallMeter"></span></div>
-              <div class="score-foot"><span>0 Initial</span><span>4 Adaptive</span></div>
-            </article>
-            <article class="stat-panel"><span class="stat-label">Completion</span><strong id="completionValue">0%</strong><span class="stat-detail" id="completionDetail">0 of 24 controls scored</span><div class="mini-ring" id="completionRing"></div></article>
-            <article class="stat-panel"><span class="stat-label">Priority gaps</span><strong id="gapValue">24</strong><span class="stat-detail">controls below target level 3</span><div class="gap-bars"><i></i><i></i><i></i><i></i><i></i></div></article>
-          </div>
-
-          <div class="section-heading"><div><p class="eyebrow">FRAMEWORK COVERAGE</p><h3>NIST CSF 2.0</h3></div><span class="target-chip">Target maturity <b>3.0</b></span></div>
-          <div class="function-cards" id="functionCards"></div>
-          <div class="section-heading"><div><p class="eyebrow">NIST CSF SUMMARY</p><h3>Category maturity</h3></div><span class="muted">Policy and Practice average by Category</span></div>
-          <div class="excel-wrap summary-wrap"><table class="excel-table summary-table"><thead><tr><th>Function</th><th>Category</th><th># Controls</th><th>Target Score</th><th>Policy Maturity</th><th>Practice Maturity</th></tr></thead><tbody id="csfSummaryBody"></tbody></table></div>
-          <div class="section-heading radar-heading"><div><p class="eyebrow">CATEGORY MATURITY PROFILE</p><h3>Policy and practice by category</h3></div><span class="muted">Average of subcategories · Scale 0 to 4</span></div>
-          <article class="radar-panel"><div class="radar-chart-wrap"><canvas id="maturityRadar" width="700" height="430" aria-label="Spider diagram NIST CSF Summary"></canvas><div class="radar-tooltip" id="radarTooltip"></div></div><div class="radar-legend"><button type="button" class="radar-series active" data-series="policy"><i class="legend-policy"></i>Policy Score</button><button type="button" class="radar-series active" data-series="practice"><i class="legend-practice"></i>Practice Score</button><button type="button" class="radar-series active" data-series="target"><i class="legend-target"></i>Target Score</button></div></article>
-          <div class="lower-grid"><article class="insight-panel"><div class="section-heading compact"><div><p class="eyebrow">NEXT MOVES</p><h3>Recommended focus</h3></div><span class="muted">Based on lowest scores</span></div><div id="recommendations"></div></article><article class="legend-panel"><p class="eyebrow">MATURITY SCALE</p><h3>What the levels mean</h3><div class="legend-list"><div><b>0</b><span><strong>Incomplete</strong><small>Practice is absent or unknown.</small></span></div><div><b>1</b><span><strong>Initial</strong><small>Ad hoc and reactive practices.</small></span></div><div><b>2</b><span><strong>Developing</strong><small>Practices exist but vary.</small></span></div><div><b>3</b><span><strong>Defined</strong><small>Documented and repeatable.</small></span></div><div><b>4</b><span><strong>Adaptive</strong><small>Continuously improving.</small></span></div></div></article></div>
         </section>
 
         <section id="csfView" class="view">
-          <div class="page-heading"><div><p class="eyebrow">NIST CYBERSECURITY FRAMEWORK</p><h2>CSF 2.0 Core</h2><p class="lede">Spreadsheet view of functions, categories, subcategories, references, and maturity scoring.</p></div><div class="csf-actions"><button class="button button-quiet" id="addCsfButton" type="button">Add CSF control</button><button class="button button-accent" id="csfAssessmentButton" type="button">Open assessment <span>-></span></button></div></div>
+          <div class="page-heading"><div><p class="eyebrow">MATURITY SNAPSHOT</p><h2>CSF 2.0 Control Room</h2><p class="lede">Overview dan assessment NIST Cybersecurity Framework 2.0 dalam satu halaman.</p></div><div class="csf-actions"><button class="button button-accent" id="startButton" type="button">Mulai assessment <span>-></span></button><button class="button button-dark" id="csfTopResetButton" type="button">Reset CSF assessment</button></div></div>
+          <div class="hero-grid"><article class="score-panel"><div class="panel-kicker">Overall maturity</div><div class="score-line"><strong id="overallScore">0.0</strong><span>/ 4.0</span></div><p id="overallLabel">Not assessed</p><div class="meter"><span id="overallMeter"></span></div><div class="score-foot"><span>0 Initial</span><span>4 Adaptive</span></div></article><article class="stat-panel"><span class="stat-label">Completion</span><strong id="completionValue">0%</strong><span class="stat-detail" id="completionDetail">0 of 24 controls scored</span><div class="mini-ring" id="completionRing"></div></article><article class="stat-panel"><span class="stat-label">Priority gaps</span><strong id="gapValue">24</strong><span class="stat-detail">controls below target level 3</span><div class="gap-bars"><i></i><i></i><i></i><i></i><i></i></div></article></div>
+          <div class="section-heading"><div><p class="eyebrow">FRAMEWORK COVERAGE</p><h3>NIST CSF 2.0</h3></div><span class="target-chip">Target maturity <b>3.0</b></span></div><div class="function-cards" id="functionCards"></div>
+          <div class="section-heading"><div><p class="eyebrow">NIST CSF SUMMARY</p><h3>Category maturity</h3></div><span class="muted">Policy and Practice average by Category</span></div><div class="excel-wrap summary-wrap"><table class="excel-table summary-table"><thead><tr><th>Function</th><th>Category</th><th># Controls</th><th>Target Score</th><th>Policy Maturity</th><th>Practice Maturity</th></tr></thead><tbody id="csfSummaryBody"></tbody></table></div>
+          <div class="section-heading radar-heading"><div><p class="eyebrow">CATEGORY MATURITY PROFILE</p><h3>Policy and practice by category</h3></div><span class="muted">Average of subcategories · Scale 0 to 4</span></div><article class="radar-panel"><div class="radar-chart-wrap"><canvas id="maturityRadar" width="700" height="430" aria-label="Spider diagram NIST CSF Summary"></canvas><div class="radar-tooltip" id="radarTooltip"></div></div><div class="radar-legend"><button type="button" class="radar-series active" data-series="policy"><i class="legend-policy"></i>Policy Score</button><button type="button" class="radar-series active" data-series="practice"><i class="legend-practice"></i>Practice Score</button><button type="button" class="radar-series active" data-series="target"><i class="legend-target"></i>Target Score</button></div></article><div class="lower-grid"><article class="insight-panel"><div class="section-heading compact"><div><p class="eyebrow">NEXT MOVES</p><h3>Recommended focus</h3></div><span class="muted">Based on lowest scores</span></div><div id="recommendations"></div></article><article class="legend-panel"><p class="eyebrow">MATURITY SCALE</p><h3>What the levels mean</h3><div class="legend-list"><div><b>0</b><span><strong>Incomplete</strong><small>Practice is absent or unknown.</small></span></div><div><b>1</b><span><strong>Initial</strong><small>Ad hoc and reactive practices.</small></span></div><div><b>2</b><span><strong>Developing</strong><small>Practices exist but vary.</small></span></div><div><b>3</b><span><strong>Defined</strong><small>Documented and repeatable.</small></span></div><div><b>4</b><span><strong>Adaptive</strong><small>Continuously improving.</small></span></div></div></article></div>
+          <div class="page-heading"><div><p class="eyebrow">NIST CYBERSECURITY FRAMEWORK</p><h2>CSF 2.0 Core</h2><p class="lede">Spreadsheet view of functions, categories, subcategories, references, and maturity scoring.</p></div><div class="csf-actions"><button class="button button-quiet" id="addCsfButton" type="button">Add CSF control</button><button class="button button-accent" id="csfAssessmentButton" type="button">Open assessment <span>-></span></button><button class="button button-dark" id="csfResetButton" type="button">Reset CSF assessment</button></div></div>
           <div class="toolbar"><label class="search-box"><span>/</span><input id="csfSearchInput" type="search" placeholder="Search CSF core..." autocomplete="off"></label><select id="csfFunctionFilter" aria-label="Filter function"><option value="all">All functions</option><option value="GV">Govern</option><option value="ID">Identify</option><option value="PR">Protect</option><option value="DE">Detect</option><option value="RS">Respond</option><option value="RC">Recover</option></select></div>
           <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Function</th><th>Category</th><th>Subcategory</th><th>Implementation examples</th><th>Informative references</th><th>Policy maturity</th><th>Policy score reasoning</th><th>Practice maturity</th><th>Practice score reasoning</th><th>Actions</th></tr></thead><tbody id="csfTableBody"></tbody></table></div>
+        </section>
+
+        <section id="privacyView" class="view">
+          <div class="page-heading"><div><p class="eyebrow">NIST PRIVACY FRAMEWORK 1.0</p><h2>Privacy Framework Core</h2><p class="lede">Assessment Privacy berdasarkan Privacy Framework Core dan ringkasan kategori dari workbook.</p></div><div class="csf-actions"><button class="button button-accent" id="privacyStartButton" type="button">Mulai assessment <span>-></span></button><button class="button button-dark" id="privacyResetButton" type="button">Reset Privacy assessment</button></div></div>
+          <div class="hero-grid"><article class="score-panel"><div class="panel-kicker">Overall privacy maturity</div><div class="score-line"><strong id="privacyOverallScore">0.0</strong><span>/ 5.0</span></div><p id="privacyOverallLabel">Belum dinilai</p><div class="meter"><span id="privacyOverallMeter"></span></div><div class="score-foot"><span>1 Initial</span><span>5 Adaptive</span></div></article><article class="stat-panel"><span class="stat-label">Completion</span><strong id="privacyCompletionValue">0%</strong><span class="stat-detail" id="privacyCompletionDetail">0 controls scored</span></article><article class="stat-panel"><span class="stat-label">Priority gaps</span><strong id="privacyGapValue">0</strong><span class="stat-detail">controls below target level 3</span></article></div>
+          <div class="section-heading"><div><p class="eyebrow">FRAMEWORK COVERAGE</p><h3>NIST Privacy Framework 1.0</h3></div><span class="target-chip">Target maturity <b>3.0</b></span></div>
+          <div class="function-cards privacy-function-cards" id="privacyFunctionCards"></div>
+          <div class="section-heading"><div><p class="eyebrow">PRIVACY SUMMARY</p><h3>Category maturity</h3></div><span class="target-chip">Target maturity <b>3.0</b></span></div>
+          <div class="excel-wrap"><table class="excel-table summary-table"><thead><tr><th>Function</th><th>NIST Privacy 1.0 Categories</th><th>Target Score</th><th>Policy Score</th><th>Practice Score</th></tr></thead><tbody id="privacySummaryBody"></tbody></table></div>
+          <div class="section-heading radar-heading"><div><p class="eyebrow">CATEGORY MATURITY PROFILE</p><h3>Policy and practice by category</h3></div><span class="muted">Average of subcategories · Scale 1 to 5</span></div>
+          <article class="radar-panel"><div class="radar-chart-wrap"><canvas id="privacyMaturityRadar" width="700" height="430" aria-label="Spider diagram NIST Privacy Framework Summary"></canvas><div class="radar-tooltip" id="privacyRadarTooltip"></div></div><div class="radar-legend"><button type="button" class="radar-series active" data-privacy-series="policy"><i class="legend-policy"></i>Policy Score</button><button type="button" class="radar-series active" data-privacy-series="practice"><i class="legend-practice"></i>Practice Score</button><button type="button" class="radar-series active" data-privacy-series="target"><i class="legend-target"></i>Target Score</button></div></article>
+          <div class="lower-grid"><article class="insight-panel"><div class="section-heading compact"><div><p class="eyebrow">NEXT MOVES</p><h3>Recommended focus</h3></div><span class="muted">Based on lowest scores</span></div><div id="privacyRecommendations"></div></article><article class="legend-panel"><p class="eyebrow">MATURITY SCALE</p><h3>What the levels mean</h3><div class="legend-list"><div><b>1</b><span><strong>Initial</strong><small>Privacy practices are absent or ad hoc.</small></span></div><div><b>2</b><span><strong>Repeatable</strong><small>Basic practices exist but vary.</small></span></div><div><b>3</b><span><strong>Defined</strong><small>Documented and repeatable practices.</small></span></div><div><b>4</b><span><strong>Managed</strong><small>Measured and consistently governed.</small></span></div><div><b>5</b><span><strong>Optimized</strong><small>Continuously improving and adaptive.</small></span></div></div></article></div>
+          <div class="section-heading"><div><p class="eyebrow">PRIVACY FRAMEWORK CORE</p><h3>Assessment controls</h3></div><div class="csf-actions"><button class="button button-quiet" id="addPrivacyButton" type="button">Add Privacy control</button><button class="button button-accent" id="privacyAssessmentButton" type="button">Open assessment <span>-></span></button><span class="muted" id="privacyControlCount">0 controls</span></div></div>
+          <div class="toolbar"><label class="search-box"><span>/</span><input id="privacySearchInput" type="search" placeholder="Search Privacy controls..." autocomplete="off"></label><select id="privacyFunctionFilter" aria-label="Filter Privacy function"><option value="all">All functions</option></select></div>
+          <div class="excel-wrap"><table class="excel-table privacy-table"><thead><tr><th>Function</th><th>Category</th><th>Subcategory</th><th>Implementation examples</th><th>Informative references</th><th>Policy maturity</th><th>Policy score reasoning</th><th>Practice maturity</th><th>Practice score reasoning</th><th>Actions</th></tr></thead><tbody id="privacyTableBody"></tbody></table><div class="assessment-pagination" id="privacyAssessmentPagination"></div></div>
+        </section>
+
+        <section id="privacyAssessmentView" class="view">
+          <div class="page-heading assessment-heading"><div><button class="back-link" id="privacyBackButton" type="button"><- Back to Privacy overview</button><p class="eyebrow" id="privacyAssessmentKicker">FUNCTION / PRIVACY FRAMEWORK CORE</p><h2 id="privacyAssessmentTitle">Identify-P</h2><p class="lede" id="privacyAssessmentDescription"></p></div><div class="assessment-progress"><span id="privacyFunctionProgress">0 / 0</span><div class="meter"><span id="privacyFunctionMeter"></span></div></div></div>
+          <div class="toolbar"><label class="search-box"><span>/</span><input id="privacyAssessmentSearch" type="search" placeholder="Search subcategories..." autocomplete="off"></label><select id="privacyAssessmentStatus" aria-label="Filter Privacy status"><option value="all">All controls</option><option value="unscored">Unscored</option><option value="scored">Scored</option><option value="gaps">Below target</option></select></div>
+          <div class="assessment-table"><div class="table-head"><span>Subcategory</span><span>Policy and Practice maturity</span><span>Policy and Practice Action Notes</span></div><div id="privacyControlList"></div><div class="assessment-pagination" id="privacyFunctionPagination"></div></div>
         </section>
 
         <section id="csfManageView" class="view">
@@ -101,16 +107,45 @@
           <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Control</th><th>Function</th><th>Category</th><th>Subcategory</th><th>Actions</th></tr></thead><tbody id="csfManageBody"></tbody></table></div>
         </section>
 
+        <section id="privacyManageView" class="view">
+          <div class="page-heading"><div><p class="eyebrow">FRAMEWORK ADMINISTRATION</p><h2>Manage Privacy Framework</h2><p class="lede">Create, update, and delete Privacy Framework Core controls stored in PostgreSQL.</p></div><span class="file-count" id="privacyManageCount">0 controls</span></div>
+          <form id="privacyForm" class="tw-surface" style="padding:20px;border:1px solid var(--line);border-radius:8px;margin-bottom:22px">
+            <input id="privacyFormOriginalId" type="hidden">
+            <div class="section-heading compact"><div><p class="eyebrow" id="privacyFormMode">NEW CONTROL</p><h3 id="privacyFormTitle">Create Privacy control</h3></div><span class="muted">All fields are saved to PostgreSQL</span></div>
+            <div class="csf-form-grid"><label>Control ID<input id="privacyFormId" required placeholder="ID.IM-P1"></label><label>Function<input id="privacyFormFunction" required placeholder="IDENTIFY-P"></label><label>Category<input id="privacyFormCategory" required></label><label>Subcategory<input id="privacyFormSubcategory" required></label><label>Implementation examples<textarea id="privacyFormImplementation" rows="3"></textarea></label><label>Informative references<textarea id="privacyFormReferences" rows="3"></textarea></label></div>
+            <div class="csf-form-actions"><button class="button button-accent" type="submit" id="privacyFormSubmit">Create control</button><button class="button button-quiet" type="button" id="privacyFormCancel">Clear form</button><span class="save-state" id="privacyFormStatus">Ready</span></div>
+          </form>
+          <div class="toolbar"><label class="search-box"><span>/</span><input id="privacyManageSearch" type="search" placeholder="Search Privacy controls..." autocomplete="off"></label></div>
+          <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Control</th><th>Function</th><th>Category</th><th>Subcategory</th><th>Actions</th></tr></thead><tbody id="privacyManageBody"></tbody></table></div>
+        </section>
+
         <section id="filesView" class="view">
           <div class="page-heading"><div><p class="eyebrow">EVIDENCE LIBRARY</p><h2>Uploaded files</h2><p class="lede">Daftar file yang sudah diupload beserta lokasi fungsi, kategori, dan subkategori.</p></div><span class="file-count" id="uploadedFileCount">0 files</span></div>
           <div class="toolbar"><label class="search-box"><span>/</span><input id="uploadedFileSearch" type="search" placeholder="Search uploaded files..." autocomplete="off"></label><select id="uploadedFileKindFilter" aria-label="Filter file type"><option value="all">Policy & Practice</option><option value="policy">Policy</option><option value="practice">Practice</option></select></div>
-          <div class="uploaded-files-wrap"><table class="uploaded-files-table"><thead><tr><th>File</th><th>Function</th><th>Category</th><th>Subcategory</th><th>Type</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="uploadedFilesBody"></tbody></table></div>
+          <div class="uploaded-files-wrap"><table class="uploaded-files-table"><thead><tr><th>File</th><th>Assessment</th><th>Function</th><th>Category</th><th>Subcategory</th><th>Type</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="uploadedFilesBody"></tbody></table></div>
+        </section>
+
+        <section id="accountView" class="view">
+          <div class="page-heading"><div><p class="eyebrow">ACCOUNT</p><h2>Account Management</h2><p class="lede">Kelola profil dan keamanan akun.</p></div></div>
+          <form id="accountProfileForm" class="tw-surface" style="padding:20px;border:1px solid var(--line);border-radius:8px;margin-bottom:22px">
+            <div class="section-heading compact"><div><p class="eyebrow">MY PROFILE</p><h3>Profile and password</h3></div><span class="muted" id="accountProfileStatus">Ready</span></div>
+            <div class="csf-form-grid"><label>Username<input id="accountUsername" readonly></label><label id="accountFullNameField">Nama<input id="accountFullName" maxlength="120"></label><label>Password saat ini<input id="accountCurrentPassword" type="password" autocomplete="current-password"></label><label>Password baru<input id="accountNewPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password"></label><label>Konfirmasi password<input id="accountConfirmPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password"></label></div>
+            <p class="muted">Password baru harus 8-72 karakter dan mengandung huruf besar, huruf kecil, serta angka.</p><div class="csf-form-actions"><button class="button button-accent" type="submit">Save profile</button></div>
+          </form>
+          <div id="accountAdminPanel" hidden>
+            <form id="accountUserForm" class="tw-surface" style="padding:20px;border:1px solid var(--line);border-radius:8px;margin-bottom:22px">
+              <div class="section-heading compact"><div><p class="eyebrow">ADMINISTRATION</p><h3 id="accountUserFormTitle">Create user</h3></div><span class="muted" id="accountUserStatus">Ready</span></div>
+              <input id="accountUserId" type="hidden"><div class="csf-form-grid"><label>Username<input id="accountUserUsername" required maxlength="50"></label><label>Nama<input id="accountUserFullName" maxlength="120"></label><label>Password<input id="accountUserPassword" type="password" minlength="8" maxlength="72"></label><label>Role<select id="accountUserRole"><option value="user">user</option><option value="admin">admin</option></select></label></div>
+              <div class="csf-form-actions"><button class="button button-accent" type="submit">Save user</button><button class="button button-quiet" id="accountUserCancel" type="button">Clear form</button></div>
+            </form>
+            <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Actions</th></tr></thead><tbody id="accountUsersBody"></tbody></table></div>
+          </div>
         </section>
 
         <section id="assessmentView" class="view">
           <div class="page-heading assessment-heading"><div><button class="back-link" id="backButton" type="button"><- Back to overview</button><p class="eyebrow" id="assessmentKicker">FUNCTION</p><h2 id="assessmentTitle">Govern</h2><p class="lede" id="assessmentDescription"></p></div><div class="assessment-progress"><span id="functionProgress">0 / 4</span><div class="meter"><span id="functionMeter"></span></div></div></div>
           <div class="toolbar"><label class="search-box"><span>/</span><input id="searchInput" type="search" placeholder="Search subcategories..." autocomplete="off"></label><select id="statusFilter" aria-label="Filter status"><option value="all">All controls</option><option value="unscored">Unscored</option><option value="scored">Scored</option><option value="gaps">Below target</option></select></div>
-          <div class="assessment-table"><div class="table-head"><span>Subcategory</span><span>Policy and Practice maturity</span><span>Policy and Practice Action Notes</span></div><div id="controlList"></div></div>
+          <div class="assessment-table"><div class="table-head"><span>Subcategory</span><span>Policy and Practice maturity</span><span>Policy and Practice Action Notes</span></div><div id="controlList"></div><div class="assessment-pagination" id="csfAssessmentPagination"></div></div>
         </section>
       </main>
     </div>

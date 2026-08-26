@@ -57,6 +57,20 @@ Session menggunakan cookie HttpOnly. Username dan password disimpan di tabel Pos
 - Reset assessment dengan konfirmasi warning.
 - Reset menghapus progress, catatan, metadata evidence, dan seluruh isi folder upload yang dipilih.
 
+## Database Framework Model
+
+Framework dan control menggunakan model generik yang dinormalisasi:
+
+```text
+frameworks (id, name, version, description)
+  1 --- n
+controls (id, framework_id, code, function, category, subcategory, ...)
+```
+
+`controls.framework_id` adalah foreign key ke `frameworks.id`, sedangkan pasangan `(framework_id, code)` wajib unik. Data lama dari `csf_controls` dan `privacy_controls` dimigrasikan idempotently ke tabel generik saat startup.
+
+Framework baru dapat dibuat melalui `POST /api/frameworks`, kemudian control-nya melalui `POST /api/frameworks/:frameworkId/controls`. Endpoint `/api/csf` dan `/api/privacy` tetap tersedia sebagai compatibility layer.
+
 ## Cara Menjalankan
 
 Aplikasi dijalankan menggunakan Node.js 18 atau lebih baru:

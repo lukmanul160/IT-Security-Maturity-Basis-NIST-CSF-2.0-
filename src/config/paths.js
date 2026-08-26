@@ -10,4 +10,5 @@ module.exports = {
   usersFile: path.join(projectRoot, 'database', 'users.sql'),
   uploadRoot: path.join(projectRoot, 'upload'),
   stateFile: path.join(projectRoot, 'data', 'assessment-state.json'),
+  privacyWorkbook: path.join(projectRoot, 'NIST-CSF2.0-Maturity-Tool-v1.0.3 (1).xlsx'),
 };

@@ -7,6 +7,10 @@
   <style>
     :root{font-family:'DM Sans',system-ui,sans-serif;color:#17252b;background:#eef4f1}*{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;background:radial-gradient(circle at 10% 10%,#d8ef9d,transparent 25rem),linear-gradient(135deg,#eef4f1,#dcece5)}main{width:min(420px,calc(100% - 32px));padding:36px;background:rgba(255,255,255,.9);border:1px solid #dbe6e4;border-radius:18px;box-shadow:0 24px 60px rgba(18,56,60,.14)}.brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}.mark{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#123f3b;color:#d8ef9d;font:bold 22px Georgia}.eyebrow{margin:0;color:#1e755b;font-size:10px;font-weight:700;letter-spacing:1.5px}.brand h1{margin:3px 0 0;font:700 21px Georgia}h2{margin:0 0 8px;font:700 30px Georgia;letter-spacing:-.8px}p{color:#6f7f83;line-height:1.6}.field{display:grid;gap:7px;margin:18px 0}.field label{font-size:12px;font-weight:700}.field input{width:100%;padding:12px;border:1px solid #dbe6e4;border-radius:9px;font:inherit;outline:0}.field input:focus{border-color:#1e755b;box-shadow:0 0 0 4px rgba(30,117,91,.1)}button{width:100%;padding:13px;border:0;border-radius:9px;background:#123f3b;color:#fff;font-weight:700;cursor:pointer}button:hover{background:#1e755b}.error{min-height:20px;margin:12px 0;color:#c95f58;font-size:12px}
   </style>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+    :root{font-family:'DM Sans',sans-serif;color:#344050;background:#f5f7fa}body{background:radial-gradient(circle at 10% 0%,#e8f1fd,transparent 28rem),#f5f7fa}main{width:min(430px,calc(100% - 32px));padding:38px;border:1px solid #e4e9f0;border-radius:8px;box-shadow:0 12px 30px rgba(43,55,72,.08);background:#fff}.brand{gap:10px;margin-bottom:34px}.mark{width:36px;height:36px;border-radius:6px;background:#2c7be5;color:#fff;font:700 19px 'Space Grotesk'}.eyebrow{color:#2c7be5;letter-spacing:1.2px;font-family:'DM Sans',sans-serif}.brand h1{margin:3px 0 0;color:#344050;font:700 19px 'Space Grotesk';letter-spacing:-.3px}.brand h1 span{color:#2c7be5}h2{color:#344050;font:700 30px 'Space Grotesk';letter-spacing:-1px}p{color:#748091}.field input{border-color:#e4e9f0;border-radius:4px;color:#344050}.field input:focus{border-color:#2c7be5;box-shadow:0 0 0 3px rgba(44,123,229,.12)}button{border-radius:4px;background:#2c7be5;font-family:'DM Sans',sans-serif}button:hover{background:#2165b4}.error{color:#d9534f}
+  </style>
 </head>
 <body>
   <main>
@@ -15,7 +19,10 @@
     <form id="loginForm"><div class="field"><label for="username">Username</label><input id="username" autocomplete="username" required></div><div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div><div class="error" id="loginError"></div><button type="submit">Login</button></form>
   </main>
   <script>
-    loginForm.addEventListener('submit', async event => { event.preventDefault(); loginError.textContent = ''; const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); if (response.ok) window.location.href = '/'; else loginError.textContent = (await response.json()).error || 'Login gagal'; });
+    const redirectToFrameworkChooser = () => { localStorage.removeItem('nist-maturity-ui'); window.location.replace('/'); };
+    fetch('/api/auth/me', { cache: 'no-store' }).then(response => { if (response.ok) redirectToFrameworkChooser(); });
+    window.addEventListener('pageshow', () => { fetch('/api/auth/me', { cache: 'no-store' }).then(response => { if (response.ok) redirectToFrameworkChooser(); }); });
+    loginForm.addEventListener('submit', async event => { event.preventDefault(); loginError.textContent = ''; const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); if (response.ok) redirectToFrameworkChooser(); else loginError.textContent = (await response.json()).error || 'Login gagal'; });
   </script>
 </body>
 </html>

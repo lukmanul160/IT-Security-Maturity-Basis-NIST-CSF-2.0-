@@ -5,9 +5,10 @@ const { uploadRoot } = require('../config/paths');
 
 const mimeTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
 const safeSegment = value => path.basename(String(value || '')).replace(/[^a-zA-Z0-9._ -]/g, '_');
-const normalizePath = relativePath => path.posix.normalize(String(relativePath || '').replaceAll('\\', '/')).replace(/^\.?\//, '');
+const normalizePath = relativePath => { const normalized = path.posix.normalize(String(relativePath || '').replaceAll('\\', '/')).replace(/^\.?\//, ''); if (!normalized || normalized === '.' || normalized === '..' || normalized.startsWith('../') || path.posix.isAbsolute(normalized) || /^[A-Za-z]:\//.test(normalized)) { const error = new Error('Invalid file path'); error.status = 400; throw error; } return normalized; };
 
-const diskPath = relativePath => path.resolve(uploadRoot, relativePath);
+const diskPath = relativePath => path.resolve(uploadRoot, normalizePath(relativePath));
+function validateUploadMetadata(functionName, kind, fileName) { if (typeof functionName !== 'string' || functionName.length < 1 || functionName.length > 100 || !['policy', 'practice'].includes(kind) || typeof fileName !== 'string' || fileName.length < 1 || fileName.length > 255) { const error = new Error('Invalid upload metadata'); error.status = 400; throw error; } }
 async function ensureUploadRoot() { await fs.mkdir(uploadRoot, { recursive: true }); }
 async function listFiles() { const result = await pool.query('SELECT path FROM evidence_files ORDER BY name'); return result.rows.map(row => `upload/${row.path}`); }
 async function saveFile({ functionName, kind, file }) { const safeFunction = safeSegment(functionName); const safeName = safeSegment(file?.originalname); const folder = kind === 'policy' ? 'Policy' : 'Practice'; if (!safeFunction || !safeName || !file?.path) { const error = new Error('Invalid multipart file payload'); error.status = 400; throw error; } const existing = await pool.query('SELECT path, name, octet_length(content) AS size, mime_type, updated_at FROM evidence_files WHERE name = $1 ORDER BY updated_at DESC LIMIT 1', [safeName]); if (existing.rowCount) { await fs.rm(file.path, { force: true }); return { ...existing.rows[0], path: `upload/${existing.rows[0].path}`, size: Number(existing.rows[0].size || file.size), type: existing.rows[0].mime_type, updatedAt: existing.rows[0].updated_at }; } const relativePath = path.posix.join(safeFunction, folder, safeName); await pool.query(`INSERT INTO evidence_files (path, name, content, mime_type, updated_at) VALUES ($1, $2, NULL, $3, NOW()) ON CONFLICT (path) DO UPDATE SET name = EXCLUDED.name, content = NULL, mime_type = EXCLUDED.mime_type, updated_at = NOW()`, [relativePath, safeName, file.mimetype || 'application/octet-stream']); return { name: safeName, path: `upload/${relativePath}`, size: file.size, type: file.mimetype || 'application/octet-stream', updatedAt: new Date().toISOString() }; }
@@ -17,4 +18,22 @@ async function readFile(relativePath) { const normalized = normalizePath(relativ
 async function deleteFile(relativePath) { const normalized = normalizePath(relativePath); const references = await pool.query(`SELECT COUNT(*)::int AS count FROM assessment_state, jsonb_each(data->'attachments') AS attachment(key, value), jsonb_array_elements(attachment.value) AS item WHERE item->>'path' = $1`, [ `upload/${normalized}` ]); if (references.rows[0].count > 1) return; await fs.rm(diskPath(normalized), { force: true }); const result = await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]); if (!result.rowCount) { const error = new Error('File not found'); error.status = 404; throw error; } }
 async function resetFiles() { await fs.rm(uploadRoot, { recursive: true, force: true }); await ensureUploadRoot(); await pool.query('DELETE FROM evidence_files'); }
 
-module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, deleteFile, resetFiles };
+async function resetFilesForAssessment(assessmentId) {
+	const state = await pool.query('SELECT data FROM assessment_state WHERE id = $1', [assessmentId]);
+	const paths = new Set();
+	for (const attachments of Object.values(state.rows[0]?.data?.attachments || {})) {
+		for (const attachment of Array.isArray(attachments) ? attachments : []) {
+			if (typeof attachment.path === 'string') paths.add(attachment.path.replace(/^upload\//, ''));
+		}
+	}
+	await pool.query('DELETE FROM assessment_state WHERE id = $1', [assessmentId]);
+	for (const relativePath of paths) {
+		const references = await pool.query(`SELECT COUNT(*)::int AS count FROM assessment_state, jsonb_each(COALESCE(data->'attachments', '{}'::jsonb)) AS attachment(key, value), jsonb_array_elements(attachment.value) AS item WHERE item->>'path' = $1`, [`upload/${relativePath}`]);
+		if (references.rows[0].count === 0) {
+			await fs.rm(diskPath(relativePath), { force: true });
+			await pool.query('DELETE FROM evidence_files WHERE path = $1', [relativePath]);
+		}
+	}
+}
+
+module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, deleteFile, resetFiles, resetFilesForAssessment, validateUploadMetadata };

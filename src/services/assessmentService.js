@@ -4,18 +4,18 @@ const { pool } = require('../config/database');
 
 const emptyState = { scores: {}, policyScores: {}, practiceScores: {}, notes: {}, attachments: {} };
 
-async function getAssessment() {
-  const result = await pool.query('SELECT data FROM assessment_state WHERE id = $1', ['default']);
+async function getAssessment(id = 'default') {
+  const result = await pool.query('SELECT data FROM assessment_state WHERE id = $1', [id]);
   return result.rows[0]?.data || emptyState;
 }
 
-async function saveAssessment(assessment) {
+async function saveAssessment(assessment, id = 'default') {
   const result = await pool.query(`
     INSERT INTO assessment_state (id, data, updated_at)
     VALUES ($1, $2::jsonb, NOW())
     ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
     RETURNING data
-  `, ['default', JSON.stringify(assessment)]);
+  `, [id, JSON.stringify(assessment)]);
   return result.rows[0].data;
 }
 

@@ -4,11 +4,15 @@
 CREATE TABLE IF NOT EXISTS app_users (
   id BIGSERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
+  full_name TEXT NOT NULL DEFAULT '',
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE app_users
+  ADD COLUMN IF NOT EXISTS full_name TEXT NOT NULL DEFAULT '';
 
 INSERT INTO app_users (username, password_hash, role)
 VALUES
