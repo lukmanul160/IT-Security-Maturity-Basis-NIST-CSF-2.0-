@@ -102,6 +102,31 @@ CREATE TABLE IF NOT EXISTS risk_dropdown_options (
 CREATE INDEX IF NOT EXISTS risk_dropdown_options_field_idx
   ON risk_dropdown_options (field_name, sort_order, option_value);
 
+CREATE TABLE IF NOT EXISTS personnel_certifications (
+  id BIGSERIAL PRIMARY KEY,
+  personnel_name TEXT NOT NULL,
+  employee_id TEXT NOT NULL DEFAULT '',
+  personnel_role TEXT NOT NULL DEFAULT '',
+  certification_name TEXT NOT NULL,
+  issuer TEXT NOT NULL DEFAULT '',
+  reference_url TEXT NOT NULL DEFAULT '',
+  certification_level TEXT NOT NULL DEFAULT 'Intermediate',
+  status TEXT NOT NULL DEFAULT 'Planned',
+  issue_date DATE,
+  expiry_date DATE,
+  notes TEXT NOT NULL DEFAULT '',
+  on_canvas BOOLEAN NOT NULL DEFAULT FALSE,
+  position_x INTEGER NOT NULL DEFAULT 24,
+  position_y INTEGER NOT NULL DEFAULT 24,
+  card_width INTEGER NOT NULL DEFAULT 260,
+  card_height INTEGER NOT NULL DEFAULT 190,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS personnel_certifications_name_idx
+  ON personnel_certifications (personnel_name, certification_name);
+
 CREATE TABLE IF NOT EXISTS evidence_files (
   path TEXT PRIMARY KEY,
   name TEXT NOT NULL,

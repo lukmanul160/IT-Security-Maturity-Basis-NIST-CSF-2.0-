@@ -8,6 +8,7 @@ const { usersFile } = require('./config/paths');
 const { pool } = require('./config/database');
 const { ensureStore: ensureRiskAcceptanceStore } = require('./services/riskAcceptanceService');
 const { ensureStore: ensureRiskManagementStore } = require('./services/riskManagementService');
+const { ensureStore: ensurePersonnelCertificationStore } = require('./services/personnelCertificationService');
 const { ensureStore: ensurePermissionStore } = require('./services/permissionService');
 
 async function start() {
@@ -16,6 +17,7 @@ async function start() {
   await initializeFrameworks();
   await ensureRiskAcceptanceStore();
   await ensureRiskManagementStore();
+  await ensurePersonnelCertificationStore();
   await ensurePermissionStore();
   await pool.query(await fs.readFile(usersFile, 'utf8'));
   app.listen(port, () => console.log(`NIST CSF Express server: http://localhost:${port}`));

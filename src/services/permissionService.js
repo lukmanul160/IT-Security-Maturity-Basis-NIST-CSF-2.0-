@@ -3,10 +3,10 @@ const { pool } = require('../config/database');
 const permissions = [
   ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'],
   ['assessment', 'CSF assessment'], ['privacy-assessment', 'Privacy assessment'],
-  ['risk-acceptance', 'Risk Acceptance'], ['risk-management', 'Risk Management'],
+  ['risk-acceptance', 'Risk Acceptance'], ['risk-management', 'Risk Management'], ['personnel-certification', 'Personnel Certification'],
   ['files', 'Uploaded files'], ['account', 'Account Management']
 ];
-const defaults = { admin: permissions.map(([key]) => key), user: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'account'] };
+const defaults = { admin: permissions.map(([key]) => key), user: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'personnel-certification', 'account'] };
 
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS role_permissions (role TEXT NOT NULL CHECK (role IN ('admin', 'user')), permission_key TEXT NOT NULL, allowed BOOLEAN NOT NULL DEFAULT TRUE, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (role, permission_key))`);

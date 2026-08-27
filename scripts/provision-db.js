@@ -34,6 +34,11 @@ async function provisionDatabase() {
   const tables = await client.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('assessment_state', 'evidence_files', 'app_users') ORDER BY tablename");
   console.log(`Tables ready: ${tables.rows.map(row => row.tablename).join(', ')}`);
   await client.end();
+  const { ensureStore } = require('../src/services/personnelCertificationService');
+  await ensureStore();
+  const { pool } = require('../src/config/database');
+  await pool.end();
+  console.log('Personnel Certification roadmap seed ready.');
 }
 
 provisionDatabase().catch(error => {

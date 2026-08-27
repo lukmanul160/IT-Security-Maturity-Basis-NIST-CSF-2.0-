@@ -1,0 +1,10 @@
+const express = require('express');
+const controller = require('../controllers/personnelCertificationController');
+const { requirePermission } = require('../middleware/permission');
+const router = express.Router();
+router.get('/', requirePermission('personnel-certification'), controller.list);
+router.post('/', requirePermission('personnel-certification'), controller.create);
+router.put('/:id/layout', requirePermission('personnel-certification'), controller.updateLayout);
+router.put('/:id', requirePermission('personnel-certification'), controller.update);
+router.delete('/:id', requirePermission('personnel-certification'), controller.remove);
+module.exports = router;
