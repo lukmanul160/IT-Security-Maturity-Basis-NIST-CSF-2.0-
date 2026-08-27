@@ -13,5 +13,7 @@ router.get('/users', requireAuth, requireAdmin, controller.listUsers);
 router.post('/users', requireAuth, requireAdmin, controller.createUser);
 router.put('/users/:id', requireAuth, requireAdmin, controller.updateUser);
 router.delete('/users/:id', requireAuth, requireAdmin, controller.deleteUser);
+router.get('/permissions', requireAuth, requireAdmin, controller.listPermissions);
+router.put('/permissions/:role', requireAuth, requireAdmin, controller.updatePermissions);
 
 module.exports = router;

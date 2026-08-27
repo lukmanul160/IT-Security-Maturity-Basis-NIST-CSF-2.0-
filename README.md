@@ -1,4 +1,25 @@
 # NIST CSF 2.0 Maturity Assessment
+
+## Clone dan Data Risiko
+
+Data referensi framework/control yang diperlukan untuk menjalankan assessment disimpan di repository:
+
+- `data/csf-data.json` untuk NIST CSF 2.0 Core.
+- `data/privacy-data.json` untuk Privacy Framework Core clone-safe.
+- `data/risk-indicators.json` untuk seed indikator tanpa membawa Risk Register.
+- Seed schema dan akun aplikasi di `database/`.
+
+`Cybersecurity Risk Register.xlsx` adalah data operasional dan tidak boleh di-commit atau di-upload ke GitHub. File tersebut diabaikan oleh `.gitignore`. Jika workbook risk diperlukan, letakkan secara lokal di root project setelah clone. Tanpa workbook tersebut aplikasi tetap dapat dijalankan; Risk Register akan mulai kosong dan dapat diisi melalui UI.
+
+Setelah clone, jalankan:
+
+```text
+npm install
+npm run db:setup
+npm start
+```
+
+`db:setup` membuat tabel dan `npm start` menginisialisasi framework/control CSF dan Privacy serta indikator risk dari file repository. `Risk Register`, `Risk Acceptance`, dan opsi dropdown risk tidak pernah di-seed dari workbook atau repository; tabel tersebut dibuat kosong pada clone baru dan hanya dapat diisi melalui aplikasi di database lokal.
 postgresql-18.6-1-windows
 node-v24.19.0-x64
 

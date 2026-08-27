@@ -4,3 +4,7 @@ node_modules/
 .env
 .env.*
 npm-debug.log*
+
+# Operational risk data must remain local and must never be committed.
+Cybersecurity Risk Register.xlsx
+*Risk*Register*.xlsx

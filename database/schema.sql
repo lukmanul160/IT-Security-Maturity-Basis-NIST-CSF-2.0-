@@ -40,6 +40,68 @@ CREATE TABLE IF NOT EXISTS risk_acceptance_forms (
 CREATE INDEX IF NOT EXISTS risk_acceptance_forms_updated_idx
   ON risk_acceptance_forms (updated_at DESC);
 
+CREATE TABLE IF NOT EXISTS risk_indicators (
+  id BIGSERIAL PRIMARY KEY,
+  indicator_type TEXT NOT NULL,
+  score INTEGER,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS risk_indicators_type_idx
+  ON risk_indicators (indicator_type, sort_order);
+
+CREATE TABLE IF NOT EXISTS risk_register (
+  risk_id TEXT PRIMARY KEY,
+  risk_category TEXT NOT NULL,
+  effected_asset TEXT NOT NULL,
+  identification_risk TEXT NOT NULL,
+  risk_control TEXT NOT NULL DEFAULT '',
+  risk_cause TEXT NOT NULL DEFAULT '',
+  risk_analysis TEXT NOT NULL DEFAULT '',
+  asset_confidentiality INTEGER,
+  asset_integrity INTEGER,
+  asset_availability INTEGER,
+  asset_value INTEGER,
+  risk_owner TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
+  ref TEXT NOT NULL DEFAULT '',
+  likelihood INTEGER NOT NULL,
+  impact INTEGER NOT NULL,
+  risk_rating TEXT NOT NULL DEFAULT '',
+  treatment_action TEXT NOT NULL DEFAULT '',
+  acceptance_form_no TEXT NOT NULL DEFAULT '',
+  risk_treatment_description TEXT NOT NULL DEFAULT '',
+  owner_of_action TEXT NOT NULL DEFAULT '',
+  deadline DATE,
+  residual_risk_description TEXT NOT NULL DEFAULT '',
+  residual_likelihood INTEGER,
+  residual_impact INTEGER,
+  residual_rating TEXT NOT NULL DEFAULT '',
+  comment TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS risk_register_rating_idx ON risk_register (risk_rating);
+CREATE INDEX IF NOT EXISTS risk_register_owner_idx ON risk_register (risk_owner);
+
+CREATE TABLE IF NOT EXISTS risk_dropdown_options (
+  id BIGSERIAL PRIMARY KEY,
+  field_name TEXT NOT NULL,
+  option_value TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT risk_dropdown_option_unique UNIQUE (field_name, option_value)
+);
+
+CREATE INDEX IF NOT EXISTS risk_dropdown_options_field_idx
+  ON risk_dropdown_options (field_name, sort_order, option_value);
+
 CREATE TABLE IF NOT EXISTS evidence_files (
   path TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -162,3 +224,11 @@ BEGIN
     ALTER TABLE privacy_controls ADD CONSTRAINT privacy_controls_id_not_blank CHECK (btrim(id) <> '');
   END IF;
 END $$;
+
+CREATE TABLE IF NOT EXISTS role_permissions (
+  role TEXT NOT NULL CHECK (role IN ('admin', 'user')),
+  permission_key TEXT NOT NULL,
+  allowed BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (role, permission_key)
+);

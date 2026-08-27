@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const XLSX = require('xlsx');
 const { pool } = require('../config/database');
-const { dataRoot, privacyWorkbook } = require('../config/paths');
+const { dataRoot, privacyWorkbook, privacyData } = require('../config/paths');
 
 function duplicateIdError(frameworkId, code) {
   const label = frameworkId === 'csf' ? 'CSF' : frameworkId === 'privacy' ? 'Privacy' : frameworkId;
@@ -55,9 +55,10 @@ async function deleteControl(frameworkId, code) {
 }
 
 function readPrivacyCore() {
-  const workbook = XLSX.readFile(privacyWorkbook);
+  let workbook;
+  try { workbook = XLSX.readFile(privacyWorkbook); } catch (error) { if (error.code === 'ENOENT') return JSON.parse(require('fs').readFileSync(privacyData, 'utf8')); throw error; }
   const sheet = workbook.Sheets['Privacy Framework Core'];
-  if (!sheet) throw Object.assign(new Error('Privacy Framework Core worksheet not found'), { status: 500 });
+  if (!sheet) return [];
   let currentFunction = '';
   let currentCategory = '';
   return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }).slice(3).map(row => {

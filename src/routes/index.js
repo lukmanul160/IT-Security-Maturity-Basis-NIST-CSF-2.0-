@@ -5,6 +5,7 @@ const csfRoutes = require('./csfRoutes');
 const privacyRoutes = require('./privacyRoutes');
 const frameworkRoutes = require('./frameworkRoutes');
 const riskAcceptanceRoutes = require('./riskAcceptanceRoutes');
+const riskManagementRoutes = require('./riskManagementRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.use('/csf', csfRoutes);
 router.use('/privacy', privacyRoutes);
 router.use('/frameworks', frameworkRoutes);
 router.use('/risk-acceptance', riskAcceptanceRoutes);
+router.use('/risk-management', riskManagementRoutes);
 
 module.exports = router;
