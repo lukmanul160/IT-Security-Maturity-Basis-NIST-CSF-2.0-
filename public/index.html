@@ -42,6 +42,7 @@
         <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Minimize sidebar" title="Minimize sidebar"><span>&lt;</span></button>
         <div class="sidebar-label">Assessment map</div>
         <button class="nav-item active" data-view="framework" type="button"><span class="nav-icon">01</span><span>Choose framework</span></button>
+        <button class="nav-item" data-view="risk-acceptance" type="button"><span class="nav-icon">02</span><span>Risk Acceptance</span></button>
         <div class="sidebar-label section-label">Framework</div>
         <button class="nav-item" data-view="csf" type="button"><span class="nav-icon">03</span><span>CSF 2.0</span></button>
         <button class="nav-item" data-view="privacy" type="button"><span class="nav-icon">03</span><span>Privacy Framework</span></button>
@@ -61,6 +62,28 @@
             <article class="framework-choice framework-choice-csf"><div class="choice-number">01</div><p class="eyebrow">CYBERSECURITY</p><h3>NIST CSF 2.0</h3><p>Ukur maturity keamanan siber berdasarkan Function, Category, dan Subcategory pada NIST Cybersecurity Framework 2.0.</p><div class="choice-meta"><span>6 Functions</span><span>Policy + Practice</span></div><button class="button button-dark" id="chooseCsfButton" type="button">Open CSF 2.0 <span>-></span></button></article>
             <article class="framework-choice framework-choice-privacy"><div class="choice-number">02</div><p class="eyebrow">DATA PRIVACY</p><h3>NIST Privacy Framework</h3><p>Nilai pengelolaan risiko privasi berdasarkan Privacy Framework Core dan Privacy Summary dari workbook.</p><div class="choice-meta"><span>5 Functions</span><span>100 Controls</span></div><button class="button button-accent" id="choosePrivacyButton" type="button">Open Privacy Framework <span>-></span></button></article>
           </div>
+        </section>
+
+        <section id="riskAcceptanceView" class="view">
+          <div class="page-heading"><div><p class="eyebrow">CYBERSECURITY GOVERNANCE</p><h2>Risk Acceptance Form</h2><p class="lede">Dokumentasikan permintaan penerimaan risiko siber dan simpan persetujuannya di database.</p></div><span class="file-count" id="riskAcceptanceCount">0 forms</span></div>
+          <form id="riskAcceptanceForm" class="risk-acceptance-form">
+            <input id="riskAcceptanceId" type="hidden">
+            <div class="risk-document-page"><div class="risk-document-header"><h3>Cybersecurity Risk Acceptance Form</h3><span>Version 1.1</span></div><p class="risk-document-intro">Cybersecurity risk acceptance is a deliberate executive decision by a business owner to acknowledge and accept a cybersecurity risk which, for the reason given, cannot be remediated through available security controls and measures.</p><p class="risk-document-intro">Using this form, the application, service, or system owner describes the risk to be accepted, its potential impact, why it should be accepted, and mitigating factors, if any.</p><div class="section-heading compact"><div><p class="eyebrow">REQUEST DETAILS</p><h3>Application, Service or System Operational Owner</h3></div><span class="muted" id="riskAcceptanceStatus">New form</span></div>
+            <div class="csf-form-grid"><label>Name of Requestor<input id="riskRequestorName" required maxlength="160"></label><label>Asset Name<input id="riskAssetName" required maxlength="200"></label><label>Department<input id="riskDepartment" required maxlength="160"></label><label class="checkbox-field"><span>Previous acceptance</span><span><input id="riskPreviouslyAccepted" type="checkbox"> This risk was accepted previously</span></label></div>
+            <div class="risk-form-grid"><label>Description of Risk and/or Compliance Deviation<textarea id="riskDescription" required rows="5"></textarea></label><label>Benefit and Justification for Accepting this Risk<textarea id="riskBenefitJustification" required rows="5"></textarea></label><label>Factors that Minimize this Risk / Proposed Mitigation Plan<textarea id="riskMitigationPlan" required rows="5"></textarea></label></div>
+            </div>
+
+            <div class="risk-document-page"><div class="risk-form-section"><div class="section-heading compact"><div><p class="eyebrow">BUSINESS OWNER ACCEPTANCE</p><h3>Maximum one year</h3></div></div><div class="risk-choice-grid"><label><span>Decision</span><select id="riskBusinessOwnerDecision" required><option value="temporary">Yes, for a temporary period</option><option value="one_year">Yes, for up to one year</option><option value="denied">No, request denied</option></select></label><label><span>Risk will be remediated by</span><input id="riskRemediationDate" type="date"></label></div><div class="csf-form-grid"><label>Requestor name (print)<input id="riskRequestorPrintName"></label><label>Email / Telephone<input id="riskRequestorEmailPhone"></label><label>Signature<input id="riskRequestorSignature"></label><label>Date<input id="riskRequestorDate" type="date"></label></div></div>
+
+            <div class="risk-form-section"><div class="section-heading compact"><div><p class="eyebrow">CIO ACKNOWLEDGEMENT</p><h3>CIO or equivalent</h3></div></div><label class="risk-wide-field">Comments (if any)<textarea id="riskCioComments" rows="4"></textarea></label><div class="csf-form-grid"><label>Name<input id="riskCioName"></label><label>Signature<input id="riskCioSignature"></label><label>Date<input id="riskCioDate" type="date"></label></div></div>
+            </div>
+
+            <div class="risk-document-page"><div class="risk-form-section"><div class="section-heading compact"><div><p class="eyebrow">CIS REVIEW</p><h3>Cybersecurity Team decision</h3></div></div><div class="risk-choice-grid"><label><span>Decision</span><select id="riskCisDecision" required><option value="approved">Approved</option><option value="denied">Denied</option><option value="conditional">Approved with conditions / comments</option></select></label><label>Reason (if denied)<textarea id="riskCisReason" rows="3"></textarea></label><label>Conditions / comments<textarea id="riskCisConditions" rows="3"></textarea></label></div><div class="csf-form-grid"><label>Name<input id="riskCisName"></label><label>Signature<input id="riskCisSignature"></label><label>Date<input id="riskCisDate" type="date"></label></div></div>
+            </div>
+            <div class="csf-form-actions"><button class="button button-accent" type="submit" id="riskAcceptanceSubmit">Save risk acceptance form</button><button class="button button-quiet" type="button" id="riskAcceptanceCancel">Clear form</button><span class="save-state" id="riskAcceptanceFormStatus">Ready</span></div>
+          </form>
+          <div class="section-heading"><div><p class="eyebrow">SAVED REQUESTS</p><h3>Risk acceptance forms</h3></div><span class="muted">Open a saved form to update it</span></div>
+          <div class="excel-wrap"><table class="excel-table risk-acceptance-table"><thead><tr><th>Requestor</th><th>Asset</th><th>Department</th><th>Business Owner</th><th>CIS</th><th>Updated</th><th>Actions</th></tr></thead><tbody id="riskAcceptanceBody"></tbody></table></div>
         </section>
 
         <section id="csfView" class="view">

@@ -55,6 +55,8 @@ Session menggunakan cookie HttpOnly. Username dan password disimpan di tabel Pos
 - Export seluruh progress, catatan, metadata evidence, dan path file ke JSON.
 - Import progress dari JSON.
 - Reset assessment dengan konfirmasi warning.
+- Form Cybersecurity Risk Acceptance untuk mendokumentasikan risiko, justifikasi, mitigasi, serta keputusan Business Owner, CIO, dan CIS.
+- Risk Acceptance tersimpan di PostgreSQL dan dapat dibuka kembali, diedit, atau dihapus.
 - Reset menghapus progress, catatan, metadata evidence, dan seluruh isi folder upload yang dipilih.
 
 ## Database Framework Model
@@ -113,6 +115,16 @@ DELETE /api/csf/:id      # Delete control
 ```
 
 Data awal CSF di-seed dari `data/csf-data.json` hanya ketika tabel `csf_controls` masih kosong.
+
+### API Risk Acceptance
+
+```text
+GET    /api/risk-acceptance
+POST   /api/risk-acceptance
+PUT    /api/risk-acceptance/:id
+DELETE /api/risk-acceptance/:id
+GET    /api/risk-acceptance/:id/export/pdf
+```
 
 ## Alur Penggunaan
 
