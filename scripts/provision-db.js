@@ -29,6 +29,17 @@ async function provisionDatabase() {
 
   const client = new Client({ ...baseConfig, database: databaseName });
   await client.connect();
+
+  const templateIdExists = await client.query(
+    "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name = 'tprm_due_diligence_questionnaires' AND column_name = 'template_id') AS exists"
+  );
+
+  if (!templateIdExists.rows[0].exists) {
+    await client.query('ALTER TABLE tprm_due_diligence_questionnaires ADD COLUMN IF NOT EXISTS template_id BIGINT');
+    await client.query('CREATE INDEX IF NOT EXISTS tprm_questionnaires_template_idx ON tprm_due_diligence_questionnaires (template_id)');
+    console.log('Migration: Added template_id column to tprm_due_diligence_questionnaires');
+  }
+
   await client.query(fs.readFileSync('database/schema.sql', 'utf8'));
   await client.query(fs.readFileSync('database/users.sql', 'utf8'));
   const tables = await client.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('assessment_state', 'evidence_files', 'app_users') ORDER BY tablename");
@@ -36,12 +47,15 @@ async function provisionDatabase() {
   await client.end();
   const { ensureStore } = require('../src/services/personnelCertificationService');
   await ensureStore();
-  const { pool } = require('../src/config/database');
-  await pool.end();
   console.log('Personnel Certification roadmap seed ready.');
+  return true;
 }
 
-provisionDatabase().catch(error => {
-  console.error(`Database provisioning failed: ${error.message}`);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  provisionDatabase().catch(error => {
+    console.error(`Database provisioning failed: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { provisionDatabase };

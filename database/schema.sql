@@ -127,6 +127,54 @@ CREATE TABLE IF NOT EXISTS personnel_certifications (
 CREATE INDEX IF NOT EXISTS personnel_certifications_name_idx
   ON personnel_certifications (personnel_name, certification_name);
 
+CREATE TABLE IF NOT EXISTS tprm_risk_register (
+  id BIGSERIAL PRIMARY KEY,
+  third_party TEXT NOT NULL,
+  service_dependency TEXT NOT NULL,
+  risk_level TEXT NOT NULL,
+  assessment_status TEXT NOT NULL DEFAULT 'Not started',
+  next_review DATE,
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS tprm_risk_register_updated_idx
+  ON tprm_risk_register (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS questionnaire_templates (
+  id BIGSERIAL PRIMARY KEY,
+  template_name TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT '',
+  sections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  is_default BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS questionnaire_templates_default_idx
+  ON questionnaire_templates (is_default);
+
+CREATE TABLE IF NOT EXISTS tprm_due_diligence_questionnaires (
+  id BIGSERIAL PRIMARY KEY,
+  vendor_name TEXT NOT NULL,
+  template_id BIGINT,
+  assessment_status TEXT NOT NULL DEFAULT 'Draft',
+  review_date DATE,
+  assessment_result TEXT NOT NULL DEFAULT 'Pending',
+  reviewer TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  responses JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS tprm_questionnaires_updated_idx
+  ON tprm_due_diligence_questionnaires (updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS tprm_questionnaires_template_idx
+  ON tprm_due_diligence_questionnaires (template_id);
+
 CREATE TABLE IF NOT EXISTS evidence_files (
   path TEXT PRIMARY KEY,
   name TEXT NOT NULL,

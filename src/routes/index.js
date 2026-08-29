@@ -7,6 +7,9 @@ const frameworkRoutes = require('./frameworkRoutes');
 const riskAcceptanceRoutes = require('./riskAcceptanceRoutes');
 const riskManagementRoutes = require('./riskManagementRoutes');
 const personnelCertificationRoutes = require('./personnelCertificationRoutes');
+const tprmRoutes = require('./tprmRoutes');
+const tprmQuestionnaireRoutes = require('./tprmQuestionnaireRoutes');
+const questionnaireTemplateRoutes = require('./questionnaireTemplateRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
@@ -20,5 +23,8 @@ router.use('/frameworks', frameworkRoutes);
 router.use('/risk-acceptance', riskAcceptanceRoutes);
 router.use('/risk-management', riskManagementRoutes);
 router.use('/personnel-certifications', personnelCertificationRoutes);
+router.use('/tprm', tprmRoutes);
+router.use('/tprm-questionnaires', tprmQuestionnaireRoutes);
+router.use('/questionnaire-templates', questionnaireTemplateRoutes);
 
 module.exports = router;

@@ -1,0 +1,14 @@
+const { pool } = require('../config/database');
+
+const levels = ['High Risk (Tier 1)', 'Medium Risk (Tier 2)', 'Low Risk (Tier 3)'];
+const statuses = ['Not started', 'In progress', 'Complete', 'Accepted'];
+function invalid(message) { return Object.assign(new Error(message), { status: 400 }); }
+function text(value) { return String(value ?? '').trim(); }
+function validate(data) { if (!text(data.thirdParty) || !text(data.serviceDependency)) throw invalid('thirdParty and serviceDependency are required'); if (!levels.includes(data.riskLevel)) throw invalid('Invalid risk level'); if (!statuses.includes(data.assessmentStatus)) throw invalid('Invalid assessment status'); if (data.nextReview && !/^\d{4}-\d{2}-\d{2}$/.test(data.nextReview)) throw invalid('nextReview must be a valid date'); }
+function map(row) { return { id: row.id, thirdParty: row.third_party, serviceDependency: row.service_dependency, riskLevel: row.risk_level, assessmentStatus: row.assessment_status, nextReview: row.next_review, notes: row.notes, createdAt: row.created_at, updatedAt: row.updated_at }; }
+async function ensureStore() { await pool.query(`CREATE TABLE IF NOT EXISTS tprm_risk_register (id BIGSERIAL PRIMARY KEY, third_party TEXT NOT NULL, service_dependency TEXT NOT NULL, risk_level TEXT NOT NULL, assessment_status TEXT NOT NULL DEFAULT 'Not started', next_review DATE, notes TEXT NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`); }
+async function list() { const result = await pool.query('SELECT * FROM tprm_risk_register ORDER BY updated_at DESC, id DESC'); return result.rows.map(map); }
+async function create(data) { validate(data); const result = await pool.query('INSERT INTO tprm_risk_register (third_party, service_dependency, risk_level, assessment_status, next_review, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [text(data.thirdParty), text(data.serviceDependency), data.riskLevel, data.assessmentStatus, data.nextReview || null, text(data.notes)]); return map(result.rows[0]); }
+async function update(id, data) { validate(data); const result = await pool.query('UPDATE tprm_risk_register SET third_party = $1, service_dependency = $2, risk_level = $3, assessment_status = $4, next_review = $5, notes = $6, updated_at = NOW() WHERE id = $7 RETURNING *', [text(data.thirdParty), text(data.serviceDependency), data.riskLevel, data.assessmentStatus, data.nextReview || null, text(data.notes), id]); if (!result.rowCount) throw Object.assign(new Error('TPRM record not found'), { status: 404 }); return map(result.rows[0]); }
+async function remove(id) { const result = await pool.query('DELETE FROM tprm_risk_register WHERE id = $1', [id]); if (!result.rowCount) throw Object.assign(new Error('TPRM record not found'), { status: 404 }); }
+module.exports = { ensureStore, list, create, update, remove };
