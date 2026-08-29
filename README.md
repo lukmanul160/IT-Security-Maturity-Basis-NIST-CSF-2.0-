@@ -1,5 +1,113 @@
-PowerShell -ExecutionPolicy Bypass -Command "npm start"
 # NIST CSF 2.0 Maturity Assessment
+
+## Instalasi dan Menjalankan Aplikasi
+
+### Prasyarat
+
+- Node.js 18 atau lebih baru. Lingkungan pengembangan saat dokumentasi ini dibuat menggunakan Node.js `v24.19.0`.
+- PostgreSQL yang sedang berjalan. Lingkungan pengembangan menggunakan PostgreSQL `18.6` untuk Windows.
+- Git untuk clone repository (opsional bila project sudah tersedia secara lokal).
+
+`psql` tidak wajib tersedia di `PATH`; provisioning database dilakukan oleh script Node.js melalui package `pg`. Pastikan user PostgreSQL yang dipakai mempunyai akses ke database maintenance `postgres` dan izin membuat database.
+
+### Langkah Instalasi di Windows (PowerShell)
+
+1. Clone repository atau buka folder project, lalu masuk ke root project:
+
+  ```powershell
+  git clone <URL_REPOSITORY> "NIST Basis"
+  Set-Location "NIST Basis"
+  ```
+
+2. Instal dependency Node.js:
+
+  ```powershell
+  npm install
+  ```
+
+3. Buat file environment dari template yang tersedia:
+
+  ```powershell
+  Copy-Item env.exsample .env
+  ```
+
+4. Sesuaikan `.env` dengan kredensial PostgreSQL lokal. Contoh konfigurasi default:
+
+  ```dotenv
+  PORT=8000
+  DB_HOST=localhost
+  DB_PORT=5432
+  DB_NAME=nist_basis
+  DB_USER=postgres
+  DB_PASSWORD=isi_password_postgres_anda
+  DB_SSL=false
+  ```
+
+  Alternatifnya, gunakan `DATABASE_URL` dan hapus atau abaikan variabel `DB_*`:
+
+  ```dotenv
+  DATABASE_URL=postgresql://postgres:password@localhost:5432/nist_basis
+  ```
+
+5. Jalankan provisioning awal. Perintah ini membuat database bila belum ada, menerapkan schema, membuat akun awal, dan menyiapkan seed sertifikasi:
+
+  ```powershell
+  npm run db:setup
+  ```
+
+6. Jalankan aplikasi:
+
+  ```powershell
+  npm start
+  ```
+
+  Buka [http://localhost:8000](http://localhost:8000) setelah terminal menampilkan alamat server. Saat startup, aplikasi juga memastikan folder `upload/`, data framework/control, indikator risiko, dan tabel pendukung tersedia.
+
+### Perintah Pengembangan
+
+```powershell
+# Jalankan server dengan restart otomatis saat source berubah
+npm run dev
+
+# Bangun ulang CSS Tailwind setelah mengubah src/tailwind.css
+npm run build:css
+
+# Bangun ulang data seed sertifikasi dari sumber roadmap
+npm run seed:personnel-certifications
+```
+
+### Verifikasi Instalasi
+
+Pastikan service PostgreSQL berjalan, lalu setelah menjalankan server buka endpoint berikut:
+
+```text
+http://localhost:8000/api/health/db
+```
+
+Endpoint tersebut memerlukan login. Masuk terlebih dahulu menggunakan akun default, kemudian akses endpoint dari browser pada sesi yang sama. Respons berhasil memuat `"connected": true`.
+
+### Troubleshooting PostgreSQL
+
+Jangan menjalankan `psql -U postgres -d nist_basis -f database\schema.sql` pada clone baru sebelum database `nist_basis` dibuat. Perintah tersebut akan gagal bila database belum ada. Gunakan perintah berikut dari root project sebagai solusi utama:
+
+```powershell
+npm run db:setup
+```
+
+Jika user PostgreSQL tidak memiliki izin membuat database melalui aplikasi, minta administrator database untuk membuatnya atau jalankan fallback manual ini. Perintah pertama harus terhubung ke database maintenance `postgres`, bukan `nist_basis`:
+
+```powershell
+psql -U postgres -d postgres -f database\create-database.sql
+psql -U postgres -d nist_basis -f database\schema.sql
+psql -U postgres -d nist_basis -f database\users.sql
+```
+
+Masalah umum:
+
+- `database "nist_basis" does not exist`: jalankan `npm run db:setup` atau perintah `create-database.sql` di atas terlebih dahulu.
+- `password authentication failed`: perbarui `DB_USER` dan `DB_PASSWORD` pada `.env` sesuai akun PostgreSQL lokal.
+- `ECONNREFUSED` atau koneksi ditolak: mulai service PostgreSQL melalui Windows Services, kemudian pastikan `DB_HOST` dan `DB_PORT` sesuai instalasi Anda.
+- `npm.ps1 cannot be loaded`: PowerShell membatasi execution policy. Jalankan perintah sebagai `npm.cmd run db:setup` dan `npm.cmd start`, atau buka PowerShell dengan execution policy yang diizinkan oleh kebijakan organisasi.
 
 ## Clone dan Data Risiko
 
@@ -12,20 +120,23 @@ Data referensi framework/control yang diperlukan untuk menjalankan assessment di
 
 `Cybersecurity Risk Register.xlsx` adalah data operasional dan tidak boleh di-commit atau di-upload ke GitHub. File tersebut diabaikan oleh `.gitignore`. Jika workbook risk diperlukan, letakkan secara lokal di root project setelah clone. Tanpa workbook tersebut aplikasi tetap dapat dijalankan; Risk Register akan mulai kosong dan dapat diisi melalui UI.
 
-Setelah clone, jalankan:
+Ringkasan perintah setelah clone:
 
-```text
+```powershell
 npm install
+Copy-Item env.exsample .env
 npm run db:setup
 npm start
 ```
 
-`db:setup` membuat tabel dan `npm start` menginisialisasi framework/control CSF dan Privacy serta indikator risk dari file repository. `Risk Register`, `Risk Acceptance`, dan opsi dropdown risk tidak pernah di-seed dari workbook atau repository; tabel tersebut dibuat kosong pada clone baru dan hanya dapat diisi melalui aplikasi di database lokal.
+`db:setup` membuat database, tabel, dan akun awal; `npm start` menginisialisasi framework/control CSF dan Privacy serta indikator risk dari file repository. `Risk Register`, `Risk Acceptance`, dan opsi dropdown risk tidak pernah di-seed dari workbook atau repository; tabel tersebut dibuat kosong pada clone baru dan hanya dapat diisi melalui aplikasi di database lokal.
 
-Data `Security-Certification-Roadmap9.html` dipetakan ke `data/personnel-certifications-seed.json` berdasarkan tiga level: `Advanced / Expert`, `Intermediate`, dan `Entry Level`. Saat `npm start` dijalankan, seluruh record seed sertifikasi di-upsert ke tabel `personnel_certifications`. Seed dapat dibuat ulang setelah sumber roadmap berubah dengan `npm run seed:personnel-certifications`.
+Data `Security-Certification-Roadmap9.html` dipetakan ke `data/personnel-certifications-seed.json` berdasarkan tiga level: `Advanced / Expert`, `Intermediate`, dan `Entry Level`. Data personil dan katalog roadmap kini disimpan terpisah:
 
-postgresql-18.6-1-windows
-node-v24.19.0-x64
+- `personnel_certifications`: register pegawai (Personnel records) yang dikelola lewat menu aplikasi (create/update/delete).
+- `certification_roadmap_catalog`: katalog referensi Security Certification Roadmap 9 (read-only di aplikasi), di-upsert otomatis saat `npm start` dari `data/personnel-certifications-seed.json`.
+
+Seed katalog dapat dibuat ulang setelah sumber roadmap berubah dengan `npm run seed:personnel-certifications`.
 
 Website lokal untuk melakukan penilaian tingkat kematangan keamanan siber berdasarkan **NIST Cybersecurity Framework (CSF) 2.0**. Aplikasi ini membantu pengguna menilai Policy dan Practice pada setiap subcategory, menyimpan catatan tindakan, serta mengelola evidence file berdasarkan Function dan kategori penilaian.
 
@@ -97,38 +208,6 @@ controls (id, framework_id, code, function, category, subcategory, ...)
 `controls.framework_id` adalah foreign key ke `frameworks.id`, sedangkan pasangan `(framework_id, code)` wajib unik. Data lama dari `csf_controls` dan `privacy_controls` dimigrasikan idempotently ke tabel generik saat startup.
 
 Framework baru dapat dibuat melalui `POST /api/frameworks`, kemudian control-nya melalui `POST /api/frameworks/:frameworkId/controls`. Endpoint `/api/csf` dan `/api/privacy` tetap tersedia sebagai compatibility layer.
-
-## Cara Menjalankan
-
-Aplikasi dijalankan menggunakan Node.js 18 atau lebih baru:
-
-```bash
-npm install
-npm run db:setup
-npm start
-```
-
-### PostgreSQL
-
-Salin `.env.example` menjadi `.env`, lalu isi kredensial PostgreSQL. Jalankan `npm run db:setup` untuk membuat database jika belum ada dan menerapkan `database/schema.sql`. Koneksi dapat menggunakan `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, dan `DB_PASSWORD`, atau satu `DATABASE_URL`. Status koneksi dapat diperiksa melalui:
-
-```text
-http://localhost:8000/api/health/db
-```
-
-Contoh respons berhasil:
-
-```json
-{ "status": "ok", "database": "postgresql", "connected": true, "connectedAt": "..." }
-```
-
-Kemudian buka:
-
-```text
-http://localhost:8000
-```
-
-Server menyediakan halaman web dan API assessment pada alamat yang sama.
 
 ### API CSF 2.0
 

@@ -9,14 +9,36 @@ const { getSession, parseCookies, sessionCookie } = require('./config/auth');
 
 const app = express();
 app.disable('x-powered-by');
-app.use((req, res, next) => { res.set({ 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()' }); if (process.env.NODE_ENV === 'production') res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains'); next(); });
+
+app.use((req, res, next) => {
+	res.set({
+		'X-Content-Type-Options': 'nosniff',
+		'X-Frame-Options': 'DENY',
+		'Referrer-Policy': 'no-referrer',
+		'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+	});
+
+	if (process.env.NODE_ENV === 'production') {
+		res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+	}
+
+	next();
+});
 app.use(express.json({ limit: '100mb' }));
 app.use('/api/auth', authRoutes);
-app.get('/login', (req, res) => { const token = parseCookies(req.headers.cookie)[sessionCookie]; if (getSession(token)) return res.redirect('/'); res.set('Cache-Control', 'no-store'); return res.sendFile(path.join(publicRoot, 'login.html')); });
-app.get('/api/personnel-certifications/roadmap-source', requireAuth, async (req, res, next) => { try { res.type('html').set('Cache-Control', 'no-store').send(await require('fs').promises.readFile(path.join(__dirname, '..', 'Security-Certification-Roadmap9.html'), 'utf8')); } catch (error) { next(error); } });
+app.get('/login', (req, res) => {
+	const token = parseCookies(req.headers.cookie)[sessionCookie];
+	if (getSession(token)) return res.redirect('/');
+
+	res.set('Cache-Control', 'no-store');
+	return res.sendFile(path.join(publicRoot, 'login.html'));
+});
 app.use('/api', requireAuth, apiRoutes);
 app.use(requireAuth, express.static(publicRoot));
-app.use(requireAuth, (req, res, next) => req.path.startsWith('/api/') ? next() : res.sendFile(path.join(publicRoot, 'index.html')));
+app.use(requireAuth, (req, res, next) => {
+	if (req.path.startsWith('/api/')) return next();
+	return res.sendFile(path.join(publicRoot, 'index.html'));
+});
 app.use(notFound);
 app.use(errorHandler);
 

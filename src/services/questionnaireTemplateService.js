@@ -4,6 +4,30 @@ const { pool } = require('../config/database');
 
 const projectRoot = path.resolve(__dirname, '..', '..');
 
+function invalid(message) {
+  return Object.assign(new Error(message), { status: 400 });
+}
+
+function normalizeSections(sections) {
+  if (!Array.isArray(sections)) throw invalid('sections must be an array');
+
+  const normalized = sections.map((section, index) => {
+    if (!Array.isArray(section) || section.length !== 2 || !Array.isArray(section[1])) {
+      throw invalid(`Section ${index + 1} is invalid`);
+    }
+
+    const title = String(section[0] || '').trim();
+    const questions = section[1].map(question => String(question || '').trim()).filter(Boolean);
+    if (!title) throw invalid(`Section ${index + 1} requires a title`);
+    if (!questions.length) throw invalid(`Section ${index + 1} requires at least one question`);
+
+    return [title, questions];
+  });
+
+  if (!normalized.length) throw invalid('At least one section is required');
+  return normalized;
+}
+
 function parseMarkdownSections(markdownText) {
   const sections = [];
   const lines = String(markdownText || '').split(/\r?\n/);
@@ -112,10 +136,11 @@ async function list() {
 async function create(data) {
   const { template_name, description = '', sections = [] } = data;
   if (!template_name) throw new Error('template_name is required');
+  const normalizedSections = normalizeSections(sections);
 
   const result = await pool.query(
     'INSERT INTO questionnaire_templates (template_name, description, sections) VALUES ($1, $2, $3) RETURNING *',
-    [template_name, description, JSON.stringify(sections)]
+    [template_name, description, JSON.stringify(normalizedSections)]
   );
 
   const row = result.rows[0];
@@ -124,9 +149,10 @@ async function create(data) {
 
 async function update(id, data) {
   const { template_name, description, sections, is_default } = data;
+  const normalizedSections = sections === undefined ? null : normalizeSections(sections);
   const result = await pool.query(
     'UPDATE questionnaire_templates SET template_name = COALESCE($1, template_name), description = COALESCE($2, description), sections = COALESCE($3, sections), is_default = COALESCE($4, is_default), updated_at = NOW() WHERE id = $5 RETURNING *',
-    [template_name, description, sections ? JSON.stringify(sections) : null, is_default, id]
+    [template_name, description, normalizedSections ? JSON.stringify(normalizedSections) : null, is_default, id]
   );
 
   const row = result.rows[0];

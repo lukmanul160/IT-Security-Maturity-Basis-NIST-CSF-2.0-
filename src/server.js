@@ -10,6 +10,7 @@ const { provisionDatabase } = require('../scripts/provision-db');
 const { ensureStore: ensureRiskAcceptanceStore } = require('./services/riskAcceptanceService');
 const { ensureStore: ensureRiskManagementStore } = require('./services/riskManagementService');
 const { ensureStore: ensurePersonnelCertificationStore } = require('./services/personnelCertificationService');
+const { ensureStore: ensureCertificationRoadmapCatalogStore } = require('./services/certificationRoadmapCatalogService');
 const { ensureStore: ensurePermissionStore } = require('./services/permissionService');
 const { ensureStore: ensureTprmStore } = require('./services/tprmService');
 const { ensureStore: ensureTprmQuestionnaireStore } = require('./services/tprmQuestionnaireService');
@@ -23,6 +24,7 @@ async function start() {
   await ensureRiskAcceptanceStore();
   await ensureRiskManagementStore();
   await ensurePersonnelCertificationStore();
+  await ensureCertificationRoadmapCatalogStore();
   await ensurePermissionStore();
   await ensureTprmStore();
   await ensureTprmQuestionnaireStore();

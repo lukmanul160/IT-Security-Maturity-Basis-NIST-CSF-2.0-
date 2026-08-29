@@ -127,6 +127,22 @@ CREATE TABLE IF NOT EXISTS personnel_certifications (
 CREATE INDEX IF NOT EXISTS personnel_certifications_name_idx
   ON personnel_certifications (personnel_name, certification_name);
 
+CREATE TABLE IF NOT EXISTS certification_roadmap_catalog (
+  id BIGSERIAL PRIMARY KEY,
+  domain TEXT NOT NULL DEFAULT '',
+  certification_name TEXT NOT NULL,
+  issuer TEXT NOT NULL DEFAULT '',
+  reference_url TEXT NOT NULL DEFAULT '',
+  certification_level TEXT NOT NULL DEFAULT 'Intermediate',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT certification_roadmap_catalog_unique UNIQUE (certification_name)
+);
+
+CREATE INDEX IF NOT EXISTS certification_roadmap_catalog_domain_idx
+  ON certification_roadmap_catalog (domain, certification_level);
+
 CREATE TABLE IF NOT EXISTS tprm_risk_register (
   id BIGSERIAL PRIMARY KEY,
   third_party TEXT NOT NULL,

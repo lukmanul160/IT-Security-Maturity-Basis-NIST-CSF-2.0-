@@ -47,7 +47,9 @@ async function provisionDatabase() {
   await client.end();
   const { ensureStore } = require('../src/services/personnelCertificationService');
   await ensureStore();
-  console.log('Personnel Certification roadmap seed ready.');
+  const { ensureStore: ensureRoadmapCatalogStore } = require('../src/services/certificationRoadmapCatalogService');
+  await ensureRoadmapCatalogStore();
+  console.log('Personnel Certification and roadmap catalog seed ready.');
   return true;
 }
 
