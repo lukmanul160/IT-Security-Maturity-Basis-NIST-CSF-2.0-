@@ -30,6 +30,9 @@ async function provisionDatabase() {
   const client = new Client({ ...baseConfig, database: databaseName });
   await client.connect();
 
+  await client.query(fs.readFileSync('database/schema.sql', 'utf8'));
+  await client.query(fs.readFileSync('database/users.sql', 'utf8'));
+
   const templateIdExists = await client.query(
     "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name = 'tprm_due_diligence_questionnaires' AND column_name = 'template_id') AS exists"
   );
@@ -40,8 +43,16 @@ async function provisionDatabase() {
     console.log('Migration: Added template_id column to tprm_due_diligence_questionnaires');
   }
 
-  await client.query(fs.readFileSync('database/schema.sql', 'utf8'));
-  await client.query(fs.readFileSync('database/users.sql', 'utf8'));
+  const questionnaireIdExists = await client.query(
+    "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name = 'tprm_risk_register' AND column_name = 'questionnaire_id') AS exists"
+  );
+
+  if (!questionnaireIdExists.rows[0].exists) {
+    await client.query('ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS questionnaire_id BIGINT');
+    await client.query('ALTER TABLE tprm_risk_register ADD CONSTRAINT tprm_risk_register_questionnaire_fk FOREIGN KEY (questionnaire_id) REFERENCES tprm_due_diligence_questionnaires(id) ON DELETE SET NULL');
+    console.log('Migration: Added questionnaire_id relation to tprm_risk_register');
+  }
+
   const tables = await client.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('assessment_state', 'evidence_files', 'app_users') ORDER BY tablename");
   console.log(`Tables ready: ${tables.rows.map(row => row.tablename).join(', ')}`);
   await client.end();

@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS risk_register (
   risk_id TEXT PRIMARY KEY,
   risk_category TEXT NOT NULL,
   effected_asset TEXT NOT NULL,
+  device_name TEXT NOT NULL DEFAULT '',
   identification_risk TEXT NOT NULL,
   risk_control TEXT NOT NULL DEFAULT '',
   risk_cause TEXT NOT NULL DEFAULT '',
@@ -190,6 +191,28 @@ CREATE INDEX IF NOT EXISTS tprm_questionnaires_updated_idx
 
 CREATE INDEX IF NOT EXISTS tprm_questionnaires_template_idx
   ON tprm_due_diligence_questionnaires (template_id);
+
+ALTER TABLE tprm_risk_register
+  ADD COLUMN IF NOT EXISTS questionnaire_id BIGINT;
+
+ALTER TABLE tprm_risk_register
+  ADD COLUMN IF NOT EXISTS due_diligence_assessment JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'tprm_risk_register_questionnaire_fk'
+  ) THEN
+    ALTER TABLE tprm_risk_register
+      ADD CONSTRAINT tprm_risk_register_questionnaire_fk
+      FOREIGN KEY (questionnaire_id)
+      REFERENCES tprm_due_diligence_questionnaires(id)
+      ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS tprm_risk_register_questionnaire_idx
+  ON tprm_risk_register (questionnaire_id);
 
 CREATE TABLE IF NOT EXISTS evidence_files (
   path TEXT PRIMARY KEY,
