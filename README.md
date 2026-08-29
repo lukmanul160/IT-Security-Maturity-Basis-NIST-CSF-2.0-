@@ -23,6 +23,7 @@ npm start
 `db:setup` membuat tabel dan `npm start` menginisialisasi framework/control CSF dan Privacy serta indikator risk dari file repository. `Risk Register`, `Risk Acceptance`, dan opsi dropdown risk tidak pernah di-seed dari workbook atau repository; tabel tersebut dibuat kosong pada clone baru dan hanya dapat diisi melalui aplikasi di database lokal.
 
 Data `Security-Certification-Roadmap9.html` dipetakan ke `data/personnel-certifications-seed.json` berdasarkan tiga level: `Advanced / Expert`, `Intermediate`, dan `Entry Level`. Saat `npm start` dijalankan, seluruh record seed sertifikasi di-upsert ke tabel `personnel_certifications`. Seed dapat dibuat ulang setelah sumber roadmap berubah dengan `npm run seed:personnel-certifications`.
+
 postgresql-18.6-1-windows
 node-v24.19.0-x64
 
