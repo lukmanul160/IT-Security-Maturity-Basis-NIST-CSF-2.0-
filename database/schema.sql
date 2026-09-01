@@ -56,6 +56,7 @@ CREATE INDEX IF NOT EXISTS risk_indicators_type_idx
 
 CREATE TABLE IF NOT EXISTS risk_register (
   risk_id TEXT PRIMARY KEY,
+  third_party TEXT NOT NULL DEFAULT '',
   risk_category TEXT NOT NULL,
   effected_asset TEXT NOT NULL,
   device_name TEXT NOT NULL DEFAULT '',
@@ -86,6 +87,8 @@ CREATE TABLE IF NOT EXISTS risk_register (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS third_party TEXT NOT NULL DEFAULT '';
 
 CREATE INDEX IF NOT EXISTS risk_register_rating_idx ON risk_register (risk_rating);
 CREATE INDEX IF NOT EXISTS risk_register_owner_idx ON risk_register (risk_owner);
@@ -152,12 +155,24 @@ CREATE TABLE IF NOT EXISTS tprm_risk_register (
   assessment_status TEXT NOT NULL DEFAULT 'Not started',
   next_review DATE,
   notes TEXT NOT NULL DEFAULT '',
+  risk_register_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS risk_register_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS tprm_risk_register_updated_idx
   ON tprm_risk_register (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS tprm_related_risks (
+  tprm_id BIGINT NOT NULL REFERENCES tprm_risk_register(id) ON DELETE CASCADE,
+  risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE,
+  PRIMARY KEY (tprm_id, risk_id)
+);
+
+CREATE INDEX IF NOT EXISTS tprm_related_risks_risk_idx
+  ON tprm_related_risks (risk_id);
 
 CREATE TABLE IF NOT EXISTS questionnaire_templates (
   id BIGSERIAL PRIMARY KEY,

@@ -1,6 +1,10 @@
 const express = require('express');
 const controller = require('../controllers/certificationRoadmapCatalogController');
 const { requirePermission } = require('../middleware/permission');
+const { requireAdmin } = require('../middleware/authorization');
 const router = express.Router();
 router.get('/', requirePermission('personnel-certification'), controller.list);
+router.post('/', requireAdmin, controller.create);
+router.put('/:id', requireAdmin, controller.update);
+router.delete('/:id', requireAdmin, controller.remove);
 module.exports = router;
