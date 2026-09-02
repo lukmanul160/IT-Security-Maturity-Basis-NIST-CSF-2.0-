@@ -1,10 +1,10 @@
 const express = require('express');
 const controller = require('../controllers/personnelCertificationController');
-const { requirePermission } = require('../middleware/permission');
+const { requirePermission, requirePageAccess } = require('../middleware/permission');
 const router = express.Router();
-router.get('/', requirePermission('personnel-certification'), controller.list);
-router.post('/', requirePermission('personnel-certification'), controller.create);
-router.put('/:id/layout', requirePermission('personnel-certification'), controller.updateLayout);
-router.put('/:id', requirePermission('personnel-certification'), controller.update);
-router.delete('/:id', requirePermission('personnel-certification'), controller.remove);
+router.get('/', requirePermission('personnel-certification', 'read'), controller.list);
+router.post('/', requirePageAccess('personnel-certification', 'create'), controller.create);
+router.put('/:id/layout', requirePageAccess('personnel-certification', 'update'), controller.updateLayout);
+router.put('/:id', requirePageAccess('personnel-certification', 'update'), controller.update);
+router.delete('/:id', requirePageAccess('personnel-certification', 'delete'), controller.remove);
 module.exports = router;

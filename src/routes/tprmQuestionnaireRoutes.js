@@ -1,9 +1,9 @@
 const express = require('express');
 const controller = require('../controllers/tprmQuestionnaireController');
-const { requirePermission } = require('../middleware/permission');
+const { requirePermission, requirePageAccess } = require('../middleware/permission');
 const router = express.Router();
-router.get('/', requirePermission('tprm-questionnaire'), controller.list);
-router.post('/', requirePermission('tprm-questionnaire'), controller.create);
-router.put('/:id', requirePermission('tprm-questionnaire'), controller.update);
-router.delete('/:id', requirePermission('tprm-questionnaire'), controller.remove);
+router.get('/', requirePermission('tprm-questionnaire', 'read'), controller.list);
+router.post('/', requirePageAccess('tprm-questionnaire', 'create'), controller.create);
+router.put('/:id', requirePageAccess('tprm-questionnaire', 'update'), controller.update);
+router.delete('/:id', requirePageAccess('tprm-questionnaire', 'delete'), controller.remove);
 module.exports = router;
