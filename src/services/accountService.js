@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const { pool } = require('../config/database');
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
+const validRoles = ['admin', 'approver', 'editor', 'viewer', 'user'];
 
 function validatePassword(password) {
   if (typeof password !== 'string' || !passwordPattern.test(password)) throw Object.assign(new Error('Password harus 8-72 karakter dan mengandung huruf besar, huruf kecil, serta angka'), { status: 400 });
@@ -57,7 +58,7 @@ async function updatePassword(username, data) {
 async function createUser(data) {
   if (typeof data.username !== 'string' || !/^[a-zA-Z0-9._-]{3,50}$/.test(data.username.trim())) throw Object.assign(new Error('Username harus 3-50 karakter alfanumerik'), { status: 400 });
   validatePassword(data.password);
-  if (!['admin', 'user'].includes(data.role || 'user')) throw Object.assign(new Error('Role tidak valid'), { status: 400 });
+  if (!validRoles.includes(data.role || 'user')) throw Object.assign(new Error('Role tidak valid'), { status: 400 });
   const passwordHash = await bcrypt.hash(data.password, 12);
   try {
     const result = await pool.query('INSERT INTO app_users (username, full_name, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username, full_name, role, created_at, updated_at', [data.username.trim(), typeof data.fullName === 'string' ? data.fullName.trim() : '', passwordHash, data.role || 'user']);
@@ -74,7 +75,7 @@ async function updateUser(id, data) {
   const fields = [];
   const values = [];
   if (data.fullName !== undefined) { if (typeof data.fullName !== 'string' || data.fullName.trim().length > 120) throw Object.assign(new Error('Nama maksimal 120 karakter'), { status: 400 }); fields.push('full_name'); values.push(data.fullName.trim()); }
-  if (data.role !== undefined) { if (!['admin', 'user'].includes(data.role)) throw Object.assign(new Error('Role tidak valid'), { status: 400 }); fields.push('role'); values.push(data.role); }
+  if (data.role !== undefined) { if (!validRoles.includes(data.role)) throw Object.assign(new Error('Role tidak valid'), { status: 400 }); fields.push('role'); values.push(data.role); }
   if (data.password !== undefined) { validatePassword(data.password); fields.push('password_hash'); values.push(await bcrypt.hash(data.password, 12)); }
   if (!fields.length) throw Object.assign(new Error('Tidak ada data untuk diubah'), { status: 400 });
   fields.push('updated_at'); values.push(new Date()); values.push(id);
