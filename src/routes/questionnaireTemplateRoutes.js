@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { list, create, update, remove } = require('../services/questionnaireTemplateService');
-const { requireAuth } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/authorization');
+const { requirePermission } = require('../middleware/permission');
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requirePermission('questionnaire-templates'), async (req, res) => {
   try {
     const templates = await list();
     res.json(templates);
@@ -12,7 +13,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const template = await create(req.body);
     res.json(template);
@@ -21,7 +22,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const template = await update(req.params.id, req.body);
     res.json(template);
@@ -30,7 +31,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const template = await remove(req.params.id);
     res.json(template);

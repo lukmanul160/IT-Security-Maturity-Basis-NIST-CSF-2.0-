@@ -3,10 +3,10 @@ const { pool } = require('../config/database');
 const permissions = [
   ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'],
   ['assessment', 'CSF assessment'], ['privacy-assessment', 'Privacy assessment'],
-  ['risk-acceptance', 'Risk Acceptance'], ['risk-management', 'Risk Management'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['tprm-register', 'TPRM Risk Register'],
+  ['risk-acceptance', 'Risk Acceptance'], ['risk-management', 'Risk Management'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'],
   ['files', 'Uploaded files'], ['account', 'Account Management']
 ];
-const defaults = { admin: permissions.map(([key]) => key), user: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register', 'account'] };
+const defaults = { admin: permissions.map(([key]) => key), user: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'account'] };
 
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS role_permissions (role TEXT NOT NULL CHECK (role IN ('admin', 'user')), permission_key TEXT NOT NULL, allowed BOOLEAN NOT NULL DEFAULT TRUE, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (role, permission_key))`);
