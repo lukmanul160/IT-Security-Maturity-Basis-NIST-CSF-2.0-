@@ -86,14 +86,41 @@ function parseMarkdownSections(markdownText) {
   return sections;
 }
 
+function fallbackSectionsForTemplate(fileName) {
+  if (fileName === 'due-diligence-questionnaire.md') {
+    return [
+      ['Company Information', ['Legal entity name', 'Headquarters location', 'Primary business contact', 'Security and privacy contacts']],
+      ['Service Scope', ['Describe the services provided', 'Will the vendor process customer data?', 'What data categories are handled?', 'Will the vendor use subprocessors?']],
+      ['Security Program', ['Do you maintain a documented security program?', 'Is the program reviewed annually?', 'Do you hold industry certifications?', 'Do you perform regular vulnerability assessments?']],
+      ['Risk & Controls', ['Do you enforce MFA for administrative access?', 'Is encryption used for data in transit and at rest?', 'Do you have an incident response plan?', 'How do you handle customer incident notifications?']],
+    ];
+  }
+
+  if (fileName === 'software-developer-checklist.md') {
+    return [
+      ['Software Development Lifecycle', ['Do you use a documented SDLC?', 'Do you perform secure code reviews?', 'Are security tests part of CI/CD?', 'Do you manage third-party dependencies?']],
+      ['Access & Secrets', ['Is access to source code protected by MFA?', 'Do you store secrets in managed secret stores?', 'Are production credentials isolated?', 'Are code repositories logged and monitored?']],
+      ['Release Security', ['Do you support secure patching and dependency updates?', 'Are deployments approved and verified?', 'Is production data masked in non-production?', 'Do you maintain a vulnerability disclosure process?']],
+    ];
+  }
+
+  return [['General', ['Question not available in the bundled template file.']]];
+}
+
 function loadSectionsFromMarkdown(fileName) {
   const filePath = path.join(projectRoot, fileName);
-  const markdown = fs.readFileSync(filePath, 'utf8');
-  const sections = parseMarkdownSections(markdown);
-  if (!sections.length) {
-    throw new Error(`Unable to parse questionnaire content from ${fileName}`);
+
+  try {
+    const markdown = fs.readFileSync(filePath, 'utf8');
+    const sections = parseMarkdownSections(markdown);
+    if (!sections.length) {
+      throw new Error(`Unable to parse questionnaire content from ${fileName}`);
+    }
+    return sections;
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return fallbackSectionsForTemplate(fileName);
+    throw error;
   }
-  return sections;
 }
 
 const defaultTemplates = [

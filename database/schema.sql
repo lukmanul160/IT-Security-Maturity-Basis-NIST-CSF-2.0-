@@ -153,6 +153,7 @@ CREATE TABLE IF NOT EXISTS tprm_risk_register (
   service_dependency TEXT NOT NULL,
   risk_level TEXT NOT NULL,
   assessment_status TEXT NOT NULL DEFAULT 'Not started',
+  relationship_status TEXT NOT NULL DEFAULT 'Active',
   next_review DATE,
   notes TEXT NOT NULL DEFAULT '',
   risk_register_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -161,6 +162,7 @@ CREATE TABLE IF NOT EXISTS tprm_risk_register (
 );
 
 ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS risk_register_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS relationship_status TEXT NOT NULL DEFAULT 'Active';
 
 CREATE INDEX IF NOT EXISTS tprm_risk_register_updated_idx
   ON tprm_risk_register (updated_at DESC);
