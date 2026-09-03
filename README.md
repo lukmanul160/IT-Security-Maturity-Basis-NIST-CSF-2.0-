@@ -118,7 +118,7 @@ Data referensi framework/control yang diperlukan untuk menjalankan assessment di
 - `data/risk-indicators.json` untuk seed indikator tanpa membawa Risk Register.
 - Seed schema dan akun aplikasi di `database/`.
 
-`Cybersecurity Risk Register.xlsx` adalah data operasional dan tidak boleh di-commit atau di-upload ke GitHub. File tersebut diabaikan oleh `.gitignore`. Jika workbook risk diperlukan, letakkan secara lokal di root project setelah clone. Tanpa workbook tersebut aplikasi tetap dapat dijalankan; Risk Register akan mulai kosong dan dapat diisi melalui UI.
+`Cybersecurity Risk Register.xlsx` adalah data operasional dan tidak boleh di-commit atau di-upload ke GitHub. File tersebut diabaikan oleh `.gitignore`. Privacy Framework menggunakan `data/privacy-data.json`, sehingga workbook eksternal tidak diperlukan. Risk Register dibuat kosong pada clone baru dan dapat diisi melalui UI.
 
 Ringkasan perintah setelah clone:
 

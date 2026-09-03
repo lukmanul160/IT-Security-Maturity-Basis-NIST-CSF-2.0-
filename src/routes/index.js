@@ -11,6 +11,7 @@ const certificationRoadmapCatalogRoutes = require('./certificationRoadmapCatalog
 const tprmRoutes = require('./tprmRoutes');
 const tprmQuestionnaireRoutes = require('./tprmQuestionnaireRoutes');
 const questionnaireTemplateRoutes = require('./questionnaireTemplateRoutes');
+const policyRegisterRoutes = require('./policyRegisterRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
@@ -28,5 +29,6 @@ router.use('/certification-roadmap-catalog', certificationRoadmapCatalogRoutes);
 router.use('/tprm', tprmRoutes);
 router.use('/tprm-questionnaires', tprmQuestionnaireRoutes);
 router.use('/questionnaire-templates', questionnaireTemplateRoutes);
+router.use('/policy-register', policyRegisterRoutes);
 
 module.exports = router;

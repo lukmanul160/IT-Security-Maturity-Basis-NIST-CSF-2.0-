@@ -176,6 +176,75 @@ CREATE TABLE IF NOT EXISTS tprm_related_risks (
 CREATE INDEX IF NOT EXISTS tprm_related_risks_risk_idx
   ON tprm_related_risks (risk_id);
 
+CREATE TABLE IF NOT EXISTS policy_register (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  review_cycle TEXT NOT NULL,
+  approval_status TEXT NOT NULL,
+  last_review DATE,
+  attachment_name TEXT NOT NULL DEFAULT '',
+  attachment_path TEXT NOT NULL DEFAULT '',
+  attachment_type TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS policy_register_updated_idx
+  ON policy_register (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS policy_register_items (
+  id BIGSERIAL PRIMARY KEY,
+  policy_id BIGINT NOT NULL REFERENCES policy_register(id) ON DELETE CASCADE,
+  subtitle TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT policy_register_item_content_check CHECK (subtitle <> '' OR content <> '')
+);
+
+CREATE INDEX IF NOT EXISTS policy_register_items_policy_idx
+  ON policy_register_items (policy_id, sort_order, id);
+
+CREATE TABLE IF NOT EXISTS policy_register_dropdown_options (
+  id BIGSERIAL PRIMARY KEY,
+  field_name TEXT NOT NULL,
+  option_value TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT policy_register_dropdown_option_unique UNIQUE (field_name, option_value)
+);
+
+CREATE INDEX IF NOT EXISTS policy_register_dropdown_field_idx
+  ON policy_register_dropdown_options (field_name, sort_order, option_value);
+
+INSERT INTO policy_register_dropdown_options (field_name, option_value, sort_order)
+VALUES
+  ('categories', 'Cybersecurity', 0),
+  ('categories', 'IT Governance', 1),
+  ('categories', 'Privacy', 2),
+  ('categories', 'Risk Management', 3),
+  ('categories', 'HR & Compliance', 4),
+  ('owners', 'CISO', 0),
+  ('owners', 'IT Manager', 1),
+  ('owners', 'Data Protection Officer', 2),
+  ('owners', 'Security Manager', 3),
+  ('owners', 'Legal', 4),
+  ('owners', 'Procurement', 5),
+  ('reviewCycles', 'Annual', 0),
+  ('reviewCycles', 'Biannual', 1),
+  ('reviewCycles', 'Quarterly', 2),
+  ('reviewCycles', 'Ad hoc', 3),
+  ('approvalStatuses', 'Approved', 0),
+  ('approvalStatuses', 'Draft', 1),
+  ('approvalStatuses', 'Review due', 2),
+  ('approvalStatuses', 'Expired', 3)
+ON CONFLICT (field_name, option_value) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS questionnaire_templates (
   id BIGSERIAL PRIMARY KEY,
   template_name TEXT NOT NULL UNIQUE,

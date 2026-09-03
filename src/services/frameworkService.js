@@ -1,7 +1,6 @@
 const fs = require('fs').promises;
-const XLSX = require('xlsx');
 const { pool } = require('../config/database');
-const { dataRoot, privacyWorkbook, privacyData } = require('../config/paths');
+const { dataRoot, privacyData } = require('../config/paths');
 
 function duplicateIdError(frameworkId, code) {
   const label = frameworkId === 'csf' ? 'CSF' : frameworkId === 'privacy' ? 'Privacy' : frameworkId;
@@ -55,19 +54,7 @@ async function deleteControl(frameworkId, code) {
 }
 
 function readPrivacyCore() {
-  let workbook;
-  try { workbook = XLSX.readFile(privacyWorkbook); } catch (error) { if (error.code === 'ENOENT') return JSON.parse(require('fs').readFileSync(privacyData, 'utf8')); throw error; }
-  const sheet = workbook.Sheets['Privacy Framework Core'];
-  if (!sheet) return [];
-  let currentFunction = '';
-  let currentCategory = '';
-  return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }).slice(3).map(row => {
-    if (String(row[1]).trim()) currentFunction = String(row[1]).trim();
-    if (String(row[3]).trim()) currentCategory = String(row[3]).trim();
-    const subcategory = String(row[5] || '').trim();
-    if (!/^([A-Z]{2})\.([A-Z]{2})-P\d+:/.test(subcategory)) return null;
-    return { id: subcategory.split(':')[0], function: currentFunction, category: currentCategory, subcategory };
-  }).filter(Boolean);
+  return JSON.parse(require('fs').readFileSync(privacyData, 'utf8'));
 }
 
 async function initializeFrameworks() {

@@ -10,6 +10,14 @@ const { getSession, parseCookies, sessionCookie } = require('./config/auth');
 const app = express();
 app.disable('x-powered-by');
 
+// Log all requests
+app.use((req, res, next) => {
+	const msg = `[app] ${req.method} ${req.originalUrl}`;
+	console.error(msg);
+	console.log(msg);
+	next();
+});
+
 app.use((req, res, next) => {
 	res.set({
 		'X-Content-Type-Options': 'nosniff',
@@ -33,7 +41,10 @@ app.get('/login', (req, res) => {
 	res.set('Cache-Control', 'no-store');
 	return res.sendFile(path.join(publicRoot, 'login.html'));
 });
+
+console.error('[app] Mounting /api routes with requireAuth');
 app.use('/api', requireAuth, apiRoutes);
+
 app.use(requireAuth, express.static(publicRoot));
 app.use(requireAuth, (req, res, next) => {
 	if (req.path.startsWith('/api/')) return next();
