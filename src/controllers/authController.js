@@ -1,11 +1,28 @@
 const { authenticate, createSession, destroySession, parseCookies, sessionCookie } = require('../config/auth');
 const accountService = require('../services/accountService');
 const permissionService = require('../services/permissionService');
+const loginAttempts = new Map();
+const maxLoginFailures = 5;
+const loginWindow = 15 * 60 * 1000;
+
+function loginKey(req, username) { return `${req.ip}|${String(username || '').trim().toLowerCase()}`; }
 
 async function login(req, res) {
   const { username, password } = req.body || {};
+  const key = loginKey(req, username);
+  const now = Date.now();
+  const attempt = loginAttempts.get(key);
+  if (attempt && attempt.blockedUntil > now) return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi nanti.' });
+  if (attempt && now - attempt.firstFailure > loginWindow) loginAttempts.delete(key);
   const user = await authenticate(username, password);
-  if (!user) return res.status(401).json({ error: 'Username atau password salah' });
+  if (!user) {
+    const current = loginAttempts.get(key) || { failures: 0, firstFailure: now };
+    current.failures += 1;
+    current.blockedUntil = current.failures >= maxLoginFailures ? now + loginWindow : 0;
+    loginAttempts.set(key, current);
+    return res.status(401).json({ error: 'Username atau password salah' });
+  }
+  loginAttempts.delete(key);
   const token = createSession(user);
   res.cookie(sessionCookie, token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 8 * 60 * 60 * 1000 });
   return res.json({ username: user.username, role: user.role });

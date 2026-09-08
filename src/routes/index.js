@@ -12,6 +12,8 @@ const tprmRoutes = require('./tprmRoutes');
 const tprmQuestionnaireRoutes = require('./tprmQuestionnaireRoutes');
 const questionnaireTemplateRoutes = require('./questionnaireTemplateRoutes');
 const policyRegisterRoutes = require('./policyRegisterRoutes');
+const auditRoutes = require('./auditRoutes');
+const backupRoutes = require('./backupRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
@@ -30,5 +32,7 @@ router.use('/tprm', tprmRoutes);
 router.use('/tprm-questionnaires', tprmQuestionnaireRoutes);
 router.use('/questionnaire-templates', questionnaireTemplateRoutes);
 router.use('/policy-register', policyRegisterRoutes);
+router.use('/audit', auditRoutes);
+router.use('/backups', backupRoutes);
 
 module.exports = router;

@@ -4,6 +4,7 @@ const { pool } = require('./database');
 const sessions = new Map();
 const sessionCookie = 'nist_session';
 const sessionLifetime = 8 * 60 * 60 * 1000;
+const dummyPasswordHash = '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a';
 
 async function authenticate(username, password) {
 	if (typeof username !== 'string' || typeof password !== 'string') return null;
@@ -13,7 +14,8 @@ async function authenticate(username, password) {
 		[username]
 	);
 	const user = result.rows[0];
-	if (!user || !(await bcrypt.compare(password, user.password_hash))) return null;
+	const passwordHash = user?.password_hash || dummyPasswordHash;
+	if (!(await bcrypt.compare(password, passwordHash)) || !user) return null;
 
 	return { username: user.username, role: user.role };
 }

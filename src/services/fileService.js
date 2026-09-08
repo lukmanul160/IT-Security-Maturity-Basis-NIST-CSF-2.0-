@@ -4,6 +4,13 @@ const { pool } = require('../config/database');
 const { uploadRoot } = require('../config/paths');
 
 const safeSegment = value => path.basename(String(value || '')).replace(/[^a-zA-Z0-9._ -]/g, '_');
+const allowedUploadMimeTypes = {
+	'.pdf': new Set(['application/pdf']),
+	'.doc': new Set(['application/msword']),
+	'.docx': new Set(['application/vnd.openxmlformats-officedocument.wordprocessingml.document']),
+	'.ppt': new Set(['application/vnd.ms-powerpoint']),
+	'.pptx': new Set(['application/vnd.openxmlformats-officedocument.presentationml.presentation']),
+};
 const normalizePath = relativePath => {
 	const normalized = path.posix
 		.normalize(String(relativePath || '').replaceAll('\\', '/'))
@@ -36,6 +43,15 @@ function validateUploadMetadata(functionName, kind, fileName) {
 	const error = new Error('Invalid upload metadata');
 	error.status = 400;
 	throw error;
+}
+function validateUploadFile(fileName, mimeType) {
+	const extension = path.extname(String(fileName || '')).toLowerCase();
+	const allowedMimeTypes = allowedUploadMimeTypes[extension];
+	if (!allowedMimeTypes || !allowedMimeTypes.has(String(mimeType || '').toLowerCase())) {
+		const error = new Error('Only PDF, Word, and PowerPoint files are allowed');
+		error.status = 400;
+		throw error;
+	}
 }
 async function ensureUploadRoot() { await fs.mkdir(uploadRoot, { recursive: true }); }
 async function listFiles() { const result = await pool.query('SELECT path FROM evidence_files ORDER BY name'); return result.rows.map(row => `upload/${row.path}`); }
@@ -112,4 +128,4 @@ async function resetFilesForAssessment(assessmentId) {
 	}
 }
 
-module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, deleteFile, resetFiles, resetFilesForAssessment, validateUploadMetadata };
+module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, deleteFile, resetFiles, resetFilesForAssessment, validateUploadMetadata, validateUploadFile };

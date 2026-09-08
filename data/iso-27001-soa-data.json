@@ -1,0 +1,932 @@
+[
+  {
+    "id": "A.5.1",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Policies for information security",
+    "implementation": "Produce top-level policy + topic-specific policies (Access, AUP, Data Classification, BYOD, Crypto, Incident, BCP, Vulnerability). Annual review + management approval signature.",
+    "references": "Auditor checks version history, management approval, and distribution logs.",
+    "minimumEvidence": "Signed policy docs, version control table, staff communication logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.2",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security roles and responsibilities",
+    "implementation": "Define responsibilities across all roles (CISO, IT, HR, Legal, Asset Owners) in job descriptions and RACI matrix.",
+    "references": "Auditor interviews 2-3 role holders outside IT to test security awareness.",
+    "minimumEvidence": "ISMS RACI matrix, job descriptions with security clauses.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.3",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Segregation of duties",
+    "implementation": "Separate incompatible duties (request vs approve, dev vs prod deploy, backup runner vs verifier, 2-person finance approval).",
+    "references": "Auditor checks role segregation policy and system workflow configs.",
+    "minimumEvidence": "Segregation of duties policy, IAM role configs, approval logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.4",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Management responsibilities",
+    "implementation": "Ensure line managers actively enforce security, perform inductions, and escalate security concerns.",
+    "references": "Auditor interviews non-IT line managers regarding their security duties.",
+    "minimumEvidence": "Manager KPI objectives, signed induction logs, escalation records.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.5",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Contact with authorities",
+    "implementation": "Maintain Contacts Register (CERT, DPA, Law Enforcement, Sector Regulators, Emergency Services) with clear contact owners.",
+    "references": "If a major incident happened tonight, who would you call and who is authorized?",
+    "minimumEvidence": "Authority Contacts Register with annual review date.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.6",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Contact with special interest groups",
+    "implementation": "Maintain active memberships in security forums, ISACs, vendor advisories, OWASP, and NCSC programs.",
+    "references": "Show me a recent piece of threat intelligence received and what action was taken.",
+    "minimumEvidence": "Membership register, intelligence logs, actioned security bulletins.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.7",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Threat intelligence [NEW]",
+    "implementation": "Establish process to collect, triage, and analyze threat intelligence (OSINT, ISAC, vendors). Produce quarterly reports.",
+    "references": "Trace how a recent threat intelligence item affected your risk register or controls.",
+    "minimumEvidence": "Threat Intelligence Register, quarterly threat reports, updated risk entries.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.8",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security in project management",
+    "implementation": "Embed security gates in SDLC/Project framework (Requirements, Design Threat Model, Pre-launch Pen Test, Post-launch Audit).",
+    "references": "Auditor picks a recent project and requests security review records.",
+    "minimumEvidence": "Project security checklist, completed security gate sign-offs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.9",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Inventory of information and other associated assets",
+    "implementation": "Maintain formal Asset Register with ID, name, owner, custodian, classification, location, and lifecycle status.",
+    "references": "Auditor samples 10 assets and verifies owner, location, and classification.",
+    "minimumEvidence": "Asset Register covering hardware, software, data, cloud, and paper.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.10",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Acceptable use of information and other associated assets",
+    "implementation": "Produce Acceptable Use Policy (AUP) covering IT, email, media, personal devices, and AI tools. Require annual acknowledgement.",
+    "references": "Auditor requests sample signed AUP and checks enforcement workflow.",
+    "minimumEvidence": "Signed/acknowledged AUP records, disciplinary link evidence.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.11",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Return of assets",
+    "implementation": "Integrate asset return into HR leaver checklist (laptops, cards, tokens) within 24h of departure.",
+    "references": "Auditor checks 3 recent leavers for timely asset return records.",
+    "minimumEvidence": "Completed HR Leaver Checklists with signatures and timestamps.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.12",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Classification of information",
+    "implementation": "Define classification taxonomy (e.g., Public, Internal, Confidential, Restricted) with handling rules for each tier.",
+    "references": "What is the classification of customer data, and how is it handled?",
+    "minimumEvidence": "Data Classification Policy, handling matrix.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.13",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Labelling of information",
+    "implementation": "Apply digital/physical labels according to classification (Purview, Drive labels, header/footers, physical stamps).",
+    "references": "Auditor inspects sample documents from each tier for proper labeling.",
+    "minimumEvidence": "Labeled document samples, DLP auto-labeling configs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.14",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information transfer",
+    "implementation": "Policy & enforcement for secure file transfer, encrypted email (TLS/Confidential+), hardware-encrypted USBs, and third-party DPAs.",
+    "references": "How do you transfer customer PII to your payroll processor?",
+    "minimumEvidence": "Information Transfer Policy, SFTP/TLS configs, signed DPAs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.15",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Access control",
+    "implementation": "Define Access Control Policy (RBAC, deny-default, approval workflows, mandatory review cycles).",
+    "references": "How is access to system X requested, approved, provisioned, and revoked?",
+    "minimumEvidence": "Access Control Policy, permission matrix, access tickets.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.16",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Identity management",
+    "implementation": "Manage full identity lifecycle (Joiner start date, Mover 24h adjust, Leaver 2h disable/30d purge). No shared accounts.",
+    "references": "Auditor checks for active accounts belonging to former employees.",
+    "minimumEvidence": "IAM logs, provisioning tickets, zero active leaver accounts.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.17",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Authentication information",
+    "implementation": "Password policy (min 12 chars, no periodic force rotation, breached-pass screening, MFA for remote/privileged access).",
+    "references": "Auditor checks technical password enforcement in AD/IdP.",
+    "minimumEvidence": "IdP password policy settings, MFA enforcement reports.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.18",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Access rights",
+    "implementation": "Formal access reviews: quarterly for privileged accounts, annually for all standard accounts by business asset owners.",
+    "references": "Auditor reviews last access review for critical system and checks revocations.",
+    "minimumEvidence": "Signed Access Review reports, revocation change tickets.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.19",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security in supplier relationships",
+    "implementation": "Perform vendor security risk assessments, tier suppliers (Tier 1-3), require ISO 27001/SOC 2 for Tier 1.",
+    "references": "Auditor requests vendor register and security evidence for highest-risk vendor.",
+    "minimumEvidence": "Supplier Risk Register, vendor assessment questionnaires, audit certificates.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.20",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Addressing information security within supplier agreements",
+    "implementation": "Include standard security schedule/DPA in contracts (data protection, incident reporting 24/72h, audit rights, data deletion).",
+    "references": "Auditor inspects sample Tier 1 contract for mandatory clauses.",
+    "minimumEvidence": "Signed vendor contracts containing mandatory security schedules.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.21",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Managing information security in the ICT supply chain",
+    "implementation": "Assess supply chain risk (vendor origin, open-source deps, SBOM for critical software, CVE monitoring).",
+    "references": "What is your process if a critical supplier has a security breach?",
+    "minimumEvidence": "Supply Chain Risk Assessment, SBOM files, procurement RFPs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.22",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Monitoring, review, and change management of supplier services",
+    "implementation": "Conduct annual supplier reviews (SLA, incident history, cert validity). Assess impact of supplier changes before approval.",
+    "references": "Auditor asks for evidence of last review for primary cloud provider.",
+    "minimumEvidence": "Annual Supplier Review reports, SLA tracking, change assessments.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.23",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security for use of cloud services [NEW]",
+    "implementation": "Cloud Security Policy, Cloud Register (provider, classification, shared responsibility matrix, certs, data residency, exit plan).",
+    "references": "Who approved cloud service X? Where does data reside? What is exit plan?",
+    "minimumEvidence": "Cloud Services Register, CSPM reports, exit strategy docs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.24",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security incident management planning and preparation",
+    "implementation": "Documented Incident Response Plan (IRP) with P1-P4 tiers, escalation paths, CSIRT roster, and regulatory notification triggers.",
+    "references": "When was the last IRP test? Walk me through P1 escalation.",
+    "minimumEvidence": "Incident Response Plan, CSIRT contact list, annual tabletop exercise report.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.25",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Assessment and decision on information security events",
+    "implementation": "Establish objective triage criteria (Event vs Incident). Assign triage officer per shift. Log all decisions.",
+    "references": "Auditor asks to see last 5 logged security events and classification rationale.",
+    "minimumEvidence": "Event Triage Log, classification criteria document.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.26",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Response to information security incidents",
+    "implementation": "Execute PICERL response model. Document actions with timestamps. Notify regulators within 72h (GDPR) if required.",
+    "references": "Auditor inspects incident response record from past 12 months.",
+    "minimumEvidence": "Incident timeline logs, containment records, DPA notification forms.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.27",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Learning from information security incidents",
+    "implementation": "Conduct formal Post-Incident Review (PIR) within 5 days for P1/P2. Feed findings into risk register and management review.",
+    "references": "Show me the PIR report for your last major incident and resulting actions.",
+    "minimumEvidence": "Post-Incident Review (PIR) reports, 5-Why analysis, updated Risk Register.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.28",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Collection of evidence",
+    "implementation": "Document Evidence Handling Procedure (chain of custody, write-blockers, forensic imaging, immutable log storage).",
+    "references": "How do you prove digital evidence was not tampered with?",
+    "minimumEvidence": "Evidence Handling Procedure, forensic chain of custody logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.29",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security during disruption",
+    "implementation": "Integrate security controls into BCP/DR plans. Ensure security remains active during failover.",
+    "references": "Auditor reviews last DR test report for security control validation.",
+    "minimumEvidence": "BCP/DR Plans containing security specs, DR test report.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.30",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "ICT readiness for business continuity [NEW]",
+    "implementation": "Conduct BIA defining RTO and RPO for critical ICT services. Test recovery against targets at least annually.",
+    "references": "What is RTO/RPO for CRM system? What was actual recovery time in last test?",
+    "minimumEvidence": "Business Impact Analysis (BIA), ICT DR test report with metrics.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.31",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Legal, statutory, regulatory, and contractual requirements",
+    "implementation": "Maintain Legal & Regulatory Register (GDPR, NIS2, PCI DSS, local laws) mapping requirements to owners and compliance proof.",
+    "references": "What laws apply to processing customer PII? Who monitors compliance?",
+    "minimumEvidence": "Legal Register with regular review timestamps.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.32",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Intellectual property rights",
+    "implementation": "Maintain Software Licence Register. Perform annual SAM audit comparing deployed software against owned licences.",
+    "references": "When did you last verify compliance with software licences?",
+    "minimumEvidence": "Software Licence Register, SAM audit report.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.33",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Protection of records",
+    "implementation": "Publish Records Retention Schedule. Implement technical controls preventing early deletion/tampering.",
+    "references": "Produce management review minutes from 3 years ago.",
+    "minimumEvidence": "Records Retention Schedule, immutable archive store configs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.34",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Privacy and protection of PII",
+    "implementation": "Maintain Article 30 RoPA, conduct DPIAs for high-risk processing, appoint DPO, enforce data minimisation & 30d DSAR response.",
+    "references": "Show me your RoPA and the last DPIA conducted.",
+    "minimumEvidence": "Record of Processing Activities (RoPA), DPIA reports, DSAR log.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.35",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Independent review of information security",
+    "implementation": "Conduct annual independent security review (internal audit by independent auditor, external consultant, or pen test).",
+    "references": "Auditor checks independence and qualifications of the reviewer.",
+    "minimumEvidence": "Independent Security Audit Report, reviewer credentials.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.36",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Compliance with policies, rules, and standards",
+    "implementation": "Conduct technical compliance audits (CIS Benchmark scans, vulnerability scans, DLP reports) regularly.",
+    "references": "How do you verify baseline technical configurations are maintained?",
+    "minimumEvidence": "Technical Compliance Audit reports, CIS benchmark scan logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.5.37",
+    "function": "Organisational",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Documented operating procedures",
+    "implementation": "Produce Standard Operating Procedures (SOPs) for IT/security operations (backup, patching, IAM, changes, scanning).",
+    "references": "Auditor selects critical process and checks SOP vs operational records.",
+    "minimumEvidence": "Version-controlled SOP documents, execution records.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.1",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Screening",
+    "implementation": "Tiered background checks (ID, right-to-work, references; DBS/financial for confidential/privileged roles). Re-screen 5 years.",
+    "references": "What screening did your CISO and database administrator undergo?",
+    "minimumEvidence": "Screening Policy, HR candidate background check files.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.2",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Terms and conditions of employment",
+    "implementation": "Contracts must include explicit security clauses (NDA, policy adherence, AUP, incident reporting, asset return).",
+    "references": "Auditor inspects sample employment contract and contractor agreement.",
+    "minimumEvidence": "Employment contract templates, signed worker agreements.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.3",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security awareness, education, and training",
+    "implementation": "Mandatory annual security training (100% completion target), new joiner induction, quarterly phishing simulations.",
+    "references": "Auditor checks annual training completion rates and phishing click metrics.",
+    "minimumEvidence": "LMS completion logs, phishing campaign analytics, induction checklists.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.4",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Disciplinary process",
+    "implementation": "Formal HR disciplinary process for policy violations, applied consistently across all staff levels.",
+    "references": "Has the disciplinary process been applied for a security breach?",
+    "minimumEvidence": "HR Disciplinary Policy, sanitized disciplinary case logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.5",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Responsibilities after termination or change of employment",
+    "implementation": "Leaver process: accounts disabled within 2h/last day, assets returned, privileged access revoked immediately, NDA reminder.",
+    "references": "Auditor spot-checks 3 recent leavers for exact account disable timestamps.",
+    "minimumEvidence": "HR Leaver checklist, active directory disable logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.6",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Confidentiality or non-disclosure agreements",
+    "implementation": "Maintain NDA Register. Enforce signed NDAs prior to granting access to confidential data for staff/third parties.",
+    "references": "Auditor requests NDA Register and checks recent contractor NDA.",
+    "minimumEvidence": "NDA Register, signed NDA documents.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.7",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Remote working",
+    "implementation": "Remote Working Policy: managed devices only, full-disk encryption, enforced VPN/ZTNA, auto-lock <=5m, no public Wi-Fi without VPN.",
+    "references": "Can someone connect from an unmanaged personal laptop? Is VPN enforced?",
+    "minimumEvidence": "Remote Working Policy, MDM compliance rules, VPN configuration logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.6.8",
+    "function": "People",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information security event reporting",
+    "implementation": "Provide effortless reporting tools (email alias, phishing button, Slack channel). Acknowledge within 4h. Track metrics.",
+    "references": "Auditor asks random employee how they report a suspicious email.",
+    "minimumEvidence": "Phishing button telemetry, event reporting procedures, response metrics.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.1",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Physical security perimeter",
+    "implementation": "Define security zones. Secure zones (server room): 30m fire doors, electronic access control, opaque/blocked windows, intrusion alarm.",
+    "references": "Auditor physically inspects server room for locks and perimeter security.",
+    "minimumEvidence": "Physical Security Policy, site layout diagrams, perimeter alarm logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.2",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Physical entry",
+    "implementation": "Electronic badge access, escorted visitor logs, contractor inductions, turnstiles/mantraps. Logs retained 12 months.",
+    "references": "Auditor checks physical access logs for anomalous entries or leaver access.",
+    "minimumEvidence": "Visitor Logbooks, electronic access control logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.3",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Securing offices, rooms, and facilities",
+    "implementation": "Conduct physical security walk-throughs. Enforce locked cabinets for Confidential documents and auto-locking screens.",
+    "references": "Auditor conducts office walk-through looking for clear desk/screen violations.",
+    "minimumEvidence": "Physical Audit checklists, clean desk inspection logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.4",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Physical security monitoring [NEW]",
+    "implementation": "CCTV coverage of secure area entries and server room interior. Retain 30-90 days. Register with DPA. Health checks.",
+    "references": "Are all CCTV cameras operational today? Show me last health check.",
+    "minimumEvidence": "CCTV topology map, retention policy, camera health check logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.5",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Protecting against physical and environmental threats",
+    "implementation": "Physical Risk Assessment. Implement FM200/clean agent fire suppression, raised floors, dual UPS, HVAC redundancy.",
+    "references": "Auditor checks maintenance contracts and test logs for fire suppression and UPS.",
+    "minimumEvidence": "Environmental Risk Assessment, UPS/HVAC/Fire maintenance logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.6",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Working in secure areas",
+    "implementation": "Secure area rules: no solo working, escorted visitors, no cameras/recording, clean-up before leaving, monthly log review.",
+    "references": "Auditor checks access logs to see last non-IT visitor in server room.",
+    "minimumEvidence": "Secure Area SOP, visitor escort log.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.7",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Clear desk and clear screen",
+    "implementation": "Technical screen lock (<=5 min timeout via MDM). Clear desk policy for physical confidential documents, paper shredders.",
+    "references": "Auditor walks office after hours inspecting desks and monitors.",
+    "minimumEvidence": "GPO/MDM screen lock policy, unannounced spot-check audit logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.8",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Equipment siting and protection",
+    "implementation": "Server room env monitoring (18-27°C, 40-60% humidity). Hot/cold aisle layout. Monitors angled away from public view.",
+    "references": "Auditor inspects environmental monitoring dashboard and monitor placement.",
+    "minimumEvidence": "Environmental sensor logs, data centre layout diagram.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.9",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Security of assets off-premises",
+    "implementation": "Mandatory full-disk encryption, encrypted USBs, privacy screens in public, loss reporting <1h, remote wipe enabled.",
+    "references": "What happens if a laptop is stolen at an airport? How fast is it wiped?",
+    "minimumEvidence": "MDM Encryption compliance report, stolen device reporting SOP.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.10",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Storage media",
+    "implementation": "Removable media register. Encrypt Confidential+ data on media. Sanitization/shredding with Certificate of Destruction (CoD).",
+    "references": "Show me Certificates of Destruction for recently decommissioned media.",
+    "minimumEvidence": "Media Handling SOP, Certificate of Destruction (CoD) records.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.11",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Supporting utilities",
+    "implementation": "UPS load testing every 6 months, annual generator failover test, HVAC PM every 6 months, dual power feeds.",
+    "references": "Auditor asks for last UPS load test report and maintenance logs.",
+    "minimumEvidence": "Utility maintenance logs, UPS test results, dual-feed SLA.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.12",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Cabling security",
+    "implementation": "Network cables in conduits, labelled patch panels, locked comms cabinets, power/data separation, disable unused ports.",
+    "references": "Auditor checks comms room cable tidiness and unmapped active port counts.",
+    "minimumEvidence": "Network cabling schematics, port audit logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.13",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Equipment maintenance",
+    "implementation": "Maintenance log for critical hardware. Escort external technicians. Wipe storage before off-site repair.",
+    "references": "Auditor inspects maintenance log for server room equipment.",
+    "minimumEvidence": "Hardware Maintenance Log, pre-repair data wipe logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.7.14",
+    "function": "Physical",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Secure disposal or reuse of equipment",
+    "implementation": "Data sanitization per NIST 800-88 (clear/purge/destroy). Obtain signed Certificate of Destruction (CoD) retained 3 years.",
+    "references": "Auditor checks disposal log and matching CoD certificates.",
+    "minimumEvidence": "Disposal Register, NIST 800-88 wiping logs, vendor CoD docs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.1",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "User endpoint devices",
+    "implementation": "MDM enforcement: BitLocker/FileVault, EDR agent, patch SLA, 5m screen lock, no local admin rights, conditional access.",
+    "references": "Auditor reviews MDM compliance dashboard for non-compliant devices.",
+    "minimumEvidence": "MDM Compliance Dashboard, Endpoint Configuration baseline.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.2",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Privileged access rights",
+    "implementation": "Least privilege, Just-In-Time (JIT) PAM access, separate admin accounts, quarterly reviews, break-glass account monitoring.",
+    "references": "Show me who has Domain Admin rights and when they were last used.",
+    "minimumEvidence": "PAM access logs, quarterly privileged access review sign-offs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.3",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information access restriction",
+    "implementation": "RBAC matrix mapped to business roles. Block production access for dev roles. Toxic combination review (maker/checker).",
+    "references": "Auditor checks permission matrix for segregation of toxic roles.",
+    "minimumEvidence": "RBAC Matrix, application authorization config screenshots.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.4",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Access to source code",
+    "implementation": "Git repos with access control, branch protection (2 reviewers), secret scanning (pre-commit hooks), read/write separation.",
+    "references": "Show me who has write access to production repos. Has a secret been committed?",
+    "minimumEvidence": "Git branch protection settings, secret scanner alerts.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.5",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Secure authentication",
+    "implementation": "NIST 800-63B standard: 12+ chars, breached-pass screening, lockout after 10 attempts, mandatory MFA (FIDO2 preferred for admin).",
+    "references": "Auditor inspects technical IdP settings for password and MFA rules.",
+    "minimumEvidence": "IdP Authentication Policy config, MFA enrollment report.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.6",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Capacity management",
+    "implementation": "Monitor CPU/RAM/Disk/Network. Alert at 70%, remediate at 85%. 12-month capacity forecasting. Monitor cloud spend spikes.",
+    "references": "How do you know 90 days in advance that storage needs expansion?",
+    "minimumEvidence": "Capacity Monitoring Dashboard, quarterly capacity forecast reports.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.7",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Protection against malware",
+    "implementation": "EDR on all endpoints, email sandbox/anti-phishing gateway, web proxy filtering, app allowlisting on servers.",
+    "references": "Auditor requests EDR coverage report and details on last malware threat.",
+    "minimumEvidence": "EDR Central Console report, email gateway quarantine logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.8",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Management of technical vulnerabilities",
+    "implementation": "Weekly external / monthly internal authenticated vulnerability scans. SLAs: Critical 24-72h, High 7d, Med 30d. Monitor CISA KEV.",
+    "references": "How many critical vulnerabilities are open right now and for how long?",
+    "minimumEvidence": "Vulnerability Scan reports, remediation tracking register, risk sign-offs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.9",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Configuration management [NEW]",
+    "implementation": "Harden systems using CIS Benchmarks / STIGs. Deploy via automation (Ansible/Terraform). Detect drift via CSPM.",
+    "references": "What is your configuration baseline for Windows Server / Cloud?",
+    "minimumEvidence": "CIS Benchmark compliance reports, Ansible/Terraform baseline scripts.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.10",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information deletion [NEW]",
+    "implementation": "Automated deletion at end of retention. Purge backup sets. Certified cloud object deletion. Quarterly audit report.",
+    "references": "If a customer requests erasure under GDPR, how do you purge backup sets?",
+    "minimumEvidence": "Data Deletion SOP, automated purge job logs, deletion audit report.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.11",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Data masking [NEW]",
+    "implementation": "Mandatory data masking/anonymization/tokenization in dev/test environments. No raw production PII in non-prod.",
+    "references": "Show me customer data records in your development database.",
+    "minimumEvidence": "Data Masking SOP, anonymization script configs, dev database export logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.12",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Data leakage prevention [NEW]",
+    "implementation": "DLP at Endpoint, Network/Proxy, and Cloud (CASB). Block unauthorized USB copies, email exfiltration, or unapproved cloud uploads.",
+    "references": "How would you know if an employee emailed customer PII to personal Gmail?",
+    "minimumEvidence": "DLP Policy configuration, DLP incident triage log.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.13",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Information backup",
+    "implementation": "3-2-1-1 backup strategy (1 offline/immutable). Daily backup, quarterly test restoration to isolated environment with metrics.",
+    "references": "When was the last restoration test? Did it meet target RPO/RTO?",
+    "minimumEvidence": "Backup schedule configs, quarterly restoration test log with timings.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.14",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Redundancy of information processing facilities",
+    "implementation": "Multi-AZ/region cloud design, active-active or active-passive failover, load balancing, annual failover simulation test.",
+    "references": "Show me failover architecture and the results of the last failover test.",
+    "minimumEvidence": "High Availability architecture diagram, failover test report.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.15",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Logging",
+    "implementation": "Centralized logging (auth, admin actions, data access, firewalls). Retain 12m online / 24m archive. Write-once/immutable storage.",
+    "references": "Can you pull all auth logs for user X for the past 90 days right now?",
+    "minimumEvidence": "Log Management Policy, SIEM ingestion coverage report, log integrity proof.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.16",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Monitoring activities",
+    "implementation": "SIEM (Sentinel/Splunk) real-time detection rules (brute force, impossible travel, mass download). Defined alert response SLAs.",
+    "references": "Show me the last 3 SIEM alerts and their triage resolution notes.",
+    "minimumEvidence": "SIEM alert dashboard, incident triage queue, monthly rule tuning logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.17",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Clock synchronisation",
+    "implementation": "NTP synchronization against trusted source (pool.ntp.org). Max drift <=1s (<=0.1s crypto). Alert on drift >5s.",
+    "references": "Can you correlate logs across firewall, SIEM, and EDR with timestamp confidence?",
+    "minimumEvidence": "NTP server configuration, NTP drift monitoring alerts.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.18",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Use of privileged utility programs",
+    "implementation": "Restricted list of admin utilities (PsExec, Nmap, Sysinternals). Block execution via app control; log all executions via SIEM.",
+    "references": "Is PowerShell remoting enabled across servers? How is its use monitored?",
+    "minimumEvidence": "AppControl allowlist policy, SIEM Event ID 4688 logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.19",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Installation of software on operational systems",
+    "implementation": "Application allowlisting (AppLocker/WDAC) on servers. Standard users cannot install endpoint software. CASB for Shadow IT.",
+    "references": "Can standard users install software or browser extensions on laptops?",
+    "minimumEvidence": "AppLocker policy file, IT software deployment log, CASB Shadow IT report.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.20",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Networks security",
+    "implementation": "Network diagram, stateful firewalls (default-deny), IDS/IPS, egress filtering, NAC for network access, annual rule review.",
+    "references": "Auditor inspects network architecture map and firewall rule review log.",
+    "minimumEvidence": "Network Topology diagram, firewall rule review records, NAC logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.21",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Security of network services",
+    "implementation": "SLA security clauses for ISP/SD-WAN providers (DDoS mitigation, uptime, breach notice). Annual failover testing.",
+    "references": "What DDoS mitigation commitments exist in your ISP contract?",
+    "minimumEvidence": "Network Service Contracts, ISP SLA reports, WAN failover test log.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.22",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Segregation of networks",
+    "implementation": "VLANs with firewall routing (Users, Servers, Management, Guest, BYOD, IoT). Strict inter-VLAN ACLs.",
+    "references": "Show me firewall rules between User VLAN and Production Server VLAN.",
+    "minimumEvidence": "VLAN architecture map, firewall inter-VLAN routing rules.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.23",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Web filtering",
+    "implementation": "Secure Web Gateway (SWG) / DNS filtering blocking malware, phishing, proxy, and unauthorized file sharing for remote & office.",
+    "references": "What happens if a user clicks a malicious link? Is remote traffic filtered?",
+    "minimumEvidence": "SWG URL filtering policy, web proxy block logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.24",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Use of cryptography",
+    "implementation": "AES-256, RSA-2048+, SHA-256+, TLS 1.2/1.3. Disable legacy SSL/TLS/DES. KMS key management with annual rotation.",
+    "references": "Are TLS 1.0/1.1 disabled on external portals? Show me key management SOP.",
+    "minimumEvidence": "Cryptography Policy, SSL Labs / testssl.sh scan report, KMS rotation logs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.25",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Secure development life cycle",
+    "implementation": "Integrate security in SDLC: Threat model -> SAST -> DAST -> SCA -> Container Scan -> Pen Test before release.",
+    "references": "Auditor picks a recent release and checks security gate pass records.",
+    "minimumEvidence": "SDLC Security Policy, CI/CD security pipeline build logs, security sign-offs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.26",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Application security requirements",
+    "implementation": "Security Requirements baseline based on OWASP ASVS Level 2 for all bespoke software developments or software procurements.",
+    "references": "Show me security requirements specified for the customer portal.",
+    "minimumEvidence": "Application Security Requirements template, completed project specs.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.27",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Secure system architecture and engineering principles",
+    "implementation": "Principles: Least privilege, defence-in-depth, fail secure, zero trust, secure defaults. Document trade-offs in ADRs.",
+    "references": "Show me Architecture Decision Records (ADRs) for major systems.",
+    "minimumEvidence": "Architecture Decision Records (ADRs), system design blueprints.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.28",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Secure coding [NEW]",
+    "implementation": "OWASP Top 10 standards, SAST/SCA in CI pipeline, mandatory peer code review, pre-commit secret scanning, parameterised queries.",
+    "references": "Show me a PR code review catching a security bug or secret scanner setup.",
+    "minimumEvidence": "Secure Coding Standard, PR review logs, GitHub/GitLab SAST reports.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.29",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Security testing in development and acceptance",
+    "implementation": "Automated SAST/DAST/SCA in pipeline + annual third-party penetration test (CREST/CHECK). Criticals block release.",
+    "references": "Show me the latest penetration test report and remediation tracking.",
+    "minimumEvidence": "Penetration Test Report, DAST scan logs, vulnerability remediation tracker.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.30",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Outsourced development",
+    "implementation": "Contracts require OWASP ASVS L2, code scanning rights, SBOM delivery, vendor SDLC review before engagement.",
+    "references": "What is your security review process when external developers deliver code?",
+    "minimumEvidence": "Third-party Dev Contract, delivered SBOM files, code audit report.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.31",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Separation of development, test, and production environments",
+    "implementation": "Strict environment segregation. Separate credentials, no dev-to-prod direct connections, no real prod data in dev.",
+    "references": "Can a developer SSH into production? Is prod data in dev DB?",
+    "minimumEvidence": "Network ACL rules, deployment pipeline config, IAM access lists.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.32",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Change management",
+    "implementation": "Formal Change Requests (CR) with risk assessment, rollback plan, approval, and CAB review. Alert on unauthorized changes.",
+    "references": "Auditor selects recent production deployment and inspects CR record.",
+    "minimumEvidence": "Change Management Tickets (Jira/ServiceNow), CAB meeting minutes.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.33",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Test information",
+    "implementation": "Use synthetic or masked production data for testing. Prohibit raw production data without explicit CISO approval.",
+    "references": "What data is stored in the development database?",
+    "minimumEvidence": "Test Data Management Policy, synthetic data generator scripts.",
+    "evidence": []
+  },
+  {
+    "id": "A.8.34",
+    "function": "Technological",
+    "category": "ISO 27001 Annex A Controls",
+    "subcategory": "Protection of information systems during audit testing [NEW]",
+    "implementation": "Rules of Engagement (ROE) for audit tools, read-only accounts, scope agreement, exclusion of fragile systems, SIEM logging.",
+    "references": "Show me written authorization and ROE for the last penetration test.",
+    "minimumEvidence": "Audit Rules of Engagement (ROE), signed penetration test agreement.",
+    "evidence": []
+  }
+]

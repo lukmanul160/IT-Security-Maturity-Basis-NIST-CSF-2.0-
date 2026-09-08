@@ -11,7 +11,7 @@ const poolConfig = database.url
       password: database.password,
     };
 
-if (database.ssl) poolConfig.ssl = { rejectUnauthorized: false };
+if (database.ssl) poolConfig.ssl = { rejectUnauthorized: database.sslRejectUnauthorized, ...(database.sslCa ? { ca: database.sslCa } : {}) };
 
 const pool = new Pool({ ...poolConfig, max: 10, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 });
 pool.on('error', error => console.error('Unexpected PostgreSQL pool error:', error.message));

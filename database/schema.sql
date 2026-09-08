@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS personnel_certifications (
   personnel_name TEXT NOT NULL,
   employee_id TEXT NOT NULL DEFAULT '',
   personnel_role TEXT NOT NULL DEFAULT '',
+  supervisor_name TEXT NOT NULL DEFAULT '',
   certification_name TEXT NOT NULL,
   issuer TEXT NOT NULL DEFAULT '',
   reference_url TEXT NOT NULL DEFAULT '',
@@ -130,6 +131,20 @@ CREATE TABLE IF NOT EXISTS personnel_certifications (
 
 CREATE INDEX IF NOT EXISTS personnel_certifications_name_idx
   ON personnel_certifications (personnel_name, certification_name);
+
+CREATE TABLE IF NOT EXISTS organization_personnel (
+  id BIGSERIAL PRIMARY KEY,
+  personnel_name TEXT NOT NULL,
+  employee_id TEXT NOT NULL DEFAULT '',
+  personnel_role TEXT NOT NULL DEFAULT '',
+  supervisor_name TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT organization_personnel_name_not_blank CHECK (btrim(personnel_name) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS organization_personnel_name_idx
+  ON organization_personnel (personnel_name, employee_id);
 
 CREATE TABLE IF NOT EXISTS certification_roadmap_catalog (
   id BIGSERIAL PRIMARY KEY,
@@ -314,43 +329,31 @@ ALTER TABLE evidence_files
 CREATE INDEX IF NOT EXISTS evidence_files_name_idx
   ON evidence_files (name);
 
-CREATE TABLE IF NOT EXISTS csf_controls (
-  id TEXT PRIMARY KEY,
-  function TEXT NOT NULL,
-  category TEXT NOT NULL,
-  subcategory TEXT NOT NULL,
-  implementation TEXT NOT NULL DEFAULT '',
-  "references" TEXT NOT NULL DEFAULT '',
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS csf_controls_function_idx
-  ON csf_controls (function);
-
-CREATE TABLE IF NOT EXISTS privacy_controls (
-  id TEXT PRIMARY KEY,
-  function TEXT NOT NULL,
-  category TEXT NOT NULL,
-  subcategory TEXT NOT NULL,
-  implementation TEXT NOT NULL DEFAULT '',
-  "references" TEXT NOT NULL DEFAULT '',
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS privacy_controls_function_idx
-  ON privacy_controls (function);
-
 CREATE INDEX IF NOT EXISTS assessment_state_updated_idx
   ON assessment_state (updated_at DESC);
 
+CREATE TABLE IF NOT EXISTS audit_events (
+  id BIGSERIAL PRIMARY KEY,
+  request_id TEXT NOT NULL,
+  actor_username TEXT NOT NULL DEFAULT '',
+  actor_role TEXT NOT NULL DEFAULT '',
+  event_type TEXT NOT NULL,
+  method TEXT NOT NULL,
+  path TEXT NOT NULL,
+  status_code INTEGER NOT NULL DEFAULT 200,
+  ip_address TEXT NOT NULL DEFAULT '',
+  user_agent TEXT NOT NULL DEFAULT '',
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS audit_events_created_idx ON audit_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS audit_events_actor_idx ON audit_events (actor_username, created_at DESC);
+CREATE INDEX IF NOT EXISTS audit_events_request_idx ON audit_events (request_id);
+
 CREATE INDEX IF NOT EXISTS evidence_files_updated_idx
   ON evidence_files (updated_at DESC);
-
-CREATE INDEX IF NOT EXISTS csf_controls_category_idx
-  ON csf_controls (category);
-
-CREATE INDEX IF NOT EXISTS privacy_controls_category_idx
-  ON privacy_controls (category);
 
 CREATE TABLE IF NOT EXISTS frameworks (
   id TEXT PRIMARY KEY,
@@ -373,6 +376,9 @@ CREATE TABLE IF NOT EXISTS controls (
   subcategory TEXT NOT NULL,
   implementation TEXT NOT NULL DEFAULT '',
   "references" TEXT NOT NULL DEFAULT '',
+  minimum_evidence TEXT NOT NULL DEFAULT '',
+  evidence JSONB NOT NULL DEFAULT '[]'::jsonb,
+  applicability TEXT NOT NULL DEFAULT 'Applicable',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT controls_framework_code_unique UNIQUE (framework_id, code),
@@ -388,21 +394,80 @@ CREATE INDEX IF NOT EXISTS controls_function_idx
 CREATE INDEX IF NOT EXISTS controls_category_idx
   ON controls (framework_id, category);
 
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS minimum_evidence TEXT NOT NULL DEFAULT '';
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS evidence JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS applicability TEXT NOT NULL DEFAULT 'Applicable';
+
 INSERT INTO frameworks (id, name, version, description)
 VALUES
   ('csf', 'NIST Cybersecurity Framework', '2.0', 'NIST CSF 2.0 controls'),
   ('privacy', 'NIST Privacy Framework', '1.0', 'NIST Privacy Framework controls')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references")
-SELECT 'csf', id, function, category, subcategory, implementation, "references"
-FROM csf_controls
-ON CONFLICT (framework_id, code) DO NOTHING;
+CREATE TABLE IF NOT EXISTS framework_category_targets (
+  framework_id TEXT NOT NULL REFERENCES frameworks (id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  target_score NUMERIC(3,1) NOT NULL DEFAULT 3.0 CHECK (target_score >= 0 AND target_score <= 5),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (framework_id, category),
+  CONSTRAINT framework_category_targets_category_not_blank CHECK (btrim(category) <> '')
+);
 
-INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references")
-SELECT 'privacy', id, function, category, subcategory, implementation, "references"
-FROM privacy_controls
-ON CONFLICT (framework_id, code) DO NOTHING;
+CREATE INDEX IF NOT EXISTS framework_category_targets_framework_idx
+  ON framework_category_targets (framework_id, category);
+
+CREATE TABLE IF NOT EXISTS information_security_objectives (
+  id BIGSERIAL PRIMARY KEY,
+  objective_year INTEGER NOT NULL CHECK (objective_year BETWEEN 2000 AND 2100),
+  objective TEXT NOT NULL,
+  indicator TEXT NOT NULL DEFAULT '',
+  baseline TEXT NOT NULL DEFAULT '',
+  target_value TEXT NOT NULL DEFAULT '',
+  owner TEXT NOT NULL DEFAULT '',
+  evaluation_frequency TEXT NOT NULL DEFAULT 'monthly' CHECK (evaluation_frequency IN ('monthly', 'quarterly', 'semester', 'annual')),
+  period_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
+  monthly_status TEXT NOT NULL DEFAULT 'Not started',
+  quarterly_status TEXT NOT NULL DEFAULT 'Not started',
+  semester_status TEXT NOT NULL DEFAULT 'Not started',
+  annual_status TEXT NOT NULL DEFAULT 'Not started',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT information_security_objective_text_not_blank CHECK (btrim(objective) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS information_security_objectives_year_idx
+  ON information_security_objectives (objective_year, updated_at DESC);
+
+ALTER TABLE information_security_objectives
+  ADD COLUMN IF NOT EXISTS evaluation_frequency TEXT NOT NULL DEFAULT 'monthly';
+ALTER TABLE information_security_objectives
+  ADD COLUMN IF NOT EXISTS period_targets JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+DO $$
+BEGIN
+  IF to_regclass('csf_controls') IS NOT NULL THEN
+    INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references")
+    SELECT 'csf', id, function, category, subcategory, implementation, "references"
+    FROM csf_controls
+    ON CONFLICT (framework_id, code) DO NOTHING;
+    DROP TABLE csf_controls;
+  END IF;
+  IF to_regclass('privacy_controls') IS NOT NULL THEN
+    INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references")
+    SELECT 'privacy', id, function, category, subcategory, implementation, "references"
+    FROM privacy_controls
+    ON CONFLICT (framework_id, code) DO NOTHING;
+    DROP TABLE privacy_controls;
+  END IF;
+END $$;
+
+INSERT INTO framework_category_targets (framework_id, category, target_score)
+SELECT framework_id, category, 3.0
+FROM controls
+WHERE framework_id IN ('csf', 'privacy')
+GROUP BY framework_id, category
+ON CONFLICT (framework_id, category) DO NOTHING;
 
 DO $$
 BEGIN
@@ -414,12 +479,6 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'evidence_files_name_not_blank') THEN
     ALTER TABLE evidence_files ADD CONSTRAINT evidence_files_name_not_blank CHECK (btrim(name) <> '');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'csf_controls_id_not_blank') THEN
-    ALTER TABLE csf_controls ADD CONSTRAINT csf_controls_id_not_blank CHECK (btrim(id) <> '');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'privacy_controls_id_not_blank') THEN
-    ALTER TABLE privacy_controls ADD CONSTRAINT privacy_controls_id_not_blank CHECK (btrim(id) <> '');
   END IF;
 END $$;
 

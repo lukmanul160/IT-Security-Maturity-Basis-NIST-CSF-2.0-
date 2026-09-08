@@ -1,0 +1,252 @@
+[
+  {
+    "id": "4.1",
+    "function": "Clause 4",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Understand the organisation and its context",
+    "implementation": "Produce a documented Context Analysis (PESTLE/SWOT) identifying internal factors (culture, governance) and external factors (regulatory, market, threat environment).",
+    "references": "Show me this document and confirm it was reviewed in the last 12 months.",
+    "minimumEvidence": "Signed context document with review date. / Internal & External Issue Register",
+    "evidence": []
+  },
+  {
+    "id": "4.2",
+    "function": "Clause 4",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Understand the needs of interested parties",
+    "implementation": "Produce an Interested Party Register listing stakeholders (customers, regulators, staff, suppliers) and their requirements (GDPR, SLAs, audit rights).",
+    "references": "Show me your interested party register and link each requirement to a control/procedure.",
+    "minimumEvidence": "Interested Party Register mapped to controls/SoA. / Needs & Expectations Register",
+    "evidence": []
+  },
+  {
+    "id": "4.3",
+    "function": "Clause 4",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Determine the scope of the ISMS",
+    "implementation": "Produce a written ISMS Scope Statement defining in-scope business units, locations, assets, and explicit justifications for any exclusions.",
+    "references": "Is this scope realistic? Are any high-risk areas excluded without justification?",
+    "minimumEvidence": "Approved ISMS Scope Statement document.",
+    "evidence": []
+  },
+  {
+    "id": "4.4",
+    "function": "Clause 4",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Establish and maintain the ISMS",
+    "implementation": "Demonstrate all ISMS processes are interconnected (risk assessment -> SoA -> controls -> monitoring -> review).",
+    "references": "Auditor checks gaps between documented processes and actual operational practice.",
+    "minimumEvidence": "ISMS Process Map / Framework Document.",
+    "evidence": []
+  },
+  {
+    "id": "5.1",
+    "function": "Clause 5",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Leadership and commitment",
+    "implementation": "Top management engagement, resource provisioning, policy approval, and strategic alignment.",
+    "references": "Auditor interviews top management on ISMS objectives and recent audit findings.",
+    "minimumEvidence": "Management Review minutes, approved ISMS budget, signed ISMS policy, board agenda items.",
+    "evidence": []
+  },
+  {
+    "id": "5.2",
+    "function": "Clause 5",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Information security policy",
+    "implementation": "Top-level policy stating CIA commitment, regulatory compliance, risk management, and continual improvement. Must be communicated and annually reviewed.",
+    "references": "Auditor checks version control, distribution records, and tests staff awareness.",
+    "minimumEvidence": "Signed security policy, version history, staff distribution log, onboarding records.",
+    "evidence": []
+  },
+  {
+    "id": "5.3",
+    "function": "Clause 5",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Organisational roles, responsibilities, and authorities",
+    "implementation": "Assign ISMS owner, CISO, DPO, asset owners, process owners, and incident response team roles.",
+    "references": "Auditor asks key role holders to explain their specific ISMS responsibilities.",
+    "minimumEvidence": "Documented RACI matrix, role definition documents, appended job descriptions.",
+    "evidence": []
+  },
+  {
+    "id": "6.1.1",
+    "function": "Clause 6",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Actions to address risks and opportunities (General)",
+    "implementation": "Produce a Risk & Opportunity Register for ISMS management (e.g., key role vacant, cloud migration).",
+    "references": "Auditor checks that this register exists, is maintained, and has mitigation actions.",
+    "minimumEvidence": "ISMS Risk & Opportunity Register with target dates.",
+    "evidence": []
+  },
+  {
+    "id": "6.1.2",
+    "function": "Clause 6",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Information security risk assessment",
+    "implementation": "Establish repeatable risk assessment methodology (likelihood/impact scales, acceptance threshold) and perform asset-based risk assessment.",
+    "references": "Auditor samples 5-10 risks and verifies the methodology was applied correctly.",
+    "minimumEvidence": "Risk Assessment Methodology doc, Risk Register with inherent/residual scores and sign-offs.",
+    "evidence": []
+  },
+  {
+    "id": "6.1.3",
+    "function": "Clause 6",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Information security risk treatment",
+    "implementation": "Formulate Risk Treatment Plan (RTP) and Statement of Applicability (SoA) covering all 93 Annex A controls.",
+    "references": "Auditor checks every applicable control in SoA has a corresponding implementation record.",
+    "minimumEvidence": "Signed Risk Treatment Plan (RTP), Statement of Applicability (SoA) signed by risk owners.",
+    "evidence": []
+  },
+  {
+    "id": "6.2",
+    "function": "Clause 6",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Information security objectives",
+    "implementation": "Establish SMART security objectives with clear owners, metrics, baselines, and targets.",
+    "references": "How do you measure this? What is the current result?",
+    "minimumEvidence": "Documented Security Objectives tracker with baseline and target metrics.",
+    "evidence": []
+  },
+  {
+    "id": "6.3",
+    "function": "Clause 6",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Planning of changes",
+    "implementation": "Formal change management process for structural/ISMS process changes (scope, standards, org updates).",
+    "references": "Auditor asks about a recent major change and verifies it followed formal ISMS change control.",
+    "minimumEvidence": "ISMS Change Request forms, impact assessments, approval records.",
+    "evidence": []
+  },
+  {
+    "id": "7.1",
+    "function": "Clause 7",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Resources",
+    "implementation": "Determine and provide necessary resources (headcount, tooling, budget, external support).",
+    "references": "Was the ISMS budget approved? What was spent last year?",
+    "minimumEvidence": "Approved ISMS budget line, headcount plan, tooling procurement records, consultant contracts.",
+    "evidence": []
+  },
+  {
+    "id": "7.2",
+    "function": "Clause 7",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Competence",
+    "implementation": "Define required competencies for ISMS roles and ensure personnel possess qualifications/training.",
+    "references": "Auditor asks for competence records for key ISMS roles.",
+    "minimumEvidence": "Competence Matrix, training certificates (CISM, Lead Implementer), CVs, personal development plans.",
+    "evidence": []
+  },
+  {
+    "id": "7.3",
+    "function": "Clause 7",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Awareness",
+    "implementation": "Ensure all staff understand policy, their role, and consequences of non-compliance.",
+    "references": "Auditor spot-checks 3-5 staff (including non-IT) on security policy knowledge.",
+    "minimumEvidence": "Annual training completion logs (100%), phishing simulation results, onboarding induction records.",
+    "evidence": []
+  },
+  {
+    "id": "7.4",
+    "function": "Clause 7",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Communication",
+    "implementation": "Establish internal and external communications plan (what, when, with whom, how).",
+    "references": "Show evidence of the last security communication sent to all staff.",
+    "minimumEvidence": "Communications Plan, email broadcast records, intranet post logs, meeting minutes.",
+    "evidence": []
+  },
+  {
+    "id": "7.5",
+    "function": "Clause 7",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Documented information",
+    "implementation": "Control ISMS documentation (creation, review, approval, distribution, retention, access).",
+    "references": "Auditor verifies Master Document Register matches documents actually in active use.",
+    "minimumEvidence": "Document Register / Master List with version history, ownership, and defined retention periods.",
+    "evidence": []
+  },
+  {
+    "id": "8.1",
+    "function": "Clause 8",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Operational planning and control",
+    "implementation": "Execute processes required to meet information security requirements and risk treatments.",
+    "references": "Auditor traces sample operational events (access request, scan, incident) through documented process.",
+    "minimumEvidence": "Operational logs, process execution records, outsourced process oversight logs.",
+    "evidence": []
+  },
+  {
+    "id": "8.2",
+    "function": "Clause 8",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Information security risk assessment",
+    "implementation": "Conduct formal risk assessments at planned intervals or following major changes.",
+    "references": "When was the last risk assessment? What changed vs. previous assessment?",
+    "minimumEvidence": "Updated Risk Assessment reports with timestamps, scope, and management sign-off.",
+    "evidence": []
+  },
+  {
+    "id": "8.3",
+    "function": "Clause 8",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Information security risk treatment",
+    "implementation": "Implement the Risk Treatment Plan and collect operational proof for all applicable SoA controls.",
+    "references": "Auditor picks 10 SoA controls and requests live implementation evidence.",
+    "minimumEvidence": "Configuration screenshots, policy docs, pen test reports, execution logs.",
+    "evidence": []
+  },
+  {
+    "id": "9.1",
+    "function": "Clause 9",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Monitoring, measurement, analysis, and evaluation",
+    "implementation": "Establish KPIs and produce security performance reports at least annually / quarterly.",
+    "references": "Auditor asks for the most recent metrics report and what management decisions it informed.",
+    "minimumEvidence": "Security KPI / Metrics Report (MFA %, patch speed, phishing click %, incident count).",
+    "evidence": []
+  },
+  {
+    "id": "9.2",
+    "function": "Clause 9",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Internal audit",
+    "implementation": "Conduct internal audits at planned intervals covering all clauses and SoA controls over 2-3 years.",
+    "references": "Are internal auditors independent and competent? Are nonconformities tracked to closure?",
+    "minimumEvidence": "Annual Internal Audit Programme, Audit Reports, Corrective Action Log.",
+    "evidence": []
+  },
+  {
+    "id": "9.3",
+    "function": "Clause 9",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Management review",
+    "implementation": "Top management reviews ISMS performance at least annually against mandatory inputs.",
+    "references": "Auditor reviews last 2 Management Review minutes to ensure all mandatory standard inputs were addressed.",
+    "minimumEvidence": "Management Review Minutes with decisions, resource allocations, and assigned actions.",
+    "evidence": []
+  },
+  {
+    "id": "10.1",
+    "function": "Clause 10",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Continual improvement",
+    "implementation": "Continually improve the suitability, adequacy, and effectiveness of the ISMS.",
+    "references": "Show me an improvement made in the last 12 months and how you verified it was effective.",
+    "minimumEvidence": "Continual Improvement Register, effectiveness verification logs.",
+    "evidence": []
+  },
+  {
+    "id": "10.2",
+    "function": "Clause 10",
+    "category": "ISO 27001 Clauses 4-10",
+    "subcategory": "Nonconformity and corrective action",
+    "implementation": "Re-evaluate nonconformities, perform root cause analysis, execute corrective action, and verify effectiveness.",
+    "references": "Auditor checks closure evidence and root cause analysis for prior findings.",
+    "minimumEvidence": "Nonconformity and Corrective Action Log with root cause analysis (5-Whys) and follow-up reviews.",
+    "evidence": []
+  }
+]

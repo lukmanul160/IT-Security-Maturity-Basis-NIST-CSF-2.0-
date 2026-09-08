@@ -14,8 +14,13 @@ CREATE TABLE IF NOT EXISTS app_users (
 ALTER TABLE app_users
   ADD COLUMN IF NOT EXISTS full_name TEXT NOT NULL DEFAULT '';
 
-INSERT INTO app_users (username, password_hash, role)
-VALUES
-  ('admin', '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a', 'admin'),
-  ('user', '$2b$12$NthjzYiK6jgmWKoAc5IWwuQWvVC8lal8DomHNGdftAbsS8WmKXQGS', 'user')
-ON CONFLICT (username) DO NOTHING;
+DO $$
+BEGIN
+  IF current_setting('app.seed_default_users', true) = 'true' THEN
+    INSERT INTO app_users (username, password_hash, role)
+    VALUES
+      ('admin', '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a', 'admin'),
+      ('user', '$2b$12$NthjzYiK6jgmWKoAc5IWwuQWvVC8lal8DomHNGdftAbsS8WmKXQGS', 'user')
+    ON CONFLICT (username) DO NOTHING;
+  END IF;
+END $$;

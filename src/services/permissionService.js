@@ -1,7 +1,7 @@
 const { pool } = require('../config/database');
 
 const permissions = [
-  ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'],
+  ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'], ['iso27001', 'ISO 27001:2022'], ['iso27001-soa', 'SOA (Statement of Applicability)'],
   ['assessment', 'CSF assessment'], ['privacy-assessment', 'Privacy assessment'],
   ['risk-acceptance', 'Risk Acceptance'], ['risk-management', 'Risk Management'], ['policy-register', 'Policy Register'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'],
   ['files', 'Uploaded files'], ['account', 'Account Management']
@@ -11,6 +11,8 @@ const pageActionMatrix = {
   framework: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
   csf: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
   privacy: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
+  iso27001: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
+  'iso27001-soa': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
   assessment: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
   'privacy-assessment': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
   'risk-acceptance': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
@@ -22,15 +24,15 @@ const pageActionMatrix = {
   'tprm-questionnaire': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
   'questionnaire-templates': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin', 'editor'] },
   'tprm-register': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
-  files: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin', 'editor'] },
+  files: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor', 'user'], update: ['admin', 'editor'], delete: ['admin', 'editor'] },
   account: { read: ['admin'], create: ['admin'], update: ['admin'], delete: ['admin'] }
 };
 const defaults = {
   admin: permissions.map(([key]) => key),
-  approver: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files'],
-  editor: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account'],
-  viewer: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'],
-  user: ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']
+  approver: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files'],
+  editor: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account'],
+  viewer: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'],
+  user: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']
 };
 
 function normalizeAction(action) {
@@ -56,9 +58,10 @@ async function ensureStore() {
   await pool.query(`ALTER TABLE role_permissions DROP CONSTRAINT IF EXISTS role_permissions_role_check`);
   await pool.query(`ALTER TABLE role_permissions ADD CONSTRAINT role_permissions_role_check CHECK (role IN ('admin', 'approver', 'editor', 'viewer', 'user'))`);
   for (const role of validRoles) for (const [key] of permissions) await pool.query('INSERT INTO role_permissions (role, permission_key, allowed) VALUES ($1, $2, $3) ON CONFLICT (role, permission_key) DO NOTHING', [role, key, defaults[role].includes(key)]);
+  await pool.query(`UPDATE role_permissions AS iso SET allowed = csf.allowed FROM role_permissions AS csf WHERE iso.role = csf.role AND iso.permission_key IN ('iso27001', 'iso27001-soa') AND csf.permission_key = 'csf'`);
 }
 async function list() { const result = await pool.query('SELECT role, permission_key AS "permissionKey", allowed FROM role_permissions ORDER BY role, permission_key'); return result.rows; }
 async function getRolePermissions(role) { if (role === 'admin') return permissions.map(([permissionKey]) => permissionKey); const result = await pool.query('SELECT permission_key FROM role_permissions WHERE role = $1 AND allowed = TRUE', [role]); return result.rows.map(row => row.permission_key); }
-async function has(role, key, action = 'read') { if (role === 'admin') return true; if (!validRoles.includes(role)) return false; const page = pageActionMatrix[key]; if (page && page[normalizeAction(action)]) return canAccess(role, key, action); const result = await pool.query('SELECT allowed FROM role_permissions WHERE role = $1 AND permission_key = $2', [role, key]); return Boolean(result.rows[0]?.allowed) && canAccess(role, key, action); }
+async function has(role, key, action = 'read') { if (role === 'admin') return true; if (!validRoles.includes(role)) return false; const page = pageActionMatrix[key]; if (page && !page[normalizeAction(action)]) return false; const result = await pool.query('SELECT allowed FROM role_permissions WHERE role = $1 AND permission_key = $2', [role, key]); return Boolean(result.rows[0]?.allowed) && (!page || page[normalizeAction(action)]?.includes(role)); }
 async function update(role, data) { if (!validRoles.includes(role) || !Array.isArray(data?.permissions)) throw Object.assign(new Error('Role and permissions are required'), { status: 400 }); const allowed = new Set(data.permissions); for (const [key] of permissions) await pool.query('UPDATE role_permissions SET allowed = $1, updated_at = NOW() WHERE role = $2 AND permission_key = $3', [role === 'admin' || allowed.has(key), role, key]); return getRolePermissions(role); }
 module.exports = { permissions, roles: validRoles, defaults, pageActionMatrix, canAccess, ensureStore, list, getRolePermissions, has, update };

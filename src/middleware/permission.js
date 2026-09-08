@@ -1,4 +1,5 @@
 const permissionService = require('../services/permissionService');
-function requirePermission(key, action = 'read') { return async (req, res, next) => { if (permissionService.canAccess(req.user?.role, key, action) || await permissionService.has(req.user?.role, key, action)) return next(); return res.status(403).json({ error: `Access denied for ${key} (${action})` }); }; }
+function requirePermission(key, action = 'read') { return async (req, res, next) => { if (await permissionService.has(req.user?.role, key, action)) return next(); return res.status(403).json({ error: `Access denied for ${key} (${action})` }); }; }
 function requirePageAccess(key, action = 'read') { return requirePermission(key, action); }
-module.exports = { requirePermission, requirePageAccess };
+function requireFrameworkEvidenceAccess() { return async (req, res, next) => { const frameworkId = req.params.frameworkId; const permission = frameworkId === 'iso27001-soa' ? 'iso27001-soa' : frameworkId === 'iso27001' ? 'iso27001' : 'framework'; if (await permissionService.has(req.user?.role, permission, 'read')) return next(); return res.status(403).json({ error: `Access denied for ${permission} (evidence)` }); }; }
+module.exports = { requirePermission, requirePageAccess, requireFrameworkEvidenceAccess };

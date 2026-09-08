@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs');
 const service = require('../services/policyRegisterService');
+const fileService = require('../services/fileService');
 const { uploadRoot } = require('../config/paths');
 
 console.log('[policyRegisterController] Module loaded');
@@ -31,6 +32,14 @@ const upload = multer({
     },
   }),
   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+  fileFilter: (req, file, cb) => {
+    try {
+      fileService.validateUploadFile(file.originalname, file.mimetype);
+      cb(null, true);
+    } catch (error) {
+      cb(error);
+    }
+  },
 });
 
 // Extract payload dari request body (support FormData dan JSON)
@@ -145,6 +154,7 @@ const create = async (req, res, next) => {
 
     // Attach file metadata jika ada file
     if (req.file) {
+      fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
       payload.attachmentName = req.file.originalname;
       payload.attachmentPath = `policy-register/${req.file.filename}`;
       payload.attachmentType = req.file.mimetype || 'application/octet-stream';
@@ -169,6 +179,7 @@ const update = async (req, res, next) => {
 
     // Attach file metadata jika ada file baru
     if (req.file) {
+      fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
       payload.attachmentName = req.file.originalname;
       payload.attachmentPath = `policy-register/${req.file.filename}`;
       payload.attachmentType = req.file.mimetype || 'application/octet-stream';

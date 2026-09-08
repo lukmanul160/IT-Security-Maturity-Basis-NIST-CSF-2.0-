@@ -9,6 +9,7 @@ module.exports = {
   schemaFile: path.join(projectRoot, 'database', 'schema.sql'),
   usersFile: path.join(projectRoot, 'database', 'users.sql'),
   uploadRoot: path.join(projectRoot, 'upload'),
+  backupRoot: path.join(projectRoot, 'backup'),
   stateFile: path.join(projectRoot, 'data', 'assessment-state.json'),
   privacyWorkbook: path.join(projectRoot, 'NIST-CSF2.0-Maturity-Tool-v1.0.3 (1).xlsx'),
   privacyData: path.join(projectRoot, 'data', 'privacy-data.json'),

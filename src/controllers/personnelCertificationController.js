@@ -5,5 +5,9 @@ module.exports = {
   create: wrap(async (req, res) => res.status(201).json(await service.create(req.body))),
   update: wrap(async (req, res) => res.json(await service.update(req.params.id, req.body))),
   updateLayout: wrap(async (req, res) => res.json(await service.updateLayout(req.params.id, req.body))),
-  remove: wrap(async (req, res) => { await service.remove(req.params.id); res.status(204).end(); })
+  remove: wrap(async (req, res) => { await service.remove(req.params.id); res.status(204).end(); }),
+  organizationList: wrap(async (req, res) => res.json(await service.listOrganizationPersonnel())),
+  organizationCreate: wrap(async (req, res) => res.status(201).json(await service.createOrganizationPersonnel(req.body))),
+  organizationUpdate: wrap(async (req, res) => res.json(await service.updateOrganizationPersonnel(req.params.personnelId, req.body))),
+  organizationDelete: wrap(async (req, res) => { await service.removeOrganizationPersonnel(req.params.personnelId); res.status(204).end(); })
 };

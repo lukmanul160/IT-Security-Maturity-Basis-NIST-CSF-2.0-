@@ -16,6 +16,8 @@ const { ensureStore: ensureTprmStore } = require('./services/tprmService');
 const { ensureStore: ensureTprmQuestionnaireStore } = require('./services/tprmQuestionnaireService');
 const { ensureStore: ensureQuestionnaireTemplateStore } = require('./services/questionnaireTemplateService');
 const { ensureStore: ensurePolicyRegisterStore } = require('./services/policyRegisterService');
+const { ensureStore: ensureAuditStore } = require('./services/auditService');
+const { ensureBackupRoot } = require('./services/backupService');
 
 async function start() {
   await provisionDatabase();
@@ -31,6 +33,8 @@ async function start() {
   await ensureTprmQuestionnaireStore();
   await ensureQuestionnaireTemplateStore();
   await ensurePolicyRegisterStore();
+  await ensureAuditStore();
+  await ensureBackupRoot();
   await pool.query(await fs.readFile(usersFile, 'utf8'));
   app.listen(port, () => console.log(`NIST CSF Express server: http://localhost:${port}`));
 }

@@ -6,6 +6,7 @@ const { publicRoot } = require('./config/paths');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { requireAuth } = require('./middleware/auth');
 const { getSession, parseCookies, sessionCookie } = require('./config/auth');
+const { auditRequest } = require('./middleware/audit');
 
 const app = express();
 app.disable('x-powered-by');
@@ -32,8 +33,19 @@ app.use((req, res, next) => {
 
 	next();
 });
-app.use(express.json({ limit: '100mb' }));
-app.use('/api/auth', authRoutes);
+app.use(express.json({ limit: '10mb' }));
+app.use((req, res, next) => {
+	if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
+	const origin = req.get('origin');
+	if (!origin) return next();
+	try {
+		if (new URL(origin).host !== req.get('host')) return res.status(403).json({ error: 'Invalid request origin' });
+	} catch (error) {
+		return res.status(403).json({ error: 'Invalid request origin' });
+	}
+	return next();
+});
+app.use('/api/auth', auditRequest, authRoutes);
 app.get('/login', (req, res) => {
 	const token = parseCookies(req.headers.cookie)[sessionCookie];
 	if (getSession(token)) return res.redirect('/');
@@ -43,7 +55,7 @@ app.get('/login', (req, res) => {
 });
 
 console.error('[app] Mounting /api routes with requireAuth');
-app.use('/api', requireAuth, apiRoutes);
+app.use('/api', requireAuth, auditRequest, apiRoutes);
 
 app.use(requireAuth, express.static(publicRoot));
 app.use(requireAuth, (req, res, next) => {
