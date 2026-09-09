@@ -108,6 +108,8 @@ CREATE INDEX IF NOT EXISTS risk_dropdown_options_field_idx
 
 CREATE TABLE IF NOT EXISTS personnel_certifications (
   id BIGSERIAL PRIMARY KEY,
+  -- Backfilled, constrained and indexed by personnel-certification-links.sql during setup.
+  personnel_id BIGINT,
   personnel_name TEXT NOT NULL,
   employee_id TEXT NOT NULL DEFAULT '',
   personnel_role TEXT NOT NULL DEFAULT '',

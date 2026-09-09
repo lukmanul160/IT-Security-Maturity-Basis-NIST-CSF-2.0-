@@ -10,7 +10,7 @@ function requireAdmin(req, res, next) {
 async function requireCsfFileAccess(req, res, next) {
   if (req.user?.role === 'admin') return next();
   if (req.method === 'POST' && (csfFunctions.has(req.body?.functionName) || evidenceFunctions.has(req.body?.functionName) || /^[A-Z]+-P$/.test(req.body?.functionName || ''))) return next();
-  if (req.method === 'GET' || req.method === 'DELETE') {
+  if (req.method === 'GET' || req.method === 'PUT' || req.method === 'DELETE') {
     const filePath = Array.isArray(req.params.path) ? req.params.path.join('/') : String(req.params.path || '');
     if (csfFunctions.has(filePath.split('/')[0]) || evidenceFunctions.has(filePath.split('/')[0]) || /^[A-Z]+-P$/.test(filePath.split('/')[0])) return next();
   }

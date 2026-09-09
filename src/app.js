@@ -46,6 +46,8 @@ app.use((req, res, next) => {
 	return next();
 });
 app.use('/api/auth', auditRequest, authRoutes);
+// The login page shares the compiled theme with the authenticated workspace.
+app.get('/tailwind.css', (req, res) => res.sendFile(path.join(publicRoot, 'tailwind.css')));
 app.get('/login', (req, res) => {
 	const token = parseCookies(req.headers.cookie)[sessionCookie];
 	if (getSession(token)) return res.redirect('/');

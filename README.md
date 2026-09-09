@@ -1,5 +1,7 @@
 # NIST CSF 2.0 Maturity Assessment
 
+Untuk memahami arsitektur, alur data, lokasi kode penting, dan temuan awal sebelum melakukan perubahan, baca [Catatan Learning Proyek](docs/PROJECT_LEARNING.md).
+
 ## Instalasi dan Menjalankan Aplikasi
 
 ### Prasyarat
@@ -133,10 +135,20 @@ npm start
 
 Data `Security-Certification-Roadmap9.html` dipetakan ke `data/personnel-certifications-seed.json` berdasarkan tiga level: `Advanced / Expert`, `Intermediate`, dan `Entry Level`. Data personil dan katalog roadmap kini disimpan terpisah:
 
-- `personnel_certifications`: register pegawai (Personnel records) yang dikelola lewat menu aplikasi (create/update/delete).
+- `organization_personnel`: daftar induk pegawai, termasuk jabatan dan atasan langsung yang boleh kosong untuk posisi paling atas.
+- `personnel_certifications`: sertifikasi milik pegawai terdaftar, dihubungkan melalui `personnel_id`. Satu pegawai dapat memiliki banyak sertifikasi.
 - `certification_roadmap_catalog`: katalog referensi Security Certification Roadmap 9 (read-only di aplikasi), di-upsert otomatis saat `npm start` dari `data/personnel-certifications-seed.json`.
 
 Seed katalog dapat dibuat ulang setelah sumber roadmap berubah dengan `npm run seed:personnel-certifications`.
+
+### Alur Personnel Certification
+
+1. Buka **Personnel Certification → 1. Daftar pegawai**, kemudian pilih **Tambah pegawai**. Atasan langsung boleh dikosongkan jika pegawai berada di posisi paling atas.
+2. Setelah pegawai tersimpan, pilih **Tambah sertifikasi** pada baris pegawai, atau buka **2. Sertifikasi pegawai** dan pilih pegawai terdaftar.
+3. Pilih sertifikasi dari saran katalog atau isi detail sertifikasi, status, dan tanggalnya. Employee ID, jabatan, dan atasan otomatis diambil dari data pegawai.
+4. Ulangi penambahan dengan pegawai yang sama untuk mencatat sertifikasi lainnya. Sertifikasi dikelompokkan berdasarkan ID pegawai, sehingga perubahan nama tidak memisahkan riwayatnya.
+
+Pegawai yang masih memiliki sertifikasi tidak dapat dihapus; pindahkan atau hapus sertifikasinya terlebih dahulu. Saat `npm start` atau `npm run db:setup`, migrasi `database/personnel-certification-links.sql` menautkan sertifikasi lama ke daftar pegawai dan membuat relasi database. Migrasi dipanggil otomatis di dalam transaksi oleh service; tidak perlu menjalankan file SQL tersebut secara terpisah.
 
 Website lokal untuk melakukan penilaian tingkat kematangan keamanan siber berdasarkan **NIST Cybersecurity Framework (CSF) 2.0**. Aplikasi ini membantu pengguna menilai Policy dan Practice pada setiap subcategory, menyimpan catatan tindakan, serta mengelola evidence file berdasarkan Function dan kategori penilaian.
 

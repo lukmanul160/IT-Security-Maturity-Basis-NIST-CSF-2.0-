@@ -36,6 +36,18 @@ const upload = multer({
 	},
 	limits: { fileSize: 50 * 1024 * 1024, files: 20 },
 });
+const replacementUpload = multer({
+	storage: multer.memoryStorage(),
+	fileFilter: (req, file, callback) => {
+		try {
+			fileService.validateUploadFile(file.originalname, file.mimetype);
+			callback(null, true);
+		} catch (error) {
+			callback(error);
+		}
+	},
+	limits: { fileSize: 50 * 1024 * 1024, files: 1 },
+});
 
 async function list(req, res) { res.json(await fileService.listFiles()); }
 async function create(req, res) {
@@ -80,6 +92,10 @@ async function download(req, res) {
 	res.set('Content-Disposition', `${disposition}; filename="${safeSegment(path.basename(relativePath))}"`);
 	res.type(file.type).send(file.content);
 }
+async function replace(req, res) {
+	if (!req.file) return res.status(400).json({ error: 'Replacement file is required' });
+	res.json(await fileService.replaceFile(filePath(req), req.file));
+}
 async function remove(req, res) { await fileService.deleteFile(filePath(req)); res.status(204).end(); }
 
-module.exports = { list, create, createBatch, download, remove, upload };
+module.exports = { list, create, createBatch, download, replace, remove, upload, replacementUpload };

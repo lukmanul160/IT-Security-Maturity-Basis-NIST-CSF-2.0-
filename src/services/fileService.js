@@ -107,6 +107,53 @@ async function saveFile({ functionName, kind, file, rejectDuplicate = false }) {
 }
 async function saveFiles({ functionName, kind, files, rejectDuplicate = false }) { const names = files.map(file => safeSegment(file.originalname)); const uniqueNames = new Set(names); if (uniqueNames.size !== names.length) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); const error = new Error('Duplicate filenames in upload batch'); error.status = 409; throw error; } const existing = await pool.query('SELECT name FROM evidence_files WHERE name = ANY($1)', [names]); if (existing.rowCount && rejectDuplicate) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); const error = new Error(`File name already exists: ${existing.rows[0].name}`); error.status = 409; throw error; } try { return await Promise.all(files.map(file => saveFile({ functionName, kind, file, rejectDuplicate }))); } catch (error) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); throw error; } }
 async function readFile(relativePath) { const normalized = normalizePath(relativePath); try { return { content: await fs.readFile(diskPath(normalized)), type: (await pool.query('SELECT mime_type FROM evidence_files WHERE path = $1', [normalized])).rows[0]?.mime_type || 'application/octet-stream' }; } catch (error) { const result = await pool.query('SELECT content, mime_type FROM evidence_files WHERE path = $1', [normalized]); if (!result.rowCount) { error.status = 404; throw error; } return { content: result.rows[0].content, type: result.rows[0].mime_type }; } }
+async function replaceFile(relativePath, file) {
+	const normalized = normalizePath(relativePath);
+	if (!file?.buffer) {
+		const error = new Error('Replacement file is required');
+		error.status = 400;
+		throw error;
+	}
+
+	validateUploadFile(file.originalname, file.mimetype);
+	const currentExtension = path.extname(normalized).toLowerCase();
+	const replacementExtension = path.extname(file.originalname).toLowerCase();
+	if (currentExtension !== replacementExtension) {
+		const error = new Error(`Replacement file must use the same ${currentExtension || 'file'} format`);
+		error.status = 400;
+		throw error;
+	}
+
+	const target = diskPath(normalized);
+	let existsOnDisk = true;
+	try {
+		await fs.access(target);
+	} catch {
+		existsOnDisk = false;
+	}
+	const stored = await pool.query('SELECT path, name FROM evidence_files WHERE path = $1', [normalized]);
+	if (!existsOnDisk && !stored.rowCount) {
+		const error = new Error('File not found');
+		error.status = 404;
+		throw error;
+	}
+
+	await fs.mkdir(path.dirname(target), { recursive: true });
+	await fs.writeFile(target, file.buffer);
+	const name = stored.rows[0]?.name || path.basename(normalized);
+	await pool.query(
+		'INSERT INTO evidence_files (path, name, content, mime_type, updated_at) VALUES ($1, $2, NULL, $3, NOW()) ON CONFLICT (path) DO UPDATE SET name = EXCLUDED.name, content = NULL, mime_type = EXCLUDED.mime_type, updated_at = NOW()',
+		[normalized, name, file.mimetype]
+	);
+
+	return {
+		name,
+		path: `upload/${normalized}`,
+		size: file.size,
+		type: file.mimetype,
+		updatedAt: new Date().toISOString(),
+	};
+}
 async function deleteFile(relativePath) { const normalized = normalizePath(relativePath); const references = await pool.query(`SELECT COUNT(*)::int AS count FROM assessment_state, jsonb_each(data->'attachments') AS attachment(key, value), jsonb_array_elements(attachment.value) AS item WHERE item->>'path' = $1`, [ `upload/${normalized}` ]); if (references.rows[0].count > 1) return; await fs.rm(diskPath(normalized), { force: true }); const result = await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]); if (!result.rowCount) { const error = new Error('File not found'); error.status = 404; throw error; } }
 async function resetFiles() { await fs.rm(uploadRoot, { recursive: true, force: true }); await ensureUploadRoot(); await pool.query('DELETE FROM evidence_files'); }
 
@@ -128,4 +175,4 @@ async function resetFilesForAssessment(assessmentId) {
 	}
 }
 
-module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, deleteFile, resetFiles, resetFilesForAssessment, validateUploadMetadata, validateUploadFile };
+module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, replaceFile, deleteFile, resetFiles, resetFilesForAssessment, validateUploadMetadata, validateUploadFile };

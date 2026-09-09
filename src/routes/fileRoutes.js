@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/', requirePermission('files', 'read'), controller.list);
 router.post('/', requirePageAccess('files', 'create'), controller.upload.single('file'), requireCsfFileAccess, controller.create);
 router.post('/batch', requirePageAccess('files', 'create'), controller.upload.array('files', 50), requireCsfFileAccess, controller.createBatch);
+router.put('/*path', requirePageAccess('files', 'update'), requireCsfFileAccess, controller.replacementUpload.single('file'), controller.replace);
 router.get('/*path', requirePermission('files', 'read'), requireCsfFileAccess, controller.download);
 router.delete('/*path', requirePageAccess('files', 'delete'), requireCsfFileAccess, controller.remove);
 
