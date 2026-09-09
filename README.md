@@ -71,7 +71,7 @@ Untuk memahami arsitektur, alur data, lokasi kode penting, dan temuan awal sebel
 # Jalankan server dengan restart otomatis saat source berubah
 npm run dev
 
-# Bangun ulang CSS Tailwind setelah mengubah src/tailwind.css
+# Bangun ulang CSS Tailwind setelah mengubah frontend/tailwind.css
 npm run build:css
 
 # Bangun ulang data seed sertifikasi dari sumber roadmap
@@ -283,26 +283,39 @@ database/
 └── schema.sql          # Query pembuatan tabel dan index PostgreSQL
 scripts/
 └── provision-db.js     # Provisioning database dan eksekusi schema
-public/              # Frontend statis (HTML, CSS, browser JavaScript)
+frontend/            # Seluruh source dan asset frontend Vue 3
+â”œâ”€â”€ client/          # Source Vue dan konfigurasi Vite
+â””â”€â”€ public/          # Login, stylesheet, dan hasil build Vue
 data/                # Data referensi CSF
 upload/              # Evidence otomatis berdasarkan Function dan jenis
 package.json         # Dependency dan scripts
 ```
 
-- `public/index.html` - Struktur halaman aplikasi.
-- `public/styles.css` - Styling dan responsive layout.
-- `public/app.js` - Logika assessment dan antarmuka browser.
+- `frontend/client/src/App.vue` - Host Vue untuk workspace aplikasi.
+- `frontend/client/src/workspace/source.html` - Sumber markup workspace yang diproses saat build.
+- `frontend/client/src/workspace/runtime.js` - Runtime workspace kompatibilitas untuk handler fitur yang sudah ada.
+- `frontend/public/styles.css` - Styling dan responsive layout.
+- `frontend/public/vue/` - Hasil build Vite, dibuat oleh `npm run build`.
 - `data/csf-data.json` - Data NIST CSF 2.0 Core.
 - Metadata evidence tersimpan di tabel PostgreSQL `evidence_files`, sedangkan binary file tersimpan satu kali di folder `upload/` untuk upload yang lebih cepat.
 - `database/create-database.sql` dijalankan satu kali dari database maintenance seperti `postgres` jika database aplikasi belum tersedia.
 - Query schema PostgreSQL terdokumentasi di `database/schema.sql` dan dijalankan otomatis saat startup.
 
+## Pembagian frontend dan backend
+
+- `frontend/` berisi seluruh aplikasi browser: source Vue/Vite di `frontend/client/`, source Tailwind di `frontend/tailwind.css`, asset login dan stylesheet di `frontend/public/`, serta hasil build Vue di `frontend/public/vue/`.
+- `src/` berisi backend Node.js/Express: konfigurasi, middleware, controller, route, service, dan bootstrap server.
+- `database/` berisi schema dan migrasi PostgreSQL.
+- `scripts/` berisi provisioning database, seed, build preparation, dan regression test.
+
+Perintah `npm run build` membangun frontend ke `frontend/public/`. Backend memakai folder tersebut sebagai static root, sehingga `npm start` tetap menyajikan aplikasi melalui route yang sama.
+
 ## Teknologi
 
 - HTML5
 - CSS3
-- JavaScript vanilla
-- Node.js HTTP server
+- Vue 3 dan Vite
+- Node.js HTTP server (backend berada di `src/`)
 - REST API
 - Tailwind CSS melalui build pipeline lokal
 - PostgreSQL sebagai sumber utama data assessment

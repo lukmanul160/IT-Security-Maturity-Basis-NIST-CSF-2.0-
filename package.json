@@ -5,12 +5,18 @@
   "description": "NIST CSF 2.0 maturity assessment powered by Node.js",
   "main": "src/server.js",
   "scripts": {
-    "build:css": "tailwindcss -i ./src/tailwind.css -o ./public/tailwind.css --minify",
+    "prepare:client": "node scripts/prepare-vue-client.js",
+    "build:client": "npm run prepare:client && vite build --config frontend/client/vite.config.js",
+    "build": "npm run build:css && npm run build:client",
+    "build:css": "tailwindcss -i ./frontend/tailwind.css -o ./frontend/public/tailwind.css --minify",
+    "test": "node --test test/fileService.test.js test/personnelCertificationService.test.js test/policyRegisterService.test.js test/questionnaireTemplateService.test.js",
+    "test:browser": "node scripts/test-vue-browser.js",
     "db:setup": "node scripts/provision-db.js",
     "seed:iso27001": "node scripts/generate-iso-27001-seed.js",
     "seed:personnel-certifications": "node scripts/generate-personnel-certification-seed.js",
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "dev:client": "npm run prepare:client && vite --config frontend/client/vite.config.js"
   },
   "engines": {
     "node": ">=18"
@@ -22,10 +28,13 @@
     "multer": "^2.2.0",
     "pdf-lib": "^1.17.1",
     "pg": "^8.16.3",
+    "vue": "^3.5.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
-    "tailwindcss": "^4.3.3"
+    "@vitejs/plugin-vue": "^6.0.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^7.0.0"
   }
 }

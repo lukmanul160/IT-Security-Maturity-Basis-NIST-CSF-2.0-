@@ -10,6 +10,7 @@ const { auditRequest } = require('./middleware/audit');
 
 const app = express();
 app.disable('x-powered-by');
+const vueWorkspaceIndex = path.join(publicRoot, 'vue', 'index.html');
 
 // Log all requests
 app.use((req, res, next) => {
@@ -59,10 +60,11 @@ app.get('/login', (req, res) => {
 console.error('[app] Mounting /api routes with requireAuth');
 app.use('/api', requireAuth, auditRequest, apiRoutes);
 
-app.use(requireAuth, express.static(publicRoot));
+app.get(['/', '/index.html'], requireAuth, (req, res) => res.sendFile(vueWorkspaceIndex));
+app.use(requireAuth, express.static(publicRoot, { index: false }));
 app.use(requireAuth, (req, res, next) => {
 	if (req.path.startsWith('/api/')) return next();
-	return res.sendFile(path.join(publicRoot, 'index.html'));
+	return res.sendFile(vueWorkspaceIndex);
 });
 app.use(notFound);
 app.use(errorHandler);

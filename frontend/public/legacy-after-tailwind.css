@@ -1,0 +1,5 @@
+/* 2. Paksa padding-top main-content menjadi minimal */
+.main-content {
+  padding-top: 40px !important;
+  margin-top: 0 !important;
+}

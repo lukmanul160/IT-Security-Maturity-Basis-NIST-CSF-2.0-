@@ -5,6 +5,9 @@ node_modules/
 .env.*
 npm-debug.log*
 
+# Generated Vue workspace artifacts are recreated by prepare:client.
+frontend/client/src/workspace/generated/
+
 # Operational risk data must remain local and must never be committed.
 Cybersecurity Risk Register.xlsx
 *Risk*Register*.xlsx

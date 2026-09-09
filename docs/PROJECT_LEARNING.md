@@ -28,7 +28,7 @@ Semua nama route di tabel berada di `src/routes/`. Daftar mount API tersedia di 
 ## 2. Arsitektur dan peta file
 
 ```text
-Browser: public/index.html + public/app.js + CSS
+Browser: frontend/client + frontend/public + Vite build
   -> fetch /api/...
   -> Express + autentikasi + audit + permission
   -> routes -> controllers -> services
@@ -45,10 +45,10 @@ Browser: public/index.html + public/app.js + CSS
 | `src/routes/` | URL, HTTP method, middleware akses dan upload |
 | `src/controllers/` | Adapter request/response; beberapa controller juga mengatur upload/export |
 | `src/services/` | Logika domain, SQL langsung lewat `pg`, filesystem dan inisialisasi tabel |
-| [public/index.html](../public/index.html) | Struktur halaman, form dan dialog |
-| [public/app.js](../public/app.js) | Banyak logika UI dan modul dalam satu file: state, render, kalkulasi, event dan API |
-| `public/styles.css`, `public/modern.css` | CSS antarmuka; periksa urutan stylesheet di HTML saat menelusuri tampilan |
-| `src/tailwind.css` | Input build Tailwind; hasil build berada di `public/tailwind.css` |
+| [frontend/client/src/workspace/source.html](../frontend/client/src/workspace/source.html) | Sumber markup halaman, form dan dialog |
+| [frontend/client/src/workspace/runtime.js](../frontend/client/src/workspace/runtime.js) | Runtime UI kompatibilitas: state, render, kalkulasi, event dan API |
+| `frontend/public/styles.css`, `frontend/public/modern.css` | CSS antarmuka; periksa urutan stylesheet di HTML saat menelusuri tampilan |
+| `frontend/tailwind.css` | Input build Tailwind; hasil build berada di `frontend/public/tailwind.css` |
 | [database/schema.sql](../database/schema.sql) | Schema utama; baca juga SQL dalam service untuk melihat perubahan saat startup |
 | `database/users.sql` | Struktur/seed akun awal |
 | `data/` | Referensi framework, indikator dan seed sertifikasi; jangan menganggap semua file sebagai data operasional |
@@ -126,7 +126,7 @@ Implikasi: startup dapat menulis schema dan seed. Menjalankan server bukan pemer
 Gunakan pencarian simbol atau URL agar tidak bergantung pada nomor baris yang mudah berubah. Contoh dari root proyek:
 
 ```powershell
-rg -n --max-columns 220 --max-columns-preview 'savePolicyRegister|calculateVendorTierScore|normalizeState' public/app.js
+rg -n --max-columns 220 --max-columns-preview 'savePolicyRegister|calculateVendorTierScore|normalizeState' client/src/workspace/runtime.js
 rg -n 'assessmentId|requirePermission|requirePageAccess' src/routes
 rg -n 'CREATE TABLE|ALTER TABLE' database src/services
 ```
@@ -139,7 +139,7 @@ rg -n 'CREATE TABLE|ALTER TABLE' database src/services
 | `npm run db:setup` | Provisioning database dan schema; menulis database |
 | `npm start` | Inisialisasi store dan menjalankan server |
 | `npm run dev` | Menjalankan server dengan Node watch |
-| `npm run build:css` | Membangun ulang `public/tailwind.css` |
+| `npm run build:css` | Membangun ulang `frontend/public/tailwind.css` |
 | `npm run seed:iso27001` | Membuat ulang seed ISO dari generator |
 | `npm run seed:personnel-certifications` | Membuat ulang seed katalog sertifikasi |
 | `node --test test/policyRegisterService.test.js test/questionnaireTemplateService.test.js` | Menjalankan dua test service yang memakai mock; hasil belum diverifikasi dalam peninjauan ini |
@@ -154,7 +154,7 @@ Berikut adalah hasil pembacaan kode, bukan hasil audit menyeluruh atau pembuktia
 |---|---|
 | README menyebut skor 0–4; `maturityLabels` frontend memiliki level 1–5 dan normalisasi target menggunakan 1–5 | Cocokkan formula, kontrol input, target dan export sebelum menyelaraskan dokumentasi |
 | README menyebut katalog roadmap read-only; route katalog menyediakan POST/PUT/DELETE dengan permission | Pastikan apakah UI mengekspos mutasi dan tetapkan perilaku yang diinginkan |
-| Banyak modul berada di satu `public/app.js`, dengan sejumlah fungsi sangat panjang | Periksa event listener, state global dan pemakai bersama saat mengubah satu fitur |
+| Banyak modul masih berada di satu runtime workspace, dengan sejumlah fungsi sangat panjang | Periksa event listener, state global dan pemakai bersama saat mengubah satu fitur |
 | Schema utama dan SQL initialize/ensureStore sama-sama mengubah database | Jangan menilai schema efektif hanya dari `database/schema.sql` |
 | Assessment disimpan sebagai seluruh dokumen JSONB tanpa pemeriksaan versi pada `saveAssessment()` | Uji potensi perubahan saling menimpa bila beberapa pengguna mengedit bersamaan |
 | Penghapusan evidence memeriksa referensi assessment, sementara modul lain juga menyimpan evidence | Verifikasi penggunaan bersama lintas modul sebelum mengubah reset/delete |
@@ -171,9 +171,9 @@ Tema aplikasi kini menggunakan sidebar slate gelap, permukaan terang, aksen biru
 
 ### Sumber dan urutan CSS
 
-- Edit tema baru di [src/tailwind.css](../src/tailwind.css), lalu jalankan `npm run build:css`. Jangan mengedit hasil build `public/tailwind.css` secara manual.
+- Edit tema baru di [frontend/tailwind.css](../frontend/tailwind.css), lalu jalankan `npm run build:css`. Jangan mengedit hasil build `frontend/public/tailwind.css` secara manual.
 - Tema menggunakan utility Tailwind melalui `@apply`, dengan scope `.workspace-ui` pada body aplikasi dan login. Font utama memakai stack font sistem agar tidak bergantung pada unduhan font.
-- `@source` memindai HTML di `public/` dan `public/app.js`; CSS hasil build tidak dijadikan sumber pemindaian utility.
+- `@source` memindai `frontend/public/login.html` dan sumber workspace di `frontend/client/src/workspace`; CSS hasil build tidak dijadikan sumber pemindaian utility.
 - Stylesheet lama (`styles.css`, `modern.css`, dan style dalam HTML) masih mendukung struktur serta fitur khusus modul. Link `tailwind.css` berada setelah style tersebut di head `index.html`.
 - Aturan tema bersama sengaja berada di luar cascade layer, dengan selector berscope, supaya dapat menimpa CSS lama yang juga tidak memakai layer. Saat suatu style tidak berubah, periksa specificity, inline attribute, dan `!important` sebelum menambah override.
 - Aturan `[hidden]` dan hak akses tetap perlu diperhatikan. Styling navigasi bukan sumber otorisasi; pemeriksaan akses tetap berada pada backend.
@@ -185,21 +185,21 @@ Tema aplikasi kini menggunakan sidebar slate gelap, permukaan terang, aksen biru
 - Tabel lebar tetap memakai container scroll horizontal agar semua kolom dapat diakses.
 - Dialog membatasi tinggi terhadap viewport, memakai satu area scroll utama dan mengunci scroll halaman di belakangnya.
 - Tersedia fokus keyboard yang terlihat, skip link ke konten utama, dan dukungan `prefers-reduced-motion`.
-- ID elemen aplikasi dipertahankan agar event handler di `public/app.js` tetap terhubung.
+- ID elemen aplikasi dipertahankan agar event handler di runtime workspace tetap terhubung.
 - Login memakai CSS build yang sama. `src/app.js` menyediakan `GET /tailwind.css` sebelum middleware autentikasi agar stylesheet login dapat dimuat tanpa sesi.
 
 ### Verifikasi yang sudah dilakukan
 
 - `npm.cmd run build:css`: berhasil.
-- `node --check src/app.js` dan `node --check public/app.js`: berhasil.
+- `node --check src/app.js` dan `node --check client/src/workspace/runtime.js`: berhasil.
 - `git diff --check`: tidak menemukan kesalahan whitespace; Git memberi pemberitahuan normalisasi LF/CRLF pada Windows.
 - Chrome headless dengan API fixture lokal read-only: memeriksa framework chooser, sidebar normal/collapsed, CSF overview/core table, Policy Register dan dialog, serta login. Ukuran viewport meliputi 1440, 1024, 768, dan 390 piksel.
 - Pemeriksaan tambahan pada lebar 390 piksel: Risk Management, kuesioner TPRM, ISO 27001, dan Uploaded Files. Tidak ditemukan overflow horizontal pada dokumen di halaman yang diperiksa; tabel/navigasi memiliki scroll internal.
 - Tidak ada exception JavaScript yang tertangkap pada alur preview tersebut. Dialog mobile sempat memiliki scroll bertumpuk dari CSS lama; sudah diperbaiki dan diperiksa ulang.
 - Pemeriksaan HTTP menggunakan Express app tanpa menjalankan bootstrap database: `/login` dan `/tailwind.css` mengembalikan 200, `/` dan `/index.html` mengarahkan pengguna tanpa sesi ke login, `/api/health` mengembalikan 401.
-- Dibandingkan dengan Git: ID lama di `public/index.html` tetap tersedia dan stylesheet Tailwind ditautkan satu kali.
+- Dibandingkan dengan Git: ID workspace tetap tersedia di sumber Vue dan stylesheet Tailwind ditautkan satu kali.
 
-Verifikasi ini tidak mencakup login dengan kredensial nyata, penyimpanan assessment ke PostgreSQL, upload evidence, atau operasi reset/restore. Data operasional tidak digunakan dalam preview dan logika assessment di `public/app.js` tidak diubah oleh modernisasi ini.
+Verifikasi ini tidak mencakup login dengan kredensial nyata, penyimpanan assessment ke PostgreSQL, upload evidence, atau operasi reset/restore. Data operasional tidak digunakan dalam preview dan runtime workspace dipertahankan sebagai compatibility layer selama migrasi Vue.
 
 ### Perbaikan login ketika stylesheet belum tersedia
 
@@ -233,8 +233,8 @@ Verifikasi Chrome headless dilakukan pada server berjalan (CSS 302) dan instance
 - Sertifikasi lama dicocokkan berdasarkan nama dan Employee ID yang sudah di-trim. Jika belum ada pemilik di register, migrasi membuat row pegawai dari data lama. Jika ada beberapa row register dengan pasangan identitas yang sama persis, dipilih ID terkecil; row lainnya tidak dihapus.
 - Setelah backfill, migrasi menambahkan foreign key, constraint NOT NULL dan index pada `personnel_id`. Migrasi dapat dijalankan ulang tanpa menggandakan pegawai hasil backfill.
 - [src/services/personnelCertificationService.js](../src/services/personnelCertificationService.js): transaksi, validasi pemilik, CRUD, sinkronisasi identitas dan format tanggal DATE dari PostgreSQL untuk input HTML.
-- `public/app.js`: `renderCertificationPersonnelOptions`, `startNewCertification`, `syncCertificationPersonnelFields`, `renderOrganizationPersonnelStructure`, `renderCertifications`, serta handler simpan pegawai/sertifikasi.
-- `public/index.html`: tahapan UI, pilihan pegawai terdaftar, field identitas read-only dan pesan alur.
+- `frontend/client/src/workspace/runtime.js`: `renderCertificationPersonnelOptions`, `startNewCertification`, `syncCertificationPersonnelFields`, `renderOrganizationPersonnelStructure`, `renderCertifications`, serta handler simpan pegawai/sertifikasi.
+- `frontend/client/src/workspace/source.html`: tahapan UI, pilihan pegawai terdaftar, field identitas read-only dan pesan alur.
 - `src/tailwind.css`: ukuran tabel pegawai agar aksi penambahan terlihat pada desktop; build menghasilkan `public/tailwind.css`.
 
 ### Hasil verifikasi dan aktivasi
@@ -266,3 +266,24 @@ Daftar **Uploaded files** dibentuk dari referensi file pada assessment CSF, Priv
 - `test/fileService.test.js` menguji konten, metadata, path yang tetap, serta penolakan format berbeda dengan file dan row database sementara yang dibersihkan setelah test.
 - `node test/fileService.test.js`, test service lain, pemeriksaan sintaks JavaScript, dan `npm.cmd run build:css` berhasil. Smoke test HTTP melalui server lokal juga berhasil untuk login, upload, PUT replace, download hasil baru, dan delete file uji.
 - Pada Windows ini, `node --test` paralel gagal sebelum menjalankan test karena child process ditolak dengan `spawn EPERM`; test dijalankan langsung satu per satu menggunakan `node test/<file>.js`.
+
+## 13. Migrasi frontend ke Vue 3 dan Vite (9 September 2026)
+
+Pipeline frontend aktif sekarang menggunakan Vue 3 dan Vite. Express menyajikan hasil build pada `frontend/public/vue/index.html` untuk route `/` dan `/index.html`, sehingga browser tidak lagi meminta runtime lama sebagai script terpisah. Tailwind tetap dibangun lebih dahulu dan stylesheet kompatibilitas dipisahkan oleh `scripts/prepare-vue-client.js` agar urutan style dan perilaku tampilan lama tetap terjaga.
+
+### Struktur sumber
+
+- `frontend/client/src/App.vue` menjadi host Vue untuk workspace.
+- `frontend/client/src/main.js` memasang aplikasi, menjalankan runtime workspace, dan memasang enhancement inline setelah DOM tersedia.
+- `frontend/client/src/workspace/source.html` adalah sumber markup halaman yang diproses menjadi artifact generated.
+- `frontend/client/src/workspace/runtime.js` menyimpan runtime workspace yang sebelumnya berada di `public/app.js`; runtime ini dijalankan sebagai modul kompatibilitas internal agar seluruh handler dan alur lama tetap tersedia.
+- `frontend/client/vite.config.js` mengatur build ke `frontend/public/vue`, termasuk sourcemap dan proxy API untuk development.
+
+### Perintah kerja
+
+- `npm run build`: build Tailwind lalu menyiapkan dan membundle aplikasi Vue.
+- `npm run dev:client`: menyiapkan sumber lalu menjalankan Vite dev server pada port 5173.
+- `npm test`: menjalankan service regression tests.
+- `npm run test:browser`: menjalankan Chrome headless untuk memeriksa mount Vue, seluruh view utama, modal, tab, Uploaded Files, serta viewport desktop/tablet/mobile.
+
+Hasil regresi browser terakhir memeriksa 17 view utama, 18 item navigasi, 19 view terdaftar, alur edit Uploaded Files, tab framework, modal create/cancel, tidak ada duplicate ID, tidak ada overflow pada tiga viewport, dan tidak ada request browser ke `/app.js`. Pemecahan runtime menjadi komponen SFC per domain dapat dilakukan bertahap kemudian; untuk migrasi ini seluruh frontend aktif sudah melewati pipeline Vue/Vite dengan behavior-preserving runtime internal.

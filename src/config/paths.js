@@ -4,7 +4,7 @@ const projectRoot = path.resolve(__dirname, '..', '..');
 
 module.exports = {
   projectRoot,
-  publicRoot: path.join(projectRoot, 'public'),
+  publicRoot: path.join(projectRoot, 'frontend', 'public'),
   dataRoot: path.join(projectRoot, 'data'),
   schemaFile: path.join(projectRoot, 'database', 'schema.sql'),
   usersFile: path.join(projectRoot, 'database', 'users.sql'),

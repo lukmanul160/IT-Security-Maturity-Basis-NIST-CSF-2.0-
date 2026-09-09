@@ -110,7 +110,7 @@ node scripts/test-policy-api.js
 
 # Check syntax
 node --check src/controllers/policyRegisterController.js
-node --check public/app.js
+node --check client/src/workspace/runtime.js
 ```
 
 ---
