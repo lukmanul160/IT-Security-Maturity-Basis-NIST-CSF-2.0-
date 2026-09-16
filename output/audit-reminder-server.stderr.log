@@ -348,3 +348,4 @@
 [app] GET /api/risk-management/dropdowns
 [app] GET /api/policy-register/dropdowns
 [app] GET /api/policy-register
+[app] GET /

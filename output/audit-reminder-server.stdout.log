@@ -446,3 +446,4 @@ NIST CSF Express server: http://localhost:8000
 [policyRegisterRoutes] GET / - after permission, calling list
 [policyRegisterController.list] Handler called
 [policyRegisterController.list] Returning 2 policies
+[app] GET /
