@@ -3,6 +3,7 @@ upload/*
 node_modules/
 data/smtp-secret.key
 .env
+.key
 .env.*
 npm-debug.log*
 
