@@ -5,15 +5,6 @@ data/smtp-secret.key
 .env
 .env.*
 npm-debug.log*
-output/
-backup/
-backups/
-dist/
-.local/
-*.log
-*.dump
-*.pem
-*.key
 
 # Generated Vue workspace artifacts are recreated by prepare:client.
 frontend/client/src/workspace/generated/

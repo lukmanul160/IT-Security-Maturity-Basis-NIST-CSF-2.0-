@@ -447,3 +447,7 @@ NIST CSF Express server: http://localhost:8000
 [policyRegisterController.list] Handler called
 [policyRegisterController.list] Returning 2 policies
 [app] GET /
+[app] GET /
+[app] GET /favicon.ico
+[app] GET /
+[app] GET /favicon.ico
