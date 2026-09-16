@@ -51,7 +51,7 @@ app.use('/api/auth', auditRequest, authRoutes);
 app.get('/tailwind.css', (req, res) => res.sendFile(path.join(publicRoot, 'tailwind.css')));
 app.get('/login', (req, res) => {
 	const token = parseCookies(req.headers.cookie)[sessionCookie];
-	if (getSession(token)) return res.redirect('/');
+	if (getSession(token)) return res.redirect('/app');
 
 	res.set('Cache-Control', 'no-store');
 	return res.sendFile(path.join(publicRoot, 'login.html'));
@@ -60,7 +60,8 @@ app.get('/login', (req, res) => {
 console.error('[app] Mounting /api routes with requireAuth');
 app.use('/api', requireAuth, auditRequest, apiRoutes);
 
-app.get(['/', '/index.html'], requireAuth, (req, res) => res.sendFile(vueWorkspaceIndex));
+app.get(['/', '/index.html'], (req, res) => res.sendFile(path.join(publicRoot, 'landing.html')));
+app.get('/app', requireAuth, (req, res) => res.sendFile(vueWorkspaceIndex));
 app.use(requireAuth, express.static(publicRoot, { index: false }));
 app.use(requireAuth, (req, res, next) => {
 	if (req.path.startsWith('/api/')) return next();

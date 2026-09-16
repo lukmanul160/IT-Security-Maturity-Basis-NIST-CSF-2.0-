@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 const permissions = [
   ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'], ['iso27001', 'ISO 27001:2022'], ['iso27001-soa', 'SOA (Statement of Applicability)'],
   ['assessment', 'CSF assessment'], ['privacy-assessment', 'Privacy assessment'],
-  ['risk-acceptance', 'Risk Acceptance'], ['risk-management', 'Risk Management'], ['policy-register', 'Policy Register'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'],
+  ['risk-acceptance', 'Risk Acceptance'], ['audit-finding-tracker', 'Audit Finding Tracker'], ['risk-management', 'Risk Management'], ['policy-register', 'Policy Register'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'],
   ['files', 'Uploaded files'], ['account', 'Account Management']
 ];
 const validRoles = ['admin', 'approver', 'editor', 'viewer', 'user'];
@@ -16,6 +16,7 @@ const pageActionMatrix = {
   assessment: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
   'privacy-assessment': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin'] },
   'risk-acceptance': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
+  'audit-finding-tracker': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
   'risk-management': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
   'policy-register': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
   'personnel-certification': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin', 'editor'] },
@@ -29,10 +30,10 @@ const pageActionMatrix = {
 };
 const defaults = {
   admin: permissions.map(([key]) => key),
-  approver: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files'],
-  editor: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account'],
-  viewer: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'],
-  user: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']
+  approver: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files'],
+  editor: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account'],
+  viewer: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'],
+  user: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']
 };
 
 function normalizeAction(action) {

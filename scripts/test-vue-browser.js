@@ -124,7 +124,7 @@ async function run() {
     const target = await targetResponse.json();
     client = new CdpClient(target.webSocketDebuggerUrl);
     await client.connect();
-    client.on('Runtime.exceptionThrown', event => errors.push(event.exceptionDetails?.text || 'Uncaught browser exception'));
+    client.on('Runtime.exceptionThrown', event => errors.push(event.exceptionDetails?.exception?.description || event.exceptionDetails?.text || 'Uncaught browser exception'));
     client.on('Runtime.consoleAPICalled', event => {
       if (event.type === 'error') errors.push(event.args?.map(item => item.value || item.description).join(' ') || 'console.error');
     });
@@ -148,10 +148,27 @@ async function run() {
       document.querySelector('#loginForm').requestSubmit();
       return true;
     })()`);
-    await waitFor(client, `location.pathname === '/' && document.documentElement.dataset.frontend === 'vue'`, 'Vue workspace', 25000);
+    try {
+    await waitFor(client, `location.pathname === '/app' && document.documentElement.dataset.frontend === 'vue'`, 'Vue workspace', 25000);
+    } catch (error) {
+      const diagnostic = await evaluate(client, `({ path: location.pathname, title: document.title, text: document.body.innerText.slice(0, 500) })`);
+      throw new Error(`${error.message}: ${JSON.stringify(diagnostic)}; browser errors: ${JSON.stringify(errors)}`);
+    }
+
     await waitFor(client, `document.querySelectorAll('.nav-item').length > 10`, 'workspace navigation');
     await delay(1500);
 
+    await evaluate(client, `document.querySelector('[data-view="audit-finding-tracker"]').click()`);
+    await waitFor(client, `!document.querySelector('#aftNew').disabled`, 'audit tracker data');
+    await evaluate(client, `document.querySelector('#aftNew').click()`);
+    assert.equal(await evaluate(client, `document.querySelector('#aftModal').open`), true);
+    await evaluate(client, `document.querySelector('#aftCancel').click()`);
+    for (const width of [1440, 768, 390]) {
+      await client.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 600 });
+      await delay(100);
+      assert.equal(await evaluate(client, `document.documentElement.scrollWidth > document.documentElement.clientWidth + 1`), false, `Tracker overflow at ${width}px`);
+    }
+    await client.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
     const runtime = await evaluate(client, `({
       vue: Boolean(document.querySelector('#app').__vue_app__),
       workspaceRuntime: window.__NIST_WORKSPACE_RUNTIME__ === true,
@@ -167,7 +184,7 @@ async function run() {
     assert.ok(runtime.navCount >= 15);
     assert.ok(runtime.viewCount >= 15);
     assert.deepEqual(runtime.duplicateIds, []);
-    assert.deepEqual(await evaluate(client, `fetch('/index.html').then(response => response.text()).then(html => html.includes('/vue/assets/'))`), true);
+    assert.deepEqual(await evaluate(client, `fetch('/app').then(response => response.text()).then(html => html.includes('/vue/assets/'))`), true);
 
     const views = ['framework', 'csf', 'csf-manage', 'privacy', 'privacy-manage', 'iso27001', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'backups'];
     for (const view of views) {
@@ -175,13 +192,14 @@ async function run() {
       assert.equal(opened, true, `Navigation unavailable: ${view}`);
       await delay(180);
     }
-    assert.equal(await evaluate(client, `(() => { const button = document.querySelector('#accountButton'); if (!button || button.hidden || button.disabled) return false; button.click(); return document.querySelector('#accountView').classList.contains('active-view'); })()`), true, 'Account navigation unavailable');
-    assert.deepEqual(await evaluate(client, `([...document.querySelectorAll('#accountView [data-account-tab]')].map(button => button.textContent.trim()))`), ['1. Account Management', '2. ROLE ACCESS', '3. ADMINISTRATION', '4. AUDIT TRAIL'], 'Account tabs are incomplete');
+    assert.equal(await evaluate(client, `(() => { const button = document.querySelector('#accountButton'); if (!button || button.hidden || button.disabled) return false; button.click(); return document.querySelector('#accountView').classList.contains('active-view'); })()`), true, `Account navigation unavailable: ${JSON.stringify(errors)}`);
+    assert.deepEqual(await evaluate(client, `([...document.querySelectorAll('#accountView [data-account-tab]')].map(button => button.textContent.trim()))`), ['1. Account Management', '2. ROLE ACCESS', '3. ADMINISTRATION', '4. AUDIT TRAIL', '5. Pengaturan SMTP'], 'Account tabs are incomplete');
     assert.equal(await evaluate(client, `(() => { const button = document.querySelector('#accountView [data-account-tab="audit"]'); button?.click(); return document.querySelector('#accountAuditPanel')?.hidden === false && document.querySelector('#accountProfilePanel')?.hidden === true; })()`), true, 'Account audit tab unavailable');
     assert.equal(await evaluate(client, `(() => { document.querySelector('#accountView [data-account-tab="profile"]')?.click(); return document.querySelector('#accountProfilePanel')?.hidden === false; })()`), true, 'Account profile tab unavailable');
 
     await evaluate(client, `document.querySelector('[data-view="personnel-certification"]').click()`);
     await waitFor(client, `document.querySelectorAll('[data-personnel-tab]').length === 3`, 'personnel tabs');
+    assert.equal(await evaluate(client, `['assessmentView', 'privacyAssessmentView', 'iso27001View', 'riskAcceptanceView', 'riskManagementView', 'policyRegisterView', 'personnelCertificationView'].every(id => { const toolbar = document.querySelector('#' + id + ' [data-module-transfer]'); return toolbar && ['import', 'export', 'report'].every(action => toolbar.querySelector('[data-' + action + ']')); })`), true, 'Module import/export/report toolbars are incomplete');
     for (const tab of ['organization', 'map', 'reference']) {
       assert.equal(await evaluate(client, `(() => { const button = document.querySelector('[data-personnel-tab="${tab}"]'); button.click(); return !button.hidden; })()`), true);
     }

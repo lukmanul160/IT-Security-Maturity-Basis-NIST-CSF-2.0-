@@ -50,6 +50,7 @@
       <span class="login-story-footer">NIST CSF &middot; Privacy Framework &middot; ISO 27001</span>
     </section>
     <section class="login-form-panel" aria-labelledby="loginTitle">
+      <a href="/" style="display:inline-block;margin-bottom:20px;color:#475569;font-size:13px">&larr; Kembali ke beranda</a>
       <h1 id="loginTitle">Welcome back</h1>
       <p>Masuk untuk melanjutkan assessment Anda.</p>
       <form id="loginForm">
@@ -61,7 +62,7 @@
     </section>
   </main>
   <script>
-    const redirectToFrameworkChooser = () => { localStorage.removeItem('nist-maturity-ui'); window.location.replace('/'); };
+    const redirectToFrameworkChooser = () => { localStorage.removeItem('nist-maturity-ui'); window.location.replace('/app'); };
     fetch('/api/auth/me', { cache: 'no-store' }).then(response => { if (response.ok) redirectToFrameworkChooser(); });
     window.addEventListener('pageshow', () => { fetch('/api/auth/me', { cache: 'no-store' }).then(response => { if (response.ok) redirectToFrameworkChooser(); }); });
     loginForm.addEventListener('submit', async event => { event.preventDefault(); loginError.textContent = ''; const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); if (response.ok) redirectToFrameworkChooser(); else loginError.textContent = (await response.json()).error || 'Login gagal'; });

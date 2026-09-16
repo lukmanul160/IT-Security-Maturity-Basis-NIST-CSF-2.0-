@@ -1,0 +1,54 @@
+{
+  "data": "Synthetic demo, no operational records",
+  "manifest": [
+    {
+      "slug": "csf",
+      "title": "Dashboard NIST CSF"
+    },
+    {
+      "slug": "privacy",
+      "title": "Dashboard NIST Privacy"
+    },
+    {
+      "slug": "iso",
+      "title": "Dashboard ISO 27001"
+    },
+    {
+      "slug": "soa",
+      "title": "Statement of Applicability"
+    },
+    {
+      "slug": "risk",
+      "title": "Risk Management"
+    },
+    {
+      "slug": "acceptance",
+      "title": "Risk Acceptance"
+    },
+    {
+      "slug": "policy",
+      "title": "Policy Register"
+    },
+    {
+      "slug": "personnel",
+      "title": "Personnel Certification"
+    },
+    {
+      "slug": "tprm",
+      "title": "TPRM Risk Register"
+    },
+    {
+      "slug": "questionnaire",
+      "title": "Due Diligence Questionnaire"
+    },
+    {
+      "slug": "evidence",
+      "title": "Uploaded Files"
+    },
+    {
+      "slug": "access",
+      "title": "Role Access"
+    }
+  ],
+  "errors": []
+}

@@ -1,7 +1,8 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { pool } = require('../config/database');
-const { dataRoot, privacyData, uploadRoot } = require('../config/paths');
+const { dataRoot, privacyData } = require('../config/paths');
+const { removeUnreferencedFile } = require('./fileService');
 
 function duplicateIdError(frameworkId, code) {
   const label = frameworkId === 'csf' ? 'CSF' : frameworkId === 'privacy' ? 'Privacy' : frameworkId === 'iso27001' ? 'ISO 27001' : frameworkId;
@@ -156,29 +157,8 @@ async function resetIso27001Assessment() {
     await client.query('COMMIT');
 
     const paths = evidenceResult.rows.map(row => row.path).filter(Boolean);
-    if (paths.length) {
-      const deletedFiles = await pool.query(`
-        DELETE FROM evidence_files
-        WHERE path = ANY($1::text[])
-          AND NOT EXISTS (
-            SELECT 1
-            FROM controls AS referenced_control
-            CROSS JOIN LATERAL jsonb_array_elements(
-              CASE WHEN jsonb_typeof(referenced_control.evidence) = 'array'
-                THEN referenced_control.evidence ELSE '[]'::jsonb END
-            ) AS evidence_item
-            WHERE evidence_item->>'path' = 'upload/' || evidence_files.path
-              AND referenced_control.framework_id IN ('csf', 'privacy', 'iso27001', 'iso27001-soa')
-          )
-          AND NOT EXISTS (
-            SELECT 1 FROM policy_register
-            WHERE attachment_path = 'upload/' || evidence_files.path
-          )
-        RETURNING path
-      `, [paths.map(relativePath => relativePath.replace(/^upload\//, ''))]);
-      await Promise.all(deletedFiles.rows.map(async row => {
-        await fs.rm(path.resolve(uploadRoot, row.path), { force: true });
-      }));
+    for (const relativePath of new Set(paths)) {
+      await removeUnreferencedFile(relativePath.replace(/^(upload|uploads)\//, ''));
     }
   } catch (error) {
     await client.query('ROLLBACK');

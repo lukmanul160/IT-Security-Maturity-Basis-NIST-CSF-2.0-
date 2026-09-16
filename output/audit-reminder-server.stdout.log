@@ -1,0 +1,448 @@
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+Database exists: nist_basis
+Tables ready: app_users, assessment_state, evidence_files
+Personnel Certification and roadmap catalog seed ready.
+NIST CSF Express server: http://localhost:8000
+[app] GET /login
+[app] GET /tailwind.css
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] POST /api/auth/login
+[app] GET /login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /modern.css
+[app] GET /tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-By0_bscx.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/auth/me
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker/reminder-settings
+[app] GET /api/auth/me
+[app] GET /api/smtp-settings
+[app] GET /api/audit-finding-tracker
+[app] GET /api/auth/users
+[app] GET /api/auth/permissions
+[app] GET /api/audit?limit=25&offset=0
+[app] POST /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker
+[app] POST /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker
+[app] POST /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker
+[app] POST /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker/5b312aeb-cdc6-41df-abb9-89b26aaaa046/download
+[app] PUT /api/audit-finding-tracker/5b312aeb-cdc6-41df-abb9-89b26aaaa046
+[app] GET /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker/5b312aeb-cdc6-41df-abb9-89b26aaaa046/download
+[app] GET /api/audit-finding-tracker
+[app] PUT /api/audit-finding-tracker/a06dd977-e812-4924-933e-5d73a50d0981
+[app] PUT /api/audit-finding-tracker/d9db0447-194e-42a5-95c4-f369b4a50c9d
+[app] POST /api/audit-finding-tracker
+[app] POST /api/audit-finding-tracker
+[app] POST /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker
+[app] DELETE /api/audit-finding-tracker/5b312aeb-cdc6-41df-abb9-89b26aaaa046
+[app] DELETE /api/audit-finding-tracker/eb6c9cb5-0498-4798-8f50-e4beef0d44cc
+[app] DELETE /api/audit-finding-tracker/d9db0447-194e-42a5-95c4-f369b4a50c9d
+[app] DELETE /api/audit-finding-tracker/c3ca8a9b-2ee2-4dfa-bba9-539a02661580
+[app] DELETE /api/audit-finding-tracker/cdf8827b-907f-48b4-99ca-ce87111e19ac
+[app] DELETE /api/audit-finding-tracker/ebe2272d-c0dc-4415-aedd-c489d2c212e1
+[app] DELETE /api/audit-finding-tracker/a06dd977-e812-4924-933e-5d73a50d0981
+[app] GET /app
+[app] GET /login
+[app] GET /tailwind.css
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] GET /login
+[app] POST /api/auth/login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-By0_bscx.js
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/auth/me
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/privacy/assessment
+[app] GET /api/privacy
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker/reminder-settings
+[app] GET /api/auth/me
+[app] GET /api/smtp-settings
+[app] GET /api/auth/users
+[app] GET /api/auth/permissions
+[app] GET /api/audit?limit=25&offset=0
+[app] GET /favicon.ico
+[app] GET /app
+[app] GET /modern.css
+[app] GET /styles.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-By0_bscx.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/auth/me
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/audit-finding-tracker
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/audit-finding-tracker/reminder-settings
+[app] GET /
+[app] GET /favicon.ico
+[app] GET /login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-C4zFbBOo.js
+[app] GET /tailwind.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/audit-finding-tracker
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[app] PUT /api/policy-register/3
+[policyRegisterRoutes] PUT /3
+[policyRegisterController.update] Handler called
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/policy-register/reminder-settings
+[app] GET /
+[app] GET /favicon.ico
+[app] GET /login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-C4zFbBOo.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/auth/me
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/policy-register/reminder-settings
+[app] PUT /api/policy-register/reminder-settings
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[policyRegisterController.list] Returning 1 policies
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[app] POST /api/policy-register
+[policyRegisterRoutes] POST /
+[policyRegisterController.create] Handler called
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 2 policies
+[app] GET /api/policy-register/reminder-settings
+[app] GET /
+[app] GET /
+[app] GET /favicon.ico
+[app] GET /login
+[app] GET /login
+[app] GET /tailwind.css
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] GET /login
+[app] POST /api/auth/login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-C4zFbBOo.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/auth/me
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[policyRegisterController.list] Returning 2 policies
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/audit-finding-tracker
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 2 policies
+[app] GET /api/audit-finding-tracker
+[app] GET /api/audit-finding-tracker/reminder-settings
+[app] PUT /api/audit-finding-tracker/reminder-settings
+[app] PUT /api/audit-finding-tracker/77b11e29-8b5d-4594-8c4f-32ea2f45bf86
+[app] GET /api/audit-finding-tracker
+[app] GET /
+[app] GET /
+[app] GET /favicon.ico
+[app] GET /login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-C4zFbBOo.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[app] GET /api/csf
+[policyRegisterController.list] Returning 2 policies
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/privacy/assessment
+[app] GET /api/privacy
+[app] GET /api/frameworks/privacy/targets
+[app] GET /
+[app] GET /
+[app] GET /favicon.ico
+[app] GET /login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-C4zFbBOo.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/auth/me
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[policyRegisterController.list] Returning 2 policies
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/audit-finding-tracker
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/policy-register/dropdowns
+[policyRegisterRoutes] GET /dropdowns
+[app] GET /api/policy-register
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 2 policies

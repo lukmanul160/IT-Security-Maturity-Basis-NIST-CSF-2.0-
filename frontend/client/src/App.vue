@@ -1,7 +1,7 @@
 <script setup>
-import workspaceTemplate from './workspace/generated/template.html?raw';
+import WorkspaceLayout from './workspace/generated/WorkspaceLayout.vue';
 </script>
 
 <template>
-  <div class="vue-workspace-host" v-html="workspaceTemplate"></div>
+  <WorkspaceLayout />
 </template>

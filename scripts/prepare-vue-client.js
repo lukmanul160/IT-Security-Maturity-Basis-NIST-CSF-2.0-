@@ -21,7 +21,20 @@ async function prepareVueClient() {
   const appScript = /<script\s+src=["']app\.js[^>]*><\/script>/i.exec(body);
   if (!appScript) throw new Error('Workspace runtime marker was not found');
 
-  const workspaceMarkup = body.slice(0, appScript.index).trim();
+  const layoutMarkup = body.slice(0, appScript.index).trim();
+  let workspaceMarkup = layoutMarkup;
+  let componentMarkup = layoutMarkup;
+  const componentNames = [];
+  for (const match of layoutMarkup.matchAll(/<!-- workspace-component:(\w+) -->/g)) {
+    const name = match[1];
+    const component = await fs.readFile(path.join(workspaceSourceDirectory, 'components', `${name}.vue`), 'utf8');
+    const template = component.match(/<template>([\s\S]*)<\/template>/)?.[1]?.trim();
+    if (!template) throw new Error(`Missing component template: ${name}`);
+    workspaceMarkup = workspaceMarkup.replace(match[0], template.replace(' v-pre', ''));
+    componentMarkup = componentMarkup.replace(match[0], `<${name} />`);
+    componentNames.push(name);
+  }
+  const layoutComponent = `<script setup>\n${componentNames.map(name => `import ${name} from '../components/${name}.vue';`).join('\n')}\n</script>\n<template><div class="vue-workspace-host">${componentMarkup}</div></template>\n`;
   const scriptsAfterApp = body.slice(appScript.index + appScript[0].length);
   const enhancements = [...scriptsAfterApp.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1].trim())
@@ -38,6 +51,7 @@ async function prepareVueClient() {
 
   await fs.mkdir(generatedDirectory, { recursive: true });
   await Promise.all([
+    fs.writeFile(path.join(generatedDirectory, 'WorkspaceLayout.vue'), layoutComponent),
     fs.writeFile(path.join(generatedDirectory, 'template.html'), `${workspaceMarkup}\n`),
     fs.writeFile(path.join(generatedDirectory, 'enhancements.js'), `${enhancements}\n`),
     fs.writeFile(path.join(publicDirectory, 'legacy-before-tailwind.css'), `${stylesBeforeTailwind}\n`),

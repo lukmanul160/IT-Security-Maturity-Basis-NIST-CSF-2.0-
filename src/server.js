@@ -23,6 +23,7 @@ async function start() {
   await provisionDatabase();
   await ensureUploadRoot();
   await initializeAssessmentStore();
+  await require('./services/storageService').ensureStore();
   await initializeFrameworks();
   await ensureRiskAcceptanceStore();
   await ensureRiskManagementStore();
@@ -33,10 +34,15 @@ async function start() {
   await ensureTprmQuestionnaireStore();
   await ensureQuestionnaireTemplateStore();
   await ensurePolicyRegisterStore();
+  await require('./services/policyReminderService').ensureStore();
   await ensureAuditStore();
+  await require('./services/auditFindingService').ensureStore();
+  await require('./services/auditFindingReminderService').ensureStore();
   await ensureBackupRoot();
   await pool.query(await fs.readFile(usersFile, 'utf8'));
   app.listen(port, () => console.log(`NIST CSF Express server: http://localhost:${port}`));
+  require('./services/policyReminderService').startScheduler();
+  require('./services/auditFindingReminderService').startScheduler();
 }
 
 start().catch(error => { console.error(error); process.exitCode = 1; });

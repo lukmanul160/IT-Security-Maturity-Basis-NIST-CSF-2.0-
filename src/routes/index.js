@@ -17,10 +17,13 @@ const backupRoutes = require('./backupRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
+router.use('/audit-finding-tracker', require('./auditFindingRoutes'));
+router.use('/smtp-settings', require('./smtpRoutes'));
 router.get('/health', (req, res) => res.json({ ok: true }));
 router.get('/health/db', healthController.database);
 router.use('/assessment', assessmentRoutes);
 router.use('/files', fileRoutes);
+router.use('/storage-settings', require('./storageRoutes'));
 router.use('/csf', csfRoutes);
 router.use('/privacy', privacyRoutes);
 router.use('/frameworks', frameworkRoutes);

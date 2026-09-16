@@ -1,0 +1,162 @@
+{
+  "capturedAt": "2026-09-14T15:36:49.788Z",
+  "viewport": "1600 × 1100",
+  "screenshots": [
+    {
+      "slug": "01-beranda",
+      "title": "Beranda dan model 3D interaktif",
+      "file": "screenshots/01-beranda.png"
+    },
+    {
+      "slug": "02-login",
+      "title": "Login",
+      "file": "screenshots/02-login.png"
+    },
+    {
+      "slug": "03-framework",
+      "title": "Pemilihan framework",
+      "file": "screenshots/03-framework.png"
+    },
+    {
+      "slug": "04-csf-dashboard",
+      "title": "Dashboard NIST CSF",
+      "file": "screenshots/04-csf-dashboard.png"
+    },
+    {
+      "slug": "05-csf-core",
+      "title": "NIST CSF Core",
+      "file": "screenshots/05-csf-core.png"
+    },
+    {
+      "slug": "06-privacy-dashboard",
+      "title": "Dashboard NIST Privacy",
+      "file": "screenshots/06-privacy-dashboard.png"
+    },
+    {
+      "slug": "07-privacy-core",
+      "title": "Privacy Core dan assessment",
+      "file": "screenshots/07-privacy-core.png"
+    },
+    {
+      "slug": "08-iso-dashboard",
+      "title": "Dashboard ISO 27001",
+      "file": "screenshots/08-iso-dashboard.png"
+    },
+    {
+      "slug": "09-iso-objectives",
+      "title": "Sasaran keamanan informasi",
+      "file": "screenshots/09-iso-objectives.png"
+    },
+    {
+      "slug": "10-iso-calendar",
+      "title": "Kalender evaluasi ISO",
+      "file": "screenshots/10-iso-calendar.png"
+    },
+    {
+      "slug": "11-iso-clauses",
+      "title": "ISO Clauses 4–10",
+      "file": "screenshots/11-iso-clauses.png"
+    },
+    {
+      "slug": "12-iso-soa",
+      "title": "Statement of Applicability",
+      "file": "screenshots/12-iso-soa.png"
+    },
+    {
+      "slug": "13-risk-acceptance",
+      "title": "Risk Acceptance",
+      "file": "screenshots/13-risk-acceptance.png"
+    },
+    {
+      "slug": "14-risk-management",
+      "title": "Risk Management",
+      "file": "screenshots/14-risk-management.png"
+    },
+    {
+      "slug": "15-risk-indicators",
+      "title": "Indikator risiko",
+      "file": "screenshots/15-risk-indicators.png"
+    },
+    {
+      "slug": "16-policy-register",
+      "title": "Policy Register",
+      "file": "screenshots/16-policy-register.png"
+    },
+    {
+      "slug": "17-policy-calendar",
+      "title": "Kalender review kebijakan",
+      "file": "screenshots/17-policy-calendar.png"
+    },
+    {
+      "slug": "18-personnel",
+      "title": "Daftar pegawai",
+      "file": "screenshots/18-personnel.png"
+    },
+    {
+      "slug": "19-certifications",
+      "title": "Sertifikasi pegawai",
+      "file": "screenshots/19-certifications.png"
+    },
+    {
+      "slug": "20-roadmap",
+      "title": "Referensi roadmap sertifikasi",
+      "file": "screenshots/20-roadmap.png"
+    },
+    {
+      "slug": "21-tprm",
+      "title": "TPRM Framework",
+      "file": "screenshots/21-tprm.png"
+    },
+    {
+      "slug": "22-tiering",
+      "title": "Vendor Tiering Matrix",
+      "file": "screenshots/22-tiering.png"
+    },
+    {
+      "slug": "23-questionnaire",
+      "title": "Due Diligence Questionnaire",
+      "file": "screenshots/23-questionnaire.png"
+    },
+    {
+      "slug": "24-templates",
+      "title": "Questionnaire Templates",
+      "file": "screenshots/24-templates.png"
+    },
+    {
+      "slug": "25-tprm-register",
+      "title": "TPRM Risk Register",
+      "file": "screenshots/25-tprm-register.png"
+    },
+    {
+      "slug": "26-evidence",
+      "title": "Uploaded Files",
+      "file": "screenshots/26-evidence.png"
+    },
+    {
+      "slug": "27-backup",
+      "title": "Database Backup",
+      "file": "screenshots/27-backup.png"
+    },
+    {
+      "slug": "28-account",
+      "title": "Profil akun",
+      "file": "screenshots/28-account.png"
+    },
+    {
+      "slug": "29-permissions",
+      "title": "Role Access",
+      "file": "screenshots/29-permissions.png"
+    },
+    {
+      "slug": "30-users",
+      "title": "Administrasi akun",
+      "file": "screenshots/30-users.png"
+    },
+    {
+      "slug": "31-audit",
+      "title": "Audit Trail",
+      "file": "screenshots/31-audit.png"
+    }
+  ],
+  "browserErrors": []
+}

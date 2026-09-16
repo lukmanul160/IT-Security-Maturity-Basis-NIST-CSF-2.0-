@@ -1,5 +1,7 @@
 # NIST CSF 2.0 Maturity Assessment
 
+Dokumentasi desain sistem: [High-Level Design (HLD)](docs/HIGH_LEVEL_DESIGN.md) untuk arsitektur, modul, dan deployment; [Low-Level Design (LLD)](docs/LOW_LEVEL_DESIGN.md) untuk struktur kode, model data, API, dan alur proses detail.
+
 Untuk memahami arsitektur, alur data, lokasi kode penting, dan temuan awal sebelum melakukan perubahan, baca [Catatan Learning Proyek](docs/PROJECT_LEARNING.md).
 
 ## Instalasi dan Menjalankan Aplikasi

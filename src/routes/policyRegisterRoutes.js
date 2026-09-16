@@ -5,6 +5,16 @@ const { requirePermission, requirePageAccess } = require('../middleware/permissi
 console.log('[policyRegisterRoutes] Loading routes');
 
 const router = express.Router();
+const reminders = require('../services/policyReminderService');
+const adminOnly = (req, res, next) => req.user?.role === 'admin' ? next() : res.status(403).json({ error: 'Pengaturan reminder hanya dapat diakses admin.' });
+const reminderHandler = action => async (req, res, next) => {
+  try { res.json(await action(req)); } catch (error) {
+    res.status(error.status || 500).json({ error: error.status ? error.message : 'Pengaturan reminder belum dapat diproses.' });
+  }
+};
+router.get('/reminder-settings', adminOnly, reminderHandler(() => reminders.getSettings()));
+router.put('/reminder-settings', adminOnly, reminderHandler(req => reminders.saveSettings(req.body)));
+router.post('/reminder-settings/test', adminOnly, reminderHandler(req => reminders.testEmail(req.body?.to)));
 
 // Log all requests to this router
 router.use((req, res, next) => {

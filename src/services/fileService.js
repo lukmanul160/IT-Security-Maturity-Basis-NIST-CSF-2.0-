@@ -2,6 +2,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const { pool } = require('../config/database');
 const { uploadRoot } = require('../config/paths');
+const storage = require('./storageService');
 
 const safeSegment = value => path.basename(String(value || '')).replace(/[^a-zA-Z0-9._ -]/g, '_');
 const allowedUploadMimeTypes = {
@@ -32,7 +33,7 @@ const normalizePath = relativePath => {
 	return normalized;
 };
 
-const diskPath = relativePath => path.resolve(uploadRoot, normalizePath(relativePath));
+const storagePath = relativePath => storage.normalizePath(normalizePath(relativePath));
 function validateUploadMetadata(functionName, kind, fileName) {
 	const validFunction = typeof functionName === 'string' && functionName.length >= 1 && functionName.length <= 100;
 	const validKind = ['policy', 'practice'].includes(kind);
@@ -89,13 +90,9 @@ async function saveFile({ functionName, kind, file, rejectDuplicate = false }) {
 	}
 
 	const relativePath = path.posix.join(safeFunction, folder, safeName);
-	const target = diskPath(relativePath);
-	await fs.mkdir(path.dirname(target), { recursive: true });
-	await fs.rename(file.path, target);
-	await pool.query(
-		'INSERT INTO evidence_files (path, name, content, mime_type, updated_at) VALUES ($1, $2, NULL, $3, NOW()) ON CONFLICT (path) DO UPDATE SET name = EXCLUDED.name, content = NULL, mime_type = EXCLUDED.mime_type, updated_at = NOW()',
-		[relativePath, safeName, file.mimetype || 'application/octet-stream']
-	);
+	try {
+		await storage.put(relativePath, { sourcePath: file.path, name: safeName, mimeType: file.mimetype || 'application/octet-stream' });
+	} finally { await fs.rm(file.path, { force: true }); }
 
 	return {
 		name: safeName,
@@ -106,9 +103,19 @@ async function saveFile({ functionName, kind, file, rejectDuplicate = false }) {
 	};
 }
 async function saveFiles({ functionName, kind, files, rejectDuplicate = false }) { const names = files.map(file => safeSegment(file.originalname)); const uniqueNames = new Set(names); if (uniqueNames.size !== names.length) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); const error = new Error('Duplicate filenames in upload batch'); error.status = 409; throw error; } const existing = await pool.query('SELECT name FROM evidence_files WHERE name = ANY($1)', [names]); if (existing.rowCount && rejectDuplicate) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); const error = new Error(`File name already exists: ${existing.rows[0].name}`); error.status = 409; throw error; } try { return await Promise.all(files.map(file => saveFile({ functionName, kind, file, rejectDuplicate }))); } catch (error) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); throw error; } }
-async function readFile(relativePath) { const normalized = normalizePath(relativePath); try { return { content: await fs.readFile(diskPath(normalized)), type: (await pool.query('SELECT mime_type FROM evidence_files WHERE path = $1', [normalized])).rows[0]?.mime_type || 'application/octet-stream' }; } catch (error) { const result = await pool.query('SELECT content, mime_type FROM evidence_files WHERE path = $1', [normalized]); if (!result.rowCount) { error.status = 404; throw error; } return { content: result.rows[0].content, type: result.rows[0].mime_type }; } }
+async function readFile(relativePath) {
+	const normalized = storagePath(relativePath);
+	const result = await pool.query('SELECT content, mime_type FROM evidence_files WHERE path = $1', [normalized]);
+	let content;
+	try { content = await storage.read(normalized); }
+	catch (error) {
+		if (error.code !== 'ENOENT' || !result.rows[0]?.content) throw error;
+		content = result.rows[0].content;
+	}
+	return { content, type: result.rows[0]?.mime_type || 'application/octet-stream' };
+}
 async function replaceFile(relativePath, file) {
-	const normalized = normalizePath(relativePath);
+	const normalized = storagePath(relativePath);
 	if (!file?.buffer) {
 		const error = new Error('Replacement file is required');
 		error.status = 400;
@@ -124,13 +131,7 @@ async function replaceFile(relativePath, file) {
 		throw error;
 	}
 
-	const target = diskPath(normalized);
-	let existsOnDisk = true;
-	try {
-		await fs.access(target);
-	} catch {
-		existsOnDisk = false;
-	}
+	const existsOnDisk = await storage.exists(normalized);
 	const stored = await pool.query('SELECT path, name FROM evidence_files WHERE path = $1', [normalized]);
 	if (!existsOnDisk && !stored.rowCount) {
 		const error = new Error('File not found');
@@ -138,13 +139,8 @@ async function replaceFile(relativePath, file) {
 		throw error;
 	}
 
-	await fs.mkdir(path.dirname(target), { recursive: true });
-	await fs.writeFile(target, file.buffer);
 	const name = stored.rows[0]?.name || path.basename(normalized);
-	await pool.query(
-		'INSERT INTO evidence_files (path, name, content, mime_type, updated_at) VALUES ($1, $2, NULL, $3, NOW()) ON CONFLICT (path) DO UPDATE SET name = EXCLUDED.name, content = NULL, mime_type = EXCLUDED.mime_type, updated_at = NOW()',
-		[normalized, name, file.mimetype]
-	);
+	await storage.put(normalized, { buffer: file.buffer, name, mimeType: file.mimetype }, { replace: true });
 
 	return {
 		name,
@@ -154,8 +150,38 @@ async function replaceFile(relativePath, file) {
 		updatedAt: new Date().toISOString(),
 	};
 }
-async function deleteFile(relativePath) { const normalized = normalizePath(relativePath); const references = await pool.query(`SELECT COUNT(*)::int AS count FROM assessment_state, jsonb_each(data->'attachments') AS attachment(key, value), jsonb_array_elements(attachment.value) AS item WHERE item->>'path' = $1`, [ `upload/${normalized}` ]); if (references.rows[0].count > 1) return; await fs.rm(diskPath(normalized), { force: true }); const result = await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]); if (!result.rowCount) { const error = new Error('File not found'); error.status = 404; throw error; } }
-async function resetFiles() { await fs.rm(uploadRoot, { recursive: true, force: true }); await ensureUploadRoot(); await pool.query('DELETE FROM evidence_files'); }
+async function referenceCounts(relativePath) {
+	const normalized = storagePath(relativePath);
+	const result = await pool.query(`SELECT
+	  (SELECT COUNT(*)::int FROM assessment_state,
+	    LATERAL jsonb_each(CASE WHEN jsonb_typeof(data->'attachments') = 'object' THEN data->'attachments' ELSE '{}'::jsonb END) AS attachment(key,value),
+	    LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(attachment.value) = 'array' THEN attachment.value ELSE '[]'::jsonb END) AS item
+	    WHERE item->>'path' = ANY($1::text[])) AS assessment,
+	  (SELECT COUNT(*)::int FROM controls,
+	    LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(evidence) = 'array' THEN evidence ELSE '[]'::jsonb END) AS item
+	    WHERE item->>'path' = ANY($1::text[])) AS controls,
+	  (SELECT COUNT(*)::int FROM policy_register WHERE attachment_path = ANY($1::text[])) AS policies`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
+	return result.rows[0];
+}
+async function deleteFile(relativePath) {
+	const normalized = storagePath(relativePath);
+	const counts = await referenceCounts(normalized);
+	// The assessment UI removes its own reference after this request succeeds.
+	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0) return;
+	await storage.remove(normalized);
+	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
+}
+async function removeUnreferencedFile(relativePath) {
+	const normalized = storagePath(relativePath);
+	const counts = await referenceCounts(normalized);
+	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0) return;
+	await storage.remove(normalized);
+	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
+}
+async function resetFiles() {
+	const result = await pool.query('SELECT path FROM evidence_files');
+	for (const row of result.rows) await removeUnreferencedFile(row.path);
+}
 
 async function resetFilesForAssessment(assessmentId) {
 	const state = await pool.query('SELECT data FROM assessment_state WHERE id = $1', [assessmentId]);
@@ -167,12 +193,8 @@ async function resetFilesForAssessment(assessmentId) {
 	}
 	await pool.query('DELETE FROM assessment_state WHERE id = $1', [assessmentId]);
 	for (const relativePath of paths) {
-		const references = await pool.query(`SELECT COUNT(*)::int AS count FROM assessment_state, jsonb_each(COALESCE(data->'attachments', '{}'::jsonb)) AS attachment(key, value), jsonb_array_elements(attachment.value) AS item WHERE item->>'path' = $1`, [`upload/${relativePath}`]);
-		if (references.rows[0].count === 0) {
-			await fs.rm(diskPath(relativePath), { force: true });
-			await pool.query('DELETE FROM evidence_files WHERE path = $1', [relativePath]);
-		}
+		await removeUnreferencedFile(relativePath);
 	}
 }
 
-module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, replaceFile, deleteFile, resetFiles, resetFilesForAssessment, validateUploadMetadata, validateUploadFile };
+module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, replaceFile, deleteFile, removeUnreferencedFile, resetFiles, resetFilesForAssessment, validateUploadMetadata, validateUploadFile };

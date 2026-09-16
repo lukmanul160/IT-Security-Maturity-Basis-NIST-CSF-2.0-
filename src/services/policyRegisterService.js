@@ -1,7 +1,5 @@
-const fs = require('fs').promises;
-const path = require('path');
 const { pool } = require('../config/database');
-const { uploadRoot } = require('../config/paths');
+const { removeUnreferencedFile } = require('./fileService');
 
 const tableName = 'policy_register';
 const itemTableName = 'policy_register_items';
@@ -373,8 +371,7 @@ async function remove(id) {
   if (attachmentPath) {
     try {
       const cleanPath = attachmentPath.replace(/^(upload|uploads)\//, '');
-      const fullPath = path.join(uploadRoot, cleanPath);
-      await fs.rm(fullPath, { force: true });
+      await removeUnreferencedFile(cleanPath);
     } catch (err) {
       // Log but don't fail if file cleanup fails
       console.error(`[policyRegisterService] File cleanup failed for ${attachmentPath}:`, err.message);

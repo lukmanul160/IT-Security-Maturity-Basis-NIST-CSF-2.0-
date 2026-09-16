@@ -1,0 +1,7 @@
+.module-transfer-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; margin-bottom: 16px; border: 1px solid #d8e1ec; border-radius: 10px; background: #f8fafc; }
+.module-transfer-toolbar button { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: white; color: #172335; cursor: pointer; }
+.module-transfer-toolbar button:disabled { opacity: .55; cursor: wait; }
+.module-transfer-toolbar [role="status"] { font-size: 12px; color: #475569; }
+dialog:has([data-confirm]) { max-width: 640px; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; }
+dialog:has([data-confirm]) p { margin: 12px 0; }
+dialog:has([data-confirm]) button { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 7px; }

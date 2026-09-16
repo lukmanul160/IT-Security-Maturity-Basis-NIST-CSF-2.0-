@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const service = require('../services/policyRegisterService');
 const fileService = require('../services/fileService');
+const storage = require('../services/storageService');
 const { uploadRoot } = require('../config/paths');
 
 console.log('[policyRegisterController] Module loaded');
@@ -53,6 +54,18 @@ const getPayload = (req) => {
   }
   return req.body || {};
 };
+
+async function storeAttachment(req, payload) {
+  if (!req.file) return;
+  const relativePath = `policy-register/${req.file.filename}`;
+  try {
+    fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
+    await storage.put(relativePath, { sourcePath: req.file.path, name: req.file.originalname, mimeType: req.file.mimetype || 'application/octet-stream' });
+    payload.attachmentName = req.file.originalname;
+    payload.attachmentPath = relativePath;
+    payload.attachmentType = req.file.mimetype || 'application/octet-stream';
+  } finally { await fs.promises.rm(req.file.path, { force: true }); }
+}
 
 // Handler: List all policy dropdowns
 const listDropdowns = async (req, res, next) => {
@@ -153,12 +166,7 @@ const create = async (req, res, next) => {
     const payload = getPayload(req);
 
     // Attach file metadata jika ada file
-    if (req.file) {
-      fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
-      payload.attachmentName = req.file.originalname;
-      payload.attachmentPath = `policy-register/${req.file.filename}`;
-      payload.attachmentType = req.file.mimetype || 'application/octet-stream';
-    }
+    await storeAttachment(req, payload);
 
     const item = await service.create(payload);
     return res.status(201).json(item);
@@ -178,12 +186,7 @@ const update = async (req, res, next) => {
     const payload = getPayload(req);
 
     // Attach file metadata jika ada file baru
-    if (req.file) {
-      fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
-      payload.attachmentName = req.file.originalname;
-      payload.attachmentPath = `policy-register/${req.file.filename}`;
-      payload.attachmentType = req.file.mimetype || 'application/octet-stream';
-    }
+    await storeAttachment(req, payload);
 
     const item = await service.update(id, payload);
     return res.json(item);

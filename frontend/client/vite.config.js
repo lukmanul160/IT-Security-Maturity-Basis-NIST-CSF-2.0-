@@ -5,7 +5,8 @@ import path from 'node:path';
 export default defineConfig({
   root: __dirname,
   base: '/vue/',
-  plugins: [vue()],
+  // Legacy runtime mutates these static trees; retain explicit DOM creation.
+  plugins: [vue({ template: { compilerOptions: { hoistStatic: false } } })],
   build: {
     outDir: path.resolve(__dirname, '..', 'public', 'vue'),
     emptyOutDir: true,

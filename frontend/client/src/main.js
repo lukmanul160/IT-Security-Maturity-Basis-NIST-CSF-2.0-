@@ -1,8 +1,10 @@
 import { createApp, nextTick } from 'vue';
 import App from './App.vue';
 import './vue-shell.css';
+import './styles/workspace-theme.css';
+import './styles/module-transfer.css';
 import workspaceEnhancements from './workspace/generated/enhancements.js?raw';
-import workspaceRuntime from './workspace/runtime.js?raw';
+import workspaceRuntime from './workspace/runtime.js';
 import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';
 
 async function bootstrap() {

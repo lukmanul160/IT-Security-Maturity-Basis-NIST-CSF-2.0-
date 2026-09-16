@@ -1,0 +1,43 @@
+Create a polished high-resolution landscape technical infographic in Indonesian for the actual repository "NIST Basis". Title "ARSITEKTUR SISTEM — NIST BASIS", subtitle "Frontend, backend, dan relasi tabel • Berdasarkan kode & skema proyek". White/light slate background, navy typography, teal frontend, blue backend, purple database, restrained amber for logical references. Crisp readable text, carefully aligned boxes, orthogonal connectors, generous spacing. This is an engineering architecture poster, not a UI mockup. Large canvas, preferably 3840x2160 or larger available.
+
+Top 35%: architecture flow, three zones left to right:
+1 FRONTEND: "Browser • /app"; "Vue 3 • Vite • Tailwind CSS"; "App.vue + komponen workspace"; feature text "Assessment / NIST CSF / Privacy / ISO 27001", "Risk Management / Risk Acceptance / TPRM", "Policy Register / Personnel / Files / Admin".
+Arrow labeled "HTTP / JSON • cookie sesi" to
+2 BACKEND: "Node.js • Express 5"; chain "Routes → Middleware → Controllers → Services"; small detail "Autentikasi • izin per role • audit"; "Sesi di memori • bcrypt"; "REST API /api/*".
+Arrow labeled "pg Pool • SQL" to
+3 DATA & INTEGRASI: "PostgreSQL • relational + JSONB"; auxiliary boxes "upload/ • berkas bukti", "backup/ • cadangan", "SMTP • pengingat kebijakan", arrows from backend services to each. Do not imply frontend connects directly to DB.
+
+Bottom 60% titled "RELASI TABEL UTAMA". Compact ER diagram arranged into 4 clearly separated domain panels, with exact table names; show only key fields listed here (not full schema).
+Panel A FRAMEWORK:
+frameworks [PK id, name, version]
+controls [PK id, FK framework_id, code, evidence JSONB]
+framework_category_targets [PK/FK framework_id, PK category, target_score]
+Solid connections frameworks 1 to controls N, frameworks 1 to framework_category_targets N.
+Separate assessment_state [PK id, data JSONB] and evidence_files [PK path, name, content BYTEA nullable]. Dashed connector assessment_state to evidence_files labeled "path dalam JSONB". No FK for that link.
+
+Panel B RISIKO & TPRM:
+questionnaire_templates [PK id, sections JSONB]
+tprm_due_diligence_questionnaires [PK id, template_id, responses JSONB]
+tprm_risk_register [PK id, FK questionnaire_id]
+tprm_related_risks [PK/FK tprm_id, PK/FK risk_id]
+risk_register [PK risk_id, acceptance_form_no]
+Draw dashed logical line questionnaire_templates to tprm_due_diligence_questionnaires labeled "template_id • tanpa FK".
+Solid tprm_due_diligence_questionnaires 1 to tprm_risk_register N (nullable questionnaire_id).
+Solid tprm_risk_register 1 to tprm_related_risks N and risk_register 1 to tprm_related_risks N; label "M:N melalui tabel penghubung".
+No invented foreign keys.
+
+Panel C KEBIJAKAN:
+policy_register [PK id, title, owner]
+policy_register_items [PK id, FK policy_id]
+policy_reminder_deliveries [PK/FK policy_id, PK due_date, PK recipient]
+Solid policy_register 1 to policy_register_items N; policy_register 1 to policy_reminder_deliveries N.
+
+Panel D PERSONEL:
+organization_personnel [PK id, personnel_name]
+personnel_certifications [PK id, FK personnel_id, certification_name]
+Solid organization_personnel 1 to personnel_certifications N.
+Short footnote "FK personel diterapkan melalui migrasi."
+
+Footer small support-table list titled "Tabel pendukung (tanpa garis FK pada diagram)": "app_users • role_permissions • audit_events • risk_acceptance_forms • risk_indicators • risk_dropdown_options • certification_roadmap_catalog • policy_register_dropdown_options • policy_reminder_settings • information_security_objectives".
+Legend "Garis utuh = foreign key | Garis putus = referensi logis / JSONB | 1:N = satu ke banyak". Footer note "Ringkasan skema kode; bukan verifikasi database aktif. Kolom ditampilkan sebagian."
+Accuracy critical. Keep long table identifiers intact, wrap cleanly if needed. Do not create extra relationships. All table boxes and connectors readable and non-overlapping. No decorative fake code or logos.

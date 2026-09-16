@@ -1,0 +1,19 @@
+# Prompt gambar arsitektur
+
+Dibuat dengan built-in image_gen, 10 September 2026. Rincian kontrak tetap mengikuti dokumen HLD/LLD.
+
+## HLD — nist-basis-hld.png
+
+Use case: infographic-diagram. Create a polished landscape technical architecture diagram in Indonesian, high resolution, crisp large typography, white background, navy headings, blue application boxes, teal storage boxes, amber optional integration. Title "NIST BASIS" subtitle "High-Level Design (HLD)" and small badge "Implementasi saat ini". Professional presentation-ready flat diagram, orthogonal arrow connectors, generous spacing, no decorative invented technology.
+Exact architecture: left box "Pengguna" with "Admin • Editor • Approver • Viewer / User", arrow labeled "HTTP / origin yang sama" to box "Browser" with "Vue 3 • Runtime workspace". Browser arrow "REST / JSON / multipart" to a large central boundary "Node.js / Express — Modular Monolith". Inside boundary upper box "Session • Audit • Permission", arrow down to "Routes & Controllers", arrow down to "Services Domain". Under domain show six small modules in 2 rows: "Assessment & Framework", "Evidence", "Risk & TPRM", "Policy Register", "Personel & Sertifikasi", "Administrasi". Also inside boundary a separate small box "Scheduler Reminder". Services arrow to right cylinder "PostgreSQL" caption "Data operasional & metadata"; services arrow to right box "Filesystem" caption "upload/ • backup/". Scheduler arrow to right box "SMTP (opsional)", then to "Pemilik kebijakan". All data connections via backend, no browser database connection. Footer three short notes "Assessment bersama: default / privacy" / "Session dalam memori: 8 jam" / "Backup database terpisah dari evidence". Ensure all text legible and arrows unambiguous.
+
+## LLD — nist-basis-lld.png
+
+Use case: infographic-diagram. Create a polished high-resolution landscape technical Low-Level Design architecture diagram in Indonesian matching white background, navy titles, blue application cards, teal database cards, amber scheduler accents. Title "NIST BASIS" subtitle "Low-Level Design (LLD)" badge "Implementasi saat ini". Crisp exact technical names, generous spacing, aligned grid and orthogonal arrows, professional document figure.
+Layout top horizontal pipeline with connected boxes: "Vue + Runtime Fitur" -> "Express Middleware" subtitle "requireAuth • auditRequest" -> "Routes + Permission" subtitle "requirePermission" -> "Controllers" subtitle "request / response" -> "Services" subtitle "validasi • SQL • file".
+From Services route down to three clearly separate columns each a bounded panel:
+LEFT panel title "01  Assessment": ordered downward connected boxes "assessmentController.update" -> "saveAssessment(state, id)" -> cylinder "assessment_state" subtitle "id • data JSONB • updated_at". Below note "CSF: default | Privacy: privacy" and "PUT mengganti seluruh state".
+MIDDLE panel title "02  Evidence": ordered flow boxes "fileController + Multer" -> "fileService.saveFiles", then split arrows to "upload/ (binary)" and cylinder "evidence_files (metadata)". Note "Path direferensikan assessment / control / policy". No arrow that implies SQL direct from frontend.
+RIGHT panel title "03  Policy Reminder": flow "Scheduler: startup + setiap jam" -> "runReminders()" -> "PostgreSQL advisory lock" -> "Hitung due date + cek riwayat" -> "Kirim SMTP" -> cylinder "policy_reminder_deliveries". small note "SMTP aktif sesuai pengaturan".
+Footer separated light shaded strip title "Relasi data inti" with three small horizontal relations: "frameworks  1 → N  controls", "organization_personnel  1 → N  personnel_certifications", "policy_register  1 → N  policy_register_items". Final small note "File dan database tidak berbagi transaksi atomik • Session berada di memori server". Avoid huge prose, retain exact spelling, every connection clean and no overlapping labels.
+

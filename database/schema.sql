@@ -325,6 +325,22 @@ CREATE TABLE IF NOT EXISTS evidence_files (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS file_storage_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  mode TEXT NOT NULL CHECK (mode IN ('local', 'shared')),
+  directory TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Paths exposed by the API stay stable when the active upload destination changes.
+-- Empty root means this application's local upload directory; legacy files have no row.
+CREATE TABLE IF NOT EXISTS file_storage_locations (
+  path TEXT PRIMARY KEY,
+  root TEXT NOT NULL,
+  object_key TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 ALTER TABLE evidence_files
   ALTER COLUMN content DROP NOT NULL;
 
