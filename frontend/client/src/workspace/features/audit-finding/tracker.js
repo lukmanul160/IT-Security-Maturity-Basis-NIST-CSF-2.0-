@@ -7,6 +7,7 @@
   let cardFilter = null;
   const cardFilters = {
     'open-findings': { title: 'Finding terbuka', matches: row => row.kind === 'finding' && row.data.status !== 'Closed' },
+    'closed-findings': { title: 'Finding selesai', matches: row => row.kind === 'finding' && row.data.status === 'Closed' },
     followups: { title: 'Semua Follow-up', matches: row => row.kind === 'followup' },
     evidence: { title: 'Semua Evidence', matches: row => row.kind === 'evidence' },
     'overdue-audits': { title: 'Audit lewat tenggat', matches: row => row.kind === 'audit' && isOverdue(row) },
@@ -61,6 +62,7 @@
     });
   });
   $('aftDashboardManage').addEventListener('click', () => openCard('audits'));
+  $('aftDashboardManageInline').addEventListener('click', () => openCard('audits'));
   $('aftDashboardRefresh').addEventListener('click', load);
   // Compare local calendar dates: due today is not overdue; closed records never count.
   function isOverdue(record) {
@@ -92,10 +94,20 @@
     $('aftReminderPanel').hidden = currentUserRole !== 'admin';
     $('aftAuditCount').textContent = rows.filter(r => r.kind === 'audit').length;
     $('aftOpenCount').textContent = rows.filter(r => r.kind === 'finding' && r.data.status !== 'Closed').length;
-    $('aftFollowupCount').textContent = rows.filter(r => r.kind === 'followup').length;
-    $('aftEvidenceCount').textContent = rows.filter(r => r.kind === 'evidence').length;
+    const findings = rows.filter(r => r.kind === 'finding');
+    const closedFindings = findings.filter(r => r.data.status === 'Closed').length;
+    const overdueFindings = findings.filter(r => isOverdue(r)).length;
+    $('aftClosedFindingCount').textContent = closedFindings;
+    $('aftResolutionRate').textContent = `${findings.length ? Math.round((closedFindings / findings.length) * 100) : 0}% penyelesaian`;
+    $('aftFindingSummary').innerHTML = [
+      ['Belum selesai', findings.length - closedFindings, '#2c7be5'],
+      ['Lewat tenggat', overdueFindings, '#b43f37'],
+      ['Selesai', closedFindings, '#21734f']
+    ].map(([label, value, color]) => `<div class="risk-summary-row"><span>${label}</span><strong>${value}</strong><i><b style="width:${findings.length ? Math.round((value / findings.length) * 100) : 0}%;background:${color}"></b></i></div>`).join('');
+    if ($('aftFollowupCount')) $('aftFollowupCount').textContent = rows.filter(r => r.kind === 'followup').length;
+    if ($('aftEvidenceCount')) $('aftEvidenceCount').textContent = rows.filter(r => r.kind === 'evidence').length;
     $('aftOverdueAuditCount').textContent = rows.filter(r => r.kind === 'audit' && isOverdue(r)).length;
-    $('aftOverdueFindingCount').textContent = rows.filter(r => r.kind === 'finding' && isOverdue(r)).length;
+    $('aftOverdueFindingCount').textContent = overdueFindings;
     $('aftBreadcrumb').innerHTML = [0, ...path.map((_, i) => i + 1)].map(i => `<button class="button ${i === level ? 'button-accent' : 'button-quiet'}" type="button" data-aft-level="${i}" ${i === level ? 'aria-current="page"' : ''}>${escapeHtml(i ? `${labels[i]}: ${path[i - 1].data.title}` : 'Semua Audit')}</button>`).join('');
     $('aftContext').textContent = path.length ? path.map(r => r.data.title).join(' → ') + (path.at(-1).data.description ? ' — ' + path.at(-1).data.description : '') : 'Pilih audit untuk melihat finding, lalu follow-up dan evidence terkait.';
     const search = $('aftSearch').value.toLowerCase();

@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const csfFunctions = new Set(['Govern', 'Identify', 'Protect', 'Detect', 'Respond', 'Recover']);
-const evidenceFunctions = new Set(['ISO 27001', 'ISO 27001 SOA', 'policy-register']);
+const evidenceFunctions = new Set(['ISO 27001', 'ISO 27001 SOA', 'policy-register', 'TPRM Vendor Documents']);
 
 function requireAdmin(req, res, next) {
   if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Administrator access required' });

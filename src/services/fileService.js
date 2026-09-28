@@ -145,21 +145,24 @@ async function referenceCounts(relativePath) {
 	  (SELECT COUNT(*)::int FROM controls,
 	    LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(evidence) = 'array' THEN evidence ELSE '[]'::jsonb END) AS item
 	    WHERE item->>'path' = ANY($1::text[])) AS controls,
-	  (SELECT COUNT(*)::int FROM policy_register WHERE attachment_path = ANY($1::text[])) AS policies`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
+	  (SELECT COUNT(*)::int FROM policy_register WHERE attachment_path = ANY($1::text[])) AS policies,
+	  (SELECT COUNT(*)::int FROM tprm_due_diligence_questionnaires,
+	    LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(responses->'vendorDocuments') = 'array' THEN responses->'vendorDocuments' ELSE '[]'::jsonb END) AS item
+	    WHERE item->>'path' = ANY($1::text[])) AS questionnaires`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
 	return result.rows[0];
 }
 async function deleteFile(relativePath) {
 	const normalized = storagePath(relativePath);
 	const counts = await referenceCounts(normalized);
 	// The assessment UI removes its own reference after this request succeeds.
-	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0) return;
+	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }
 async function removeUnreferencedFile(relativePath) {
 	const normalized = storagePath(relativePath);
 	const counts = await referenceCounts(normalized);
-	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0) return;
+	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }

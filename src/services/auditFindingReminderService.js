@@ -32,8 +32,8 @@ async function saveSettings(data) {
 }
 function renderMessage(row) {
   return {
-    subject: `Reminder follow-up finding: ${row.data.title}`.replace(/[\r\n]/g, ' '),
-    text: `Judul: ${row.auditTitle}\nFinding: ${row.data.title}\n\nDeskripsi finding: ${row.data.description || '-'}\nPIC: ${row.data.owner || '-'}\nStatus: ${row.data.status}\nTenggat: ${row.data.dueDate}\n\nMohon tindak lanjuti finding melalui Audit Finding Tracker.`
+    subject: `Reminder finding — ${row.auditTitle}: ${row.data.title}`.replace(/[\r\n]/g, ' '),
+    text: `Jenis audit: ${row.auditTitle}\nFinding: ${row.data.title}\n\nStatus: ${row.data.status}\nTenggat finding: ${row.data.dueDate}\n\nMohon tindak lanjuti finding melalui Audit Finding Tracker.`
   };
 }
 function eligible(row, daysBefore, now = new Date()) {

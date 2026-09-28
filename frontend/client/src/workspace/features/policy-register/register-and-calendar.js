@@ -306,14 +306,14 @@ function showPolicyRegisterView() { document.querySelectorAll('.view').forEach(v
 document.querySelectorAll('[data-policy-tab]').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const tab = e.currentTarget.dataset.policyTab;
-    if (tab === 'reminder' && currentUserRole !== 'admin') return;
     document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-accent', b === e.target));
     document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-quiet', b !== e.target));
-    $('policyRegisterPanel').hidden = tab !== 'register';
-    $('policyReviewCalendarPanel').hidden = tab !== 'calendar';
-    $('policySmtpPanel').hidden = tab !== 'reminder';
-    if (tab !== 'reminder') $('policySmtpPassword').value = '';
-    if (tab === 'calendar') renderPolicyReviewCalendar();
+    const dashboard = tab === 'dashboard';
+    $('policyDashboardMetrics').hidden = !dashboard;
+    $('policyDashboardSummary').hidden = !dashboard;
+    $('policyRegisterPanel').hidden = dashboard;
+    $('policyReviewCalendarPanel').hidden = true;
+    $('policySmtpPanel').hidden = true;
   });
 });
 

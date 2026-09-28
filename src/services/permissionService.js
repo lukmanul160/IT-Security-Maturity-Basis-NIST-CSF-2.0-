@@ -22,7 +22,7 @@ const pageActionMatrix = {
   'personnel-certification': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin', 'editor'] },
   tprm: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
   'tprm-tiering': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
-  'tprm-questionnaire': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
+  'tprm-questionnaire': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor', 'user'], update: ['admin', 'approver', 'editor', 'user'], delete: ['admin', 'approver'] },
   'questionnaire-templates': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor'], update: ['admin', 'editor'], delete: ['admin', 'editor'] },
   'tprm-register': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor'], update: ['admin', 'approver', 'editor'], delete: ['admin', 'approver'] },
   files: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor', 'user'], update: ['admin', 'editor'], delete: ['admin', 'editor'] },
