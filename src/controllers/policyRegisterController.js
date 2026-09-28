@@ -5,6 +5,8 @@ const fs = require('fs');
 const service = require('../services/policyRegisterService');
 const fileService = require('../services/fileService');
 const storage = require('../services/storageService');
+const evidenceAccess = require('../services/evidenceAccessService');
+const { pool } = require('../config/database');
 const { uploadRoot } = require('../config/paths');
 
 console.log('[policyRegisterController] Module loaded');
@@ -60,7 +62,7 @@ async function storeAttachment(req, payload) {
   const relativePath = `policy-register/${req.file.filename}`;
   try {
     fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
-    await storage.put(relativePath, { sourcePath: req.file.path, name: req.file.originalname, mimeType: req.file.mimetype || 'application/octet-stream' });
+    await storage.put(relativePath, { sourcePath: req.file.path, name: req.file.originalname, mimeType: req.file.mimetype || 'application/octet-stream', uploadedBy: await evidenceAccess.userId(req.user) });
     payload.attachmentName = req.file.originalname;
     payload.attachmentPath = relativePath;
     payload.attachmentType = req.file.mimetype || 'application/octet-stream';
@@ -165,6 +167,9 @@ const create = async (req, res, next) => {
   try {
     const payload = getPayload(req);
 
+    const selectedPath = payload.attachmentPath || payload.attachment_path;
+    if (!req.file && selectedPath) await evidenceAccess.assertReferences([{path:selectedPath}], [], req.user);
+
     // Attach file metadata jika ada file
     await storeAttachment(req, payload);
 
@@ -184,6 +189,11 @@ const update = async (req, res, next) => {
   try {
     const { id } = req.params;
     const payload = getPayload(req);
+    const selectedPath = payload.attachmentPath || payload.attachment_path;
+    if (!req.file && selectedPath) {
+      const previous = (await pool.query('SELECT attachment_path FROM policy_register WHERE id=$1',[id])).rows[0]?.attachment_path;
+      await evidenceAccess.assertReferences([{path:selectedPath}], previous ? [{path:previous}] : [], req.user);
+    }
 
     // Attach file metadata jika ada file baru
     await storeAttachment(req, payload);

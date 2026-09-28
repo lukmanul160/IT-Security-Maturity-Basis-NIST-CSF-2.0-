@@ -11,6 +11,11 @@ const allowedUploadMimeTypes = {
 	'.docx': new Set(['application/vnd.openxmlformats-officedocument.wordprocessingml.document']),
 	'.ppt': new Set(['application/vnd.ms-powerpoint']),
 	'.pptx': new Set(['application/vnd.openxmlformats-officedocument.presentationml.presentation']),
+	'.png': new Set(['image/png']),
+	'.jpg': new Set(['image/jpeg']),
+	'.jpeg': new Set(['image/jpeg']),
+	'.gif': new Set(['image/gif']),
+	'.webp': new Set(['image/webp']),
 };
 const normalizePath = relativePath => {
 	const normalized = path.posix
@@ -49,14 +54,14 @@ function validateUploadFile(fileName, mimeType) {
 	const extension = path.extname(String(fileName || '')).toLowerCase();
 	const allowedMimeTypes = allowedUploadMimeTypes[extension];
 	if (!allowedMimeTypes || !allowedMimeTypes.has(String(mimeType || '').toLowerCase())) {
-		const error = new Error('Only PDF, Word, and PowerPoint files are allowed');
+		const error = new Error('Only PDF, Word, PowerPoint, PNG, JPG, JPEG, GIF, and WEBP files are allowed');
 		error.status = 400;
 		throw error;
 	}
 }
 async function ensureUploadRoot() { await fs.mkdir(uploadRoot, { recursive: true }); }
-async function listFiles() { const result = await pool.query('SELECT path FROM evidence_files ORDER BY name'); return result.rows.map(row => `upload/${row.path}`); }
-async function saveFile({ functionName, kind, file, rejectDuplicate = false }) {
+async function listFiles(user) { return (await require('./evidenceAccessService').list(user)).map(file => file.path); }
+async function saveFile({ functionName, kind, file, rejectDuplicate = false, uploadedBy = null }) {
 	const safeFunction = safeSegment(functionName);
 	const safeName = safeSegment(file?.originalname);
 	const folder = kind === 'policy' ? 'Policy' : 'Practice';
@@ -67,31 +72,9 @@ async function saveFile({ functionName, kind, file, rejectDuplicate = false }) {
 		throw error;
 	}
 
-	const existing = await pool.query(
-		'SELECT path, name, octet_length(content) AS size, mime_type, updated_at FROM evidence_files WHERE name = $1 ORDER BY updated_at DESC LIMIT 1',
-		[safeName]
-	);
-
-	if (existing.rowCount) {
-		await fs.rm(file.path, { force: true });
-		if (rejectDuplicate) {
-			const error = new Error(`File name already exists: ${safeName}`);
-			error.status = 409;
-			throw error;
-		}
-
-		return {
-			...existing.rows[0],
-			path: `upload/${existing.rows[0].path}`,
-			size: Number(existing.rows[0].size || file.size),
-			type: existing.rows[0].mime_type,
-			updatedAt: existing.rows[0].updated_at,
-		};
-	}
-
-	const relativePath = path.posix.join(safeFunction, folder, safeName);
+	const relativePath = path.posix.join(safeFunction, folder, require('node:crypto').randomUUID(), safeName);
 	try {
-		await storage.put(relativePath, { sourcePath: file.path, name: safeName, mimeType: file.mimetype || 'application/octet-stream' });
+		await storage.put(relativePath, { sourcePath: file.path, name: safeName, mimeType: file.mimetype || 'application/octet-stream', uploadedBy });
 	} finally { await fs.rm(file.path, { force: true }); }
 
 	return {
@@ -102,7 +85,7 @@ async function saveFile({ functionName, kind, file, rejectDuplicate = false }) {
 		updatedAt: new Date().toISOString(),
 	};
 }
-async function saveFiles({ functionName, kind, files, rejectDuplicate = false }) { const names = files.map(file => safeSegment(file.originalname)); const uniqueNames = new Set(names); if (uniqueNames.size !== names.length) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); const error = new Error('Duplicate filenames in upload batch'); error.status = 409; throw error; } const existing = await pool.query('SELECT name FROM evidence_files WHERE name = ANY($1)', [names]); if (existing.rowCount && rejectDuplicate) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); const error = new Error(`File name already exists: ${existing.rows[0].name}`); error.status = 409; throw error; } try { return await Promise.all(files.map(file => saveFile({ functionName, kind, file, rejectDuplicate }))); } catch (error) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); throw error; } }
+async function saveFiles({ functionName, kind, files, rejectDuplicate = false, uploadedBy = null }) { try { return await Promise.all(files.map(file => saveFile({ functionName, kind, file, rejectDuplicate, uploadedBy }))); } catch (error) { await Promise.all(files.map(file => fs.rm(file.path, { force: true }))); throw error; } }
 async function readFile(relativePath) {
 	const normalized = storagePath(relativePath);
 	const result = await pool.query('SELECT content, mime_type FROM evidence_files WHERE path = $1', [normalized]);
@@ -114,6 +97,8 @@ async function readFile(relativePath) {
 	}
 	return { content, type: result.rows[0]?.mime_type || 'application/octet-stream' };
 }
+async function openPage(relativePath) { const normalized = storagePath(relativePath); const result = await pool.query('SELECT open_page FROM evidence_files WHERE path=$1', [normalized]); return Math.max(1, Number(result.rows[0]?.open_page) || 1); }
+async function setOpenPage(relativePath, page) { const normalized = storagePath(relativePath); const value = Number(page); if (!Number.isInteger(value) || value < 1 || value > 100000) { const error = new Error('Halaman PDF harus berupa angka minimal 1.'); error.status = 400; throw error; } const result = await pool.query('UPDATE evidence_files SET open_page=$1, updated_at=NOW() WHERE path=$2 RETURNING open_page AS "openPage"', [value, normalized]); if (!result.rowCount) { const error = new Error('File tidak ditemukan'); error.status = 404; throw error; } return result.rows[0].openPage; }
 async function replaceFile(relativePath, file) {
 	const normalized = storagePath(relativePath);
 	if (!file?.buffer) {
@@ -197,4 +182,4 @@ async function resetFilesForAssessment(assessmentId) {
 	}
 }
 
-module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, replaceFile, deleteFile, removeUnreferencedFile, resetFiles, resetFilesForAssessment, validateUploadMetadata, validateUploadFile };
+module.exports = { ensureUploadRoot, listFiles, saveFile, saveFiles, readFile, openPage, setOpenPage, replaceFile, deleteFile, removeUnreferencedFile, resetFiles, resetFilesForAssessment, validateUploadMetadata, validateUploadFile };

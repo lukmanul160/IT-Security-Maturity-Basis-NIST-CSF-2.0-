@@ -322,6 +322,7 @@ CREATE TABLE IF NOT EXISTS evidence_files (
   name TEXT NOT NULL,
   content BYTEA,
   mime_type TEXT NOT NULL,
+  open_page INTEGER NOT NULL DEFAULT 1 CHECK (open_page >= 1),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -343,6 +344,7 @@ CREATE TABLE IF NOT EXISTS file_storage_locations (
 
 ALTER TABLE evidence_files
   ALTER COLUMN content DROP NOT NULL;
+ALTER TABLE evidence_files ADD COLUMN IF NOT EXISTS open_page INTEGER NOT NULL DEFAULT 1 CHECK (open_page >= 1);
 
 CREATE INDEX IF NOT EXISTS evidence_files_name_idx
   ON evidence_files (name);
@@ -395,6 +397,7 @@ CREATE TABLE IF NOT EXISTS controls (
   implementation TEXT NOT NULL DEFAULT '',
   "references" TEXT NOT NULL DEFAULT '',
   minimum_evidence TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
   evidence JSONB NOT NULL DEFAULT '[]'::jsonb,
   applicability TEXT NOT NULL DEFAULT 'Applicable',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -413,6 +416,7 @@ CREATE INDEX IF NOT EXISTS controls_category_idx
   ON controls (framework_id, category);
 
 ALTER TABLE controls ADD COLUMN IF NOT EXISTS minimum_evidence TEXT NOT NULL DEFAULT '';
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT '';
 ALTER TABLE controls ADD COLUMN IF NOT EXISTS evidence JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE controls ADD COLUMN IF NOT EXISTS applicability TEXT NOT NULL DEFAULT 'Applicable';
 

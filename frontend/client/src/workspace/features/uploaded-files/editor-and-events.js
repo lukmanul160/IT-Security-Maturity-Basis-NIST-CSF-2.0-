@@ -16,12 +16,27 @@ function editUploadedFile(recordId) {
   $('uploadedFileEditCurrentPath').textContent = record.path || '-';
   $('uploadedFileEditLocation').textContent = `${record.item.fn.name} · ${categoryLabel(record.item.category || 'CSF Core')}`;
   $('uploadedFileEditControl').textContent = `${record.item.fn.id} · ${record.item.name || record.item.subcategory || '-'}`;
-  $('uploadedFileEditInput').accept = extension || '.pdf,.doc,.docx,.ppt,.pptx';
+  $('uploadedFileEditInput').accept = extension || '.pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp';
+  const isPdf = extension === '.pdf' || record.type === 'application/pdf';
+  $('uploadedPdfOpenPageField').hidden = !isPdf;
+  $('uploadedPdfOpenPageSave').hidden = !isPdf;
+  $('uploadedPdfOpenPage').value = Math.max(1, Number(record.openPage) || 1);
   $('uploadedFileEditHint').textContent = extension ? `Pilih file ${extension.toUpperCase()} agar path dan seluruh referensi tetap sama.` : 'Pilih file dengan format yang sama.';
   $('uploadedFileEditStatus').textContent = 'Ready';
   $('uploadedFileEditSubmit').disabled = false;
   $('uploadedFileEditModal')._record = record;
   $('uploadedFileEditModal').showModal();
+}
+async function saveUploadedPdfOpenPage() {
+  const record = $('uploadedFileEditModal')._record;
+  if (!record) return;
+  const openPage = Number($('uploadedPdfOpenPage').value);
+  if (!Number.isInteger(openPage) || openPage < 1) { $('uploadedFileEditStatus').textContent = 'Masukkan nomor halaman PDF minimal 1.'; return; }
+  const response = await fetch(`/api/files/open-page/${record.path.replace(/^upload\//, '').split('/').map(encodeURIComponent).join('/')}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ openPage }) });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) { $('uploadedFileEditStatus').textContent = result.error || 'Halaman PDF gagal disimpan.'; return; }
+  record.openPage = result.openPage;
+  $('uploadedFileEditStatus').textContent = `PDF akan dibuka pada halaman ${result.openPage}.`;
 }
 function openUploadedFileSource() {
   const record = $('uploadedFileEditModal')._record;

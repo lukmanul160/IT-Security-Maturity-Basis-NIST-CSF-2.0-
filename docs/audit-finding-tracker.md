@@ -12,6 +12,12 @@ Pengembangan berikutnya: lanjutkan implementasi modul ini dengan mengikuti pola 
 
 ## Reminder finding
 
+Navigasi modul terdiri dari tiga tab: **1. Dashboard** (ringkasan jumlah dan tenggat), **2. Setting SMTP** (pengaturan reminder dan koneksi SMTP Admin), dan **3. Kelola Audit** (Audit → Finding → Follow-up → Evidence). Tab SMTP menampilkan informasi akses bagi pengguna selain Admin; form pengaturannya hanya tersedia bagi Admin.
+
+Keenam kartu Dashboard dapat diklik atau diaktifkan dengan Enter/Spasi untuk membuka data sesuai kartu pada Kelola Audit. Daftar lintas audit menampilkan asal data dan tetap dapat dibuka menuju turunan yang tepat. Pencarian dan filter status mempersempit hasil kartu; tombol breadcrumb **Semua Audit** menghapus filter kartu. Pembuatan data turunan dilakukan setelah memilih induknya, bukan dari daftar lintas audit.
+
+Reminder follow-up hanya didasarkan pada **Finding**: judul finding pada subjek, status finding, dan tanggal tenggat finding. Tenggat atau status Audit maupun Follow-up tidak memicu reminder tersendiri. Judul audit tetap dicantumkan sebagai konteks dalam isi email. Finding Closed atau tanpa tenggat tidak dikirim.
+
 Admin dapat membuka **Pengaturan reminder finding / SMTP Admin** di Audit Finding Tracker. Koneksi memakai `smtpService` terpusat; host, pengirim, dan password tetap di Account > Pengaturan SMTP. Modul hanya menyimpan status aktif, H- (0–365 hari), dan email penerima (satu per baris). Seluruh penerima menerima setiap finding yang memenuhi jadwal, bukan pemetaan otomatis berdasarkan PIC.
 
 Email berisi **Judul** audit dan **Finding**, ditambah deskripsi, PIC, status, serta tenggat. Scheduler setiap jam selama server aktif memproses finding selain Closed yang mempunyai tenggat dalam jendela H- atau sudah lewat. Pengiriman berhasil dicatat sekali per finding/tenggat/penerima; kegagalan dicoba lagi pada pemeriksaan berikutnya. Jika tanggal tenggat diubah, reminder dapat dikirim kembali untuk tanggal baru. Reminder nonaktif secara default. Tombol email percobaan memakai data contoh dan SMTP Admin, tanpa mengaktifkan scheduler.

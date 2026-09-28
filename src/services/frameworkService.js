@@ -29,7 +29,7 @@ async function createFramework(data) {
 
 async function getControls(frameworkId) {
   const orderBy = frameworkId === 'iso27001' ? "string_to_array(code, '.')::int[] ASC" : frameworkId === 'iso27001-soa' ? "string_to_array(regexp_replace(code, '^A\\.', ''), '.')::int[] ASC" : 'code';
-  const result = await pool.query(`SELECT code AS id, function, category, subcategory, implementation, "references", minimum_evidence AS "minimumEvidence", evidence, applicability FROM controls WHERE framework_id = $1 ORDER BY ${orderBy}`, [frameworkId]);
+  const result = await pool.query(`SELECT code AS id, function, category, subcategory, implementation, "references", minimum_evidence AS "minimumEvidence", notes, evidence, applicability FROM controls WHERE framework_id = $1 ORDER BY ${orderBy}`, [frameworkId]);
   if (frameworkId === 'iso27001') {
     const seed = JSON.parse(await fs.readFile(`${dataRoot}/iso-27001-data.json`, 'utf8'));
     const seedByCode = new Map(seed.map(row => [row.id, row.minimumEvidence || '']));
@@ -43,17 +43,17 @@ async function createControl(frameworkId, data) {
   if (existing.rowCount) throw duplicateIdError(frameworkId, data.id);
   const evidence = Array.isArray(data.evidence) ? data.evidence : [];
   const applicability = ['Applicable', 'Not applicable'].includes(data.applicability) ? data.applicability : 'Applicable';
-  const result = await pool.query('INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references", minimum_evidence, evidence, applicability) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING code AS id, function, category, subcategory, implementation, "references", minimum_evidence AS "minimumEvidence", evidence, applicability', [frameworkId, data.id, data.function, data.category, data.subcategory, data.implementation || '', data.references || '', data.minimumEvidence || '', JSON.stringify(evidence), applicability]);
+  const result = await pool.query('INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references", minimum_evidence, notes, evidence, applicability) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING code AS id, function, category, subcategory, implementation, "references", minimum_evidence AS "minimumEvidence", notes, evidence, applicability', [frameworkId, data.id, data.function, data.category, data.subcategory, data.implementation || '', data.references || '', data.minimumEvidence || '', data.notes || '', JSON.stringify(evidence), applicability]);
   return result.rows[0];
 }
 
 async function updateControl(frameworkId, code, data) {
-  const fields = ['function', 'category', 'subcategory', 'implementation', '"references"', 'minimum_evidence', 'evidence', 'applicability'].filter(field => data[field.replaceAll('"', '')] !== undefined);
+  const fields = ['function', 'category', 'subcategory', 'implementation', '"references"', 'minimum_evidence', 'notes', 'evidence', 'applicability'].filter(field => data[field.replaceAll('"', '')] !== undefined);
   if (!fields.length) throw Object.assign(new Error('No fields to update'), { status: 400 });
   const params = fields.map(field => field === 'evidence' ? JSON.stringify(Array.isArray(data.evidence) ? data.evidence : []) : field === 'applicability' && !['Applicable', 'Not applicable'].includes(data.applicability) ? 'Applicable' : data[field.replaceAll('"', '')]);
   const assignments = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
   params.push(frameworkId, code);
-  const result = await pool.query(`UPDATE controls SET ${assignments}, updated_at = NOW() WHERE framework_id = $${params.length - 1} AND code = $${params.length} RETURNING code AS id, function, category, subcategory, implementation, "references", minimum_evidence AS "minimumEvidence", evidence, applicability`, params);
+  const result = await pool.query(`UPDATE controls SET ${assignments}, updated_at = NOW() WHERE framework_id = $${params.length - 1} AND code = $${params.length} RETURNING code AS id, function, category, subcategory, implementation, "references", minimum_evidence AS "minimumEvidence", notes, evidence, applicability`, params);
   if (!result.rowCount) throw Object.assign(new Error('Control not found'), { status: 404 });
   return result.rows[0];
 }

@@ -1,0 +1,416 @@
+[app] Mounting /api routes with requireAuth
+[app] GET /app
+[app] GET /login
+[app] GET /tailwind.css
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] GET /login
+[app] POST /api/auth/login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-DR5GtVBJ.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[app] GET /api/auth/me
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/privacy/assessment
+[app] GET /api/privacy
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/files/access/open/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[0f46d1ba-a41a-420d-8648-ab0d11ec6695] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files/access/open/ISO%2027001/Policy/324f26af-7aea-4574-a6f3-154689b84fa0/Tanpa%20judul.jpeg
+[a5d0ac91-ee09-48d9-89a7-e50c079277c5] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/1788341401042-69997f978423ab9f-relevansi%20kebijakan%20_1_.xlsx
+[app] GET /api/auth/me
+[app] GET /api/files/access/upload/Govern/Policy/60fabe4a-354f-4c9b-90bf-9ee7af978ab9/Cybersecurity-Risk-Acceptance-Form-3%20_8_.pdf
+[app] GET /api/files?details=true
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/files/open/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /favicon.ico
+[app] POST /api/files/batch
+[app] GET /api/files?details=true
+[app] PUT /api/frameworks/iso27001/controls/4.1/evidence
+[app] GET /api/files/access/open/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[5dc338ac-7579-48a4-87db-70c1d197a36a] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] POST /api/files/batch
+[app] GET /api/files?details=true
+[app] PUT /api/privacy/assessment
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/d6fa2c26-e92c-418f-94d7-d3aaf6bfd0f1/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-DR5GtVBJ.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/auth/me
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/assessment
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files?details=true
+[app] GET /favicon.ico
+[app] GET /api/files/access/open/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[d3548073-22a5-44c4-9e74-e37388662685] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files/access/open/ISO%2027001/Policy/324f26af-7aea-4574-a6f3-154689b84fa0/Tanpa%20judul.jpeg
+[9609354b-a668-49fb-877b-679dbd298e52] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files/access/open/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[742a7702-fd22-4add-bc9d-ce777df7af01] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/1788341401042-69997f978423ab9f-relevansi%20kebijakan%20_1_.xlsx
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/d6fa2c26-e92c-418f-94d7-d3aaf6bfd0f1/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/files/access/upload/Govern/Policy/60fabe4a-354f-4c9b-90bf-9ee7af978ab9/Cybersecurity-Risk-Acceptance-Form-3%20_8_.pdf
+[app] GET /app
+[app] GET /styles.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /modern.css
+[app] GET /tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-DR5GtVBJ.js
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/auth/me
+[app] GET /api/assessment
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/files?details=true
+[app] GET /favicon.ico
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files/access/open/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[9cd81116-0fe9-4317-892b-b9a97a7f9243] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files/access/open/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/files/access/open/ISO%2027001/Policy/324f26af-7aea-4574-a6f3-154689b84fa0/Tanpa%20judul.jpeg
+[app] GET /api/files/access/upload/Govern/Policy/60fabe4a-354f-4c9b-90bf-9ee7af978ab9/Cybersecurity-Risk-Acceptance-Form-3%20_8_.pdf
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[cbf73f82-4c5b-4d2a-a218-82c8b1e34b08] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[0251d892-1d66-497e-9e15-ba1c68bdafac] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/1788341401042-69997f978423ab9f-relevansi%20kebijakan%20_1_.xlsx
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/d6fa2c26-e92c-418f-94d7-d3aaf6bfd0f1/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-DR5GtVBJ.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/auth/me
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/auth/me
+[app] GET /api/files/access/open/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/access/open/ISO%2027001/Policy/324f26af-7aea-4574-a6f3-154689b84fa0/Tanpa%20judul.jpeg
+[app] GET /api/files/access/open/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[ba039913-ee2f-4476-beef-2126ac5dcd45] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files?details=true
+[659d6e12-3d85-4d49-bd93-914ee829b9bd] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[b02f9804-321d-4c96-b243-e2d656b21b72] Error: Evidence tidak tersedia.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.canModify (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:37:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async access (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:99:57) {
+  status: 404
+}
+[app] GET /api/files/access/upload/Govern/Policy/60fabe4a-354f-4c9b-90bf-9ee7af978ab9/Cybersecurity-Risk-Acceptance-Form-3%20_8_.pdf
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/d6fa2c26-e92c-418f-94d7-d3aaf6bfd0f1/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/1788341401042-69997f978423ab9f-relevansi%20kebijakan%20_1_.xlsx
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-Cho-6x7q.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/assessment
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files/access/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/access/ISO%2027001/Policy/324f26af-7aea-4574-a6f3-154689b84fa0/Tanpa%20judul.jpeg
+[app] GET /api/files/access/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/auth/me
+[app] GET /api/files?details=true
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/d6fa2c26-e92c-418f-94d7-d3aaf6bfd0f1/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/1788341401042-69997f978423ab9f-relevansi%20kebijakan%20_1_.xlsx
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files/access/upload/Govern/Policy/60fabe4a-354f-4c9b-90bf-9ee7af978ab9/Cybersecurity-Risk-Acceptance-Form-3%20_8_.pdf
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/files/open/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /favicon.ico
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /tailwind.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /vue/assets/index-TSiAekQN.js
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-management
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files/access/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/access/ISO%2027001/Policy/324f26af-7aea-4574-a6f3-154689b84fa0/Tanpa%20judul.jpeg
+[app] GET /api/files/access/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/files?details=true
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/files/access/upload/Govern/Policy/60fabe4a-354f-4c9b-90bf-9ee7af978ab9/Cybersecurity-Risk-Acceptance-Form-3%20_8_.pdf
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/1788341401042-69997f978423ab9f-relevansi%20kebijakan%20_1_.xlsx
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/d6fa2c26-e92c-418f-94d7-d3aaf6bfd0f1/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] PUT /api/files/open-page/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/open/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /favicon.ico
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /favicon.ico
+[app] GET /favicon.ico
+[app] GET /
+[app] GET /favicon.ico
+[app] GET /login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /tailwind.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /vue/assets/index-TSiAekQN.js
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/assessment
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/auth/me
+[app] GET /api/files?details=true
+[app] GET /api/files/access/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /api/files/access/ISO%2027001/Policy/324f26af-7aea-4574-a6f3-154689b84fa0/Tanpa%20judul.jpeg
+[app] GET /api/files/access/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/files/access/upload/Govern/Policy/60fabe4a-354f-4c9b-90bf-9ee7af978ab9/Cybersecurity-Risk-Acceptance-Form-3%20_8_.pdf
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/d6fa2c26-e92c-418f-94d7-d3aaf6bfd0f1/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/files/access/upload/COMMUNICATE-P/Policy/1788341401042-69997f978423ab9f-relevansi%20kebijakan%20_1_.xlsx
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001/objectives
+[app] POST /api/files/batch
+[app] GET /api/files?details=true
+[app] PUT /api/frameworks/iso27001/controls/4.1/evidence
+[app] GET /api/files/access/ISO%2027001/Policy/4451a19b-0c75-4ccb-a3e2-e7cb6bffba46/Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[app] PUT /api/files/open-page/ISO%2027001/Policy/4451a19b-0c75-4ccb-a3e2-e7cb6bffba46/Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[app] GET /api/files/open/ISO%2027001/Policy/4451a19b-0c75-4ccb-a3e2-e7cb6bffba46/Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[app] GET /api/files/ISO%2027001/Policy/4451a19b-0c75-4ccb-a3e2-e7cb6bffba46/Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[app] GET /favicon.ico
+[app] PUT /api/files/open-page/ISO%2027001/Policy/4451a19b-0c75-4ccb-a3e2-e7cb6bffba46/Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[app] GET /api/files/open/ISO%2027001/Policy/4451a19b-0c75-4ccb-a3e2-e7cb6bffba46/Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[app] GET /api/files/ISO%2027001/Policy/4451a19b-0c75-4ccb-a3e2-e7cb6bffba46/Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[app] GET /favicon.ico
+[app] GET /api/files/open/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /api/files/ISO%2027001/Policy/e026bb26-d429-454e-a637-325cd6b9aac4/Lukmanul_Hakim_CV_ATS%20_2_.pdf
+[app] GET /favicon.ico

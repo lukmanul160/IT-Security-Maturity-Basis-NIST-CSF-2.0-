@@ -1,0 +1,86 @@
+[app] Mounting /api routes with requireAuth
+[app] GET /app
+[app] GET /login
+[app] GET /tailwind.css
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /favicon.ico
+[app] GET /login
+[app] POST /api/auth/login
+[app] GET /app
+[app] GET /styles.css
+[app] GET /modern.css
+[app] GET /legacy-before-tailwind.css
+[app] GET /legacy-after-tailwind.css
+[app] GET /vue/assets/index-D1u8A5W9.js
+[app] GET /tailwind.css
+[app] GET /vue/assets/index-BTrHBBtl.css
+[app] GET /api/auth/me
+[app] GET /api/policy-register
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/assessment
+[app] GET /api/csf
+[app] GET /api/frameworks/csf/targets
+[app] GET /api/risk-acceptance
+[app] GET /api/risk-management
+[app] GET /api/risk-management/indicators
+[app] GET /api/risk-management/dropdowns
+[app] GET /api/auth/me
+[app] GET /api/auth/me
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /favicon.ico
+[app] GET /api/auth/me
+[app] GET /api/files?details=true
+[app] GET /api/privacy
+[app] GET /api/privacy/assessment
+[app] GET /api/frameworks/privacy/targets
+[app] GET /api/audit-finding-tracker
+[app] GET /api/frameworks/iso27001/controls
+[app] GET /api/frameworks/iso27001-soa/controls
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001/objectives
+[app] GET /api/frameworks/iso27001/objectives
+[app] POST /api/files/batch
+[app] GET /api/files?details=true
+[app] PUT /api/frameworks/iso27001/controls/4.1/evidence
+[app] GET /api/files/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /favicon.ico
+[app] GET /api/files/policy-register/1788698794433-015aefdecd6c9c34-Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[5b813e6a-2115-40be-911a-c07df0e0835f] Error: Evidence tidak tersedia atau bukan file yang Anda upload.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.assertAccess (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:23:110)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async download (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:90:2) {
+  status: 403
+}
+[app] GET /favicon.ico
+[app] GET /api/files/policy-register/1788698794433-015aefdecd6c9c34-Script_Presentasi_BRINSIGHT_5_Menit.pdf
+[0791a436-d22a-4929-8548-4599c88fedf2] Error: Evidence tidak tersedia atau bukan file yang Anda upload.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at Object.assertAccess (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:23:110)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async download (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:90:2) {
+  status: 403
+}
+[app] GET /favicon.ico
+[app] GET /api/files/ISO%2027001/Policy/cba87cde-8968-4500-9170-549c1f772d45/Lukmanul_Hakim_CV_ATS.pdf
+[app] GET /favicon.ico
+[app] POST /api/files/batch
+[dc520234-3b9b-465a-834c-adbe630554db] Error: Only PDF, Word, and PowerPoint files are allowed
+    at Object.validateUploadFile (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\fileService.js:52:17)
+    at fileFilter (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:32:16)
+    at wrappedFileFilter (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\multer\index.js:45:7)
+    at Multipart.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\multer\lib\make-middleware.js:193:7)
+    at Multipart.emit (node:events:509:28)
+    at HeaderParser.cb (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\streamsearch\lib\sbmh.js:248:10)
+    at SBMH.push (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\streamsearch\lib\sbmh.js:104:16) {
+  status: 400,
+  storageErrors: []
+}

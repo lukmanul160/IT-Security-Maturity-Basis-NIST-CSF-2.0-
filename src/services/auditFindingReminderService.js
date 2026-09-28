@@ -32,11 +32,12 @@ async function saveSettings(data) {
 }
 function renderMessage(row) {
   return {
-    subject: `Reminder finding audit: ${row.auditTitle}`.replace(/[\r\n]/g, ' '),
+    subject: `Reminder follow-up finding: ${row.data.title}`.replace(/[\r\n]/g, ' '),
     text: `Judul: ${row.auditTitle}\nFinding: ${row.data.title}\n\nDeskripsi finding: ${row.data.description || '-'}\nPIC: ${row.data.owner || '-'}\nStatus: ${row.data.status}\nTenggat: ${row.data.dueDate}\n\nMohon tindak lanjuti finding melalui Audit Finding Tracker.`
   };
 }
 function eligible(row, daysBefore, now = new Date()) {
+  if (row.kind !== 'finding') return false;
   const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() + daysBefore);
   const date = `${cutoff.getFullYear()}-${String(cutoff.getMonth()+1).padStart(2,'0')}-${String(cutoff.getDate()).padStart(2,'0')}`;
   return row.data.status !== 'Closed' && /^\d{4}-\d{2}-\d{2}$/.test(row.data.dueDate || '') && row.data.dueDate <= date;
@@ -56,7 +57,7 @@ async function runReminders() {
     if (!locked) return;
     const settings = await read();
     if (!settings.enabled) return;
-    const result = await client.query(`SELECT f.id, f.data, a.data->>'title' AS "auditTitle" FROM audit_finding_records f JOIN audit_finding_records a ON a.id=f.parent_id AND a.kind='audit' WHERE f.kind='finding' AND f.data->>'status' <> 'Closed'`);
+    const result = await client.query(`SELECT f.id, f.kind, f.data, a.data->>'title' AS "auditTitle" FROM audit_finding_records f JOIN audit_finding_records a ON a.id=f.parent_id AND a.kind='audit' WHERE f.kind='finding' AND f.data->>'status' <> 'Closed'`);
     const pending = result.rows.filter(row => eligible(row, settings.daysBefore));
     if (!pending.length) return;
     const delivery = await smtp.createMailer(); mailer = delivery.mailer;

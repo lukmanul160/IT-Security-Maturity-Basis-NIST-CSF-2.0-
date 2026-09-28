@@ -1,4 +1,5 @@
 const fileService = require('../services/fileService');
+const evidenceAccess = require('../services/evidenceAccessService');
 const multer = require('multer');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -49,13 +50,14 @@ const replacementUpload = multer({
 	limits: { fileSize: 50 * 1024 * 1024, files: 1 },
 });
 
-async function list(req, res) { res.json(await fileService.listFiles()); }
+async function list(req, res) { const files = await evidenceAccess.list(req.user); res.json(req.query.details === 'true' ? files : files.map(file => file.path)); }
 async function create(req, res) {
 	if (!req.file) return res.status(400).json({ error: 'File is required' });
 
 	fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
 	fileService.validateUploadMetadata(req.body.functionName, req.body.kind, req.file.originalname);
 	const file = await fileService.saveFile({
+		uploadedBy: await evidenceAccess.userId(req.user),
 		functionName: req.body.functionName,
 		kind: req.body.kind,
 		file: req.file,
@@ -74,6 +76,7 @@ async function createBatch(req, res) {
 	req.files.forEach(file => fileService.validateUploadMetadata(req.body.functionName, req.body.kind, file.originalname));
 	req.files.forEach(file => fileService.validateUploadFile(file.originalname, file.mimetype));
 	const files = await fileService.saveFiles({
+		uploadedBy: await evidenceAccess.userId(req.user),
 		functionName: req.body.functionName,
 		kind: req.body.kind,
 		files: req.files,
@@ -84,18 +87,24 @@ async function createBatch(req, res) {
 const filePath = req => Array.isArray(req.params.path) ? req.params.path.join('/') : req.params.path;
 async function download(req, res) {
 	const relativePath = filePath(req);
+	await evidenceAccess.assertReadAccess(relativePath, req.user);
 	const file = await fileService.readFile(relativePath);
 	const extension = path.extname(relativePath).toLowerCase();
-	const disposition = inlineFileTypes.has(file.type) || ['.pdf', '.doc', '.docx', '.dot', '.dotx', '.docm', '.dotm'].includes(extension)
+	const disposition = inlineFileTypes.has(file.type) || String(file.type || '').startsWith('image/') || ['.pdf', '.doc', '.docx', '.dot', '.dotx', '.docm', '.dotm'].includes(extension)
 		? 'inline'
 		: 'attachment';
 	res.set('Content-Disposition', `${disposition}; filename="${safeSegment(path.basename(relativePath))}"`);
 	res.type(file.type).send(file.content);
 }
+async function access(req, res) { res.json({ canModify: await evidenceAccess.canModify(filePath(req), req.user) }); }
+async function open(req, res) { await evidenceAccess.assertReadAccess(filePath(req), req.user); const page = await fileService.openPage(filePath(req)); res.redirect(`/api/files/${filePath(req).split('/').map(encodeURIComponent).join('/')}#page=${page}`); }
+async function getOpenPage(req, res) { await evidenceAccess.assertReadAccess(filePath(req), req.user); res.json({ openPage: await fileService.openPage(filePath(req)) }); }
+async function setOpenPage(req, res) { await evidenceAccess.assertAccess(filePath(req), req.user); res.json({ openPage: await fileService.setOpenPage(filePath(req), req.body?.openPage) }); }
 async function replace(req, res) {
+	await evidenceAccess.assertAccess(filePath(req), req.user);
 	if (!req.file) return res.status(400).json({ error: 'Replacement file is required' });
 	res.json(await fileService.replaceFile(filePath(req), req.file));
 }
-async function remove(req, res) { await fileService.deleteFile(filePath(req)); res.status(204).end(); }
+async function remove(req, res) { await evidenceAccess.assertAccess(filePath(req), req.user); await fileService.deleteFile(filePath(req)); res.status(204).end(); }
 
-module.exports = { list, create, createBatch, download, replace, remove, upload, replacementUpload };
+module.exports = { list, create, createBatch, download, access, open, getOpenPage, setOpenPage, replace, remove, upload, replacementUpload };

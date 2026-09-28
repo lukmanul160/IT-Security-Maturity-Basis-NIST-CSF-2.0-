@@ -160,6 +160,7 @@ async function run() {
 
     await evaluate(client, `document.querySelector('[data-view="audit-finding-tracker"]').click()`);
     await waitFor(client, `!document.querySelector('#aftNew').disabled`, 'audit tracker data');
+    await evaluate(client, `document.querySelector('[data-aft-tab="manage"]').click()`);
     await evaluate(client, `document.querySelector('#aftNew').click()`);
     assert.equal(await evaluate(client, `document.querySelector('#aftModal').open`), true);
     await evaluate(client, `document.querySelector('#aftCancel').click()`);

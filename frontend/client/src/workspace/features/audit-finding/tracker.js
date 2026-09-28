@@ -4,10 +4,64 @@
   const kinds = ['audit', 'finding', 'followup', 'evidence'];
   const labels = ['Audit', 'Finding', 'Follow-up', 'Evidence'];
   let rows = [], path = [], editing = null, ready = false;
+  let cardFilter = null;
+  const cardFilters = {
+    'open-findings': { title: 'Finding terbuka', matches: row => row.kind === 'finding' && row.data.status !== 'Closed' },
+    followups: { title: 'Semua Follow-up', matches: row => row.kind === 'followup' },
+    evidence: { title: 'Semua Evidence', matches: row => row.kind === 'evidence' },
+    'overdue-audits': { title: 'Audit lewat tenggat', matches: row => row.kind === 'audit' && isOverdue(row) },
+    'overdue-findings': { title: 'Finding lewat tenggat', matches: row => row.kind === 'finding' && isOverdue(row) }
+  };
+  function ancestors(row) {
+    const chain = [], visited = new Set([row.id]);
+    let parent = rows.find(item => item.id === row.parentId);
+    while (parent && !visited.has(parent.id)) {
+      chain.unshift(parent); visited.add(parent.id);
+      parent = rows.find(item => item.id === parent.parentId);
+    }
+    return chain;
+  }
+  function openCard(filter) {
+    if (!ready) return;
+    cardFilter = cardFilters[filter] ? filter : null; path = [];
+    $('aftSearch').value = ''; $('aftFilter').value = '';
+    setTab('manage'); render(); $('aftManageTab').focus();
+  }
+  document.querySelectorAll('[data-aft-card]').forEach(card => {
+    card.addEventListener('click', () => openCard(card.dataset.aftCard));
+    card.addEventListener('keydown', event => {
+      if (!['Enter', ' '].includes(event.key)) return;
+      event.preventDefault(); openCard(card.dataset.aftCard);
+    });
+  });
   const form = $('aftForm');
   const canWrite = () => ['admin', 'approver', 'editor'].includes(currentUserRole);
   const canDelete = () => ['admin', 'approver'].includes(currentUserRole);
   const status = message => { $('aftStatus').textContent = message; };
+  function setTab(tab) {
+    if (!['dashboard', 'smtp', 'manage'].includes(tab)) return;
+    const panels = { dashboard: 'aftDashboardPanel', smtp: 'aftSmtpPanel', manage: 'aftManagePanel' };
+    document.querySelectorAll('[data-aft-tab]').forEach(button => {
+      const active = button.dataset.aftTab === tab;
+      button.classList.toggle('button-accent', active);
+      button.classList.toggle('button-quiet', !active);
+      button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1;
+    });
+    Object.entries(panels).forEach(([name, id]) => { $(id).hidden = name !== tab; });
+    $('aftReminderPanel').hidden = currentUserRole !== 'admin';
+    $('aftReminderAccess').hidden = currentUserRole === 'admin';
+    if (tab === 'smtp' && currentUserRole === 'admin') loadReminder();
+  }
+  document.querySelectorAll('[data-aft-tab]').forEach((button, index, buttons) => {
+    button.addEventListener('click', () => setTab(button.dataset.aftTab));
+    button.addEventListener('keydown', event => {
+      const positions = { ArrowRight: (index + 1) % buttons.length, ArrowLeft: (index + buttons.length - 1) % buttons.length, Home: 0, End: buttons.length - 1 };
+      if (positions[event.key] === undefined) return;
+      event.preventDefault(); const target = buttons[positions[event.key]]; target.focus(); target.click();
+    });
+  });
+  $('aftDashboardManage').addEventListener('click', () => openCard('audits'));
+  $('aftDashboardRefresh').addEventListener('click', load);
   // Compare local calendar dates: due today is not overdue; closed records never count.
   function isOverdue(record) {
     const now = new Date();
@@ -32,8 +86,9 @@
   function render() {
     const level = path.length, parentId = path.at(-1)?.id || null;
     $('aftNew').textContent = `Tambah ${labels[level]}`;
-    $('aftNew').hidden = !canWrite();
+    $('aftNew').hidden = !canWrite() || Boolean(cardFilter);
     $('aftNew').disabled = !ready;
+    document.querySelectorAll('[data-aft-card]').forEach(card => card.setAttribute('aria-disabled', String(!ready)));
     $('aftReminderPanel').hidden = currentUserRole !== 'admin';
     $('aftAuditCount').textContent = rows.filter(r => r.kind === 'audit').length;
     $('aftOpenCount').textContent = rows.filter(r => r.kind === 'finding' && r.data.status !== 'Closed').length;
@@ -44,8 +99,10 @@
     $('aftBreadcrumb').innerHTML = [0, ...path.map((_, i) => i + 1)].map(i => `<button class="button ${i === level ? 'button-accent' : 'button-quiet'}" type="button" data-aft-level="${i}" ${i === level ? 'aria-current="page"' : ''}>${escapeHtml(i ? `${labels[i]}: ${path[i - 1].data.title}` : 'Semua Audit')}</button>`).join('');
     $('aftContext').textContent = path.length ? path.map(r => r.data.title).join(' → ') + (path.at(-1).data.description ? ' — ' + path.at(-1).data.description : '') : 'Pilih audit untuk melihat finding, lalu follow-up dan evidence terkait.';
     const search = $('aftSearch').value.toLowerCase();
-    const visible = rows.filter(r => r.kind === kinds[level] && r.parentId === parentId && (!$('aftFilter').value || r.data.status === $('aftFilter').value) && Object.values(r.data).join(' ').toLowerCase().includes(search));
-    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small></td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.filename || '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${level < 3 ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[level + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>`}${canWrite() ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${canDelete() ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
+    const scope = cardFilters[cardFilter];
+    const visible = rows.filter(r => (scope ? scope.matches(r) : r.kind === kinds[level] && r.parentId === parentId) && (!$('aftFilter').value || r.data.status === $('aftFilter').value) && Object.values(r.data).join(' ').toLowerCase().includes(search));
+    if (scope) $('aftContext').textContent = `${scope.title} — ${visible.length} data. Pilih Semua Audit untuk kembali ke daftar audit.`;
+    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" ? "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.filename || '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>`}${canWrite() ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${canDelete() ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
   }
   async function load() {
     ready = false; render(); status('Memuat data…');
@@ -65,25 +122,26 @@
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
     $('auditFindingView').classList.add('active-view'); saveUiState(key);
     document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === key));
+    setTab('dashboard');
     load();
   });
   $('aftNew').addEventListener('click', () => openForm());
   $('aftCancel').addEventListener('click', () => $('aftModal').close());
   $('aftRefresh').addEventListener('click', load);
   $('aftSearch').addEventListener('input', render); $('aftFilter').addEventListener('change', render);
-  $('aftBreadcrumb').addEventListener('click', event => { const button = event.target.closest('[data-aft-level]'); if (!button) return; path = path.slice(0, Number(button.dataset.aftLevel)); $('aftSearch').value = ''; $('aftFilter').value = ''; render(); });
+  $('aftBreadcrumb').addEventListener('click', event => { const button = event.target.closest('[data-aft-level]'); if (!button) return; cardFilter = null; path = path.slice(0, Number(button.dataset.aftLevel)); $('aftSearch').value = ''; $('aftFilter').value = ''; render(); });
   $('aftBody').addEventListener('click', async event => {
     const button = event.target.closest('button'); if (!button) return;
     if (button.dataset.aftFinding) {
       const finding = rows.find(row => row.id === button.dataset.aftFinding && row.kind === 'finding');
       const audit = rows.find(row => row.id === finding?.parentId && row.kind === 'audit');
       if (!audit || !finding) return;
-      path = [audit, finding]; $('aftSearch').value = ''; $('aftFilter').value = ''; render();
+      cardFilter = null; path = [audit, finding]; $('aftSearch').value = ''; $('aftFilter').value = ''; render();
       return;
     }
     const id = button.dataset.aftOpen || button.dataset.aftEdit || button.dataset.aftDelete;
     const row = rows.find(r => r.id === id); if (!row) return;
-    if (button.dataset.aftOpen) { path.push(row); $('aftSearch').value = ''; $('aftFilter').value = ''; render(); }
+    if (button.dataset.aftOpen) { cardFilter = null; path = [...ancestors(row), row]; $('aftSearch').value = ''; $('aftFilter').value = ''; render(); }
     else if (button.dataset.aftEdit) openForm(row);
     else if (confirm(`Hapus "${row.data.title}"? Data dengan turunan tidak dapat dihapus.`)) {
       button.disabled = true;
@@ -116,7 +174,6 @@
       $('aftReminderStatus').textContent = 'Pengaturan siap diedit.';
     } catch (error) { $('aftReminderStatus').textContent = error.message; $('aftReminderReload').disabled = false; }
   }
-  $('aftReminderPanel').addEventListener('toggle', () => { if ($('aftReminderPanel').open && currentUserRole === 'admin') loadReminder(); });
   $('aftReminderReload').addEventListener('click', loadReminder);
   $('aftReminderSmtp').addEventListener('click', () => { $('accountButton').click(); document.querySelector('[data-account-tab="smtp"]').click(); });
   $('aftReminderForm').addEventListener('submit', async event => {

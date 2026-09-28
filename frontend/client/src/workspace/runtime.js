@@ -30,8 +30,11 @@ import smtpSettings from './features/administration/smtp-settings.js?raw';
 
 import auditFindingTracker from './features/audit-finding/tracker.js?raw';
 
+import evidenceLibrary from './features/uploaded-files/evidence-library.js?raw';
+
 export default [
   part01,
+  evidenceLibrary,
   part02,
   part03,
   part04,

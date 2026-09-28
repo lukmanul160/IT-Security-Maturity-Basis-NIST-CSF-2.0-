@@ -8,7 +8,7 @@ test('settings validate recipients and refuse module SMTP credentials', () => {
   for (const change of [{recipients:[]},{recipients:['invalid']},{daysBefore:-1},{password:'secret'}]) assert.throws(()=>service.validate({enabled:true,daysBefore:7,recipients:['a@example.com'],...change}),{status:400});
 });
 test('reminders include audit title and finding, skip closed/undated/future and include overdue', () => {
-  const row = {auditTitle:'Audit title',data:{title:'Finding title',status:'Open',dueDate:'2026-09-20'}};
+  const row = {kind:'finding',auditTitle:'Audit title',data:{title:'Finding title',status:'Open',dueDate:'2026-09-20'}};
   const now = new Date(2026,8,16,12);
   assert.equal(service.eligible(row,7,now),true);
   assert.equal(service.eligible({...row,data:{...row.data,status:'Closed'}},7,now),false);
@@ -16,6 +16,9 @@ test('reminders include audit title and finding, skip closed/undated/future and 
   assert.equal(service.eligible({...row,data:{...row.data,dueDate:'2026-09-24'}},7,now),false);
   assert.equal(service.eligible({...row,data:{...row.data,dueDate:'2020-01-01'}},0,now),true);
   assert.match(service.renderMessage(row).text,/Judul: Audit title\nFinding: Finding title/);
+  assert.equal(service.renderMessage(row).subject,'Reminder follow-up finding: Finding title');
+  for (const kind of ['audit','followup','evidence']) assert.equal(service.eligible({...row,kind},7,now),false);
+  assert.equal(service.eligible({...row,auditStatus:'Closed',auditDueDate:'2099-01-01',followupDueDate:'2099-01-01'},7,now),true);
 });
 test('test email uses central SMTP and closes transport', async t => {
   const sent=[]; let closed=false;
@@ -28,10 +31,10 @@ test('scheduler retries failed delivery and deduplicates successful delivery', a
   const delivered=new Set();let sends=0,closed=0;
   const settings={enabled:true,daysBefore:7,recipients:['test@example.com']};
   t.mock.method(pool,'query',async()=>({rows:[{settings}]}));
-  const row={id:'finding-1',auditTitle:'Audit',data:{title:'Finding',status:'Open',dueDate:'2000-01-01'}};
+  const row={id:'finding-1',kind:'finding',auditTitle:'Audit',data:{title:'Finding',status:'Open',dueDate:'2000-01-01'}};
   t.mock.method(pool,'connect',async()=>({release(){},async query(sql,params){
     if(sql.includes('pg_try'))return {rows:[{locked:true}]};
-    if(sql.includes('SELECT f.id'))return {rows:[row,{...row,id:'closed',data:{...row.data,status:'Closed'}}]};
+    if(sql.includes('SELECT f.id'))return {rows:[row,{...row,id:'closed',data:{...row.data,status:'Closed'}},{...row,id:'followup',kind:'followup'},{...row,id:'audit',kind:'audit'}]};
     if(sql.startsWith('SELECT 1'))return {rowCount:delivered.has(JSON.stringify(params))?1:0};
     if(sql.startsWith('INSERT'))delivered.add(JSON.stringify(params));
     return {rows:[]};
