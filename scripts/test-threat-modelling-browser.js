@@ -141,4 +141,5 @@ async function run() {
     }
   }
 }
-run().catch(error => { console.error(error.stack); process.exitCode = 1; });
+module.exports = { Cdp };
+if (require.main === module) run().catch(error => { console.error(error.stack); process.exitCode = 1; });

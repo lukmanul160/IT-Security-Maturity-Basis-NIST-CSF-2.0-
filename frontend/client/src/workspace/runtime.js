@@ -10,6 +10,7 @@ import part07 from './features/tprm/navigation-and-questionnaires.js?raw';
 import part08 from './features/tprm/questionnaire-templates.js?raw';
 import part09 from './features/tprm/vendor-register.js?raw';
 import part10 from './features/risk-management/register.js?raw';
+import riskOptions from './features/risk-management/options.js?raw';
 import personnelForms from './features/personnel/organization-and-forms.js?raw';
 import part11 from './features/personnel/certifications.js?raw';
 import part12 from './features/assessment/overview-and-csf.js?raw';
@@ -46,6 +47,7 @@ export default [
   part08,
   part09,
   part10,
+  riskOptions,
   personnelForms,
   part11,
   part12,

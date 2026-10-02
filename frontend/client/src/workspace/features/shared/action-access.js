@@ -1,5 +1,6 @@
 // UI controls mirror server action permissions; ownership remains a separate check.
 const actionControlRules = [
+  ['risk-management','create','#riskDropdownNewButton,[data-option-action="create"]'],['risk-management','update','[data-option-action="update"]'],['risk-management','delete','[data-dropdown-delete]'],
   ['csf','create','#csfManageNewButton,#addCsfButton'],['csf','update','[data-manager-edit],#csfView [data-open-csf-modal]'],['csf','delete','[data-manager-delete],[data-delete-csf-control]'],
   ['privacy','create','#privacyManageNewButton,#addPrivacyButton'],['privacy','update','[data-privacy-edit],#privacyView [data-open-privacy-modal]'],['privacy','delete','[data-privacy-delete],[data-delete-privacy-control]'],
   ['iso27001','create','#iso27001NewButton,#isoObjectiveNewButton'],['iso27001','update','[data-iso-edit],[data-objective-edit],#isoObjectiveCalendarSave'],['iso27001','delete','[data-iso-delete],[data-objective-delete]'],
@@ -16,6 +17,7 @@ const actionControlRules = [
   ['files','delete','[data-delete-library-file]'],['files','create','[data-attachment],[data-list-evidence-upload]']
 ];
 const actionForms = {
+  riskDropdownForm:['risk-management','riskDropdownId'],
   csfForm:['csf','csfFormOriginalId'],csfControlModalForm:['csf','csfControlModalOriginalId'],privacyForm:['privacy','privacyFormOriginalId'],privacyControlModalForm:['privacy','privacyControlModalOriginalId'],
   iso27001Form:['iso27001','iso27001OriginalId'],iso27001SoaForm:['iso27001-soa','iso27001SoaOriginalId'],isoObjectiveForm:['iso27001','isoObjectiveId'],
   riskRegisterForm:['risk-management','riskRegisterOriginalId'],riskAcceptanceForm:['risk-acceptance','riskAcceptanceId'],policyRegisterForm:['policy-register','policyRegisterId'],
