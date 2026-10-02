@@ -13,7 +13,7 @@
     @media(max-width:650px){#controlList .action-note-group+.action-note-group,#privacyControlList .action-note-group+.action-note-group{margin-top:18px}}
     .organization-reports:has(> .organization-node:only-child)::after{display:none}.organization-reports> .organization-node{min-width:0;max-width:240px}
     .attachment-item .attachment-action,.attachment-item .attachment-action-button.danger,.list-evidence-file .attachment-action,.list-evidence-file .attachment-action-button.danger{display:none}.attachment-item[data-evidence-editable="true"] .attachment-action,.attachment-item[data-evidence-editable="true"] .attachment-action-button.danger,.list-evidence-file[data-evidence-editable="true"] .attachment-action,.list-evidence-file[data-evidence-editable="true"] .attachment-action-button.danger{display:inline-flex}
-    .csf-actions{display:flex;align-items:center;gap:8px;position:relative}.csf-actions small{position:absolute;right:0;top:42px;color:var(--muted);font-size:10px}.attachment-control{display:flex;align-items:center;gap:6px;margin-top:7px}.attachment-control input{display:none}.attachment-button{border:1px solid var(--line);background:#f7faf8;border-radius:4px;color:var(--green);padding:4px 7px;font-size:10px;cursor:pointer}.attachment-name{color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px}
+    .csf-actions{display:flex;align-items:center;gap:8px;position:relative}.csf-actions small{position:absolute;right:0;top:42px;color:var(--muted);font-size:10px}.attachment-control{display:flex;align-items:center;gap:6px;margin-top:7px}.attachment-control input[type="file"]{display:none}.attachment-button{border:1px solid var(--line);background:#f7faf8;border-radius:4px;color:var(--green);padding:4px 7px;font-size:10px;cursor:pointer}.attachment-name{color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px}
     .tier-high{background:#fee2e2!important;color:#991b1b!important;padding:8px 10px!important;border-radius:4px;font-weight:600!important}.tier-medium{background:#fef3c7!important;color:#92400e!important;padding:8px 10px!important;border-radius:4px;font-weight:600!important}.tier-low{background:#dcfce7!important;color:#166534!important;padding:8px 10px!important;border-radius:4px;font-weight:600!important}
     .status-badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.03em;line-height:1.3;border:1px solid transparent;white-space:nowrap}
     .status-ok{background:#dcfce7;color:#166534;border-color:#bbf7d0}.status-warning{background:#fef3c7;color:#92400e;border-color:#fde68a}.status-alert{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.status-danger{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.status-neutral{background:#e5e7eb;color:#374151;border-color:#d1d5db}
@@ -29,7 +29,8 @@
     .dropdown-input-group{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:flex-end;grid-column:span 1}.dropdown-input-group label{display:flex;flex-direction:column;gap:6px;color:var(--navy);font-size:11px;font-weight:700;margin:0}.dropdown-input-group label input{width:100%;border:1px solid var(--line);border-radius:5px;background:white;color:var(--ink);padding:9px;font:inherit;font-weight:400;outline:0}.dropdown-input-group label input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(38,114,86,.1)}.dropdown-edit-btn{border:1px solid var(--line);background:#f7faf8;color:var(--navy);border-radius:5px;padding:8px 7px;font:inherit;font-size:13px;cursor:pointer;height:38px;width:38px;display:flex;align-items:center;justify-content:center;white-space:nowrap;transition:all .18s ease}.dropdown-edit-btn:hover{background:var(--green);color:white;border-color:var(--green);transform:translateY(-1px)}.dropdown-options-list{display:flex;flex-direction:column;gap:8px;max-height:350px;overflow-y:auto;margin-bottom:0;padding:0}.dropdown-option-item{display:flex;align-items:center;gap:10px;padding:12px;background:#f8faf9;border:1px solid #e1ebe5;border-radius:7px;transition:all .18s ease}.dropdown-option-item:hover{background:#f0f7f3;border-color:var(--green);box-shadow:0 2px 8px rgba(38,114,86,.08)}.dropdown-option-item input{flex:1;border:0;background:transparent;padding:0;font:inherit;outline:0;color:var(--ink);font-weight:500}.dropdown-option-item input:focus{color:var(--green)}.dropdown-option-delete{border:1px solid #d2e0d8;background:white;color:#b85f55;border-radius:5px;padding:5px 8px;font-size:10px;font-weight:600;cursor:pointer;transition:all .18s ease;white-space:nowrap}.dropdown-option-delete:hover{background:#fff0ee;border-color:#dda49c;transform:translateY(-1px)}
     #policyDropdownManagerForm .csf-form-actions{flex-wrap:nowrap}#policyDropdownManagerForm #policyDropdownNewOption{flex:1;min-width:150px;border:1px solid var(--line);border-radius:5px;padding:9px;font:inherit;outline:0;background:white}#policyDropdownManagerForm #policyDropdownNewOption:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(38,114,86,.1)}
     #policyDropdownManagerModal{border:0;border-radius:12px;background:white;padding:0;overflow:hidden}#policyDropdownManagerModal[open]{display:flex;flex-direction:column;width:min(600px,calc(100vw - 32px));max-height:calc(100vh - 32px);box-shadow:0 20px 60px rgba(20,45,42,.15)}#policyDropdownManagerModal::backdrop{background:rgba(19,35,42,.5);backdrop-filter:blur(4px)}.policy-dropdown-header{padding:24px 28px 20px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fcf8 0%,#edf6f0 100%)}#policyDropdownManagerTitle{margin:0;color:var(--navy);font:700 18px 'Space Grotesk';letter-spacing:-.5px}.policy-dropdown-content{flex:1;overflow-y:auto;padding:22px 28px}.policy-dropdown-footer{padding:16px 28px;border-top:1px solid var(--line);background:#fafcfb;display:flex;justify-content:flex-end;gap:10px}
-  </style>
+  #auditFindingView .aft-overdue{color:#b42318;font-weight:700}
+</style>
 
   <style>
     .tprm-related-actions{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}.tprm-rating-counts{display:flex;flex-direction:column;gap:3px}.tprm-rating-count{display:block;width:max-content;max-width:100%;padding:3px 6px;border-radius:3px;font-size:10px;font-weight:600;line-height:1.2}.tprm-rating-very-low{background:#dcfce7;color:#166534}.tprm-rating-low{background:#dbeafe;color:#1e40af}.tprm-rating-medium{background:#fef3c7;color:#92400e}.tprm-rating-high{background:#fed7aa;color:#9a3412}.tprm-rating-very-high{background:#fee2e2;color:#991b1b}
@@ -107,27 +108,7 @@
   <script>
     if (!HTMLCollection.prototype.forEach) HTMLCollection.prototype.forEach = Array.prototype.forEach;
   </script>
-  <script>
-    (() => {
-      const panels = { profile: 'accountProfilePanel', permissions: 'permissionManagementPanel', users: 'accountUsersPanel', audit: 'accountAuditPanel', smtp: 'accountSmtpPanel' };
-      let activeTab = 'profile';
-      const setAccountTab = tab => {
-        activeTab = Object.prototype.hasOwnProperty.call(panels, tab) ? tab : 'profile';
-        document.querySelectorAll('[data-account-tab]').forEach(button => {
-          const active = button.dataset.accountTab === activeTab;
-          button.classList.toggle('button-accent', active);
-          button.classList.toggle('button-quiet', !active);
-          button.setAttribute('aria-selected', String(active));
-        });
-        Object.entries(panels).forEach(([key, id]) => { const panel = document.getElementById(id); if (panel) panel.hidden = key !== activeTab; });
-      };
-      document.querySelectorAll('[data-account-tab]').forEach(button => button.addEventListener('click', () => setAccountTab(button.dataset.accountTab)));
-      document.querySelector('[data-view="account"]')?.addEventListener('click', () => setAccountTab('profile'));
-      const permissionPanel = document.getElementById('permissionManagementPanel');
-      if (permissionPanel) new MutationObserver(() => { if (activeTab !== 'permissions' && !permissionPanel.hidden) permissionPanel.hidden = true; }).observe(permissionPanel, { attributes: true, attributeFilter: ['hidden'] });
-      setAccountTab('profile');
-    })();
-  </script>
+
   <script>
     (() => {
       const addFilterToolbar = (body, html, apply, reset) => {

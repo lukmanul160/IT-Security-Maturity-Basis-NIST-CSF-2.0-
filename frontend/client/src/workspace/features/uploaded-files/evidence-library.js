@@ -2,6 +2,51 @@
 let evidenceLibrary = [];
 let evidenceLibraryPending = null;
 function selectableEvidenceRecords() { return evidenceLibrary; }
+function evidenceReference(file) {
+  const { policyDetails, ...reference } = file;
+  return reference;
+}
+function evidenceMatches(file, query = '') {
+  const text = [file.name,file.path,file.source,...(file.policyDetails || []).flatMap(item=>[item.title,item.subtitle,item.content])].join(' ').toLowerCase().replace(/\s+/g,' ');
+  return text.includes(String(query).trim().toLowerCase().replace(/\s+/g,' '));
+}
+function evidenceMatchPreview(file, query = '') {
+  const needle = String(query).trim().toLowerCase().replace(/\s+/g,' ');
+  if (!needle) return '';
+  for (const item of file.policyDetails || []) {
+    for (const [label,value] of [['Judul policy',item.title],['Subtitle',item.subtitle],['Konten policy',item.content]]) {
+      const text = String(value || '').replace(/\s+/g,' ');
+      const index = text.toLowerCase().indexOf(needle);
+      if (index < 0) continue;
+      const start = Math.max(0,index-55), end = Math.min(text.length,index+needle.length+100);
+      return `<small class="evidence-policy-match">${escapeHtml(label)}: ${start ? '…' : ''}${escapeHtml(text.slice(start,end))}${end < text.length ? '…' : ''}</small>`;
+    }
+  }
+  return '';
+}
+function addEvidenceSelectSearch(select) {
+  if (select.dataset.searchable === 'true') return;
+  select.dataset.searchable = 'true';
+  const input = document.createElement('input');
+  input.type = 'search'; input.placeholder = 'Search file, policy subtitle or content...';
+  input.setAttribute('aria-label','Search uploaded evidence');
+  const preview = document.createElement('div');
+  select.before(input); select.after(preview);
+  const apply = () => {
+    const matches = [];
+    for (const option of select.options) {
+      if (!option.value || option.disabled) continue;
+      let reference;
+      try { reference = JSON.parse(option.value); } catch { continue; }
+      const file = evidenceLibrary.find(item=>item.path===reference.path) || reference;
+      option.hidden = !evidenceMatches(file,input.value);
+      if (!option.hidden && input.value.trim()) matches.push(`<div><strong>${escapeHtml(file.name)}</strong>${evidenceMatchPreview(file,input.value)}</div>`);
+    }
+    preview.innerHTML = input.value.trim() ? matches.slice(0,10).join('') || '<small>No matching evidence.</small>' : '';
+  };
+  input.addEventListener('input', apply);
+  new MutationObserver(apply).observe(select,{childList:true});
+}
 function updateEvidencePicker(picker, html) {
   if (!picker) return;
   const input = picker.querySelector('input[type="search"]');
@@ -11,7 +56,7 @@ function updateEvidencePicker(picker, html) {
   if (focused) {
     const replacement = picker.querySelector('input[type="search"]');
     replacement?.focus({ preventScroll: true });
-    if (selection) replacement?.setSelectionRange(...selection);
+    if (selection && replacement) { try { replacement.setSelectionRange(...selection); } catch {} }
   }
 }
 async function refreshEvidenceLibrary() {
@@ -73,6 +118,10 @@ function addPdfOpenPageAction(item, filePath) {
 }
 function hideEvidenceEditActions(item, canModify, filePath) {
   item.dataset.evidenceEditable = canModify ? 'true' : 'false';
+  const actions = item.querySelector('.attachment-actions');
+  if (actions) actions.hidden = !canModify;
+  const link = item.querySelector('a.list-evidence-name');
+  if (link && !canModify) { link.removeAttribute('href'); link.title = 'File hanya dapat dibuka oleh pengunggah atau admin.'; }
   if (canModify) addPdfOpenPageAction(item, filePath);
 }
 async function setEvidenceEditPermissions() {
@@ -82,6 +131,8 @@ async function setEvidenceEditPermissions() {
     const filePath = attachmentPathForActions(item);
     if (!filePath) return;
     item.dataset.evidenceEditable = 'checking';
+    const actions = item.querySelector('.attachment-actions');
+    if (actions) actions.hidden = true;
     if (!evidenceEditPermission.has(filePath)) evidenceEditPermission.set(filePath, fetch(`/api/files/access/${filePath.split('/').map(encodeURIComponent).join('/')}`).then(response => response.ok ? response.json() : { canModify: false }).then(result => Boolean(result.canModify)).catch(() => false));
     hideEvidenceEditActions(item, await evidenceEditPermission.get(filePath), filePath);
   }));

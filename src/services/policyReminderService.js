@@ -1,3 +1,4 @@
+const { localDate, scheduleSlot } = require('./reminderSchedule');
 const { pool } = require('../config/database');
 const smtp = require('./smtpService');
 const templateDefaults = {
@@ -9,13 +10,18 @@ function renderMessage(settings, policy, dueDate) {
   const render = value => value.replace(/{{(\w+)}}/g, (match, name) => String(values[name] ?? match));
   return { subject: render(settings.subjectTemplate || templateDefaults.subjectTemplate).replace(/[\r\n]/g, ' '), text: render(settings.bodyTemplate || templateDefaults.bodyTemplate) };
 }
-const defaults = { ...templateDefaults, enabled: false, daysBefore: 30, owners: [] };
+const defaults = { ...templateDefaults, enabled: false, daysBefore: 30, startUnit: 'days', repeatDaily: false, repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, owners: [] };
 const invalid = message => Object.assign(new Error(message), { status: 400 });
 const email = value => typeof value === 'string' && /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/.test(value);
 
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS policy_reminder_settings (id INTEGER PRIMARY KEY CHECK (id = 1), settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT '')`);
   await pool.query(`CREATE TABLE IF NOT EXISTS policy_reminder_deliveries (policy_id BIGINT REFERENCES policy_register(id) ON DELETE CASCADE, due_date DATE NOT NULL, recipient TEXT NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(policy_id, due_date, recipient))`);
+  await pool.query(`ALTER TABLE policy_reminder_deliveries ADD COLUMN IF NOT EXISTS reminder_date DATE;
+    UPDATE policy_reminder_deliveries SET reminder_date=sent_at::date WHERE reminder_date IS NULL;
+    ALTER TABLE policy_reminder_deliveries ALTER COLUMN reminder_date SET NOT NULL;
+    ALTER TABLE policy_reminder_deliveries DROP CONSTRAINT IF EXISTS policy_reminder_deliveries_pkey;
+    ALTER TABLE policy_reminder_deliveries ADD PRIMARY KEY(policy_id,due_date,recipient,reminder_date)`);
   await smtp.ensureStore();
 }
 async function read() {
@@ -31,6 +37,16 @@ function validate(data) {
   const settings = {};
   if (!Number.isInteger(data.daysBefore) || data.daysBefore < 0 || data.daysBefore > 365) throw invalid('daysBefore tidak valid.');
   settings.daysBefore = data.daysBefore;
+  settings.startUnit = data.startUnit ?? defaults.startUnit;
+  settings.repeatDaily = data.repeatDaily ?? defaults.repeatDaily;
+  settings.repeatEvery = data.repeatEvery ?? defaults.repeatEvery;
+  settings.repeatUnit = data.repeatUnit ?? defaults.repeatUnit;
+  settings.maxDeliveries = data.maxDeliveries ?? defaults.maxDeliveries;
+  if (!['days','months'].includes(settings.startUnit) || !['days','months'].includes(settings.repeatUnit)) throw invalid('Satuan reminder harus hari atau bulan.');
+  if (settings.startUnit === 'months' && settings.daysBefore > 36) throw invalid('Waktu mulai maksimal 36 bulan.');
+  if (typeof settings.repeatDaily !== 'boolean') throw invalid('Pilihan pengulangan reminder tidak valid.');
+  if (!Number.isInteger(settings.repeatEvery) || settings.repeatEvery < 1 || settings.repeatEvery > (settings.repeatUnit === 'months' ? 36 : 365)) throw invalid('Interval reminder tidak valid.');
+  if (!Number.isInteger(settings.maxDeliveries) || settings.maxDeliveries < 1 || settings.maxDeliveries > 366) throw invalid('Jumlah pengiriman harus bilangan bulat antara 1 dan 366.');
   if (!Array.isArray(data.owners) || data.owners.length > 500) throw invalid('Daftar penerima tidak valid.');
   settings.owners = data.owners.map(row => {
     if (typeof row?.owner !== 'string' || !row.owner.trim() || !email(row.email)) throw invalid('Setiap owner harus memiliki alamat email yang valid.');
@@ -76,33 +92,36 @@ function nextReview(row) {
   date.setUTCDate(Math.min(day, end));
   return date.toISOString().slice(0, 10);
 }
-async function runReminders() {
+async function runReminders(now = new Date()) {
   const client = await pool.connect();
-  let mailer;
+  let mailer, locked = false;
   try {
     const lock = await client.query('SELECT pg_try_advisory_lock(73421009) AS locked');
-    if (!lock.rows[0].locked) return;
+    locked = lock.rows[0].locked;
+    if (!locked) return;
     const { settings } = await read();
     if (!settings.enabled) return;
     const delivery = await smtp.createMailer();
     mailer = delivery.mailer;
     const policies = await client.query('SELECT id, title, owner, review_cycle, last_review::text FROM policy_register');
-    const cutoff = new Date();
-    cutoff.setUTCDate(cutoff.getUTCDate() + settings.daysBefore);
     for (const policy of policies.rows) {
       const due = nextReview(policy);
       const to = settings.owners.find(row => row.owner === policy.owner)?.email;
-      if (!due || !to || due > cutoff.toISOString().slice(0, 10)) continue;
-      const previous = await client.query('SELECT 1 FROM policy_reminder_deliveries WHERE policy_id = $1 AND due_date = $2 AND recipient = $3', [policy.id, due, to]);
-      if (previous.rowCount) continue;
+      if (!due || !to) continue;
+      const slot = scheduleSlot(due, settings, now);
+      if (!slot) continue;
+      const previous = await client.query(`SELECT COUNT(*)::int AS count,
+        COALESCE(BOOL_OR(reminder_date >= $4::date), false) AS sent_in_slot
+        FROM policy_reminder_deliveries WHERE policy_id=$1 AND due_date=$2 AND recipient=$3`, [policy.id, due, to, slot]);
+      if (previous.rows[0].sent_in_slot || previous.rows[0].count >= (settings.repeatDaily ? settings.maxDeliveries : 1)) continue;
       try {
         await smtp.send(mailer, { from: delivery.from, to, ...renderMessage(settings, policy, due) });
-        await client.query('INSERT INTO policy_reminder_deliveries (policy_id, due_date, recipient) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [policy.id, due, to]);
+        await client.query('INSERT INTO policy_reminder_deliveries (policy_id, due_date, recipient, reminder_date) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [policy.id, due, to, localDate(now)]);
       } catch { console.error('[policy-reminder] Delivery failed for policy', policy.id); }
     }
   } finally {
     mailer?.close?.();
-    try { await client.query('SELECT pg_advisory_unlock(73421009)'); } finally { client.release(); }
+    try { if (locked) await client.query('SELECT pg_advisory_unlock(73421009)'); } finally { client.release(); }
   }
 }
 function startScheduler() {

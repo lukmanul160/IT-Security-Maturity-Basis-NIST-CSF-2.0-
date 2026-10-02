@@ -17,6 +17,11 @@ test('tracker permission preserves role boundaries', () => {
 test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { skip: process.env.RUN_AFT_DB_TESTS !== '1' }, async t => {
   const client = await pool.connect();
   try {
+    await client.query('CREATE TEMP TABLE app_users(id BIGINT PRIMARY KEY, username TEXT)');
+    await client.query("INSERT INTO app_users VALUES(1,'alice'),(2,'bob'),(3,'admin')");
+    await client.query('CREATE TEMP TABLE evidence_files(path TEXT PRIMARY KEY,name TEXT,content BYTEA,mime_type TEXT,uploaded_by BIGINT,open_page INTEGER DEFAULT 1,updated_at TIMESTAMPTZ DEFAULT NOW())');
+    await client.query('CREATE TEMP TABLE file_storage_locations(path TEXT PRIMARY KEY,root TEXT,object_key TEXT)');
+    await client.query('CREATE TEMP TABLE file_storage_settings(id INTEGER,mode TEXT,directory TEXT,updated_at TIMESTAMPTZ)');
     await client.query(`CREATE TEMP TABLE audit_finding_records(id UUID PRIMARY KEY, kind TEXT NOT NULL, parent_id UUID REFERENCES audit_finding_records(id) ON DELETE RESTRICT, data JSONB NOT NULL, filename TEXT, content BYTEA, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())`);
     t.mock.method(pool, 'query', client.query.bind(client));
     t.mock.method(pool, 'connect', async () => ({ query: client.query.bind(client), release() {} }));
@@ -26,13 +31,59 @@ test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { s
     const followup = await service.save('followup', null, finding.id, { title: 'Action test' });
     await assert.rejects(service.save('evidence', null, followup.id, { title: 'Missing file' }), { status: 400 });
     const file = { originalname: 'proof.txt', buffer: Buffer.from('proof'), size: 5 };
-    const evidence = await service.save('evidence', null, followup.id, { title: 'Proof' }, file);
-    assert.deepEqual((await service.download(evidence.id)).content, file.buffer);
-    await service.save('evidence', evidence.id, audit.id, { title: 'Updated' });
-    assert.deepEqual((await service.download(evidence.id)).content, file.buffer);
+    const alice = { username: 'alice', role: 'user' }, bob = { username: 'bob', role: 'user' }, admin = { username: 'admin', role: 'admin' };
+    const evidence = await service.save('evidence', null, followup.id, { title: 'Proof', uploadedBy: 2 }, file, alice);
+    assert.deepEqual((await service.download(evidence.id, alice)).content, file.buffer);
+    await service.save('evidence', evidence.id, audit.id, { title: 'Updated' }, undefined, alice);
+    assert.deepEqual((await service.download(evidence.id, admin)).content, file.buffer);
+    await assert.rejects(service.download(evidence.id, bob), { status: 403 });
+    await assert.rejects(service.save('evidence', evidence.id, null, { title: 'Stolen' }, file, bob), { status: 403 });
+    await assert.rejects(service.remove(evidence.id, bob), { status: 403 });
+    await assert.rejects(service.remove(followup.id, alice), { status: 403 });
+    const access = require('../src/services/evidenceAccessService');
+    assert.equal((await access.list(alice)).length, 1, 'audit upload appears in owner library');
+    assert.equal((await access.list(bob)).length, 0);
+    assert.equal((await service.list(bob)).find(row => row.id === evidence.id).canManageFile, false);
+    // Migration is idempotent and never overwrites an existing uploader.
+    const migration = await require('node:fs/promises').readFile(require('node:path').join(__dirname, '../database/audit-evidence-files.sql'), 'utf8');
+    await client.query(migration); await client.query(migration);
+    assert.equal((await access.list(alice)).length, 1);
     assert.equal((await service.list()).find(r => r.id === evidence.id).parentId, followup.id);
+    const policyPath='policy-register/existing-policy.pdf';
+    await client.query('INSERT INTO evidence_files(path,name,content,mime_type,uploaded_by) VALUES($1,$2,$3,$4,$5)',[policyPath,'Existing policy.pdf',Buffer.from('policy'),'application/pdf',1]);
+    const selectInput={title:'Linked policy',existingAttachments:JSON.stringify([policyPath,'upload/'+policyPath])};
+    const linked=await service.save('evidence',null,followup.id,selectInput,[],alice);
+    assert.equal(linked.data.attachments.length,1,'duplicate selections are collapsed');
+    assert.equal(linked.data.attachments[0].name,'Existing policy.pdf');
+    assert.deepEqual((await service.download(linked.id,alice)).content,Buffer.from('policy'));
+    await assert.rejects(service.save('evidence',null,followup.id,selectInput,[],bob),{status:403});
+    await assert.rejects(service.save('evidence',null,followup.id,{...selectInput,existingAttachments:JSON.stringify(['policy-register/missing.pdf'])},[],admin),{status:403});
+    const adminLinked=await service.save('evidence',null,followup.id,selectInput,[],admin);
+    assert.equal((await client.query('SELECT uploaded_by FROM evidence_files WHERE path=$1',[policyPath])).rows[0].uploaded_by,'1','reuse does not transfer ownership');
+    await service.remove(linked.id,alice);
+    await service.remove(adminLinked.id,admin);
+    const second={originalname:'second.pdf',buffer:Buffer.from('second'),size:6,mimetype:'application/pdf'};
+    const third={originalname:'third.txt',buffer:Buffer.from('third'),size:5};
+    const multiple=await service.save('evidence',evidence.id,null,{title:'Multiple'},[second,third],alice);
+    assert.equal(multiple.data.attachments.length,3);
+    const secondPath=multiple.data.attachments[1].path;
+    const thirdPath=multiple.data.attachments[2].path;
+    await assert.rejects(require('../src/services/fileService').deleteFile(thirdPath,{library:true}),{status:409});
+    assert.deepEqual((await service.download(evidence.id,alice,secondPath)).content,second.buffer);
+    await assert.rejects(service.download(evidence.id,bob,secondPath),{status:403});
+    await assert.rejects(service.download(evidence.id,alice,'audit-finding/unrelated'),{status:404});
+    await assert.rejects(service.save('evidence',evidence.id,null,{title:'Bad remove',removeAttachments:JSON.stringify(['other-file'])},[],alice),{status:400});
+    await assert.rejects(service.save('evidence',evidence.id,null,{title:'Foreign remove',removeAttachments:JSON.stringify([secondPath])},[],bob),{status:403});
+    const reduced=await service.save('evidence',evidence.id,null,{title:'Reduced',removeAttachments:JSON.stringify([secondPath])},[],alice);
+    assert.equal(reduced.data.attachments.length,2);
+    assert.equal(reduced.data.attachments[1].path,thirdPath);
+    await assert.rejects(service.download(evidence.id,alice,secondPath),{status:404});
+    await assert.rejects(service.save('evidence',evidence.id,null,{title:'Empty',removeAttachments:JSON.stringify(reduced.data.attachments.map(item=>item.path))},[],alice),{status:400});
+    assert.equal((await service.list(alice)).find(row=>row.id===evidence.id).attachments.length,2);
+    await client.query(migration);
     await assert.rejects(service.remove(audit.id), { status: 409 });
-    for (const row of [evidence, followup, finding, audit]) await service.remove(row.id);
+    await service.remove(evidence.id, alice);
+    for (const row of [followup, finding, audit]) await service.remove(row.id, admin);
     assert.equal((await service.list()).length, 0);
-  } finally { await client.query('DROP TABLE IF EXISTS pg_temp.audit_finding_records'); client.release(); await pool.end(); }
+  } finally { await client.query('DROP TABLE IF EXISTS pg_temp.audit_finding_records, pg_temp.evidence_files, pg_temp.file_storage_locations, pg_temp.file_storage_settings, pg_temp.app_users'); client.release(); await pool.end(); }
 });

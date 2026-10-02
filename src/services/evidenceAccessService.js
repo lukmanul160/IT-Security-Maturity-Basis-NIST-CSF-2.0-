@@ -23,12 +23,24 @@ async function assertAccess(value, user) {
   if (!result.rows[0] || (user.role !== 'admin' && String(result.rows[0].uploaded_by) !== String(id))) throw invalid('Evidence tidak tersedia atau bukan file yang Anda upload.');
   return normalized;
 }
+async function searchableList(user) {
+  const files = await list(user);
+  if (!files.length) return files;
+  const paths = files.map(file=>normalize(file.path));
+  const result = await pool.query(`SELECT regexp_replace(p.attachment_path, '^(uploads?)/', '') AS path,
+    p.title, i.subtitle, i.content
+    FROM policy_register p LEFT JOIN policy_register_items i ON i.policy_id=p.id
+    WHERE regexp_replace(p.attachment_path, '^(uploads?)/', '') = ANY($1::text[])
+    ORDER BY p.id, i.sort_order, i.id`, [paths]);
+  const details = new Map();
+  for (const row of result.rows) {
+    if (!details.has(row.path)) details.set(row.path, []);
+    details.get(row.path).push({title:row.title,subtitle:row.subtitle || '',content:row.content || ''});
+  }
+  return files.map(file=>({...file,source:details.has(normalize(file.path)) ? 'Policy Register' : file.source,policyDetails:details.get(normalize(file.path)) || []}));
+}
 async function assertReadAccess(value, user) {
-  const normalized = normalize(value);
-  await userId(user);
-  const result = await pool.query('SELECT 1 FROM evidence_files WHERE path=$1', [normalized]);
-  if (!result.rows[0]) throw invalid('Evidence tidak tersedia.', 404);
-  return normalized;
+  return assertAccess(value, user);
 }
 async function canModify(value, user) {
   const normalized = normalize(value);
@@ -40,9 +52,11 @@ async function canModify(value, user) {
 async function assertReferences(next, previous, user) {
   if (!Array.isArray(next)) throw invalid('Daftar evidence tidak valid.', 400);
   const existing = new Set((Array.isArray(previous) ? previous : []).filter(file => file?.path).map(file => normalize(file.path)));
+  const nextPaths = new Set(next.filter(file => file?.path).map(file => normalize(file.path)));
+  for (const filePath of existing) if (!nextPaths.has(filePath)) await assertAccess(filePath, user);
   for (const file of next) {
     if (!file?.path) throw invalid('Evidence wajib memiliki path.', 400);
     if (!existing.has(normalize(file.path))) await assertAccess(file.path, user);
   }
 }
-module.exports = { normalize, userId, list, assertAccess, assertReadAccess, canModify, assertReferences };
+module.exports = { normalize, userId, list, searchableList, assertAccess, assertReadAccess, canModify, assertReferences };

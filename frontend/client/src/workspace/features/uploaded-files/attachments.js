@@ -17,21 +17,38 @@ function attachmentRecords() {
   const policyRecords = policyRegisterFiles().map(file => ({ ...file, key: 'policy-register', index: file.sourceIndex, kind: 'policy', sourceType: 'policy-register', item: { name: file.name, category: 'Policy Register', subcategory: file.name, frameworkLabel: 'Policy Register', fn: { id: 'POLICY', name: 'Policy Register' } } }));
   return [...csfRecords, ...privacyRecords, ...isoRecords, ...policyRecords].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 }
-const canEditUploadedFile = record => record.sourceType === 'policy-register'
-  ? canManagePolicyRegister('update')
-  : currentUserRole === 'admin' || (currentUserRole === 'editor' && currentUserPermissions.includes('files'));
+// Library membership is supplied by the server: non-admins receive only their own uploads.
+const canEditUploadedFile = record => Boolean(record?.path && selectableEvidenceRecords().some(file => file.path === record.path));
+function uploadedLibraryRecords() {
+  const references = new Map(attachmentRecords().map(record => [record.path, record]));
+  return selectableEvidenceRecords().map((file, index) => {
+    const reference = references.get(file.path);
+    const folder = file.path.replace(/^uploads?\//, '').split('/')[0];
+    return { ...(reference || { key: 'uploaded-library', index, sourceType: 'uploaded-library', kind: file.path.includes('/Practice/') ? 'practice' : 'policy', item: { frameworkLabel: 'Uploaded files', name: 'Belum terhubung ke assessment', category: '-', fn: { id: '-', name: folder } } }), ...file };
+  });
+}
+async function deleteUploadedLibraryFile(recordId) {
+  const record = uploadedFileRecordMap.get(recordId);
+  if (!canEditUploadedFile(record) || !confirm(`Hapus file ${record.name}?`)) return;
+  try {
+    const response = await fetch(`${apiFileUrl(record.path)}?library=true`, { method: 'DELETE' });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'File gagal dihapus.');
+    await refreshEvidenceLibrary();
+    $('saveState').textContent = 'File berhasil dihapus.';
+  } catch (error) { $('saveState').textContent = error.message; }
+}
 function renderUploadedFiles() {
   const query = $('uploadedFileSearch').value.toLowerCase(); const kindFilter = $('uploadedFileKindFilter').value;
-  const allowedPaths = new Set(selectableEvidenceRecords().map(file => file.path)); const allRecords = attachmentRecords().filter(file => allowedPaths.has(file.path));
+  const allRecords = uploadedLibraryRecords();
   const records = allRecords.filter(record => { const item = record.item; const text = `${record.name} ${record.path} ${item.fn.name} ${item.category} ${item.subcategory}`.toLowerCase(); return (kindFilter === 'all' || record.kind === kindFilter) && text.includes(query); });
   uploadedFileRecordMap = new Map(allRecords.map((record, index) => [`uploaded-${index}`, record]));
   const recordIds = new Map([...uploadedFileRecordMap].map(([id, record]) => [record, id]));
   const total = allRecords.length; $('uploadedFileCount').textContent = `${total} file${total === 1 ? '' : 's'}`;
   uploadedFilesPage = renderListPagination('uploadedFilesPagination', uploadedFilesPage, records.length, 'files'); const visibleRecords = records.slice((uploadedFilesPage - 1) * 20, uploadedFilesPage * 20);
-  $('uploadedFilesBody').innerHTML = visibleRecords.map(record => `<tr><td><strong class="uploaded-file-name" title="${escapeHtml(record.path)}">${escapeHtml(record.name)}</strong><small>${escapeHtml(record.path)}</small></td><td><span class="framework-badge">${escapeHtml(record.item.frameworkLabel || (record.key.startsWith('privacy-') ? 'Privacy Framework' : 'CSF 2.0'))}</span></td><td><span class="function-badge">${escapeHtml(record.item.fn.id)}</span>${escapeHtml(record.item.fn.name)}</td><td>${escapeHtml(categoryLabel(record.item.category || 'CSF Core'))}</td><td>${escapeHtml(record.item.name)}</td><td><span class="file-kind ${record.kind}">${record.kind === 'policy' ? 'Policy' : 'Practice'}</span></td><td>${record.updatedAt ? new Date(record.updatedAt).toLocaleDateString('id-ID') : '-'}</td><td><div class="file-actions"><button class="attachment-action-button" type="button" data-open-attachment="${record.key}" data-attachment-index="${record.index}">Open</button><button class="attachment-action-button" type="button" data-download-attachment="${record.key}" data-attachment-index="${record.index}">Download</button>${canEditUploadedFile(record) ? `<button class="attachment-action-button" type="button" data-uploaded-file-edit="${recordIds.get(record)}">Edit</button>` : ''}<button class="attachment-action-button danger" type="button" data-delete-attachment="${record.key}" data-attachment-index="${record.index}"${record.sourceType === 'policy-register' ? ` data-policy-id="${escapeHtml(record.policyId)}"` : ''}>Delete</button></div></td></tr>`).join('') || '<tr><td colspan="8" class="empty-files">Belum ada file yang diupload.</td></tr>';
-  document.querySelectorAll('#uploadedFilesBody [data-delete-attachment]').forEach(button => button.addEventListener('click', () => deleteAttachment(button.dataset.deleteAttachment, Number(button.dataset.attachmentIndex))));
-  document.querySelectorAll('#uploadedFilesBody [data-open-attachment]').forEach(button => button.addEventListener('click', () => openAttachment(button.dataset.openAttachment, Number(button.dataset.attachmentIndex))));
-  document.querySelectorAll('#uploadedFilesBody [data-download-attachment]').forEach(button => button.addEventListener('click', () => downloadAttachment(button.dataset.downloadAttachment, Number(button.dataset.attachmentIndex))));
+  $('uploadedFilesBody').innerHTML = visibleRecords.map(record => `<tr><td><strong class="uploaded-file-name" title="${escapeHtml(record.path)}">${escapeHtml(record.name)}</strong><small>${escapeHtml(record.path)}</small></td><td><span class="framework-badge">${escapeHtml(record.item.frameworkLabel || (record.key.startsWith('privacy-') ? 'Privacy Framework' : 'CSF 2.0'))}</span></td><td><span class="function-badge">${escapeHtml(record.item.fn.id)}</span>${escapeHtml(record.item.fn.name)}</td><td>${escapeHtml(categoryLabel(record.item.category || 'CSF Core'))}</td><td>${escapeHtml(record.item.name)}</td><td><span class="file-kind ${record.kind}">${record.kind === 'policy' ? 'Policy' : 'Practice'}</span></td><td>${record.updatedAt ? new Date(record.updatedAt).toLocaleDateString('id-ID') : '-'}</td><td><div class="file-actions"><button class="attachment-action-button" type="button" data-open-library-file="${recordIds.get(record)}">Open</button><button class="attachment-action-button" type="button" data-download-library-file="${recordIds.get(record)}">Download</button>${canEditUploadedFile(record) ? `<button class="attachment-action-button" type="button" data-uploaded-file-edit="${recordIds.get(record)}">Edit</button>` : ''}${canEditUploadedFile(record) ? `<button class="attachment-action-button danger" type="button" data-delete-library-file="${recordIds.get(record)}">Delete</button>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="8" class="empty-files">Belum ada file yang diupload.</td></tr>';
+  $('uploadedFilesBody').querySelectorAll('[data-delete-library-file]').forEach(button => button.addEventListener('click', () => deleteUploadedLibraryFile(button.dataset.deleteLibraryFile)));
+  $('uploadedFilesBody').querySelectorAll('[data-open-library-file]').forEach(button => button.addEventListener('click', () => { const record = uploadedFileRecordMap.get(button.dataset.openLibraryFile); if (record) window.open(apiFileOpenUrl(record.path), '_blank', 'noopener'); }));
+  $('uploadedFilesBody').querySelectorAll('[data-download-library-file]').forEach(button => button.addEventListener('click', () => { const record = uploadedFileRecordMap.get(button.dataset.downloadLibraryFile); if (!record) return; const link = document.createElement('a'); link.href = apiFileUrl(record.path); link.download = record.name; link.click(); }));
 }
 let evidenceSelectionSaving = false;
 async function persistSelectedEvidence(targetKey, sourceAttachment, privacy = false) {
@@ -39,7 +56,7 @@ async function persistSelectedEvidence(targetKey, sourceAttachment, privacy = fa
   const owner = privacy ? privacyState : state;
   const attachments = owner.attachments[targetKey] || [];
   if (attachments.some(file => file.path === sourceAttachment.path)) return;
-  const next = [...attachments, sourceAttachment];
+  const next = [...attachments, evidenceReference(sourceAttachment)];
   evidenceSelectionSaving = true;
   $('saveState').textContent = 'Saving evidence...';
   try {
@@ -75,15 +92,50 @@ async function ensureUploadStructure() { for (const fn of functions) { const fun
 const updateUploadProgress = (key, percent, message, status = '') => { uploadStatuses.set(key, { percent, message, status }); document.querySelectorAll(`[data-progress-key="${key}"]`).forEach(progress => { progress.className = `upload-progress ${status}`; progress.querySelector('.upload-progress-track i').style.width = `${percent}%`; progress.querySelector('small').textContent = message; }); };
 async function uploadAttachment(input) {
   const files = [...input.files]; if (!files.length) return;
-  const key = input.dataset.attachment; const functionName = input.dataset.function; const kind = input.dataset.kind; const owner = attachmentStateFor(key); const isPrivacy = input.dataset.scope === 'privacy';
+  const key = input.dataset.attachment;
+  const isPrivacy = input.dataset.scope === 'privacy';
   if (isPrivacy) await privacyDataReady;
+  const owner = attachmentStateFor(key);
   try {
-    updateUploadProgress(key, 2, `Uploading ${files.length} file${files.length === 1 ? '' : 's'}...`); const attachments = owner.attachments[key] || []; owner.attachments[key] = attachments; const metadataList = await saveFilesToServer(functionName, kind, files); metadataList.forEach(metadata => { const existing = attachments.findIndex(attachment => attachment.name === metadata.name); if (existing >= 0) attachments[existing] = metadata; else attachments.push(metadata); });
-    isPrivacy ? savePrivacy() : save(); updateUploadProgress(key, 100, `${files.length} file${files.length === 1 ? '' : 's'} uploaded`, 'success'); renderCsfTable(); renderUploadedFiles(); if ($('assessmentView').classList.contains('active-view')) renderControls(); if ($('privacyView').classList.contains('active-view')) renderPrivacy();
-  } catch (error) { isPrivacy ? savePrivacy() : save(); const duplicate = error.message.includes('already exists'); updateUploadProgress(key, 100, duplicate ? 'File name already exists' : 'Upload failed', 'fail'); $('saveState').textContent = duplicate ? 'Nama file sudah ada' : 'Upload gagal'; renderCsfTable(); renderUploadedFiles(); if ($('assessmentView').classList.contains('active-view')) renderControls(); if ($('privacyView').classList.contains('active-view')) renderPrivacy(); }
+    updateUploadProgress(key, 2, `Uploading ${files.length} file(s)...`);
+    const metadataList = await saveFilesToServer(input.dataset.function, input.dataset.kind, files);
+    const attachments = [...(owner.attachments[key] || [])];
+    metadataList.forEach(metadata => {
+      const existing = attachments.findIndex(attachment => attachment.path === metadata.path);
+      if (existing >= 0) attachments[existing] = metadata; else attachments.push(metadata);
+    });
+    const response = await fetch(isPrivacy ? '/api/privacy/assessment' : '/api/assessment', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...owner, attachments: { ...owner.attachments, [key]: attachments } }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'File tersimpan di Uploaded Files, tetapi lampiran belum berhasil dikaitkan.');
+    owner.attachments[key] = attachments;
+    updateUploadProgress(key, 100, `${files.length} file(s) uploaded`, 'success');
+    $('saveState').textContent = 'File dan lampiran berhasil disimpan.';
+  } catch (error) {
+    updateUploadProgress(key, 100, error.message || 'Upload failed', 'fail');
+    $('saveState').textContent = error.message || 'Upload gagal';
+  }
+  renderCsfTable(); renderUploadedFiles();
+  if ($('assessmentView').classList.contains('active-view')) renderControls();
+  if ($('privacyView').classList.contains('active-view')) renderPrivacy();
   input.value = '';
 }
-async function replaceAttachment(input) { const key = input.dataset.replaceAttachment; const index = Number(input.dataset.attachmentIndex); const owner = attachmentStateFor(key); const oldAttachment = (owner.attachments[key] || [])[index]; await uploadAttachment({ files: input.files, dataset: { attachment: key, function: input.dataset.function, kind: input.dataset.kind, scope: input.dataset.scope } }); const attachments = owner.attachments[key] || []; const replacementIndex = attachments.findIndex(attachment => attachment.name === input.files[0]?.name); if (replacementIndex >= 0 && replacementIndex !== index) { attachments.splice(index, 1); const moved = attachments.splice(replacementIndex > index ? replacementIndex - 1 : replacementIndex, 1)[0]; attachments.splice(index, 0, moved); owner.attachments[key] = attachments; key.startsWith('privacy-') ? savePrivacy() : save(); renderCsfTable(); renderUploadedFiles(); if ($('privacyView').classList.contains('active-view')) renderPrivacy(); } if (oldAttachment && oldAttachment.name !== input.files[0]?.name) attachmentHandles.delete(`${key}-${oldAttachment.name}`); }
+async function replaceAttachment(input) {
+  const key = input.dataset.replaceAttachment;
+  const index = Number(input.dataset.attachmentIndex);
+  const attachment = (attachmentStateFor(key).attachments[key] || [])[index];
+  const file = input.files?.[0];
+  if (!attachment || !file) return;
+  try {
+    const data = new FormData(); data.append('file', file, file.name);
+    const response = await fetch(apiFileUrl(attachment.path), { method: 'PUT', body: data });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'File gagal diganti.');
+    Object.assign(attachment, result);
+    await refreshEvidenceLibrary();
+    $('saveState').textContent = 'File berhasil diganti.';
+  } catch (error) { $('saveState').textContent = error.message; }
+  input.value = '';
+}
+
 const apiFileUrl = filePath => `/api/files/${filePath.replace(/^upload\//, '').split('/').map(encodeURIComponent).join('/')}`;
 const apiFileOpenUrl = filePath => `/api/files/open/${filePath.replace(/^upload\//, '').split('/').map(encodeURIComponent).join('/')}`;
 async function saveFilesToServer(functionName, kind, files) { const formData = new FormData(); formData.append('functionName', functionName); formData.append('kind', kind); formData.append('rejectDuplicate', 'true'); files.forEach(file => formData.append('files', file, file.name)); const response = await fetch('/api/files/batch', { method: 'POST', body: formData }); if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || 'Upload failed'); } const uploaded = await response.json(); await refreshEvidenceLibrary(); return uploaded; }
@@ -91,4 +143,16 @@ function isoRecordContext(key) { const [, framework, ...idParts] = String(key).s
 function isoAttachmentFor(key, index) { return isoRecordContext(key).row?.evidence?.[index]; }
 async function openAttachment(key, index) { const attachment = key === 'policy-register' ? policyRegisterFiles().find(file => file.sourceIndex === index) : key.startsWith('iso|') ? isoAttachmentFor(key, index) : (attachmentStateFor(key).attachments[key] || [])[index]; if (attachment) window.open(apiFileOpenUrl(attachment.path), '_blank', 'noopener'); }
 async function downloadAttachment(key, index) { const attachment = key === 'policy-register' ? policyRegisterFiles().find(file => file.sourceIndex === index) : key.startsWith('iso|') ? isoAttachmentFor(key, index) : (attachmentStateFor(key).attachments[key] || [])[index]; if (attachment) { const link = document.createElement('a'); link.href = apiFileUrl(attachment.path); link.download = attachment.name; link.click(); } }
-async function deleteAttachment(key, index) { if (key === 'policy-register') { const policyId = document.querySelector(`#uploadedFilesBody [data-delete-attachment="policy-register"][data-attachment-index="${index}"]`)?.dataset.policyId; const row = policyRegisterRows.find(item => String(item.id) === String(policyId)) || policyRegisterRows[index]; if (!row || !confirm(`Hapus policy ${row.title || row.attachmentName}?`)) return; const response = await fetch(`/api/policy-register/${encodeURIComponent(row.id)}`, { method: 'DELETE' }); if (response.ok) await loadPolicyRegisterRows(); else $('saveState').textContent = 'Policy Register gagal dihapus'; return; } if (key.startsWith('iso|')) { const { id, isSoa, row } = isoRecordContext(key); if (!row) return; const attachments = [...(row.evidence || [])]; const attachment = attachments[index]; if (!attachment || !confirm(`Hapus lampiran ${attachment.name}?`)) return; attachments.splice(index, 1); if ((await updateIsoEvidence(isSoa ? 'soa' : 'clauses', id, attachments)).ok) { row.evidence = attachments; renderUploadedFiles(); isSoa ? renderIso27001SoaManager() : renderIso27001Manager(); } return; } const owner = attachmentStateFor(key); const attachments = owner.attachments[key] || []; const attachment = attachments[index]; if (!attachment || !confirm(`Hapus lampiran ${attachment.name}?`)) return; await fetch(apiFileUrl(attachment.path), { method: 'DELETE' }); attachments.splice(index, 1); owner.attachments[key] = attachments; key.startsWith('privacy-') ? savePrivacy() : save(); renderCsfTable(); renderUploadedFiles(); if ($('privacyView').classList.contains('active-view')) renderPrivacy(); }
+async function deleteAttachment(key, index) { if (key === 'policy-register') { const policyId = document.querySelector(`#uploadedFilesBody [data-delete-attachment="policy-register"][data-attachment-index="${index}"]`)?.dataset.policyId; const row = policyRegisterRows.find(item => String(item.id) === String(policyId)) || policyRegisterRows[index]; if (!row || !confirm(`Hapus policy ${row.title || row.attachmentName}?`)) return; const response = await fetch(`/api/policy-register/${encodeURIComponent(row.id)}`, { method: 'DELETE' }); if (response.ok) await loadPolicyRegisterRows(); else $('saveState').textContent = 'Policy Register gagal dihapus'; return; } if (key.startsWith('iso|')) { const { id, isSoa, row } = isoRecordContext(key); if (!row) return; const attachments = [...(row.evidence || [])]; const attachment = attachments[index]; if (!attachment || !confirm(`Hapus lampiran ${attachment.name}?`)) return; attachments.splice(index, 1); if ((await updateIsoEvidence(isSoa ? 'soa' : 'clauses', id, attachments)).ok) { row.evidence = attachments; renderUploadedFiles(); isSoa ? renderIso27001SoaManager() : renderIso27001Manager(); } return; } const owner = attachmentStateFor(key); const attachments = owner.attachments[key] || []; const attachment = attachments[index];
+  if (!attachment || !confirm(`Hapus lampiran ${attachment.name}?`)) return;
+  try {
+    const next = attachments.filter((_, position) => position !== index);
+    const response = await fetch(key.startsWith('privacy-') ? '/api/privacy/assessment' : '/api/assessment', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...owner, attachments: { ...owner.attachments, [key]: next } }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Lampiran gagal dilepas.');
+    owner.attachments[key] = next;
+    const deletion = await fetch(`${apiFileUrl(attachment.path)}?library=true`, { method: 'DELETE' });
+    $('saveState').textContent = deletion.ok ? 'Lampiran dan file berhasil dihapus.' : 'Lampiran dilepas. File tetap tersedia di Uploaded Files karena masih digunakan atau belum dapat dihapus.';
+    await refreshEvidenceLibrary(); renderCsfTable();
+    if ($('privacyView').classList.contains('active-view')) renderPrivacy();
+  } catch (error) { $('saveState').textContent = error.message; }
+}

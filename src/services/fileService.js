@@ -107,7 +107,8 @@ async function replaceFile(relativePath, file) {
 		throw error;
 	}
 
-	validateUploadFile(file.originalname, file.mimetype);
+	if (!normalized.startsWith('audit-finding/')) validateUploadFile(file.originalname, file.mimetype);
+	else if (!file.size || file.size > 10 * 1024 * 1024) throw Object.assign(new Error('Evidence maksimum 10 MB.'), { status: 400 });
 	const currentExtension = path.extname(normalized).toLowerCase();
 	const replacementExtension = path.extname(file.originalname).toLowerCase();
 	if (currentExtension !== replacementExtension) {
@@ -125,13 +126,17 @@ async function replaceFile(relativePath, file) {
 	}
 
 	const name = stored.rows[0]?.name || path.basename(normalized);
-	await storage.put(normalized, { buffer: file.buffer, name, mimeType: file.mimetype }, { replace: true });
+	let mimeType = file.mimetype;
+	if (normalized.startsWith('audit-finding/')) {
+		try { validateUploadFile(file.originalname, mimeType); } catch { mimeType = 'application/octet-stream'; }
+	}
+	await storage.put(normalized, { buffer: file.buffer, name, mimeType }, { replace: true });
 
 	return {
 		name,
 		path: `upload/${normalized}`,
 		size: file.size,
-		type: file.mimetype,
+		type: mimeType,
 		updatedAt: new Date().toISOString(),
 	};
 }
@@ -148,21 +153,25 @@ async function referenceCounts(relativePath) {
 	  (SELECT COUNT(*)::int FROM policy_register WHERE attachment_path = ANY($1::text[])) AS policies,
 	  (SELECT COUNT(*)::int FROM tprm_due_diligence_questionnaires,
 	    LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(responses->'vendorDocuments') = 'array' THEN responses->'vendorDocuments' ELSE '[]'::jsonb END) AS item
-	    WHERE item->>'path' = ANY($1::text[])) AS questionnaires`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
+	    WHERE item->>'path' = ANY($1::text[])) AS questionnaires,
+	  (SELECT COUNT(*)::int FROM audit_finding_records WHERE data->>'attachmentPath' = ANY($1::text[]) OR EXISTS (SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(data->'attachments')='array' THEN data->'attachments' ELSE '[]'::jsonb END) AS item WHERE item->>'path' = ANY($1::text[]))) AS audit`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
 	return result.rows[0];
 }
-async function deleteFile(relativePath) {
+async function deleteFile(relativePath, { library = false } = {}) {
 	const normalized = storagePath(relativePath);
 	const counts = await referenceCounts(normalized);
+	if (library && Object.values(counts).some(count => Number(count) > 0)) {
+		throw Object.assign(new Error('File masih digunakan. Lepaskan lampiran dari lokasi penggunaannya sebelum menghapus file.'), { status: 409 });
+	}
 	// The assessment UI removes its own reference after this request succeeds.
-	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0) return;
+	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }
 async function removeUnreferencedFile(relativePath) {
 	const normalized = storagePath(relativePath);
 	const counts = await referenceCounts(normalized);
-	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0) return;
+	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }

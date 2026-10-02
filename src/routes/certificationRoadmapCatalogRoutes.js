@@ -1,9 +1,10 @@
 const express = require('express');
 const controller = require('../controllers/certificationRoadmapCatalogController');
-const { requirePermission, requirePageAccess } = require('../middleware/permission');
+const { requirePermission } = require('../middleware/permission');
+const { requireAdmin } = require('../middleware/authorization');
 const router = express.Router();
 router.get('/', requirePermission('personnel-certification', 'read'), controller.list);
-router.post('/', requirePageAccess('personnel-certification', 'create'), controller.create);
-router.put('/:id', requirePageAccess('personnel-certification', 'update'), controller.update);
-router.delete('/:id', requirePageAccess('personnel-certification', 'delete'), controller.remove);
+router.post('/', requireAdmin, controller.create);
+router.put('/:id', requireAdmin, controller.update);
+router.delete('/:id', requireAdmin, controller.remove);
 module.exports = router;

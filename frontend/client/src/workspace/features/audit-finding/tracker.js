@@ -5,6 +5,47 @@
   const labels = ['Audit', 'Finding', 'Follow-up', 'Evidence'];
   let rows = [], path = [], editing = null, ready = false;
   let cardFilter = null;
+  let removedAttachments = new Set();
+  let libraryFiles = [], selectedLibrary = new Set(), libraryRequest = 0;
+  function renderLibrary() {
+    const query = $('aftLibrarySearch').value.toLowerCase();
+    const attached = new Set(evidenceFiles(editing).filter(file=>!removedAttachments.has(file.path)).map(file=>file.path));
+    $('aftLibraryList').innerHTML = libraryFiles.filter(file=>!attached.has(file.path) && evidenceMatches(file, query)).map(file=>`<label class="toolbar"><input type="checkbox" data-aft-library-path="${escapeHtml(file.path)}" ${selectedLibrary.has(file.path) ? 'checked' : ''}><span>${escapeHtml(file.name)} <small>${escapeHtml(file.source)}</small>${evidenceMatchPreview(file, query)}</span></label>`).join('') || '<p class="muted">Tidak ada file yang dapat dipilih.</p>';
+  }
+  async function loadLibrary() {
+    const version = ++libraryRequest;
+    libraryFiles = []; renderLibrary();
+    $('aftLibraryStatus').textContent = 'Memuat file yang dapat Anda akses...';
+    try {
+      const files = await request('/available-files');
+      if (version !== libraryRequest) return;
+      libraryFiles = files;
+      selectedLibrary = new Set([...selectedLibrary].filter(path=>files.some(file=>file.path===path)));
+      renderLibrary(); $('aftLibraryStatus').textContent = `${files.length} file tersedia.`;
+    } catch (error) { if (version === libraryRequest) $('aftLibraryStatus').textContent = error.message; }
+  }
+  $('aftLibrarySearch').addEventListener('input', renderLibrary);
+  $('aftLibraryReload').addEventListener('click', loadLibrary);
+  $('aftLibraryList').addEventListener('change', event => {
+    const path = event.target.dataset.aftLibraryPath;
+    if (!path) return;
+    if (event.target.checked) selectedLibrary.add(path); else selectedLibrary.delete(path);
+  });
+  const evidenceFiles = record => record?.attachments || record?.data?.attachments?.map(file=>({...file,canManageFile:record.canManageFile})) || (record?.data?.attachmentPath ? [{path:record.data.attachmentPath,name:record.filename,canManageFile:record.canManageFile}] : []);
+  function renderExistingFiles() {
+    const items = evidenceFiles(editing);
+    $('aftExistingFile').hidden = !items.length;
+    $('aftExistingFileList').innerHTML = items.map((item,index) => `<div class="toolbar"><span>${escapeHtml(item.name || 'File evidence')}${removedAttachments.has(item.path) ? ' (akan dihapus dari evidence)' : ''}</span>${item.canManageFile ? `<a class="button button-quiet" href="${escapeHtml(apiFileOpenUrl(item.path))}" target="_blank" rel="noopener noreferrer">Lihat file</a><a class="button button-quiet" href="/api/audit-finding-tracker/${encodeURIComponent(editing.id)}/download?path=${encodeURIComponent(item.path)}">Unduh</a><button class="button button-quiet" type="button" data-aft-remove-file="${index}">${removedAttachments.has(item.path) ? 'Batalkan hapus' : 'Hapus dari evidence'}</button>` : '<span>File milik akun lain</span>'}</div>`).join('');
+  }
+  $('aftExistingFileList').addEventListener('click', event => {
+    const button = event.target.closest('[data-aft-remove-file]');
+    if (!button) return;
+    const item = evidenceFiles(editing)[Number(button.dataset.aftRemoveFile)];
+    if (!item?.canManageFile) return;
+    if (removedAttachments.has(item.path)) removedAttachments.delete(item.path); else removedAttachments.add(item.path);
+    renderExistingFiles();
+    renderLibrary();
+  });
   const cardFilters = {
     'open-findings': { title: 'Finding terbuka', matches: row => row.kind === 'finding' && row.data.status !== 'Closed' },
     'closed-findings': { title: 'Finding selesai', matches: row => row.kind === 'finding' && row.data.status === 'Closed' },
@@ -36,7 +77,7 @@
     });
   });
   const form = $('aftForm');
-  const canWrite = () => ['admin', 'approver', 'editor'].includes(currentUserRole);
+  const canWrite = () => ['admin', 'approver', 'editor', 'user'].includes(currentUserRole);
   const canDelete = () => ['admin', 'approver'].includes(currentUserRole);
   const status = message => { $('aftStatus').textContent = message; };
   function setTab(tab) {
@@ -75,9 +116,9 @@
     const pending = findings.filter(row => row.data.status !== 'Closed');
     const overdue = pending.filter(isOverdue).length;
     pending.sort((a, b) => Number(isOverdue(b)) - Number(isOverdue(a)) || (a.data.dueDate || '9999').localeCompare(b.data.dueDate || '9999'));
-    return `<p class="muted">${findings.length} finding · ${findings.length - pending.length} selesai · ${pending.length} belum selesai · <strong>${overdue} lewat tenggat</strong></p><details class="insight-panel" data-aft-details="${audit.id}"><summary>Lihat ${pending.length} finding belum selesai</summary>${pending.length ? `<div class="excel-wrap"><table class="excel-table"><thead><tr><th>Finding / Severity</th><th>PIC</th><th>Status</th><th>Tenggat</th><th>Follow-up</th></tr></thead><tbody>${pending.map(finding => {
+    return `<p class="muted">${findings.length} finding · ${findings.length - pending.length} selesai · ${pending.length} belum selesai · <strong class="${overdue ? 'aft-overdue' : ''}">${overdue} lewat tenggat</strong></p><details class="insight-panel" data-aft-details="${audit.id}"><summary>Lihat ${pending.length} finding belum selesai</summary>${pending.length ? `<div class="excel-wrap"><table class="excel-table"><thead><tr><th>Finding / Severity</th><th>PIC</th><th>Status</th><th>Tenggat</th><th>Follow-up</th></tr></thead><tbody>${pending.map(finding => {
       const actions = rows.filter(row => row.kind === 'followup' && row.parentId === finding.id);
-      return `<tr><td><strong>${escapeHtml(finding.data.title)}</strong><br>${escapeHtml(finding.data.severity)}<br><small>${escapeHtml(finding.data.description)}</small></td><td>${escapeHtml(finding.data.owner || 'Belum ditentukan')}</td><td>${escapeHtml(finding.data.status)}</td><td>${escapeHtml(finding.data.dueDate || 'Tanpa tenggat')}${isOverdue(finding) ? '<br><strong>Lewat tenggat</strong>' : ''}</td><td>${actions.filter(action => action.data.status === 'Closed').length}/${actions.length} selesai<br><button class="button button-quiet" type="button" data-aft-finding="${finding.id}">Buka Follow-up</button></td></tr>`;
+      return `<tr><td><strong>${escapeHtml(finding.data.title)}</strong><br>${escapeHtml(finding.data.severity)}<br><small>${escapeHtml(finding.data.description)}</small></td><td>${escapeHtml(finding.data.owner || 'Belum ditentukan')}</td><td>${escapeHtml(finding.data.status)}</td><td>${escapeHtml(finding.data.dueDate || 'Tanpa tenggat')}${isOverdue(finding) ? '<br><strong class="aft-overdue">Lewat tenggat</strong>' : ''}</td><td>${actions.filter(action => action.data.status === 'Closed').length}/${actions.length} selesai<br><button class="button button-quiet" type="button" data-aft-finding="${finding.id}">Buka Follow-up</button></td></tr>`;
     }).join('')}</tbody></table></div>` : `<p class="muted">${findings.length ? 'Semua finding sudah selesai.' : 'Belum ada finding pada audit ini.'}</p>`}</details>`;
   }
   async function request(url = '', options = {}) {
@@ -106,15 +147,15 @@
     ].map(([label, value, color]) => `<div class="risk-summary-row"><span>${label}</span><strong>${value}</strong><i><b style="width:${findings.length ? Math.round((value / findings.length) * 100) : 0}%;background:${color}"></b></i></div>`).join('');
     if ($('aftFollowupCount')) $('aftFollowupCount').textContent = rows.filter(r => r.kind === 'followup').length;
     if ($('aftEvidenceCount')) $('aftEvidenceCount').textContent = rows.filter(r => r.kind === 'evidence').length;
-    $('aftOverdueAuditCount').textContent = rows.filter(r => r.kind === 'audit' && isOverdue(r)).length;
     $('aftOverdueFindingCount').textContent = overdueFindings;
     $('aftBreadcrumb').innerHTML = [0, ...path.map((_, i) => i + 1)].map(i => `<button class="button ${i === level ? 'button-accent' : 'button-quiet'}" type="button" data-aft-level="${i}" ${i === level ? 'aria-current="page"' : ''}>${escapeHtml(i ? `${labels[i]}: ${path[i - 1].data.title}` : 'Semua Audit')}</button>`).join('');
     $('aftContext').textContent = path.length ? path.map(r => r.data.title).join(' → ') + (path.at(-1).data.description ? ' — ' + path.at(-1).data.description : '') : 'Pilih audit untuk melihat finding, lalu follow-up dan evidence terkait.';
     const search = $('aftSearch').value.toLowerCase();
     const scope = cardFilters[cardFilter];
     const visible = rows.filter(r => (scope ? scope.matches(r) : r.kind === kinds[level] && r.parentId === parentId) && (!$('aftFilter').value || r.data.status === $('aftFilter').value) && Object.values(r.data).join(' ').toLowerCase().includes(search));
+    $('aftDateColumn').textContent = ['followup', 'followups', 'evidence'].includes(cardFilter || kinds[level]) ? 'Tanggal evidence' : 'Tenggat';
     if (scope) $('aftContext').textContent = `${scope.title} — ${visible.length} data. Pilih Semua Audit untuk kembali ke daftar audit.`;
-    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" ? "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.filename || '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>`}${canWrite() ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${canDelete() ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
+    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" ? "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserRole === 'user') : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
   }
   async function load() {
     ready = false; render(); status('Memuat data…');
@@ -125,9 +166,17 @@
     editing = record || null; form.reset();
     if (record) for (const [name, value] of Object.entries(record.data)) if (form.elements.namedItem(name)) form.elements.namedItem(name).value = value;
     const kind = record?.kind || kinds[path.length];
+    $('aftDateLabel').textContent = ['followup', 'evidence'].includes(kind) ? 'Tanggal evidence' : 'Tenggat';
+    removedAttachments = new Set();
+    selectedLibrary = new Set(); libraryFiles = []; libraryRequest++;
+    $('aftLibrarySearch').value = '';
+    $('aftLibraryPanel').hidden = kind !== 'evidence';
+    renderLibrary();
+    if (kind === 'evidence') loadLibrary();
+    renderExistingFiles();
     $('aftFormTitle').textContent = `${record ? 'Ubah' : 'Tambah'} ${labels[kinds.indexOf(kind)]}`;
     $('aftSeverityLabel').hidden = kind !== 'finding'; $('aftFileLabel').hidden = kind !== 'evidence';
-    form.elements.file.required = kind === 'evidence' && !record;
+    form.elements.file.required = false;
     $('aftFormStatus').textContent = ''; $('aftModal').showModal();
   }
   document.querySelector(`[data-view="${key}"]`).addEventListener('click', () => {
@@ -164,16 +213,53 @@
     event.preventDefault(); const body = new FormData(form);
     body.set('kind', editing?.kind || kinds[path.length]); body.set('parentId', path.at(-1)?.id || '');
     if (!form.elements.file.files.length) body.delete('file');
-    if (form.elements.file.files[0]?.size > 10 * 1024 * 1024) { $('aftFormStatus').textContent = 'Ukuran file maksimum 10 MB.'; return; }
+    const selectedFiles = [...form.elements.file.files];
+    if (selectedFiles.some(file=>!file.size || file.size > 10 * 1024 * 1024)) { $('aftFormStatus').textContent = 'Setiap file harus berukuran 1 byte hingga 10 MB.'; return; }
+    if ((editing?.kind || kinds[path.length]) === 'evidence') {
+      const count = evidenceFiles(editing).length - removedAttachments.size + selectedFiles.length + [...selectedLibrary].filter(path=>!evidenceFiles(editing).some(file=>file.path===path && !removedAttachments.has(path))).length;
+      if (count < 1 || count > 10) { $('aftFormStatus').textContent = 'Evidence harus memiliki 1 hingga 10 file. Tambahkan pengganti sebelum menghapus file terakhir.'; return; }
+    }
+    body.set('existingAttachments', JSON.stringify([...selectedLibrary]));
+    body.set('removeAttachments', JSON.stringify([...removedAttachments]));
     $('aftSave').disabled = true; $('aftCancel').disabled = true;
-    try { await request(editing ? '/' + editing.id : '', { method: editing ? 'PUT' : 'POST', body }); $('aftModal').close(); await load(); }
+    try { await request(editing ? '/' + editing.id : '', { method: editing ? 'PUT' : 'POST', body }); $('aftModal').close(); await load(); await refreshEvidenceLibrary(); }
     catch (error) { $('aftFormStatus').textContent = error.message; }
     finally { $('aftSave').disabled = false; $('aftCancel').disabled = false; }
   });
-  const reminderControls = () => [...$('aftReminderForm').elements, $('aftReminderTest')];
+  const reminderControls = () => [...$('aftReminderForm').elements, $('aftReminderTest')].filter(control => control.id !== 'aftReminderUseTemplate');
+  const reminderTemplateFallback = {
+  subjectTemplate: 'Pengingat tindak lanjut audit: {{auditTitle}} - {{finding}}',
+  bodyTemplate: 'Yth. Bapak/Ibu PIC dan tim terkait,\n\nMohon menindaklanjuti temuan audit berikut sebelum tanggal tenggat.\n\nJenis audit: {{auditTitle}}\nFinding: {{finding}}\nPIC penanggung jawab: {{owner}}\nStatus saat ini: {{status}}\nTenggat penyelesaian: {{dueDate}}\n\nDeskripsi temuan / rekomendasi:\n{{description}}\n\nLangkah yang perlu dilakukan:\n1. Tinjau temuan dan rekomendasi di atas.\n2. Lakukan tindak lanjut dan unggah evidence pendukung di Audit Finding Tracker.\n3. Perbarui status finding sesuai hasil tindak lanjut. Jika sudah selesai, ubah status menjadi Closed.\n\nJika ada kendala, koordinasikan dengan tim audit sebelum tenggat.\n\nTerima kasih atas perhatian dan kerja samanya.\n\nEmail ini merupakan pengingat otomatis dari Audit Finding Tracker.'
+};
+  let reminderTemplateExample = reminderTemplateFallback;
+  function previewReminder() {
+    const values = { auditTitle: 'Audit Keamanan Informasi (contoh)', finding: 'Review akses belum selesai (contoh)', owner: 'PIC Audit', status: 'Open', dueDate: '2026-12-31', description: 'Lakukan review dan lampirkan evidence.' };
+    const render = value => value.replace(/{{(\w+)}}/g, (match, name) => values[name] ?? match);
+    $('aftReminderPreviewSubject').textContent = render($('aftReminderSubject').value).replace(/[\r\n]/g, ' ');
+    $('aftReminderPreviewBody').textContent = render($('aftReminderBody').value);
+  }
+  $('aftReminderSubject').addEventListener('input', previewReminder);
+  $('aftReminderBody').addEventListener('input', previewReminder);
+  $('aftReminderUseTemplate').addEventListener('click', () => {
+    if (currentUserRole !== 'admin') return;
+    $('aftReminderSubject').value = reminderTemplateExample.subjectTemplate;
+    $('aftReminderBody').value = reminderTemplateExample.bodyTemplate;
+    previewReminder();
+    $('aftReminderStatus').textContent = 'Template standar diterapkan pada formulir. Periksa pratinjau, lalu klik Simpan reminder untuk menyimpan.';
+  });
   function populateReminder(data) {
+    reminderTemplateExample = typeof data.templateExample?.subjectTemplate === 'string' && typeof data.templateExample?.bodyTemplate === 'string' ? data.templateExample : reminderTemplateFallback;
+
+    $('aftReminderSubject').value = data.subjectTemplate || $('aftReminderSubject').value || reminderTemplateExample.subjectTemplate;
+    $('aftReminderBody').value = data.bodyTemplate || $('aftReminderBody').value || reminderTemplateExample.bodyTemplate;
+    previewReminder();
     $('aftReminderEnabled').checked = data.enabled;
     $('aftReminderDays').value = data.daysBefore;
+    $('aftReminderStartUnit').value = data.startUnit ?? 'days';
+    $('aftReminderRepeatEvery').value = data.repeatEvery ?? 1;
+    $('aftReminderRepeatUnit').value = data.repeatUnit ?? 'days';
+    $('aftReminderRepeatDaily').checked = data.repeatDaily === true;
+    $('aftReminderMaxDeliveries').value = data.maxDeliveries ?? 366;
     $('aftReminderRecipients').value = data.recipients.join('\n');
     $('aftReminderConnection').textContent = data.smtpConfigured ? 'Menggunakan SMTP Admin yang sudah dikonfigurasi.' : 'SMTP Admin belum dikonfigurasi. Lengkapi koneksi sebelum mengaktifkan reminder.';
   }
@@ -192,8 +278,12 @@
     event.preventDefault();
     $('aftReminderSave').disabled = true;
     try {
-      const data = await request('/reminder-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: $('aftReminderEnabled').checked, daysBefore: Number($('aftReminderDays').value), recipients: $('aftReminderRecipients').value.split('\n').map(to => to.trim()).filter(Boolean) }) });
+      const data = await request('/reminder-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subjectTemplate: $('aftReminderSubject').value, bodyTemplate: $('aftReminderBody').value, enabled: $('aftReminderEnabled').checked, daysBefore: Number($('aftReminderDays').value), startUnit: $('aftReminderStartUnit').value, repeatEvery: Number($('aftReminderRepeatEvery').value), repeatUnit: $('aftReminderRepeatUnit').value, repeatDaily: $('aftReminderRepeatDaily').checked, maxDeliveries: Number($('aftReminderMaxDeliveries').value), recipients: $('aftReminderRecipients').value.split('\n').map(to => to.trim()).filter(Boolean) }) });
       populateReminder(data);
+      if (!data.subjectTemplate || !data.bodyTemplate) {
+        $('aftReminderStatus').textContent = 'Isi template tetap ditampilkan, tetapi server belum mengonfirmasi penyimpanannya. Restart server aplikasi untuk memuat pembaruan, lalu simpan kembali.';
+        return;
+      }
       $('aftReminderStatus').textContent = data.enabled ? 'Reminder tersimpan dan aktif. Jadwal diperiksa paling lambat satu jam lagi.' : 'Pengaturan tersimpan. Reminder otomatis nonaktif.';
     } catch (error) { $('aftReminderStatus').textContent = error.message; }
     finally { $('aftReminderSave').disabled = false; }

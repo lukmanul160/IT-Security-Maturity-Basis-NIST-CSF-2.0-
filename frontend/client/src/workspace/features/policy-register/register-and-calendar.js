@@ -306,14 +306,16 @@ function showPolicyRegisterView() { document.querySelectorAll('.view').forEach(v
 document.querySelectorAll('[data-policy-tab]').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const tab = e.currentTarget.dataset.policyTab;
+    if (tab === 'smtp' && currentUserRole !== 'admin') return;
     document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-accent', b === e.target));
     document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-quiet', b !== e.target));
     const dashboard = tab === 'dashboard';
     $('policyDashboardMetrics').hidden = !dashboard;
     $('policyDashboardSummary').hidden = !dashboard;
-    $('policyRegisterPanel').hidden = dashboard;
+    $('policyRegisterPanel').hidden = tab !== 'register';
     $('policyReviewCalendarPanel').hidden = true;
-    $('policySmtpPanel').hidden = true;
+    $('policySmtpPanel').hidden = tab !== 'smtp';
+    document.querySelectorAll('[data-policy-tab]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.policyTab === tab)));
   });
 });
 

@@ -1,12 +1,7 @@
 function editUploadedFile(recordId) {
   const record = uploadedFileRecordMap.get(recordId);
-  if (!record) return;
-  if (record.sourceType === 'policy-register') {
-    const row = policyRegisterRows.find(item => String(item.id) === String(record.policyId));
-    if (row) openPolicyRegisterModal(row);
-    else $('saveState').textContent = 'Kebijakan tidak ditemukan. Muat ulang daftar file lalu coba kembali.';
-    return;
-  }
+  if (!canEditUploadedFile(record)) return;
+  $('uploadedFileEditSourceButton').hidden = ['uploaded-library', 'policy-register'].includes(record.sourceType);
   const extension = (String(record.name || '').match(/\.[^.]+$/)?.[0] || '').toLowerCase();
   $('uploadedFileEditForm').reset();
   $('uploadedFileEditRecordId').value = recordId;
@@ -29,7 +24,7 @@ function editUploadedFile(recordId) {
 }
 async function saveUploadedPdfOpenPage() {
   const record = $('uploadedFileEditModal')._record;
-  if (!record) return;
+  if (!canEditUploadedFile(record)) return;
   const openPage = Number($('uploadedPdfOpenPage').value);
   if (!Number.isInteger(openPage) || openPage < 1) { $('uploadedFileEditStatus').textContent = 'Masukkan nomor halaman PDF minimal 1.'; return; }
   const response = await fetch(`/api/files/open-page/${record.path.replace(/^upload\//, '').split('/').map(encodeURIComponent).join('/')}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ openPage }) });
@@ -62,7 +57,7 @@ async function replaceUploadedFile(event) {
   event.preventDefault();
   const record = $('uploadedFileEditModal')._record;
   const replacement = $('uploadedFileEditInput').files?.[0];
-  if (!record || !replacement) return;
+  if (!canEditUploadedFile(record) || !replacement) return;
   const currentExtension = String(record.name || '').match(/\.[^.]+$/)?.[0]?.toLowerCase();
   const replacementExtension = String(replacement.name || '').match(/\.[^.]+$/)?.[0]?.toLowerCase();
   if (!currentExtension || currentExtension !== replacementExtension) {
@@ -79,27 +74,8 @@ async function replaceUploadedFile(event) {
     const response = await fetch(apiFileUrl(record.path), { method: 'PUT', body: formData });
     const metadata = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(metadata.error || 'File gagal diganti');
-    metadata.name = record.name;
-
-    if (record.key.startsWith('iso|')) {
-      const { id, isSoa, row } = isoRecordContext(record.key);
-      if (!row) throw new Error('Kontrol asal tidak ditemukan');
-      const evidence = [...(row.evidence || [])];
-      evidence[record.index] = metadata;
-      const evidenceResponse = await updateIsoEvidence(isSoa ? 'soa' : 'clauses', id, evidence);
-      if (!evidenceResponse.ok) throw new Error('Referensi ISO gagal diperbarui');
-      row.evidence = evidence;
-      isSoa ? renderIso27001SoaManager() : renderIso27001Manager();
-    } else {
-      const owner = attachmentStateFor(record.key);
-      const attachments = [...(owner.attachments[record.key] || [])];
-      attachments[record.index] = metadata;
-      owner.attachments[record.key] = attachments;
-      const stateResponse = await fetch(record.sourceType === 'privacy' ? '/api/privacy/assessment' : '/api/assessment', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(owner) });
-      if (!stateResponse.ok) throw new Error('Referensi assessment gagal diperbarui');
-      record.sourceType === 'privacy' ? renderPrivacy() : (renderCsfTable(), renderControls());
-    }
-
+    // The replacement keeps its path; existing references need no assessment write.
+    await refreshEvidenceLibrary();
     $('saveState').textContent = 'File berhasil diganti';
     renderUploadedFiles();
     $('uploadedFileEditModal').close();

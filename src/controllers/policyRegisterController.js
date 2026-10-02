@@ -189,11 +189,10 @@ const update = async (req, res, next) => {
   try {
     const { id } = req.params;
     const payload = getPayload(req);
-    const selectedPath = payload.attachmentPath || payload.attachment_path;
-    if (!req.file && selectedPath) {
-      const previous = (await pool.query('SELECT attachment_path FROM policy_register WHERE id=$1',[id])).rows[0]?.attachment_path;
-      await evidenceAccess.assertReferences([{path:selectedPath}], previous ? [{path:previous}] : [], req.user);
-    }
+    const selectedPath = payload.removeAttachment === true ? '' : payload.attachmentPath ?? payload.attachment_path;
+    const previous = (await pool.query('SELECT attachment_path FROM policy_register WHERE id=$1', [id])).rows[0]?.attachment_path;
+    if (req.file && previous) await evidenceAccess.assertAccess(previous, req.user);
+    if (!req.file && selectedPath !== undefined) await evidenceAccess.assertReferences(selectedPath ? [{ path: selectedPath }] : [], previous ? [{ path: previous }] : [], req.user);
 
     // Attach file metadata jika ada file baru
     await storeAttachment(req, payload);
@@ -213,6 +212,8 @@ const remove = async (req, res, next) => {
   console.log('[policyRegisterController.remove] Handler called');
   try {
     const { id } = req.params;
+    const previous = (await pool.query('SELECT attachment_path FROM policy_register WHERE id=$1', [id])).rows[0]?.attachment_path;
+    if (previous) await evidenceAccess.assertAccess(previous, req.user);
     await service.remove(id);
     return res.status(204).send();
   } catch (error) {

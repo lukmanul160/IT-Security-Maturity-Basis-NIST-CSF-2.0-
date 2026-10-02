@@ -34,7 +34,7 @@ function fillPolicyRegisterForm(row) {
   $('policyRegisterApprovalStatus').value = row.approvalStatus || '';
   $('policyRegisterLastReview').value = row.lastReview ? String(row.lastReview).slice(0, 10) : '';
   $('policyRegisterNotes').value = row.notes || '';
-  $('policyRegisterDelete').hidden = false;
+  $('policyRegisterDelete').hidden = !canManagePolicyRegister('delete');
   $('policyRegisterSubmit').textContent = 'Update policy';
   $('policyRegisterFormTitle').textContent = `Update ${row.title || 'policy'}`;
   $('policyRegisterStatus').textContent = `Editing ${row.title || 'policy'}`;

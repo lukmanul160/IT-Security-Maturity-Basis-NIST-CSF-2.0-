@@ -41,7 +41,7 @@ const replacementUpload = multer({
 	storage: multer.memoryStorage(),
 	fileFilter: (req, file, callback) => {
 		try {
-			fileService.validateUploadFile(file.originalname, file.mimetype);
+			if (!filePath(req).startsWith('audit-finding/')) fileService.validateUploadFile(file.originalname, file.mimetype);
 			callback(null, true);
 		} catch (error) {
 			callback(error);
@@ -50,7 +50,7 @@ const replacementUpload = multer({
 	limits: { fileSize: 50 * 1024 * 1024, files: 1 },
 });
 
-async function list(req, res) { const files = await evidenceAccess.list(req.user); res.json(req.query.details === 'true' ? files : files.map(file => file.path)); }
+async function list(req, res) { const detailed = req.query.details === 'true'; const files = await (detailed ? evidenceAccess.searchableList(req.user) : evidenceAccess.list(req.user)); res.set('Cache-Control','no-store').json(detailed ? files : files.map(file => file.path)); }
 async function create(req, res) {
 	if (!req.file) return res.status(400).json({ error: 'File is required' });
 
@@ -105,6 +105,6 @@ async function replace(req, res) {
 	if (!req.file) return res.status(400).json({ error: 'Replacement file is required' });
 	res.json(await fileService.replaceFile(filePath(req), req.file));
 }
-async function remove(req, res) { await evidenceAccess.assertAccess(filePath(req), req.user); await fileService.deleteFile(filePath(req)); res.status(204).end(); }
+async function remove(req, res) { await evidenceAccess.assertAccess(filePath(req), req.user); await fileService.deleteFile(filePath(req), { library: req.query.library === 'true' }); res.status(204).end(); }
 
 module.exports = { list, create, createBatch, download, access, open, getOpenPage, setOpenPage, replace, remove, upload, replacementUpload };
