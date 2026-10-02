@@ -1,348 +1,94 @@
-# NIST CSF 2.0 Maturity Assessment
+# NIST Basis
 
-Dokumentasi desain sistem: [High-Level Design (HLD)](docs/HIGH_LEVEL_DESIGN.md) untuk arsitektur, modul, dan deployment; [Low-Level Design (LLD)](docs/LOW_LEVEL_DESIGN.md) untuk struktur kode, model data, API, dan alur proses detail.
+Aplikasi web untuk assessment keamanan, risk register, threat modelling,
+policy, personel, evidence, serta pengelolaan risiko pihak ketiga. Backend
+Express/Node.js memakai PostgreSQL; frontend Vue 3 dibangun melalui Vite dan
+Tailwind, lalu disajikan oleh backend pada port default 8000.
 
-Untuk memahami arsitektur, alur data, lokasi kode penting, dan temuan awal sebelum melakukan perubahan, baca [Catatan Learning Proyek](docs/PROJECT_LEARNING.md).
+## Dokumentasi
 
-## Instalasi dan Menjalankan Aplikasi
+- [Instalasi Linux dan Windows](docs/INSTALLATION.md): prasyarat, PostgreSQL,
+  environment, build, akun awal, systemd/Task Scheduler, HTTPS, upgrade,
+  backup/restore, migrasi antar-OS, dan troubleshooting.
+- [Panduan penggunaan](docs/USER_GUIDE.md): langkah penggunaan setiap modul.
+- [High-Level Design](docs/HIGH_LEVEL_DESIGN.md) dan
+  [Low-Level Design](docs/LOW_LEVEL_DESIGN.md): arsitektur, data, dan API.
+- [Catatan proyek](docs/PROJECT_LEARNING.md): lokasi kode dan alur inisialisasi.
+- [Import/export/report](docs/module-import-export-report.md),
+  [Database Backup](docs/database-backup.md),
+  [Threat Modelling](docs/threat-modelling.md),
+  [Pengelolaan pilihan risk](docs/risk-options.md),
+  [Audit Finding Tracker](docs/audit-finding-tracker.md), dan
+  [Policy reminder](docs/policy-email-reminders.md).
 
-### Prasyarat
+## Mulai cepat
 
-- Node.js 18 atau lebih baru. Lingkungan pengembangan saat dokumentasi ini dibuat menggunakan Node.js `v24.19.0`.
-- PostgreSQL yang sedang berjalan. Lingkungan pengembangan menggunakan PostgreSQL `18.6` untuk Windows.
-- Git untuk clone repository (opsional bila project sudah tersedia secara lokal).
+Instal Node.js 24 LTS, PostgreSQL server beserta client tools, lalu buka root
+project. Buat role database dan konfigurasikan kredensial sesuai panduan instalasi.
+Template environment di repository bernama **env.exsample**. Jangan menimpa
+file .env yang sudah dipakai pada instalasi lama.
 
-`psql` tidak wajib tersedia di `PATH`; provisioning database dilakukan oleh script Node.js melalui package `pg`. Pastikan user PostgreSQL yang dipakai mempunyai akses ke database maintenance `postgres` dan izin membuat database.
+Linux:
 
-### Langkah Instalasi di Windows (PowerShell)
-
-1. Clone repository atau buka folder project, lalu masuk ke root project:
-
-  ```powershell
-  git clone <URL_REPOSITORY> "NIST Basis"
-  Set-Location "NIST Basis"
-  ```
-
-2. Instal dependency Node.js:
-
-  ```powershell
-  npm install
-  ```
-
-3. Buat file environment dari template yang tersedia:
-
-  ```powershell
-  Copy-Item env.exsample .env
-  ```
-
-4. Sesuaikan `.env` dengan kredensial PostgreSQL lokal. Contoh konfigurasi default:
-
-  ```dotenv
-  PORT=8000
-  DB_HOST=localhost
-  DB_PORT=5432
-  DB_NAME=nist_basis
-  DB_USER=postgres
-  DB_PASSWORD=isi_password_postgres_anda
-  DB_SSL=false
-  ```
-
-  Alternatifnya, gunakan `DATABASE_URL` dan hapus atau abaikan variabel `DB_*`:
-
-  ```dotenv
-  DATABASE_URL=postgresql://postgres:password@localhost:5432/nist_basis
-  ```
-
-5. Jalankan provisioning awal. Perintah ini membuat database bila belum ada, menerapkan schema, membuat akun awal, dan menyiapkan seed sertifikasi:
-
-  ```powershell
-  npm run db:setup
-  ```
-
-6. Jalankan aplikasi:
-
-  ```powershell
-  npm start
-  ```
-
-  Buka [http://localhost:8000](http://localhost:8000) setelah terminal menampilkan alamat server. Saat startup, aplikasi juga memastikan folder `upload/`, data framework/control, indikator risiko, dan tabel pendukung tersedia.
-
-### Perintah Pengembangan
-
-```powershell
-# Jalankan server dengan restart otomatis saat source berubah
-npm run dev
-
-# Bangun ulang CSS Tailwind setelah mengubah frontend/tailwind.css
-npm run build:css
-
-# Bangun ulang data seed sertifikasi dari sumber roadmap
-npm run seed:personnel-certifications
-```
-
-### Verifikasi Instalasi
-
-Pastikan service PostgreSQL berjalan, lalu setelah menjalankan server buka endpoint berikut:
-
-```text
-http://localhost:8000/api/health/db
-```
-
-Endpoint tersebut memerlukan login. Masuk terlebih dahulu menggunakan akun default, kemudian akses endpoint dari browser pada sesi yang sama. Respons berhasil memuat `"connected": true`.
-
-### Troubleshooting PostgreSQL
-
-Jangan menjalankan `psql -U postgres -d nist_basis -f database\schema.sql` pada clone baru sebelum database `nist_basis` dibuat. Perintah tersebut akan gagal bila database belum ada. Gunakan perintah berikut dari root project sebagai solusi utama:
-
-```powershell
+~~~bash
+cp env.exsample .env
+# Edit .env: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD.
+npm ci
+npm run build
 npm run db:setup
-```
-
-Jika user PostgreSQL tidak memiliki izin membuat database melalui aplikasi, minta administrator database untuk membuatnya atau jalankan fallback manual ini. Perintah pertama harus terhubung ke database maintenance `postgres`, bukan `nist_basis`:
-
-```powershell
-psql -U postgres -d postgres -f database\create-database.sql
-psql -U postgres -d nist_basis -f database\schema.sql
-psql -U postgres -d nist_basis -f database\users.sql
-```
-
-Masalah umum:
-
-- `database "nist_basis" does not exist`: jalankan `npm run db:setup` atau perintah `create-database.sql` di atas terlebih dahulu.
-- `password authentication failed`: perbarui `DB_USER` dan `DB_PASSWORD` pada `.env` sesuai akun PostgreSQL lokal.
-- `ECONNREFUSED` atau koneksi ditolak: mulai service PostgreSQL melalui Windows Services, kemudian pastikan `DB_HOST` dan `DB_PORT` sesuai instalasi Anda.
-- `npm.ps1 cannot be loaded`: PowerShell membatasi execution policy. Jalankan perintah sebagai `npm.cmd run db:setup` dan `npm.cmd start`, atau buka PowerShell dengan execution policy yang diizinkan oleh kebijakan organisasi.
-
-## Clone dan Data Risiko
-
-Data referensi framework/control yang diperlukan untuk menjalankan assessment disimpan di repository:
-
-- `data/csf-data.json` untuk NIST CSF 2.0 Core.
-- `data/privacy-data.json` untuk Privacy Framework Core clone-safe.
-- `data/risk-indicators.json` untuk seed indikator tanpa membawa Risk Register.
-- Seed schema dan akun aplikasi di `database/`.
-
-`Cybersecurity Risk Register.xlsx` adalah data operasional dan tidak boleh di-commit atau di-upload ke GitHub. File tersebut diabaikan oleh `.gitignore`. Privacy Framework menggunakan `data/privacy-data.json`, sehingga workbook eksternal tidak diperlukan. Risk Register dibuat kosong pada clone baru dan dapat diisi melalui UI.
-
-Ringkasan perintah setelah clone:
-
-```powershell
-npm install
-Copy-Item env.exsample .env
-npm run db:setup
+npm run admin:create
 npm start
-```
+~~~
 
-`db:setup` membuat database, tabel, dan akun awal; `npm start` menginisialisasi framework/control CSF dan Privacy serta indikator risk dari file repository. `Risk Register`, `Risk Acceptance`, dan opsi dropdown risk tidak pernah di-seed dari workbook atau repository; tabel tersebut dibuat kosong pada clone baru dan hanya dapat diisi melalui aplikasi di database lokal.
+Windows PowerShell:
 
-Data `Security-Certification-Roadmap9.html` dipetakan ke `data/personnel-certifications-seed.json` berdasarkan tiga level: `Advanced / Expert`, `Intermediate`, dan `Entry Level`. Data personil dan katalog roadmap kini disimpan terpisah:
+~~~powershell
+Copy-Item env.exsample .env
+notepad .env
+npm.cmd ci
+npm.cmd run build
+npm.cmd run db:setup
+npm.cmd run admin:create
+npm.cmd start
+~~~
 
-- `organization_personnel`: daftar induk pegawai, termasuk jabatan dan atasan langsung yang boleh kosong untuk posisi paling atas.
-- `personnel_certifications`: sertifikasi milik pegawai terdaftar, dihubungkan melalui `personnel_id`. Satu pegawai dapat memiliki banyak sertifikasi.
-- `certification_roadmap_catalog`: katalog referensi Security Certification Roadmap 9 (read-only di aplikasi), di-upsert otomatis saat `npm start` dari `data/personnel-certifications-seed.json`.
+Buat akun administrator melalui perintah admin:create (username default
+**nistadmin**, password dipilih sendiri), lalu login di http://localhost:8000/login.
+Perintah menambahkan admin baru setelah db:setup; username harus belum terdaftar.
+Mode production memakai cookie Secure, sehingga akses melalui HTTPS.
 
-Seed katalog dapat dibuat ulang setelah sumber roadmap berubah dengan `npm run seed:personnel-certifications`.
+Startup/provisioning tetap memakai DB_* meskipun DATABASE_URL diisi. Gunakan
+DB_* untuk instalasi sederhana, atau pastikan URL dan DB_* menunjuk target yang
+sama. Build membutuhkan versi Node yang kompatibel dengan Vite; Node.js 18 pada
+engine aplikasi tidak cukup untuk membangun frontend saat ini.
 
-### Alur Personnel Certification
+## Modul
 
-1. Buka **Personnel Certification → 1. Daftar pegawai**, kemudian pilih **Tambah pegawai**. Atasan langsung boleh dikosongkan jika pegawai berada di posisi paling atas.
-2. Setelah pegawai tersimpan, pilih **Tambah sertifikasi** pada baris pegawai, atau buka **2. Sertifikasi pegawai** dan pilih pegawai terdaftar.
-3. Pilih sertifikasi dari saran katalog atau isi detail sertifikasi, status, dan tanggalnya. Employee ID, jabatan, dan atasan otomatis diambil dari data pegawai.
-4. Ulangi penambahan dengan pegawai yang sama untuk mencatat sertifikasi lainnya. Sertifikasi dikelompokkan berdasarkan ID pegawai, sehingga perubahan nama tidak memisahkan riwayatnya.
+- NIST CSF 2.0, NIST Privacy, dan ISO 27001 termasuk SOA serta sasaran keamanan.
+- Risk Acceptance dan Risk Management dengan tab Pengelolaan Pilihan.
+- Threat Modelling: diagram data flow, trust boundary, dan ancaman STRIDE.
+- Policy Register, reminder, serta SMTP terpusat.
+- Personnel Certification, organisasi, dan reference roadmap.
+- TPRM, kuesioner, template, serta register risiko vendor.
+- Audit Finding Tracker, Uploaded files, akun/permission, audit, dan backup.
 
-Pegawai yang masih memiliki sertifikasi tidak dapat dihapus; pindahkan atau hapus sertifikasinya terlebih dahulu. Saat `npm start` atau `npm run db:setup`, migrasi `database/personnel-certification-links.sql` menautkan sertifikasi lama ke daftar pegawai dan membuat relasi database. Migrasi dipanggil otomatis di dalam transaksi oleh service; tidak perlu menjalankan file SQL tersebut secara terpisah.
+## Operasi dan pengembangan
 
-Website lokal untuk melakukan penilaian tingkat kematangan keamanan siber berdasarkan **NIST Cybersecurity Framework (CSF) 2.0**. Aplikasi ini membantu pengguna menilai Policy dan Practice pada setiap subcategory, menyimpan catatan tindakan, serta mengelola evidence file berdasarkan Function dan kategori penilaian.
+~~~bash
+npm run dev
+npm run dev:client
+npm run build
+npm test
+npm run test:threat-browser
+npm run test:risk-options-browser
+~~~
 
-## Login
+Backend dan dev frontend dijalankan pada terminal terpisah. Perubahan frontend
+memerlukan build; perubahan backend/config memerlukan restart. Session ada dalam
+memori, sehingga pengguna login kembali setelah restart.
 
-Semua halaman aplikasi dan API memerlukan login. Akun default:
-
-```text
-admin / admin
-user  / user
-```
-
-Session menggunakan cookie HttpOnly. Username dan password disimpan di tabel PostgreSQL `app_users`; password disimpan sebagai bcrypt hash. Query tabel dan seed account tersedia di `database/users.sql`.
-
-## Fitur
-
-- Dashboard ringkasan tingkat kematangan assessment.
-- Perhitungan overall maturity score dengan skala 0 sampai 4.
-- Informasi completion progress dan priority gaps.
-- Ringkasan maturity berdasarkan Function dan Category.
-- Radar chart untuk membandingkan Policy, Practice, dan Target Score.
-- Tampilan lengkap NIST CSF 2.0 Core.
-- CRUD subcategory CSF 2.0 melalui PostgreSQL.
-- Search dan filter berdasarkan Function atau subcategory.
-- Penilaian terpisah untuk Policy Maturity dan Practice Maturity.
-- Policy Action Notes dan Practice Action Notes pada setiap subcategory.
-- Upload evidence file ke struktur folder:
-
-  ```text
-  upload/
-  ├── Govern/
-  │   ├── Policy/
-  │   └── Practice/
-  ├── Identify/
-  ├── Protect/
-  ├── Detect/
-  ├── Respond/
-  └── Recover/
-  ```
-
-- Daftar seluruh file yang sudah diupload.
-- Informasi Function, Category, Subcategory, tipe evidence, dan tanggal upload.
-- Search file evidence.
-- Pagination file evidence, maksimal 10 item per halaman.
-- Menggunakan kembali file yang sudah diupload sebagai evidence pada subcategory lain.
-- Nama file dibuat unik; upload dengan nama yang sudah ada menggunakan path file existing.
-- Select uploaded evidence hanya membuat reference, bukan salinan file baru.
-- Aksi Open, Download, Replace, dan Delete untuk evidence.
-- Penyimpanan otomatis progress melalui API Node.js ke PostgreSQL.
-- Evidence otomatis dikirim ke server Node.js dan disimpan di folder `upload/`; PostgreSQL menyimpan path, nama, ukuran, tipe, dan waktu upload.
-- Banyak file dalam satu row dikirim melalui satu request `POST /api/files/batch`, sehingga lebih cepat daripada satu request per file.
-- Export seluruh progress, catatan, metadata evidence, dan path file ke JSON.
-- Import progress dari JSON.
-- Reset assessment dengan konfirmasi warning.
-- Form Cybersecurity Risk Acceptance untuk mendokumentasikan risiko, justifikasi, mitigasi, serta keputusan Business Owner, CIO, dan CIS.
-- Risk Acceptance tersimpan di PostgreSQL dan dapat dibuka kembali, diedit, atau dihapus.
-- Reset menghapus progress, catatan, metadata evidence, dan seluruh isi folder upload yang dipilih.
-
-## Database Framework Model
-
-Framework dan control menggunakan model generik yang dinormalisasi:
-
-```text
-frameworks (id, name, version, description)
-  1 --- n
-controls (id, framework_id, code, function, category, subcategory, ...)
-```
-
-`controls.framework_id` adalah foreign key ke `frameworks.id`, sedangkan pasangan `(framework_id, code)` wajib unik. Data lama dari `csf_controls` dan `privacy_controls` dimigrasikan idempotently ke tabel generik saat startup.
-
-Framework baru dapat dibuat melalui `POST /api/frameworks`, kemudian control-nya melalui `POST /api/frameworks/:frameworkId/controls`. Endpoint `/api/csf` dan `/api/privacy` tetap tersedia sebagai compatibility layer.
-
-### API CSF 2.0
-
-```text
-GET    /api/csf          # List semua control
-POST   /api/csf          # Create control
-PUT    /api/csf/:id      # Update control
-DELETE /api/csf/:id      # Delete control
-```
-
-Data awal CSF di-seed dari `data/csf-data.json` hanya ketika tabel `csf_controls` masih kosong.
-
-### API Risk Acceptance
-
-```text
-GET    /api/risk-acceptance
-POST   /api/risk-acceptance
-PUT    /api/risk-acceptance/:id
-DELETE /api/risk-acceptance/:id
-GET    /api/risk-acceptance/:id/export/pdf
-```
-
-## Alur Penggunaan
-
-1. Buka halaman **Overview** untuk melihat ringkasan assessment.
-2. Buka **CSF 2.0** atau klik **Open assessment**.
-3. Evidence otomatis disimpan ke folder `upload/` oleh server Node.js.
-4. Isi nilai Policy dan Practice pada subcategory.
-5. Tambahkan Policy Action Notes dan Practice Action Notes.
-6. Tambahkan evidence dengan upload file baru atau pilih **Select uploaded evidence**.
-7. Gunakan search dan pagination untuk menemukan file evidence yang sudah tersedia.
-8. Gunakan **Export JSON** untuk menyimpan progress.
-9. Pada perangkat lain, import JSON dan salin folder `upload/` bila file evidence diperlukan.
-
-## Export dan Import
-
-File JSON menyimpan:
-
-- Policy score dan Practice score.
-- Action Notes.
-- Metadata evidence.
-- Path file evidence.
-- Lokasi folder upload.
-- Informasi halaman dan Function terakhir.
-
-File fisik tidak disimpan di dalam JSON. Ketika berpindah laptop, folder `upload/` harus ikut dipindahkan secara manual.
-
-## Struktur File
-
-```text
-src/
-├── config/          # Konfigurasi environment dan lokasi direktori
-├── controllers/     # Adapter HTTP untuk setiap resource
-├── middleware/      # Error handling dan middleware Express
-├── routes/          # Definisi endpoint API
-├── services/        # Business logic dan filesystem persistence
-├── app.js           # Konfigurasi Express tanpa listen()
-└── server.js        # Bootstrap server dan startup lifecycle
-database/
-├── create-database.sql # Query pembuatan database PostgreSQL
-└── schema.sql          # Query pembuatan tabel dan index PostgreSQL
-scripts/
-└── provision-db.js     # Provisioning database dan eksekusi schema
-frontend/            # Seluruh source dan asset frontend Vue 3
-â”œâ”€â”€ client/          # Source Vue dan konfigurasi Vite
-â””â”€â”€ public/          # Login, stylesheet, dan hasil build Vue
-data/                # Data referensi CSF
-upload/              # Evidence otomatis berdasarkan Function dan jenis
-package.json         # Dependency dan scripts
-```
-
-- `frontend/client/src/App.vue` - Host Vue untuk workspace aplikasi.
-- `frontend/client/src/workspace/source.html` - Sumber markup workspace yang diproses saat build.
-- `frontend/client/src/workspace/runtime.js` - Runtime workspace kompatibilitas untuk handler fitur yang sudah ada.
-- `frontend/public/styles.css` - Styling dan responsive layout.
-- `frontend/public/vue/` - Hasil build Vite, dibuat oleh `npm run build`.
-- `data/csf-data.json` - Data NIST CSF 2.0 Core.
-- Metadata evidence tersimpan di tabel PostgreSQL `evidence_files`, sedangkan binary file tersimpan satu kali di folder `upload/` untuk upload yang lebih cepat.
-- `database/create-database.sql` dijalankan satu kali dari database maintenance seperti `postgres` jika database aplikasi belum tersedia.
-- Query schema PostgreSQL terdokumentasi di `database/schema.sql` dan dijalankan otomatis saat startup.
-
-## Pembagian frontend dan backend
-
-- `frontend/` berisi seluruh aplikasi browser: source Vue/Vite di `frontend/client/`, source Tailwind di `frontend/tailwind.css`, asset login dan stylesheet di `frontend/public/`, serta hasil build Vue di `frontend/public/vue/`.
-- `src/` berisi backend Node.js/Express: konfigurasi, middleware, controller, route, service, dan bootstrap server.
-- `database/` berisi schema dan migrasi PostgreSQL.
-- `scripts/` berisi provisioning database, seed, build preparation, dan regression test.
-
-Perintah `npm run build` membangun frontend ke `frontend/public/`. Backend memakai folder tersebut sebagai static root, sehingga `npm start` tetap menyajikan aplikasi melalui route yang sama.
-
-## Teknologi
-
-- HTML5
-- CSS3
-- Vue 3 dan Vite
-- Node.js HTTP server (backend berada di `src/`)
-- REST API
-- Tailwind CSS melalui build pipeline lokal
-- PostgreSQL sebagai sumber utama data assessment
-- HTML Canvas untuk radar chart
-
-## Contoh Tampilan Website
-
-### Dashboard Overview
-
-![Dashboard Overview](img/nist%201.png)
-
-### Assessment CSF 2.0
-
-![Assessment CSF 2.0](img/nist%202.png)
-
-### Tampilan NIST CSF
-
-![Tampilan NIST CSF](img/NIST%203.png)
-
-### Evidence Management
-
-![Evidence Management](img/NIST%204.png)
-
-### Ringkasan Assessment
-
-![Ringkasan Assessment](img/NIST%20CSF%205.png)
-
-## Catatan Browser
+Database adalah sumber utama data operasional. Evidence berada di upload/ atau
+storage tambahan; password SMTP terenkripsi memerlukan data/smtp-secret.key.
+Backup PostgreSQL tidak menyertakan file evidence, kunci SMTP, atau konfigurasi
+server. Ikuti panduan recovery untuk salinan lengkap. Workbook Risk Register
+operasional tidak diperlukan untuk clone dan tidak boleh dimasukkan ke repository.

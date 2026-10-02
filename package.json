@@ -14,6 +14,8 @@
     "test:threat-browser": "node scripts/test-threat-modelling-browser.js",
     "test:risk-options-browser": "node scripts/test-risk-options-browser.js",
     "db:setup": "node scripts/provision-db.js",
+    "admin:create": "node scripts/create-admin.js",
+    "test:admin-setup": "node --test test/createAdmin.test.js",
     "seed:iso27001": "node scripts/generate-iso-27001-seed.js",
     "seed:personnel-certifications": "node scripts/generate-personnel-certification-seed.js",
     "start": "node src/server.js",
