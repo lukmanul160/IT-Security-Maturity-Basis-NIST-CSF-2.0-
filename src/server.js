@@ -31,6 +31,7 @@ async function start() {
   await ensurePersonnelCertificationStore();
   await ensureCertificationRoadmapCatalogStore();
   await ensurePermissionStore();
+  await require('./services/threatModelService').ensureStore();
   await ensureTprmStore();
   await ensureTprmQuestionnaireStore();
   await ensureQuestionnaireTemplateStore();

@@ -9,6 +9,31 @@ function load(fetch = async () => { throw new Error('Unexpected request'); }) {
 }
 function payload(module, data) { return { format: 'nist-basis-module', version: 1, module, exportedAt: '2026-09-14', data }; }
 test('every requested module exposes a transfer definition', () => { assert.equal(Object.keys(load().modules).length, 7); });
+
+test('each module template has matching headers and passes its import format validation', () => {
+  const api = load();
+  for (const key of Object.keys(api.modules)) {
+    const file = JSON.parse(JSON.stringify(api.template(key)));
+    assert.equal(api.validate(key, file), file);
+    for (const section of api.modules[key].sections) assert.ok(file.headers[section.key]);
+    assert.ok(file.instructions.some(text => text.includes('YYYY-MM-DD')));
+  }
+  assert.ok(api.template('personnel').headers.certifications.personnelId);
+  const risk = api.template('risk-management');
+  assert.ok(risk.headers.register.deviceName);
+  assert.equal(risk.examples.register[0].likelihood, 3);
+  assert.equal(risk.data.register.length, 0);
+});
+
+test('risk report includes complete register fields and collect exports only the risk register', async () => {
+  const urls = [];
+  const api = load(async url => { urls.push(url); return { ok: true, json: async () => [{ riskId: 'CSR-001', deviceName: 'Laptop-001', riskCause: 'Unpatched', comment: 'Follow up' }] }; });
+  const file = await api.collect('risk-management');
+  assert.deepEqual(urls, ['/api/risk-management']);
+  assert.equal(file.data.register[0].deviceName, 'Laptop-001');
+  const html = api.report('risk-management', file);
+  for (const text of ['Device Name', 'Risk Cause', 'Laptop-001', 'Unpatched', 'Follow up']) assert.ok(html.includes(text));
+});
 test('reject wrong modules, missing sections, duplicate IDs and invalid scores before writing', async () => {
   const api = load();
   assert.throws(() => api.validate('csf', payload('privacy', {})), /modul/);

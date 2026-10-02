@@ -14,6 +14,21 @@ async function ensureBackupRoot() {
   await fs.mkdir(backupRoot, { recursive: true });
 }
 
+async function resolvePgTool(name) {
+  const configured = process.env[name === 'pg_dump' ? 'PG_DUMP_PATH' : 'PG_RESTORE_PATH'];
+  if (configured) return configured;
+  if (process.platform === 'win32') {
+    const root = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'PostgreSQL');
+    const versions = await fs.readdir(root, { withFileTypes: true }).catch(() => []);
+    versions.sort((a, b) => b.name.localeCompare(a.name, undefined, { numeric: true }));
+    for (const version of versions.filter(entry => entry.isDirectory())) {
+      const executable = path.join(root, version.name, 'bin', `${name}.exe`);
+      try { await fs.access(executable); return executable; } catch {}
+    }
+  }
+  return name;
+}
+
 function pgDumpArguments(outputPath) {
   if (database.url) return ['--dbname', database.url, '--format=custom', '--file', outputPath];
   return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, '--format=custom', '--file', outputPath];
@@ -27,36 +42,25 @@ async function createBackup() {
   const environment = { ...process.env };
   if (!database.url && database.password) environment.PGPASSWORD = database.password;
   try {
-    await execFileAsync(process.env.PG_DUMP_PATH || 'pg_dump', pgDumpArguments(filePath), { env: environment, windowsHide: true, maxBuffer: 1024 * 1024 });
+    await execFileAsync(await resolvePgTool('pg_dump'), pgDumpArguments(filePath), { env: environment, windowsHide: true, maxBuffer: 1024 * 1024 });
     const stats = await fs.stat(filePath);
-    return { fileName, format: 'PostgreSQL custom dump', size: stats.size, createdAt: stats.mtime.toISOString() };
+    return { fileName, format: 'PostgreSQL custom dump', scope: 'Seluruh schema, tabel, data, sequence, view, fungsi, index, dan constraint database aplikasi', size: stats.size, createdAt: stats.mtime.toISOString() };
   } catch (error) {
     await fs.rm(filePath, { force: true });
-    if (error.code === 'ENOENT') return createJsonSnapshot(timestamp);
+    if (error.code === 'ENOENT') {
+      const unavailable = new Error('Backup lengkap memerlukan pg_dump. Install PostgreSQL client tools atau atur PG_DUMP_PATH; snapshot JSON tidak dibuat karena tidak mencakup struktur database.');
+      unavailable.status = 503;
+      throw unavailable;
+    }
     const failure = new Error(error.stderr?.trim() || 'Database backup failed');
     failure.status = 500;
     throw failure;
   }
 }
 
-async function createJsonSnapshot(timestamp) {
-  const fileName = `nist-basis-${timestamp}.json`;
-  const filePath = path.join(backupRoot, fileName);
-  const tableResult = await pool.query(`SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public' ORDER BY tablename`);
-  const tables = {};
-  for (const row of tableResult.rows) {
-    const tableName = row.tablename.replaceAll('"', '""');
-    const result = await pool.query(`SELECT * FROM "${tableName}"`);
-    tables[row.tablename] = result.rows;
-  }
-  await fs.writeFile(filePath, JSON.stringify({ format: 'PostgreSQL data snapshot', createdAt: new Date().toISOString(), database: database.name, tables }, null, 2), 'utf8');
-  const stats = await fs.stat(filePath);
-  return { fileName, format: 'PostgreSQL data snapshot', size: stats.size, createdAt: stats.mtime.toISOString() };
-}
-
 function pgRestoreArguments(filePath) {
-  if (database.url) return ['--dbname', database.url, '--clean', '--if-exists', filePath];
-  return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, '--clean', '--if-exists', filePath];
+  if (database.url) return ['--dbname', database.url, '--clean', '--if-exists', '--single-transaction', filePath];
+  return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, '--clean', '--if-exists', '--single-transaction', filePath];
 }
 
 async function restoreJsonSnapshot(filePath) {
@@ -103,7 +107,7 @@ async function restoreBackup(file) {
     if (path.extname(file.originalname).toLowerCase() === '.json') {
       await restoreJsonSnapshot(file.path);
     } else {
-      await execFileAsync(process.env.PG_RESTORE_PATH || 'pg_restore', pgRestoreArguments(file.path), { env: environment, windowsHide: true, maxBuffer: 1024 * 1024 });
+      await execFileAsync(await resolvePgTool('pg_restore'), pgRestoreArguments(file.path), { env: environment, windowsHide: true, maxBuffer: 1024 * 1024 });
     }
     return { restored: true, fileName: file.originalname };
   } catch (error) {

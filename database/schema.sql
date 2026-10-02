@@ -2,6 +2,15 @@
 -- Select the application database before running this file:
 -- \c nist_basis
 
+CREATE TABLE IF NOT EXISTS threat_models (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  diagram JSONB NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS assessment_state (
   id TEXT PRIMARY KEY,
   data JSONB NOT NULL,

@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 
 const permissions = [
+  ['threat-modelling', 'Threat Modelling'],
   ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'], ['iso27001', 'ISO 27001:2022'], ['iso27001-soa', 'SOA (Statement of Applicability)'],
   ['assessment', 'CSF assessment'], ['privacy-assessment', 'Privacy assessment'],
   ['risk-acceptance', 'Risk Acceptance'], ['audit-finding-tracker', 'Audit Finding Tracker'], ['risk-management', 'Risk Management'], ['policy-register', 'Policy Register'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'],
@@ -8,6 +9,7 @@ const permissions = [
 ];
 const validRoles = ['admin', 'approver', 'editor', 'viewer', 'user'];
 const pageActionMatrix = {
+  'threat-modelling': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor', 'user'], update: ['admin', 'approver', 'editor', 'user'], delete: ['admin', 'approver'] },
   framework: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor', 'user'], update: ['admin', 'editor', 'user'], delete: ['admin'] },
   csf: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor', 'user'], update: ['admin', 'editor', 'user'], delete: ['admin'] },
   privacy: { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'editor', 'user'], update: ['admin', 'editor', 'user'], delete: ['admin'] },
@@ -35,6 +37,8 @@ const defaults = {
   viewer: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'],
   user: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']
 };
+
+for (const role of validRoles) if (!defaults[role].includes('threat-modelling')) defaults[role].push('threat-modelling');
 
 function normalizeAction(action) {
   const value = String(action || 'read').toLowerCase();

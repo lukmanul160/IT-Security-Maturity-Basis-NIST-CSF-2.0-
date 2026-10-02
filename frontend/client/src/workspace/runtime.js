@@ -32,6 +32,7 @@ import auditFindingTracker from './features/audit-finding/tracker.js?raw';
 
 import evidenceLibrary from './features/uploaded-files/evidence-library.js?raw';
 import actionAccess from './features/shared/action-access.js?raw';
+import threatNavigation from './features/shared/threat-navigation.js?raw';
 
 export default [
   part01,
@@ -63,5 +64,6 @@ export default [
   storageSettings,
   moduleTransfer,
   smtpSettings,
-  actionAccess
+  actionAccess,
+  threatNavigation
 ].join('');

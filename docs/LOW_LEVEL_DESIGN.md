@@ -219,7 +219,7 @@ Semantik pengiriman bukan exactly-once: crash setelah SMTP menerima email dan se
 
 Global error handler menerima `error.status` 4xx; selain itu mengembalikan 500 dengan `Internal server error`. Bentuk response global adalah `{error, requestId}`. Beberapa controller memberikan response langsung `{error}`, sehingga requestId belum konsisten pada seluruh kegagalan.
 
-Backup menggunakan `pg_dump`, dengan fallback snapshot JSON ketika executable tidak ditemukan. Restore dump memakai `pg_restore --clean --if-exists`; restore JSON mengganti data dalam transaksi. Backup database tidak mencakup file evidence atau kunci SMTP.
+Backup lengkap menggunakan `pg_dump` tanpa filter schema/tabel; jika tool tidak tersedia, backup gagal tanpa fallback JSON parsial. Restore dump memakai `pg_restore --clean --if-exists --single-transaction`; restore JSON lama tetap didukung. Backup database tidak mencakup file evidence atau kunci SMTP. Lihat `database-backup.md`.
 
 **Usulan prosedur recovery:** hentikan perubahan pengguna dan scheduler, simpan snapshot sebelum restore, pulihkan database serta upload dari periode konsisten, pasang kunci yang sesuai, mulai aplikasi, lalu verifikasi login, relasi personel, assessment, pembukaan evidence, dan dekripsi konfigurasi SMTP. Pengiriman tes email hanya dilakukan ketika memang diotorisasi.
 

@@ -1,0 +1,2 @@
+[app] Mounting /api routes with requireAuth
+[app] GET /login

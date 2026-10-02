@@ -95,7 +95,7 @@ Implikasi: startup dapat menulis schema dan seed. Menjalankan server bukan pemer
 
 - Tabel domain mencakup `risk_register`, `risk_acceptance_forms`, `policy_register`, `policy_register_items`, `tprm_risk_register`, `tprm_related_risks`, `tprm_due_diligence_questionnaires`, dan `questionnaire_templates`.
 - Data personel berada di `personnel_certifications` dan `organization_personnel`; katalog referensi berada di `certification_roadmap_catalog`.
-- `backupService.js` menggunakan `pg_dump`; fallback ke snapshot JSON tabel schema `public` terjadi bila executable tidak ditemukan (`ENOENT`).
+- `backupService.js` menggunakan dump lengkap `pg_dump` tanpa filter schema/tabel. Client tools Windows ditemukan otomatis; tool yang tidak tersedia menyebabkan error tanpa fallback JSON parsial. Lihat `database-backup.md`.
 - Restore dump menggunakan `pg_restore --clean --if-exists`; restore JSON menjalankan truncate dan insert dalam transaksi. Ini operasi penggantian data.
 - Backup database tidak mengarsipkan folder `upload/`. Bedakan backup database dari export state assessment dan salinan evidence.
 - README menyatakan Risk Register, Risk Acceptance dan dropdown risk kosong pada clone baru. Workbook Risk Register merupakan data operasional lokal yang dikecualikan oleh `.gitignore`.

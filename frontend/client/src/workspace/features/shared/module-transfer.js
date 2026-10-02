@@ -7,7 +7,7 @@ const moduleTransfer = (() => {
     privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true })] },
     iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'year objective indicator baseline targetValue owner evaluationFrequency periodTargets notes')] },
     'risk-acceptance': { title: 'Risk Acceptance', views: ['riskAcceptanceView'], sections: [section('register', 'Acceptance register', '/api/risk-acceptance', 'id requestorName assetName department riskDescription benefitJustification mitigationPlan businessOwnerDecision remediationDate cisDecision cisConditions')] },
-    'risk-management': { title: 'Risk Management', views: ['riskManagementView'], sections: [section('register', 'Risk register', '/api/risk-management', 'riskId riskCategory effectedAsset identificationRisk riskOwner likelihood impact riskRating treatmentAction deadline residualRating', { id: 'riskId' })] },
+    'risk-management': { title: 'Risk Management', views: ['riskManagementView'], sections: [section('register', 'Risk register', '/api/risk-management', 'riskId thirdParty riskCategory effectedAsset deviceName identificationRisk riskControl riskCause riskAnalysis assetConfidentiality assetIntegrity assetAvailability assetValue riskOwner note ref likelihood impact riskRating treatmentAction acceptanceFormNo riskTreatmentDescription ownerOfAction deadline residualRiskDescription residualLikelihood residualImpact residualRating comment', { id: 'riskId' })] },
     'policy-register': { title: 'Policy Register', views: ['policyRegisterView'], sections: [section('register', 'Policy register', '/api/policy-register', 'id title category owner reviewCycle approvalStatus lastReview notes items')] },
     personnel: { title: 'Personnel Certification', views: ['personnelCertificationView'], sections: [section('personnel', 'Organization personnel', '/api/personnel-certifications/organization-personnel', 'id employeeId personnelName personnelRole supervisorName'), section('certifications', 'Certifications', '/api/personnel-certifications', 'personnelName employeeId certificationName issuer certificationLevel status issueDate expiryDate notes')] }
   };
@@ -23,6 +23,32 @@ const moduleTransfer = (() => {
     const data = {};
     for (const item of modules[key].sections) data[item.key] = await request(item.url);
     return { format: 'nist-basis-module', version: 1, module: key, exportedAt: new Date().toISOString(), data };
+  }
+  function template(key) {
+    const config = modules[key];
+    const data = {};
+    const headers = {};
+    for (const item of config.sections) {
+      data[item.key] = item.assessment ? { scores: {}, policyScores: {}, practiceScores: {}, notes: {}, attachments: {} } : [];
+      headers[item.key] = item.assessment
+        ? { scores: 'Object: ID kontrol -> angka 0–5', policyScores: 'Object: ID kontrol -> angka 0–5', practiceScores: 'Object: ID kontrol -> angka 0–5', notes: 'Object: ID kontrol / policy-ID / practice-ID -> teks', attachments: 'Object: ID kontrol -> daftar referensi evidence' }
+        : Object.fromEntries([...new Set([...item.columns, ...(item.key === 'certifications' ? ['personnelId'] : [])])].map(field => [field, label(field)]));
+    }
+    return {
+      format: 'nist-basis-module', version: 1, module: key,
+      instructions: [
+        `Template import ${config.title}. Isi data sesuai header; headers dan instructions hanya panduan dan tidak disimpan.`,
+        'Daftar kosong [] diisi dengan object untuk setiap record. Gunakan Export JSON sebagai contoh data lengkap dari halaman ini.',
+        'Tanggal: YYYY-MM-DD. Gunakan ID dari export untuk memperbarui record; hilangkan id untuk record baru (kecuali ID kontrol ISO).',
+        'Assessment memakai ID kontrol yang tersedia di halaman. Import mengganti state assessment; template kosong akan mengosongkan assessment.',
+        'Personnel: setiap pegawai wajib memiliki id unik di file, dan personnelId sertifikasi harus menunjuk id pegawai tersebut.',
+        'Risk register: riskCategory, effectedAsset, deviceName, identificationRisk wajib diisi; likelihood dan impact berupa angka 1–5. Risk ID baru dapat dikosongkan.',
+        'Risk Acceptance: requestorName, assetName, department, riskDescription, benefitJustification, mitigationPlan wajib diisi; businessOwnerDecision: temporary/one_year/denied; cisDecision: approved/denied/conditional.',
+        'Policy: title, category, owner, reviewCycle, approvalStatus wajib diisi. Personnel: personnelName wajib; sertifikasi: personnelId dan certificationName wajib.'
+      ], headers,
+      examples: key === 'risk-management' ? { register: [{ riskCategory: 'Technical', effectedAsset: 'Laptop User', deviceName: 'Laptop-001', identificationRisk: 'Akses tidak sah', riskOwner: 'IT Security', likelihood: 3, impact: 4, treatmentAction: 'Mitigation', deadline: '2026-12-31' }] } : {},
+      data
+    };
   }
   function validate(key, payload) {
     if (!object(payload) || payload.format !== 'nist-basis-module' || payload.version !== 1 || payload.module !== key || !object(payload.data)) throw new Error('Format, versi, atau modul file tidak sesuai. Gunakan file Export JSON dari modul ini.');
@@ -123,6 +149,16 @@ const moduleTransfer = (() => {
       toolbar.className = 'module-transfer-toolbar';
       toolbar.innerHTML = '<button type="button" data-import>Import JSON</button><button type="button" data-export>Export JSON</button><button type="button" data-report>Report / PDF</button><input type="file" accept=".json,application/json" hidden><span role="status" aria-live="polite"></span>';
       const status = toolbar.querySelector('[role="status"]');
+      const templateButton = document.createElement('button');
+      templateButton.type = 'button'; templateButton.textContent = 'Template Import';
+      templateButton.onclick = () => {
+        download(`${key}-import-template.json`, JSON.stringify(template(key), null, 2), 'application/json');
+        status.textContent = `Template ${config.title} diunduh. Baca instructions dan headers, lalu isi bagian data sebelum import.`;
+      };
+      toolbar.insertBefore(templateButton, status);
+      const guide = document.createElement('details');
+      guide.innerHTML = `<summary>Panduan import / export ${escape(config.title)}</summary><p>Export JSON dan Report / PDF mengambil seluruh data ${escape(config.sections.map(item => item.title).join(', '))} yang sudah tersimpan pada halaman ini, termasuk data di luar filter tabel. Report HTML dapat dicetak atau disimpan sebagai PDF.</p><p>Unduh Template Import untuk melihat header dan struktur dokumen. Isi bagian data, simpan sebagai JSON, lalu pilih Import JSON. File harus berasal dari modul yang sama (maksimal 10 MB). Pratinjau ditampilkan sebelum penyimpanan.</p><p>ID yang cocok diperbarui; record baru ditambahkan. Assessment diganti dengan isi file. Lampiran berkas tidak disertakan, hanya referensinya.</p>`;
+      toolbar.append(guide);
       const input = toolbar.querySelector('input');
       toolbar.querySelector('[data-import]').onclick = () => { input.value = ''; input.click(); };
       input.onchange = async () => {
@@ -139,7 +175,7 @@ const moduleTransfer = (() => {
       view.prepend(toolbar);
     }
   }
-  return { modules, validate, rows, report, collect, importPayload, mount };
+  return { modules, validate, rows, report, collect, template, importPayload, mount };
 })();
 moduleTransfer.mount();
 // Personnel's section is created lazily by its navigation handler.

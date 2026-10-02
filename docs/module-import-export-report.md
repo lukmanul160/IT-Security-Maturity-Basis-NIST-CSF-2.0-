@@ -4,6 +4,16 @@ Toolbar tersedia pada NIST CSF Assessment, NIST Privacy Assessment, ISO 27001,
 Risk Acceptance, Risk Management, Policy Register, dan Personnel Certification.
 Risk Acceptance mengikuti nama modul aplikasi yang sudah ada.
 
+- **Template Import** mengunduh JSON khusus modul dengan `format`, `version`,
+  `module`, `headers`, `instructions`, dan `data`. Header menunjukkan nama field
+  yang digunakan saat import. Isi bagian `data`; bagian panduan tidak disimpan.
+  Risk Management menyertakan contoh risk register dalam `examples` yang dapat
+  disalin ke `data.register` lalu disesuaikan. Template memakai daftar kosong
+  agar contoh tidak otomatis tersimpan. Assessment kosong mengganti state dengan
+  data kosong, sehingga isi assessment sebelum import.
+- **Panduan import / export** pada setiap toolbar menjelaskan cakupan data,
+  format file, pratinjau import, serta cara menyimpan laporan sebagai PDF.
+
 - **Export JSON** mengambil seluruh data modul terbaru dari API, termasuk metadata
   versi, nama modul, dan waktu export. Filter tabel tidak membatasi export.
 - **Import JSON** menerima file hasil export modul yang sama (maksimal 10 MB).

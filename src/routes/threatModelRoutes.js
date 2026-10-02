@@ -1,0 +1,9 @@
+const router = require('express').Router();
+const service = require('../services/threatModelService');
+const { requirePermission } = require('../middleware/permission');
+router.post('/validate', requirePermission('threat-modelling', 'read'), (req, res) => { service.validate(req.body); res.json({ valid: true }); });
+router.get('/', requirePermission('threat-modelling', 'read'), async (req, res) => res.json(await service.list()));
+router.post('/', requirePermission('threat-modelling', 'create'), async (req, res) => res.status(201).json(await service.create(req.body)));
+router.put('/:id', requirePermission('threat-modelling', 'update'), async (req, res) => res.json(await service.update(req.params.id, req.body)));
+router.delete('/:id', requirePermission('threat-modelling', 'delete'), async (req, res) => { await service.remove(req.params.id); res.sendStatus(204); });
+module.exports = router;
