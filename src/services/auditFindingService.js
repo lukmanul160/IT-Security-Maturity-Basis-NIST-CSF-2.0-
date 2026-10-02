@@ -111,7 +111,8 @@ async function save(kind, id, parentId, input, file, user) {
 async function remove(id, user) {
   try {
     const row = (await pool.query('SELECT kind,data,filename FROM audit_finding_records WHERE id=$1', [id])).rows[0];
-    if (user?.role === 'user' && row?.kind !== 'evidence') fail('Anda hanya dapat menghapus evidence milik sendiri.', 403);
+    const permissions = require('./permissionService');
+    if (user && !await permissions.has(user.role,'audit-finding-tracker','delete') && !(row?.kind === 'evidence' && await permissions.canDeleteOwnedEvidence(user.role))) fail('Role tidak memiliki izin hapus.',403);
     if (row?.kind === 'evidence') for (const item of attachments(row)) await evidenceAccess.assertAccess(item.path, user);
     const result = await pool.query('DELETE FROM audit_finding_records WHERE id=$1', [id]);
     if (!result.rowCount) fail('Data tidak ditemukan', 404);

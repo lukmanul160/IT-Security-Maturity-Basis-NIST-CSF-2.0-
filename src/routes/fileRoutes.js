@@ -4,6 +4,11 @@ const { requireCsfFileAccess } = require('../middleware/authorization');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
 
 const router = express.Router();
+router.use(async(req,res,next)=>{
+  const action=req.method==='GET' ? 'read' : req.method==='DELETE' ? 'delete' : req.method==='PUT' ? 'update' : null;
+  if(!action || await require('../services/permissionService').hasFileAction(req.user?.role,action))return next();
+  return res.status(403).json({error:'File action is not permitted for this role'});
+});
 router.get('/', requirePermission('files', 'read'), controller.list);
 router.post('/', requirePageAccess('files', 'create'), controller.upload.single('file'), requireCsfFileAccess, controller.create);
 router.post('/batch', requirePageAccess('files', 'create'), controller.upload.array('files', 50), requireCsfFileAccess, controller.createBatch);

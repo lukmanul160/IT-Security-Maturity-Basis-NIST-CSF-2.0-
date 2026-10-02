@@ -28,7 +28,7 @@ async function login(req, res) {
   return res.json({ username: user.username, role: user.role });
 }
 function logout(req, res) { destroySession(parseCookies(req.headers.cookie)[sessionCookie]); res.clearCookie(sessionCookie); res.status(204).end(); }
-async function currentUser(req, res) { const profile = await accountService.getProfile(req.user.username); profile.permissions = await permissionService.getRolePermissions(profile.role); res.json(profile); }
+async function currentUser(req, res) { const profile = await accountService.getProfile(req.user.username); profile.actions = await permissionService.getRoleActions(profile.role); profile.ownEvidenceDelete = await permissionService.canDeleteOwnedEvidence(profile.role); profile.permissions = Object.keys(profile.actions).filter(key=>profile.actions[key].read); res.json(profile); }
 async function updateProfile(req, res) { const data = req.body || {}; if (req.user.role !== 'admin' && Object.keys(data).some(field => field !== 'fullName')) return res.status(403).json({ error: 'Only administrators can change account security settings' }); res.json(await accountService.updateProfile(req.user.username, data)); }
 async function updatePassword(req, res) { res.json(await accountService.updatePassword(req.user.username, req.body || {})); }
 async function listUsers(req, res) { res.json(await accountService.listUsers()); }

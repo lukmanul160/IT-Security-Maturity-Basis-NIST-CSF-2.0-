@@ -22,6 +22,6 @@ router.get('/:id/download', requirePermission('audit-finding-tracker', 'read'), 
 }));
 router.post('/', requirePageAccess('audit-finding-tracker', 'create'), upload.array('file',10), wrap(async (req, res) => res.status(201).json(await service.save(req.body.kind, null, req.body.parentId, req.body, req.files, req.user))));
 router.put('/:id', requirePageAccess('audit-finding-tracker', 'update'), upload.array('file',10), wrap(async (req, res) => res.json(await service.save(req.body.kind, req.params.id, null, req.body, req.files, req.user))));
-router.delete('/:id', (req, res, next) => requirePageAccess('audit-finding-tracker', req.user?.role === 'user' ? 'read' : 'delete')(req, res, next), wrap(async (req, res) => { await service.remove(req.params.id, req.user); res.status(204).end(); }));
+router.delete('/:id', requirePageAccess('audit-finding-tracker', 'read'), wrap(async (req, res) => { await service.remove(req.params.id, req.user); res.status(204).end(); }));
 router.use((error, req, res, next) => error instanceof multer.MulterError ? res.status(400).json({ error: 'Upload tidak valid. Maksimum 10 file, masing-masing 10 MB.' }) : next(error));
 module.exports = router;

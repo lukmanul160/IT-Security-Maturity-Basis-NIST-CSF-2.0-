@@ -1,4 +1,72 @@
+async function exportOrganizationPng() {
+  const button = $('organizationExportPng');
+  const status = $('organizationExportStatus');
+  const chart = $('organizationStructure');
+  button.disabled = true;
+  status.textContent = 'Menyiapkan gambar…';
+  try {
+    if (!chart.querySelector('.organization-person')) throw new Error('Belum ada pegawai untuk diekspor.');
+    await document.fonts.ready;
+    const width = Math.ceil(Math.max(chart.scrollWidth, chart.getBoundingClientRect().width));
+    const height = Math.ceil(Math.max(chart.scrollHeight, chart.getBoundingClientRect().height));
+    const clone = chart.cloneNode(true);
+    const originals = [chart, ...chart.querySelectorAll('*')];
+    const copies = [clone, ...clone.querySelectorAll('*')];
+    const pseudoRules = [];
+    originals.forEach((element, index) => {
+      const style = getComputedStyle(element);
+      for (const property of style) copies[index].style.setProperty(property, style.getPropertyValue(property));
+      copies[index].setAttribute('data-png-node', String(index));
+      for (const pseudo of ['::before', '::after']) {
+        const computed = getComputedStyle(element, pseudo);
+        if (computed.content === 'none' || computed.content === 'normal') continue;
+        const declarations = Array.from(computed, property => `${property}:${computed.getPropertyValue(property)};`).join('');
+        pseudoRules.push(`[data-png-node="${index}"]${pseudo}{${declarations}}`);
+      }
+    });
+    const exportStyles = document.createElement('style');
+    exportStyles.textContent = pseudoRules.join('\n');
+    clone.prepend(exportStyles);
+    Object.assign(clone.style, { width: `${width}px`, height: `${height}px`, maxWidth: 'none', maxHeight: 'none', margin: '0', overflow: 'visible', boxSizing: 'border-box' });
+    const padding = 24;
+    const imageWidth = width + padding * 2;
+    const imageHeight = height + 80;
+    const markup = new XMLSerializer().serializeToString(clone);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${imageWidth}" height="${imageHeight}"><rect width="100%" height="100%" fill="white"/><text x="24" y="32" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#172b4d">Struktur Organisasi</text><foreignObject x="${padding}" y="56" width="${width}" height="${height}">${markup}</foreignObject></svg>`;
+    const picture = new Image();
+    await new Promise((resolve, reject) => {
+      picture.onload = resolve;
+      picture.onerror = () => reject(new Error('Gambar tidak dapat dibuat. Silakan coba kembali.'));
+      picture.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+    // Keep large organizations within browser canvas limits while preferring 2x resolution.
+    const scale = Math.min(2, 16000 / imageWidth, 16000 / imageHeight, Math.sqrt(32000000 / (imageWidth * imageHeight)));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(imageWidth * scale);
+    canvas.height = Math.ceil(imageHeight * scale);
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Browser tidak mendukung ekspor gambar.');
+    context.scale(scale, scale);
+    context.drawImage(picture, 0, 0);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Gambar tidak dapat dibuat.');
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `struktur-organisasi-${new Date().toISOString().slice(0, 10)}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    status.textContent = 'Gambar PNG berhasil diekspor.';
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+$('organizationExportPng').addEventListener('click', exportOrganizationPng);
+
 function canManagePersonnelCertifications(action = 'create') {
+  if (currentUserActions['personnel-certification']) return canPerform('personnel-certification',action);
   return currentUserRole === 'admin' || (currentUserPermissions.includes('personnel-certification') && (action === 'create' ? ['editor', 'user'] : ['editor']).includes(currentUserRole));
 }
 function applyPersonnelAccess() {
@@ -152,7 +220,7 @@ $('certificationPersonnelId').addEventListener('change', syncCertificationPerson
 $('organizationPersonnelBody').addEventListener('click', event => { const button = event.target.closest('[data-organization-certify]'); if (button) startNewCertification(button.dataset.organizationCertify); });
 document.querySelector('#certificationCancel').addEventListener('click', () => $('certificationModal').close());
 const certificationLevels = ['Entry Level', 'Intermediate', 'Advanced / Expert'];
-function renderCertifications() { const board = $('certificationBoard'); if (!board) return; const employeeRows = personnelCertifications; const canvasRows = employeeRows; const grouped = [...employeeRows.reduce((groups, row) => { const key = String(row.personnelId); if (!groups.has(key)) groups.set(key, { ...row, certifications: [] }); groups.get(key).certifications.push(row); return groups; }, new Map()).values()]; $('certificationCount').textContent = `${grouped.length} personnel${grouped.length === 1 ? '' : 's'} · ${employeeRows.length} certifications · ${certificationRoadmapCatalog.length} roadmap items`; $('certificationBoardEmpty').hidden = canvasRows.length > 0; board.querySelectorAll('.certification-lane').forEach(lane => lane.remove()); board.insertAdjacentHTML('beforeend', certificationLevels.map(level => `<section class="certification-lane"><header><h4>${level}</h4><span>${canvasRows.filter(row => row.certificationLevel === level).length}</span></header><div class="certification-lane-canvas">${canvasRows.filter(row => row.certificationLevel === level).map(certificationCard).join('') || '<p class="certification-lane-empty">Belum ada sertifikasi di canvas</p>'}</div></section>`).join('')); document.querySelector('.certification-table thead').innerHTML = '<tr><th>Personnel</th><th>Employee ID</th><th>Role / domain</th><th>Certifications held</th><th>Expiry</th><th>Actions</th></tr>'; $('certificationBody').innerHTML = grouped.map(person => `<tr><td><strong>${escapeHtml(person.personnelName)}</strong></td><td>${escapeHtml(person.employeeId || '-')}</td><td>${escapeHtml(person.personnelRole || '-')}</td><td class="certification-summary-list">${person.certifications.map(row => `<div class="certification-summary-item"><a href="${escapeHtml(row.referenceUrl || '#')}" ${row.referenceUrl ? 'target="_blank" rel="noopener"' : ''}>${escapeHtml(row.certificationName)}</a><span class="status-${String(row.status || '').toLowerCase().replaceAll(' ', '-')}">${escapeHtml(row.status || '-')}</span></div>`).join('')}</td><td>${person.certifications.map(row => `<div>${escapeHtml(row.expiryDate || '-')}</div>`).join('')}</td><td>${person.certifications.map(row => `<div class="certification-row-actions"><button class="attachment-action-button" type="button" data-certification-canvas="${row.id}">Move on canvas</button><button class="attachment-action-button" type="button" data-certification-edit="${row.id}">Edit</button><button class="attachment-action-button danger" type="button" data-certification-delete="${row.id}">Delete</button></div>`).join('')}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada pegawai yang memiliki sertifikasi.</td></tr>'; $('certificationBody').querySelectorAll('[data-certification-canvas], [data-certification-delete]').forEach(button => { button.hidden = !canManagePersonnelCertifications('update'); }); $('certificationBody').querySelectorAll('[data-certification-edit]').forEach(button => { button.textContent = canManagePersonnelCertifications('update') ? 'Edit' : 'Detail'; }); renderCertificationReference(); }
+function renderCertifications() { const board = $('certificationBoard'); if (!board) return; const employeeRows = personnelCertifications; const canvasRows = employeeRows; const grouped = [...employeeRows.reduce((groups, row) => { const key = String(row.personnelId); if (!groups.has(key)) groups.set(key, { ...row, certifications: [] }); groups.get(key).certifications.push(row); return groups; }, new Map()).values()]; $('certificationCount').textContent = `${grouped.length} personnel${grouped.length === 1 ? '' : 's'} · ${employeeRows.length} certifications · ${certificationRoadmapCatalog.length} roadmap items`; $('certificationBoardEmpty').hidden = canvasRows.length > 0; board.querySelectorAll('.certification-lane').forEach(lane => lane.remove()); board.insertAdjacentHTML('beforeend', certificationLevels.map(level => `<section class="certification-lane"><header><h4>${level}</h4><span>${canvasRows.filter(row => row.certificationLevel === level).length}</span></header><div class="certification-lane-canvas">${canvasRows.filter(row => row.certificationLevel === level).map(certificationCard).join('') || '<p class="certification-lane-empty">Belum ada sertifikasi di canvas</p>'}</div></section>`).join('')); document.querySelector('.certification-table thead').innerHTML = '<tr><th>Personnel</th><th>Employee ID</th><th>Role / domain</th><th>Certifications held</th><th>Expiry</th><th>Actions</th></tr>'; $('certificationBody').innerHTML = grouped.map(person => `<tr><td><strong>${escapeHtml(person.personnelName)}</strong></td><td>${escapeHtml(person.employeeId || '-')}</td><td>${escapeHtml(person.personnelRole || '-')}</td><td class="certification-summary-list">${person.certifications.map(row => `<div class="certification-summary-item"><a href="${escapeHtml(row.referenceUrl || '#')}" ${row.referenceUrl ? 'target="_blank" rel="noopener"' : ''}>${escapeHtml(row.certificationName)}</a><span class="status-${String(row.status || '').toLowerCase().replaceAll(' ', '-')}">${escapeHtml(row.status || '-')}</span></div>`).join('')}</td><td>${person.certifications.map(row => `<div>${escapeHtml(row.expiryDate || '-')}</div>`).join('')}</td><td>${person.certifications.map(row => `<div class="certification-row-actions"><button class="attachment-action-button" type="button" data-certification-canvas="${row.id}">Move on canvas</button><button class="attachment-action-button" type="button" data-certification-edit="${row.id}">Edit</button><button class="attachment-action-button danger" type="button" data-certification-delete="${row.id}">Delete</button></div>`).join('')}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada pegawai yang memiliki sertifikasi.</td></tr>'; $('certificationBody').querySelectorAll('[data-certification-canvas], [data-certification-delete]').forEach(button => { button.hidden = !canManagePersonnelCertifications(button.hasAttribute('data-certification-delete') ? 'delete' : 'update'); }); $('certificationBody').querySelectorAll('[data-certification-edit]').forEach(button => { button.textContent = canManagePersonnelCertifications('update') ? 'Edit' : 'Detail'; }); renderCertificationReference(); }
 function resizeCertificationCanvases() { document.querySelectorAll('.certification-lane-canvas').forEach(canvas => { const cards = [...canvas.querySelectorAll('.certification-card')].sort((first, second) => (parseFloat(first.style.top) || 0) - (parseFloat(second.style.top) || 0) || (parseFloat(first.style.left) || 0) - (parseFloat(second.style.left) || 0)); const widestCard = Math.max(145, ...cards.map(card => card.offsetWidth)); const tallestCard = Math.max(72, ...cards.map(card => card.offsetHeight)); const horizontalPadding = 18; const availableWidth = Math.max(widestCard, canvas.clientWidth - horizontalPadding * 2); const columns = Math.max(1, Math.floor((availableWidth + 16) / (widestCard + 16))); const gap = columns > 1 ? (availableWidth - columns * widestCard) / (columns - 1) : 0; cards.forEach((card, index) => { card.style.left = `${horizontalPadding + (index % columns) * (widestCard + gap)}px`; card.style.top = `${18 + Math.floor(index / columns) * (tallestCard + 20)}px`; }); const bottom = Math.max(232, ...cards.map(card => (parseFloat(card.style.top) || 0) + card.offsetHeight + 24)); canvas.style.minHeight = `${bottom}px`; }); }
 new MutationObserver(resizeCertificationCanvases).observe($('certificationBoard'), { childList: true, subtree: true });
 function roadmapCatalogData() { return { domain: $('roadmapCatalogDomain').value, certificationName: $('roadmapCatalogName').value, issuer: $('roadmapCatalogIssuer').value, referenceUrl: $('roadmapCatalogUrl').value, certificationLevel: $('roadmapCatalogLevel').value, notes: $('roadmapCatalogNotes').value }; }

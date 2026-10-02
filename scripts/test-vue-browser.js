@@ -320,10 +320,30 @@ async function run() {
       return;
     }
 
+    if (process.env.BROWSER_TEST_FOCUS === 'role-actions') {
+      await evaluate(client, `document.querySelector('#accountButton').click(); document.querySelector('[data-account-tab="permissions"]').click()`);
+      await waitFor(client, `document.querySelector('#permissionChecks [data-permission-action="delete"]')`, 'action permission table');
+      await evaluate(client, `document.querySelector('#permissionRoleSelect').value='user'; document.querySelector('#permissionRoleSelect').dispatchEvent(new Event('change'))`);
+      assert.equal(await evaluate(client, `document.querySelectorAll('#permissionChecks [data-permission-key="risk-management"]').length === 4 && !document.querySelector('#permissionSaveButton').disabled`),true);
+      await evaluate(client, `(() => {
+        const original=window.fetch; window.roleActionPayload=null;
+        window.fetch=(url,options)=>String(url)==='/api/auth/permissions/user' && options?.method==='PUT' ? (window.roleActionPayload=JSON.parse(options.body),Promise.resolve(new Response('[]',{status:200}))) : original(url,options);
+        const read=document.querySelector('[data-permission-key="risk-management"][data-permission-action="read"]'); read.checked=false;read.dispatchEvent(new Event('change',{bubbles:true}));
+      })()`);
+      assert.equal(await evaluate(client, `[...document.querySelectorAll('[data-permission-key="risk-management"]')].every(input=>!input.checked)`),true);
+      await evaluate(client, `document.querySelector('[data-permission-key="risk-management"][data-permission-action="delete"]').click(); document.querySelector('#permissionSaveButton').click()`);
+      await waitFor(client, `window.roleActionPayload`, 'role action save payload');
+      assert.deepEqual(await evaluate(client, `window.roleActionPayload.actions['risk-management']`),{read:true,create:false,update:false,delete:true});
+      await evaluate(client, `currentUserRole='user';currentUserActions={'risk-management':{read:true,create:false,update:false,delete:true}};const button=document.createElement('button');button.dataset.rmDelete='test';button.id='testRoleDelete';document.querySelector('#riskManagementView').appendChild(button);applyActionControls()`);
+      assert.equal(await evaluate(client, `document.querySelector('#riskManagementNewButton').classList.contains('role-action-denied') && !document.querySelector('#testRoleDelete').classList.contains('role-action-denied')`),true);
+      console.log('PASS: role action table, read dependency, save payload and per-action controls');
+      return;
+    }
+
     if (process.env.BROWSER_TEST_FOCUS === 'admin-tabs') {
       await evaluate(client, `document.querySelector('#accountButton').click()`);
       await waitFor(client, `!document.querySelector('#accountAdminPanel').hidden`, 'admin account loaded');
-      for (const [tab, panel] of [['permissions','permissionManagementPanel'],['users','accountUsersPanel'],['audit','accountAuditPanel'],['smtp','accountSmtpPanel']]) {
+      for (const [tab, panel] of [['permissions','permissionManagementPanel'],['matrix','accountAccessMatrixPanel'],['users','accountUsersPanel'],['audit','accountAuditPanel'],['smtp','accountSmtpPanel']]) {
         await evaluate(client, `document.querySelector('[data-account-tab="${tab}"]').click()`);
         assert.equal(await evaluate(client, `!document.querySelector('#${panel}').hidden && document.querySelector('[data-account-tab="${tab}"]').getAttribute('aria-selected') === 'true'`), true, `${tab}: ${errors.join('; ')}`);
       }
@@ -360,6 +380,37 @@ async function run() {
       await waitFor(client, `document.querySelector('#aftReminderStatus').textContent === 'Pengaturan siap diedit.'`, 'saved template reload');
       assert.equal(await evaluate(client, `document.querySelector('#aftReminderSubject').value.includes('{{auditTitle}}') && document.querySelector('#aftReminderBody').value.includes('Langkah yang perlu dilakukan:') && document.querySelector('#aftReminderPreviewBody').textContent.includes('PIC Audit')`), true);
       console.log('PASS: template applies, saves, reloads, and preserves preview');
+      return;
+    }
+
+    if (process.env.BROWSER_TEST_FOCUS === 'organization-png') {
+      await evaluate(client, `document.querySelector('[data-view="personnel-certification"]').click()`);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const result = await evaluate(client, `(async () => {
+        organizationPersonnel = [{id: 991, personnelName: 'Direktur & Tim', personnelRole: 'Direktur', supervisorName: ''}, {id: 992, personnelName: 'Analis', personnelRole: 'Security Analyst', supervisorName: 'Direktur & Tim'}];
+        personnelCertifications = [];
+        renderOrganizationPersonnelStructure();
+        const create = URL.createObjectURL;
+        const click = HTMLAnchorElement.prototype.click;
+        let output;
+        URL.createObjectURL = blob => { output = blob; return create(blob); };
+        HTMLAnchorElement.prototype.click = function () {};
+        try {
+          await exportOrganizationPng();
+          if (!output) return {status: document.querySelector('#organizationExportStatus').textContent};
+          const bitmap = await createImageBitmap(output);
+          const canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height;
+          const ctx = canvas.getContext('2d'); ctx.drawImage(bitmap, 0, 0);
+          const pixels = ctx.getImageData(0, 112, canvas.width, canvas.height - 112).data;
+          let colored = 0;
+          for (let i = 0; i < pixels.length; i += 4) if (pixels[i] < 240 && pixels[i + 1] < 240) colored++;
+          return {type: output.type, size: output.size, colored, status: document.querySelector('#organizationExportStatus').textContent};
+        } finally { URL.createObjectURL = create; HTMLAnchorElement.prototype.click = click; }
+      })()`);
+      assert.equal(result.type, 'image/png', JSON.stringify(result));
+      assert.ok(result.size > 1000);
+      assert.ok(result.colored > 100, 'PNG must contain chart content below the title');
+      console.log('PASS: organization PNG contains rendered hierarchy and downloads successfully');
       return;
     }
 

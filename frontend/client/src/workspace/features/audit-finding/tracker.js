@@ -77,8 +77,8 @@
     });
   });
   const form = $('aftForm');
-  const canWrite = () => ['admin', 'approver', 'editor', 'user'].includes(currentUserRole);
-  const canDelete = () => ['admin', 'approver'].includes(currentUserRole);
+  const canWrite = (action='update') => currentUserActions[key] ? canPerform(key,action) : ['admin', 'approver', 'editor', 'user'].includes(currentUserRole);
+  const canDelete = () => currentUserActions[key] ? canPerform(key,'delete') : ['admin', 'approver'].includes(currentUserRole);
   const status = message => { $('aftStatus').textContent = message; };
   function setTab(tab) {
     if (!['dashboard', 'smtp', 'manage'].includes(tab)) return;
@@ -129,7 +129,7 @@
   function render() {
     const level = path.length, parentId = path.at(-1)?.id || null;
     $('aftNew').textContent = `Tambah ${labels[level]}`;
-    $('aftNew').hidden = !canWrite() || Boolean(cardFilter);
+    $('aftNew').hidden = !canWrite('create') || Boolean(cardFilter);
     $('aftNew').disabled = !ready;
     document.querySelectorAll('[data-aft-card]').forEach(card => card.setAttribute('aria-disabled', String(!ready)));
     $('aftReminderPanel').hidden = currentUserRole !== 'admin';
@@ -155,7 +155,7 @@
     const visible = rows.filter(r => (scope ? scope.matches(r) : r.kind === kinds[level] && r.parentId === parentId) && (!$('aftFilter').value || r.data.status === $('aftFilter').value) && Object.values(r.data).join(' ').toLowerCase().includes(search));
     $('aftDateColumn').textContent = ['followup', 'followups', 'evidence'].includes(cardFilter || kinds[level]) ? 'Tanggal evidence' : 'Tenggat';
     if (scope) $('aftContext').textContent = `${scope.title} — ${visible.length} data. Pilih Semua Audit untuk kembali ke daftar audit.`;
-    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" ? "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserRole === 'user') : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
+    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" ? "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
   }
   async function load() {
     ready = false; render(); status('Memuat data…');

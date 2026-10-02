@@ -31,6 +31,7 @@ import smtpSettings from './features/administration/smtp-settings.js?raw';
 import auditFindingTracker from './features/audit-finding/tracker.js?raw';
 
 import evidenceLibrary from './features/uploaded-files/evidence-library.js?raw';
+import actionAccess from './features/shared/action-access.js?raw';
 
 export default [
   part01,
@@ -61,5 +62,6 @@ export default [
   eventBindings,
   storageSettings,
   moduleTransfer,
-  smtpSettings
+  smtpSettings,
+  actionAccess
 ].join('');

@@ -56,13 +56,71 @@ function canAccess(role, key, action = 'read') {
 
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS role_permissions (role TEXT NOT NULL CHECK (role IN ('admin', 'approver', 'editor', 'viewer', 'user')), permission_key TEXT NOT NULL, allowed BOOLEAN NOT NULL DEFAULT TRUE, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (role, permission_key))`);
+  await pool.query('ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS actions JSONB');
   await pool.query(`ALTER TABLE role_permissions DROP CONSTRAINT IF EXISTS role_permissions_role_check`);
   await pool.query(`ALTER TABLE role_permissions ADD CONSTRAINT role_permissions_role_check CHECK (role IN ('admin', 'approver', 'editor', 'viewer', 'user'))`);
   for (const role of validRoles) for (const [key] of permissions) await pool.query('INSERT INTO role_permissions (role, permission_key, allowed) VALUES ($1, $2, $3) ON CONFLICT (role, permission_key) DO NOTHING', [role, key, defaults[role].includes(key)]);
-  await pool.query(`UPDATE role_permissions AS iso SET allowed = csf.allowed FROM role_permissions AS csf WHERE iso.role = csf.role AND iso.permission_key IN ('iso27001', 'iso27001-soa') AND csf.permission_key = 'csf'`);
 }
-async function list() { const result = await pool.query('SELECT role, permission_key AS "permissionKey", allowed FROM role_permissions ORDER BY role, permission_key'); return result.rows; }
-async function getRolePermissions(role) { if (role === 'admin') return permissions.map(([permissionKey]) => permissionKey); const result = await pool.query('SELECT permission_key FROM role_permissions WHERE role = $1 AND allowed = TRUE', [role]); return result.rows.map(row => row.permission_key); }
-async function has(role, key, action = 'read') { if (role === 'admin') return true; if (!validRoles.includes(role)) return false; const page = pageActionMatrix[key]; if (page && !page[normalizeAction(action)]) return false; const result = await pool.query('SELECT allowed FROM role_permissions WHERE role = $1 AND permission_key = $2', [role, key]); return Boolean(result.rows[0]?.allowed) && (!page || page[normalizeAction(action)]?.includes(role)); }
-async function update(role, data) { if (!validRoles.includes(role) || !Array.isArray(data?.permissions)) throw Object.assign(new Error('Role and permissions are required'), { status: 400 }); const allowed = new Set(data.permissions); for (const [key] of permissions) await pool.query('UPDATE role_permissions SET allowed = $1, updated_at = NOW() WHERE role = $2 AND permission_key = $3', [role === 'admin' || allowed.has(key), role, key]); return getRolePermissions(role); }
-module.exports = { permissions, roles: validRoles, defaults, pageActionMatrix, canAccess, ensureStore, list, getRolePermissions, has, update };
+const actions = ['read','create','update','delete'];
+function defaultActions(role,key) {
+  return Object.fromEntries(actions.map(action=>[action, role === 'admin' || (key === 'account' ? action === 'read' : key === 'personnel-certification' && role === 'user' && action === 'create' ? true : key === 'files' && ['read','update','delete'].includes(action) ? true : canAccess(role,key,action))]));
+}
+function effectiveActions(role,key,row) {
+  const base = {...defaultActions(role,key),...(row?.actions || {})};
+  if (role === 'admin') return Object.fromEntries(actions.map(action=>[action,true]));
+  if (key === 'account') for(const action of ['create','update','delete']) base[action]=false;
+  return Object.fromEntries(actions.map(action=>[action,Boolean(row?.allowed && base.read && base[action])]));
+}
+async function list() {
+  const result=await pool.query('SELECT role, permission_key AS "permissionKey", allowed, actions FROM role_permissions ORDER BY role, permission_key');
+  return result.rows.map(row=>({...row,actions:effectiveActions(row.role,row.permissionKey,row)}));
+}
+async function getRoleActions(role) {
+  const result=role === 'admin' ? {rows:[]} : await pool.query('SELECT permission_key, allowed, actions FROM role_permissions WHERE role=$1',[role]);
+  return Object.fromEntries(permissions.map(([key])=>[key,effectiveActions(role,key,result.rows.find(row=>row.permission_key===key))]));
+}
+async function getRolePermissions(role) { const values=await getRoleActions(role); return Object.keys(values).filter(key=>values[key].read); }
+async function has(role,key,action='read') {
+  if(role==='admin') return true;
+  if(!validRoles.includes(role) || !permissions.some(([value])=>value===key)) return false;
+  const result=await pool.query('SELECT allowed, actions FROM role_permissions WHERE role=$1 AND permission_key=$2',[role,key]);
+  return effectiveActions(role,key,result.rows[0])[normalizeAction(action)];
+}
+async function hasFileAction(role,action) {
+  if(role==='admin')return true;
+  if(!validRoles.includes(role))return false;
+  const result=await pool.query("SELECT allowed, actions FROM role_permissions WHERE role=$1 AND permission_key='files'",[role]);
+  // Preserve existing owner-only file access until action settings are configured.
+  const row=result.rows[0];
+  return row?.actions ? effectiveActions(role,'files',row)[normalizeAction(action)] : true;
+}
+async function canDeleteOwnedEvidence(role) {
+  if(role!=='user')return false;
+  const result=await pool.query("SELECT allowed, actions FROM role_permissions WHERE role=$1 AND permission_key='audit-finding-tracker'",[role]);
+  return Boolean(result.rows[0]?.allowed && !result.rows[0]?.actions && await hasFileAction(role,'delete'));
+}
+async function update(role,data) {
+  const invalid=message=>Object.assign(new Error(message),{status:400});
+  if(!validRoles.includes(role) || !Array.isArray(data?.permissions))throw invalid('Role and permissions are required');
+  const keys=new Set(permissions.map(([key])=>key));
+  if(data.permissions.some(key=>!keys.has(key)))throw invalid('Unknown permission');
+  if(data.actions !== undefined && (!data.actions || typeof data.actions !== 'object' || Array.isArray(data.actions)))throw invalid('Invalid permission actions');
+  for(const [key,value] of Object.entries(data.actions || {})) {
+    if(!keys.has(key) || !value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(action=>!actions.includes(action)) || actions.some(action=>typeof value[action]!=='boolean'))throw invalid('Invalid action configuration');
+    if(!value.read && actions.slice(1).some(action=>value[action]))throw invalid('Read access is required before enabling write actions');
+    if(key==='account' && role!=='admin' && actions.slice(1).some(action=>value[action]))throw invalid('Account administration is admin-only');
+  }
+  const client=await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for(const [key] of permissions) {
+      const override=data.actions?.[key];
+      const allowed=role==='admin' || (data.permissions.includes(key) && (override?.read ?? true));
+      if(override) await client.query('UPDATE role_permissions SET allowed=$1, actions=$2, updated_at=NOW() WHERE role=$3 AND permission_key=$4',[allowed,role==='admin' ? defaultActions(role,key) : override,role,key]);
+      else await client.query('UPDATE role_permissions SET allowed=$1, updated_at=NOW() WHERE role=$2 AND permission_key=$3',[allowed,role,key]);
+    }
+    await client.query('COMMIT');
+  } catch(error) {await client.query('ROLLBACK');throw error;} finally {client.release();}
+  return getRolePermissions(role);
+}
+module.exports = { permissions, roles: validRoles, defaults, pageActionMatrix, actions, defaultActions, effectiveActions, canAccess, ensureStore, list, getRolePermissions, getRoleActions, has, hasFileAction, canDeleteOwnedEvidence, update };

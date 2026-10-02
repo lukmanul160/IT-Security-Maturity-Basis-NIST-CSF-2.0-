@@ -17,9 +17,12 @@ const loadState = () => {
 let state = loadState();
 let currentUserRole = 'user';
 let currentUserPermissions = [];
+let currentUserActions = {};
+let currentUserOwnEvidenceDelete = false;
+function canPerform(key,action='read') { return currentUserRole === 'admin' || Boolean(currentUserActions[key]?.[action]); }
 const permissionFallback = { permissions: [['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'], ['iso27001', 'ISO 27001:2022'], ['iso27001-soa', 'SOA (Statement of Applicability)'], ['assessment', 'CSF assessment'], ['privacy-assessment', 'Privacy assessment'], ['risk-acceptance', 'Risk Acceptance'], ['audit-finding-tracker', 'Audit Finding Tracker'], ['risk-management', 'Risk Management'], ['policy-register', 'Policy Register'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'], ['files', 'Uploaded files'], ['account', 'Account Management']], assignments: [] };
 const policyRegisterActions = { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor', 'user'], update: ['admin', 'approver', 'editor', 'user'], delete: ['admin', 'approver'] };
-const canManagePolicyRegister = action => currentUserRole === 'admin' || policyRegisterActions[action]?.includes(currentUserRole);
+const canManagePolicyRegister = action => currentUserActions['policy-register'] ? canPerform('policy-register',action) : currentUserRole === 'admin' || policyRegisterActions[action]?.includes(currentUserRole);
 let accountUsers = [];
 const uiStorageKey = 'nist-maturity-ui';
 const sidebarStorageKey = 'nist-sidebar-collapsed';
@@ -112,14 +115,14 @@ function applyUserAccess() {
   setAccountTab();
   $('fileStorageSettings').hidden = currentUserRole !== 'admin';
   $('policySmtpOpen').hidden = currentUserRole !== 'admin';
-  if (currentUserPermissions.includes('csf')) currentUserPermissions = [...new Set([...currentUserPermissions, 'iso27001', 'iso27001-soa'])];
+
   $('roadmapCatalogNewButton').hidden = currentUserRole !== 'admin';
   $('policyRegisterNewButton').hidden = !canManagePolicyRegister('create');
   document.querySelectorAll('.dropdown-edit-btn').forEach(button => { button.hidden = !canManagePolicyRegister('update'); });
   renderUploadedFiles();
   if (currentUserRole === 'admin') return;
-  document.body.classList.toggle('regular-user', currentUserRole === 'user');
-  const canInput = ['user', 'editor'].includes(currentUserRole);
+  document.body.classList.toggle('regular-user', currentUserRole === 'user' && !Object.keys(currentUserActions).length);
+  const canInput = Object.keys(currentUserActions).length ? Object.values(currentUserActions).some(value=>value.create || value.update || value.delete) : ['user', 'editor'].includes(currentUserRole);
   document.body.classList.toggle('user-mode', !canInput);
   const inputControls = '#privacyManageView, #csfManageView, [data-view="privacy-manage"], [data-view="csf-manage"], #csfManageNewButton, #privacyManageNewButton, #addCsfButton, #addPrivacyButton, #csfControlModal, #privacyControlModal, #riskManagementNewButton, #riskRegisterSubmit, #riskRegisterCancel, #riskIndicatorNewButton, #riskRegisterImportInput, #csfAssessmentButton, #privacyAssessmentButton, [data-open-csf-modal], [data-open-privacy-modal], #csfView .excel-table th:last-child, #csfView .excel-table td:last-child, #privacyView .excel-table th:last-child, #privacyView .excel-table td:last-child';
   document.querySelectorAll(inputControls).forEach(element => { element.hidden = !canInput; element.disabled = !canInput; });
@@ -132,7 +135,7 @@ function applyUserAccess() {
     Object.entries(pageMap).forEach(([view, [permission, sectionId]]) => { const nav = document.querySelector(`[data-view="${view}"]`); const section = $(sectionId); if (!currentUserPermissions.includes(permission)) { if (nav) { nav.hidden = true; nav.disabled = true; } if (section) section.hidden = true; } });
     if (!currentUserPermissions.includes(uiState.view)) uiState.view = currentUserPermissions.find(permission => pageMap[permission]) || 'account';
 }
-fetch('/api/auth/me').then(response => response.ok ? response.json() : null).then(user => { if (!user) return; currentUserRole = user.role; currentUserPermissions = user.permissions?.length ? user.permissions : (user.role === 'admin' ? permissionFallback.permissions.map(([key]) => key) : user.role === 'approver' ? ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files'] : user.role === 'viewer' ? ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'] : ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']); $('currentUser').textContent = user.fullName ? `${user.username} (${user.fullName})` : user.username; applyUserAccess(); privacyDataReady = loadPrivacyData(); privacyDataReady.catch(() => { $('saveState').textContent = 'Privacy Framework unavailable'; }); });
+fetch('/api/auth/me').then(response => response.ok ? response.json() : null).then(user => { if (!user) return; currentUserRole = user.role; currentUserActions = user.actions || {}; currentUserOwnEvidenceDelete = user.ownEvidenceDelete === true; currentUserPermissions = Array.isArray(user.permissions) ? user.permissions : (user.role === 'admin' ? permissionFallback.permissions.map(([key]) => key) : user.role === 'approver' ? ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files'] : user.role === 'viewer' ? ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'] : ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']); $('currentUser').textContent = user.fullName ? `${user.username} (${user.fullName})` : user.username; applyUserAccess(); privacyDataReady = loadPrivacyData(); privacyDataReady.catch(() => { $('saveState').textContent = 'Privacy Framework unavailable'; }); });
 const syncUploadFolderStatus = text => document.querySelectorAll('#uploadFolderState, #assessmentUploadFolderState').forEach(element => { element.textContent = text; });
 const allControls = () => csfRows.length ? csfRows.map(row => ({ ...row, id: row.id, code: row.id, name: row.subcategory.split(':').slice(1).join(':').trim(), fn: functions.find(fn => row.id.startsWith(fn.id + '-')) || functions[0] })) : functions.flatMap(fn => fn.controls.map((name, index) => ({ id: `${fn.id}-${index + 1}`, code: `${fn.id}.${index + 1}`, name, fn })));
 const controlsFor = fn => allControls().filter(item => item.fn.id === fn.id);

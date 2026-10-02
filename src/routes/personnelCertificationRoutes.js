@@ -9,7 +9,7 @@ router.post('/organization-personnel', requireAdmin, controller.organizationCrea
 router.put('/organization-personnel/:personnelId', requireAdmin, controller.organizationUpdate);
 router.delete('/organization-personnel/:personnelId', requireAdmin, controller.organizationDelete);
 // Users may add certificates to registered employees, without gaining catalog or employee creation rights.
-router.post('/', (req, res, next) => requirePageAccess('personnel-certification', req.user?.role === 'user' ? 'read' : 'create')(req, res, next), controller.create);
+router.post('/', requirePageAccess('personnel-certification', 'create'), controller.create);
 router.put('/:id/layout', requirePageAccess('personnel-certification', 'update'), controller.updateLayout);
 router.put('/:id', requirePageAccess('personnel-certification', 'update'), controller.update);
 router.delete('/:id', requirePageAccess('personnel-certification', 'delete'), controller.remove);

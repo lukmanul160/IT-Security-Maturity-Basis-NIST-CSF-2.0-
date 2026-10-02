@@ -20,6 +20,7 @@
             <div id="personnelOrganizationPanel">
               <div class="page-heading"><div><p class="eyebrow">ORGANIZATION STRUCTURE</p><h2>Struktur Organisasi</h2><p class="lede">Lihat hierarki pegawai, jabatan, dan sertifikasi dalam struktur organisasi.</p></div></div>
               <div class="risk-dashboard-grid"><article class="stat-panel"><span class="stat-label">Personel</span><strong id="organizationPersonCount">0</strong><span class="stat-detail">registered personnel</span></article><article class="stat-panel"><span class="stat-label">Sertifikasi aktif</span><strong id="organizationActiveCount">0</strong><span class="stat-detail">active certifications</span></article><article class="stat-panel"><span class="stat-label">Role / domain</span><strong id="organizationRoleCount">0</strong><span class="stat-detail">organization groups</span></article><article class="stat-panel"><span class="stat-label">Perlu perhatian</span><strong id="organizationAttentionCount">0</strong><span class="stat-detail">planned or expired</span></article></div>
+              <div class="csf-actions"><button class="button button-quiet" id="organizationExportPng" type="button">Export PNG</button><span id="organizationExportStatus" role="status" aria-live="polite"></span></div>
               <div id="organizationStructure" class="organization-structure"></div>
             </div>
             <div id="personnelRegisterPanel" hidden>

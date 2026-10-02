@@ -7,7 +7,7 @@ let selectedRestoreFile = null;
 function selectRestoreFile(event) { selectedRestoreFile = event.target.files?.[0] || null; $('backupRestoreFileName').textContent = selectedRestoreFile?.name || 'No file selected'; $('backupRestoreButton').disabled = !selectedRestoreFile; }
 async function restoreBackup() { if (!selectedRestoreFile || !confirm('Restore akan mengganti data database saat ini dan tidak dapat dibatalkan. Lanjutkan?')) return; const button = $('backupRestoreButton'); const status = $('backupStatus'); const formData = new FormData(); formData.append('backup', selectedRestoreFile, selectedRestoreFile.name); button.disabled = true; status.textContent = 'Restoring database...'; try { const response = await fetch('/api/backups/restore', { method: 'POST', body: formData }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || 'Database restore failed'); status.textContent = `Restore berhasil: ${data.fileName}`; selectedRestoreFile = null; $('backupRestoreInput').value = ''; $('backupRestoreFileName').textContent = 'No file selected'; await loadBackups(); } catch (error) { status.textContent = error.message; button.disabled = false; } }
 function showBackupsView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('backupsView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'backups')); saveUiState('backups'); loadBackups().catch(error => { $('backupStatus').textContent = error.message; }); }
-const accountTabPanels = { profile: 'accountProfilePanel', permissions: 'permissionManagementPanel', users: 'accountUsersPanel', audit: 'accountAuditPanel', smtp: 'accountSmtpPanel' };
+const accountTabPanels = { profile: 'accountProfilePanel', permissions: 'permissionManagementPanel', matrix: 'accountAccessMatrixPanel', users: 'accountUsersPanel', audit: 'accountAuditPanel', smtp: 'accountSmtpPanel' };
 let activeAccountTab = 'profile';
 function setAccountTab(tab = activeAccountTab) {
   const admin = currentUserRole === 'admin';
@@ -42,12 +42,55 @@ async function loadAccountData() {
   } catch (error) { $('accountProfileStatus').textContent = error.message; }
 }
 
-async function loadPermissions() { const panel = $('permissionManagementPanel'); if (!panel) return; const response = await fetch('/api/auth/permissions', { cache: 'no-store' }); const defaultAssignments = ['admin', 'approver', 'editor', 'viewer', 'user'].flatMap(role => permissionFallback.permissions.map(([permissionKey]) => ({ role, permissionKey, allowed: role === 'admin' ? true : role === 'approver' ? ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files'].includes(permissionKey) : role === 'editor' ? ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account'].includes(permissionKey) : role === 'viewer' ? ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'].includes(permissionKey) : ['framework', 'csf', 'privacy', 'assessment', 'privacy-assessment', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account'].includes(permissionKey) }))); const data = response.ok ? await response.json() : { ...permissionFallback, assignments: defaultAssignments }; panel.querySelector('#permissionRoleSelect').innerHTML = [...new Set(data.assignments.map(row => row.role))].map(role => `<option value="${role}">${role}</option>`).join(''); renderPermissionChecks(data); renderPermissionMatrix(data); if (!response.ok) $('permissionStatus').textContent = 'Server permission API unavailable; showing defaults'; }
-function renderPermissionChecks(data) { const role = $('permissionRoleSelect').value; const assigned = new Set(data.assignments.filter(row => row.role === role && row.allowed).map(row => row.permissionKey)); $('permissionChecks').innerHTML = data.permissions.map(([key, label]) => `<label class="permission-option"><input type="checkbox" value="${key}" ${assigned.has(key) ? 'checked' : ''}><span>${label}</span></label>`).join(''); $('permissionManagementPanel').dataset.permissions = JSON.stringify(data); }
-function renderPermissionMatrix(data) { const roles = [...new Set(data.assignments.map(row => row.role))]; const matrix = new Map(); roles.forEach(role => matrix.set(role, new Set())); data.assignments.filter(row => row.allowed).forEach(row => matrix.get(row.role)?.add(row.permissionKey)); const rows = data.permissions.map(([key, label]) => `<tr><th>${label}</th>${roles.map(role => `<td><button type="button" class="permission-matrix-cell ${matrix.get(role)?.has(key) ? 'allowed' : 'blocked'}" data-role="${role}" data-permission="${key}" aria-label="Toggle ${role} access for ${label}">${matrix.get(role)?.has(key) ? 'Allowed' : 'Blocked'}</button></td>`).join('')}</tr>`).join(''); $('permissionMatrix').innerHTML = `<table class="permission-matrix-table"><thead><tr><th>Page</th>${roles.map(role => `<th>${role}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`; }
-async function togglePermissionCell(role, permissionKey) { const panel = $('permissionManagementPanel'); if (!panel) return; const payload = JSON.parse(panel.dataset.permissions || '{"permissions":[],"assignments":[]}'); const assignments = Array.isArray(payload.assignments) ? payload.assignments : []; const existing = assignments.find(row => row.role === role && row.permissionKey === permissionKey); if (existing) { existing.allowed = !existing.allowed; } else { assignments.push({ role, permissionKey, allowed: true }); } const next = { ...payload, assignments }; panel.dataset.permissions = JSON.stringify(next); $('permissionRoleSelect').value = role; renderPermissionChecks(next); renderPermissionMatrix(next); await savePermissions(); }
-document.querySelector('#permissionMatrix')?.addEventListener('click', async event => { const button = event.target.closest('.permission-matrix-cell'); if (!button) return; await togglePermissionCell(button.dataset.role, button.dataset.permission); });
-async function savePermissions() { const panel = $('permissionManagementPanel'); const role = $('permissionRoleSelect').value; const permissions = [...panel.querySelectorAll('#permissionChecks input:checked')].map(input => input.value); const response = await fetch(`/api/auth/permissions/${role}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permissions }) }); $('permissionStatus').textContent = response.ok ? `Permissions saved for ${role}` : 'Save failed'; if (response.ok) await loadPermissions(); }
+async function loadPermissions() {
+  const selected = $('permissionRoleSelect').value;
+  try {
+    const response=await fetch('/api/auth/permissions',{cache:'no-store'});
+    if(!response.ok)throw new Error('Pengaturan hak akses belum dapat dimuat.');
+    const data=await response.json();
+    if(data.assignments.some(row=>!row.actions))throw new Error('Restart server untuk mengaktifkan pengaturan izin per aksi.');
+    $('permissionRoleSelect').innerHTML=[...new Set(data.assignments.map(row=>row.role))].map(role=>`<option value="${role}">${role}</option>`).join('');
+    if(selected)$('permissionRoleSelect').value=selected;
+    renderPermissionChecks(data); renderPermissionMatrix(data);
+    $('permissionSaveButton').disabled=$('permissionRoleSelect').value==='admin';
+  } catch(error) { $('permissionStatus').textContent=error.message; $('permissionSaveButton').disabled=true; }
+}
+const permissionActions = [['read','Read / View'],['create','Tambah'],['update','Edit'],['delete','Delete']];
+function renderPermissionChecks(data) {
+  const role=$('permissionRoleSelect').value;
+  $('permissionChecks').innerHTML=`<div class="excel-wrap"><table class="excel-table"><thead><tr><th>Fitur</th>${permissionActions.map(([,label])=>`<th>${label}</th>`).join('')}</tr></thead><tbody>${data.permissions.map(([key,label])=>{
+    const assignment=data.assignments.find(row=>row.role===role && row.permissionKey===key);
+    return `<tr><th>${escapeHtml(label)}</th>${permissionActions.map(([action,label])=>`<td><input type="checkbox" data-permission-key="${key}" data-permission-action="${action}" aria-label="${escapeHtml(label)} ${escapeHtml(key)}" ${assignment?.actions?.[action] ? 'checked' : ''} ${role==='admin' || key==='account' && action!=='read' ? 'disabled' : ''}></td>`).join('')}</tr>`;
+  }).join('')}</tbody></table></div><p class="muted">Read/View wajib untuk aksi lainnya. Izin file tetap dibatasi pemilik file. Pengelolaan pegawai, katalog sertifikasi, akun, SMTP, dan reset tetap khusus admin.</p>`;
+  $('permissionManagementPanel').dataset.permissions=JSON.stringify(data);
+  $('permissionSaveButton').disabled=role==='admin';
+}
+$('permissionChecks').addEventListener('change',event=>{
+  const input=event.target;
+  if(!input.dataset.permissionKey)return;
+  const group=[...$('permissionChecks').querySelectorAll('input')].filter(field=>field.dataset.permissionKey===input.dataset.permissionKey);
+  if(input.dataset.permissionAction==='read' && !input.checked)group.forEach(field=>field.checked=false);
+  if(input.dataset.permissionAction!=='read' && input.checked)group.find(field=>field.dataset.permissionAction==='read').checked=true;
+});
+function renderPermissionMatrix(data) {
+  const roles=[...new Set(data.assignments.map(row=>row.role))];
+  $('permissionMatrix').innerHTML=`<table class="permission-matrix-table"><thead><tr><th>Fitur</th>${roles.map(role=>`<th>${role}</th>`).join('')}</tr></thead><tbody>${data.permissions.map(([key,label])=>`<tr><th>${escapeHtml(label)}</th>${roles.map(role=>{const row=data.assignments.find(item=>item.role===role && item.permissionKey===key);return `<td>${permissionActions.filter(([action])=>row?.actions?.[action]).map(([,label])=>label).join(', ') || '-'}</td>`;}).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function togglePermissionCell() { /* Matrix is a read-only summary; edit the selected role above. */ }
+$('permissionRoleSelect').addEventListener('change',()=>renderPermissionChecks(JSON.parse($('permissionManagementPanel').dataset.permissions)));
+$('permissionSaveButton').addEventListener('click',savePermissions);
+async function savePermissions() {
+  const role=$('permissionRoleSelect').value, actions={};
+  $('permissionChecks').querySelectorAll('input[data-permission-action]').forEach(input=>{(actions[input.dataset.permissionKey] ||= {})[input.dataset.permissionAction]=input.checked;});
+  const permissions=Object.keys(actions).filter(key=>actions[key].read);
+  $('permissionSaveButton').disabled=true;
+  try {
+    const response=await fetch(`/api/auth/permissions/${role}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({permissions,actions})});
+    if(!response.ok)throw new Error((await response.json()).error || 'Save failed');
+    await loadPermissions(); $('permissionStatus').textContent=`Izin ${role} tersimpan. Pengguna perlu memuat ulang halaman untuk memperbarui tampilan.`;
+  } catch(error) { $('permissionStatus').textContent=error.message; }
+  finally { $('permissionSaveButton').disabled=role==='admin'; }
+}
 async function loadAccountUsers() { const response = await fetch('/api/auth/users', { cache: 'no-store' }); if (!response.ok) return; accountUsers = await response.json(); accountUsersPage = renderListPagination('accountUsersPagination', accountUsersPage, accountUsers.length, 'users'); const visible = accountUsers.slice((accountUsersPage - 1) * 20, accountUsersPage * 20); $('accountUsersBody').innerHTML = visible.map(user => `<tr><td>${escapeHtml(user.username)}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.role)}</td><td><button class="attachment-action-button" type="button" data-account-edit="${user.id}">Edit</button><button class="attachment-action-button danger" type="button" data-account-delete="${user.id}">Delete</button></td></tr>`).join('') || '<tr><td colspan="4">No users found.</td></tr>'; }
 function editAccountUser(id) { const user = accountUsers.find(item => String(item.id) === String(id)); if (!user) return; $('accountUserId').value = user.id; $('accountUserUsername').value = user.username; $('accountUserUsername').readOnly = true; $('accountUserFullName').value = user.fullName; $('accountUserRole').value = user.role; $('accountUserPassword').value = ''; $('accountUserFormTitle').textContent = `Edit ${user.username}`; }
 async function deleteAccountUser(id) { if (!confirm('Hapus akun ini?')) return; const response = await fetch(`/api/auth/users/${id}`, { method: 'DELETE' }); $('accountUserStatus').textContent = response.ok ? 'User deleted' : 'Delete failed'; if (response.ok) await loadAccountUsers(); }
