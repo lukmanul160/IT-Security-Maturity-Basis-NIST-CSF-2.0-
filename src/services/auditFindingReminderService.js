@@ -5,7 +5,7 @@ const templateDefaults = {
   subjectTemplate: 'Pengingat tindak lanjut audit: {{auditTitle}} - {{finding}}',
   bodyTemplate: 'Yth. Bapak/Ibu PIC dan tim terkait,\n\nMohon menindaklanjuti temuan audit berikut sebelum tanggal tenggat.\n\nJenis audit: {{auditTitle}}\nFinding: {{finding}}\nPIC penanggung jawab: {{owner}}\nStatus saat ini: {{status}}\nTenggat penyelesaian: {{dueDate}}\n\nDeskripsi temuan / rekomendasi:\n{{description}}\n\nLangkah yang perlu dilakukan:\n1. Tinjau temuan dan rekomendasi di atas.\n2. Lakukan tindak lanjut dan unggah evidence pendukung di Audit Finding Tracker.\n3. Perbarui status finding sesuai hasil tindak lanjut. Jika sudah selesai, ubah status menjadi Closed.\n\nJika ada kendala, koordinasikan dengan tim audit sebelum tenggat.\n\nTerima kasih atas perhatian dan kerja samanya.\n\nEmail ini merupakan pengingat otomatis dari Audit Finding Tracker.'
 };
-const defaults = { ...templateDefaults, enabled: false, daysBefore: 7, repeatDaily: false, startUnit: 'days', repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, recipients: [] };
+const defaults = { ...templateDefaults, smtpAccountId: 'default', enabled: false, daysBefore: 7, repeatDaily: false, startUnit: 'days', repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, recipients: [] };
 const invalid = message => Object.assign(new Error(message), { status: 400 });
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS audit_finding_reminder_settings (id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL)`);
@@ -24,7 +24,8 @@ async function read() {
   return { ...defaults, ...result.rows[0]?.settings };
 }
 async function getSettings() {
-  return { ...await read(), templateExample: { ...templateDefaults }, smtpConfigured: (await smtp.getSettings()).configured };
+  const settings = await read();
+  return { ...settings, templateExample: { ...templateDefaults }, smtpConfigured: (await smtp.getSettings(settings.smtpAccountId)).configured, smtpAccounts: await smtp.listAccounts() };
 }
 function validate(data) {
   if (!data || typeof data.enabled !== 'boolean' || !Number.isInteger(data.daysBefore) || data.daysBefore < 0 || data.daysBefore > 365) throw invalid('Status dan jadwal reminder tidak valid (0–365 hari).');
@@ -48,13 +49,14 @@ function validate(data) {
     if ([...value.matchAll(/{{([^{}]+)}}/g)].some(match => !['auditTitle','finding','owner','status','dueDate','description'].includes(match[1]))) throw invalid('Variabel email tidak dikenal. Gunakan auditTitle, finding, owner, status, dueDate, atau description.');
     templates[field] = value;
   }
-  return { ...templates, enabled: data.enabled, daysBefore: data.daysBefore, repeatDaily: data.repeatDaily ?? false, startUnit, repeatEvery, repeatUnit, maxDeliveries, recipients };
+  return { ...templates, smtpAccountId: smtp.accountId(data.smtpAccountId), enabled: data.enabled, daysBefore: data.daysBefore, repeatDaily: data.repeatDaily ?? false, startUnit, repeatEvery, repeatUnit, maxDeliveries, recipients };
 }
 async function saveSettings(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw invalid('Pengaturan reminder tidak valid.');
   const current = await read();
   const settings = validate({ ...current, ...data });
-  if (settings.enabled && !(await smtp.getSettings()).configured) throw invalid('Konfigurasikan SMTP di Admin > Pengaturan SMTP terlebih dahulu.');
+  const selected = await smtp.getSettings(settings.smtpAccountId);
+  if (settings.enabled && !selected.configured) throw invalid('Konfigurasikan SMTP di Admin > Pengaturan SMTP terlebih dahulu.');
   await pool.query('INSERT INTO audit_finding_reminder_settings(id,settings) VALUES(1,$1) ON CONFLICT(id) DO UPDATE SET settings=EXCLUDED.settings', [settings]);
   return getSettings();
 }
@@ -76,7 +78,7 @@ function eligible(row, daysBefore, now = new Date()) {
 async function testEmail(to) {
   if (!smtp.email(to)) throw invalid('Email tujuan tes tidak valid.');
   const settings = await read();
-  const { mailer, from } = await smtp.createMailer();
+  const { mailer, from } = await smtp.createMailer(settings.smtpAccountId);
   try { await smtp.send(mailer, { from, to, ...renderMessage({ auditTitle: 'Audit Keamanan Informasi (contoh)', data: { title: 'Review akses belum selesai (contoh)', description: 'Lakukan review dan lampirkan evidence.', owner: 'PIC Audit', status: 'Open', dueDate: '2026-12-31' } }, settings) }); }
   finally { mailer.close?.(); }
   return { message: 'Email percobaan diterima server SMTP Admin.' };
@@ -92,7 +94,7 @@ async function runReminders(now = new Date()) {
     const result = await client.query(`SELECT f.id, f.kind, f.data, a.data->>'title' AS "auditTitle" FROM audit_finding_records f JOIN audit_finding_records a ON a.id=f.parent_id AND a.kind='audit' WHERE f.kind='finding' AND f.data->>'status' <> 'Closed'`);
     const pending = result.rows.filter(row => reminderSlot(row, settings, now) !== null);
     if (!pending.length) return;
-    const delivery = await smtp.createMailer(); mailer = delivery.mailer;
+    const delivery = await smtp.createMailer(settings.smtpAccountId); mailer = delivery.mailer;
     for (const row of pending) for (const to of settings.recipients) {
       const params = [row.id, row.data.dueDate, to];
       const history = await client.query(`SELECT COUNT(*)::int AS count,

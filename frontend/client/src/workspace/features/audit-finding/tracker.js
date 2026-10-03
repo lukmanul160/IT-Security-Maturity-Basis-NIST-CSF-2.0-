@@ -248,6 +248,7 @@
     $('aftReminderStatus').textContent = 'Template standar diterapkan pada formulir. Periksa pratinjau, lalu klik Simpan reminder untuk menyimpan.';
   });
   function populateReminder(data) {
+    populateSmtpAccountOptions('aftReminderAccount', data.smtpAccounts || [], data.smtpAccountId);
     reminderTemplateExample = typeof data.templateExample?.subjectTemplate === 'string' && typeof data.templateExample?.bodyTemplate === 'string' ? data.templateExample : reminderTemplateFallback;
 
     $('aftReminderSubject').value = data.subjectTemplate || $('aftReminderSubject').value || reminderTemplateExample.subjectTemplate;
@@ -261,7 +262,7 @@
     $('aftReminderRepeatDaily').checked = data.repeatDaily === true;
     $('aftReminderMaxDeliveries').value = data.maxDeliveries ?? 366;
     $('aftReminderRecipients').value = data.recipients.join('\n');
-    $('aftReminderConnection').textContent = data.smtpConfigured ? 'Menggunakan SMTP Admin yang sudah dikonfigurasi.' : 'SMTP Admin belum dikonfigurasi. Lengkapi koneksi sebelum mengaktifkan reminder.';
+    $('aftReminderConnection').textContent = data.smtpConfigured ? 'Akun SMTP tersimpan sudah dikonfigurasi.' : 'SMTP Admin belum dikonfigurasi. Lengkapi koneksi sebelum mengaktifkan reminder.';
   }
   async function loadReminder() {
     reminderControls().forEach(control => { control.disabled = true; });
@@ -278,7 +279,7 @@
     event.preventDefault();
     $('aftReminderSave').disabled = true;
     try {
-      const data = await request('/reminder-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subjectTemplate: $('aftReminderSubject').value, bodyTemplate: $('aftReminderBody').value, enabled: $('aftReminderEnabled').checked, daysBefore: Number($('aftReminderDays').value), startUnit: $('aftReminderStartUnit').value, repeatEvery: Number($('aftReminderRepeatEvery').value), repeatUnit: $('aftReminderRepeatUnit').value, repeatDaily: $('aftReminderRepeatDaily').checked, maxDeliveries: Number($('aftReminderMaxDeliveries').value), recipients: $('aftReminderRecipients').value.split('\n').map(to => to.trim()).filter(Boolean) }) });
+      const data = await request('/reminder-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ smtpAccountId: $('aftReminderAccount').value, subjectTemplate: $('aftReminderSubject').value, bodyTemplate: $('aftReminderBody').value, enabled: $('aftReminderEnabled').checked, daysBefore: Number($('aftReminderDays').value), startUnit: $('aftReminderStartUnit').value, repeatEvery: Number($('aftReminderRepeatEvery').value), repeatUnit: $('aftReminderRepeatUnit').value, repeatDaily: $('aftReminderRepeatDaily').checked, maxDeliveries: Number($('aftReminderMaxDeliveries').value), recipients: $('aftReminderRecipients').value.split('\n').map(to => to.trim()).filter(Boolean) }) });
       populateReminder(data);
       if (!data.subjectTemplate || !data.bodyTemplate) {
         $('aftReminderStatus').textContent = 'Isi template tetap ditampilkan, tetapi server belum mengonfirmasi penyimpanannya. Restart server aplikasi untuk memuat pembaruan, lalu simpan kembali.';

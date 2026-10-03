@@ -85,3 +85,34 @@ test('partial import reports persisted count and stops subsequent writes', async
   await assert.rejects(api.importPayload('policy-register', payload('policy-register', { register: [{ title: 'A' }, { title: 'B' }, { title: 'C' }] })), /1 data sudah tersimpan.*Invalid row/);
   assert.equal(count, 2);
 });
+
+function loadAuditHelpers(fetch) {
+  const context = vm.createContext({ fetch, document: { getElementById: () => null, querySelector: () => null } });
+  vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/shared/module-transfer.js', 'utf8'), context);
+  return context;
+}
+test('transfer records initiated and success with actual filename and count', async () => {
+  const events = [];
+  const api = loadAuditHelpers(async (url, options) => { events.push(JSON.parse(options.body)); return { ok: true }; });
+  assert.equal(await api.runAuditedTransfer('import', 'csf', 'input.json', async () => 3, 'Import selesai'), 3);
+  assert.deepEqual(events.map(row => row.outcome), ['initiated', 'success']);
+  assert.equal(events[1].count, 3); assert.equal(events[1].filename, 'input.json'); assert.equal(events[1].message, 'Import selesai');
+});
+test('partial import records failure with error and persisted count', async () => {
+  const events = [];
+  const api = loadAuditHelpers(async (url, options) => { events.push(JSON.parse(options.body)); return { ok: true }; });
+  const failure = Object.assign(new Error('2 data tersimpan; Access denied'), { completedCount: 2 });
+  await assert.rejects(api.runAuditedTransfer('import', 'csf', 'input.json', async () => { throw failure; }), /Access denied/);
+  assert.equal(events[1].outcome, 'failed'); assert.equal(events[1].count, 2); assert.equal(events[1].error, failure.message);
+});
+test('missing audit endpoint exposes HTTP and restart hint before transfer', async () => {
+  let ran = false;
+  const api = loadAuditHelpers(async () => ({ ok: false, status: 404, json: async () => ({ error: 'Route not found', requestId: 'req-1' }) }));
+  await assert.rejects(api.runAuditedTransfer('export', 'csf', 'data.json', () => { ran = true; }), /HTTP 404.*Restart backend.*req-1/);
+  assert.equal(ran, false);
+});
+test('audit failure after completion reports that operation already succeeded', async () => {
+  let calls = 0;
+  const api = loadAuditHelpers(async () => ++calls === 1 ? { ok: true } : { ok: false, status: 503, json: async () => ({ error: 'Database unavailable' }) });
+  await assert.rejects(api.runAuditedTransfer('download', 'csf', 'template.json', async () => {}, 'Template berhasil dibuat'), /Aktivitas selesai.*HTTP 503.*Database unavailable/);
+});

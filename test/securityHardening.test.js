@@ -6,6 +6,29 @@ const accounts = require('../src/services/accountService');
 const { createLoginRateLimit } = require('../src/middleware/loginRateLimit');
 test.after(() => pool.end());
 
+test('new login replaces same account session without affecting other accounts', () => {
+  const first = auth.createSession({ username: 'single-device', role: 'user' });
+  const other = auth.createSession({ username: 'independent-device', role: 'viewer' });
+  const latest = auth.createSession({ username: 'single-device', role: 'user' });
+  assert.equal(auth.getSession(first), null);
+  assert.equal(auth.getSession(latest).username, 'single-device');
+  assert.equal(auth.getSession(other).username, 'independent-device');
+  auth.destroySession(first);
+  assert.ok(auth.getSession(latest), 'old device logout cannot end new login');
+  auth.destroySession(latest);
+  auth.destroySession(other);
+});
+
+test('failed login does not revoke active device', async t => {
+  const bcrypt = require('bcryptjs');
+  const passwordHash = await bcrypt.hash('ValidPassword123', 4);
+  t.mock.method(pool, 'query', async () => ({ rows: [{ username: 'single-device', password_hash: passwordHash, role: 'user' }] }));
+  const token = auth.createSession({ username: 'single-device', role: 'user' });
+  assert.equal(await auth.authenticate('single-device', 'WrongPassword123'), null);
+  assert.ok(auth.getSession(token));
+  auth.destroySession(token);
+});
+
 test('role changes and deletion revoke every session for the affected account', async t => {
   t.mock.method(pool, 'query', async () => ({ rowCount: 1, rows: [{ id: 1, username: 'target', role: 'viewer' }] }));
   const unaffected = auth.createSession({ username: 'other', role: 'user' });

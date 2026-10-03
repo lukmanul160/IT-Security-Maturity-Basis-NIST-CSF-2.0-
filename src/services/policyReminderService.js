@@ -10,7 +10,7 @@ function renderMessage(settings, policy, dueDate) {
   const render = value => value.replace(/{{(\w+)}}/g, (match, name) => String(values[name] ?? match));
   return { subject: render(settings.subjectTemplate || templateDefaults.subjectTemplate).replace(/[\r\n]/g, ' '), text: render(settings.bodyTemplate || templateDefaults.bodyTemplate) };
 }
-const defaults = { ...templateDefaults, enabled: false, daysBefore: 30, startUnit: 'days', repeatDaily: false, repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, owners: [] };
+const defaults = { ...templateDefaults, smtpAccountId: 'default', enabled: false, daysBefore: 30, startUnit: 'days', repeatDaily: false, repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, owners: [] };
 const invalid = message => Object.assign(new Error(message), { status: 400 });
 const email = value => typeof value === 'string' && /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/.test(value);
 
@@ -30,7 +30,7 @@ async function read() {
 }
 async function getSettings() {
   const { settings } = await read();
-  return { ...settings, smtpConfigured: (await smtp.getSettings()).configured };
+  return { ...settings, smtpConfigured: (await smtp.getSettings(settings.smtpAccountId)).configured, smtpAccounts: await smtp.listAccounts() };
 }
 function validate(data) {
   if (!data || typeof data.enabled !== 'boolean') throw invalid('Status reminder tidak valid.');
@@ -61,21 +61,22 @@ function validate(data) {
     if (unknown) throw invalid('Variabel email tidak dikenal. Gunakan title, owner, lastReview, reviewCycle, atau dueDate.');
     settings[field] = value;
   }
-  return { ...settings, enabled: data.enabled };
+  return { ...settings, smtpAccountId: smtp.accountId(data.smtpAccountId), enabled: data.enabled };
 }
 async function saveSettings(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw invalid('Pengaturan reminder tidak valid.');
   if (['host','port','security','username','password','clearPassword','from'].some(field => Object.hasOwn(data,field))) throw invalid('Simpan koneksi email melalui Pengaturan SMTP terpusat.');
   const current = await read();
   const settings = validate({ ...current.settings, ...data });
-  if (settings.enabled && !(await smtp.getSettings()).configured) throw invalid('Konfigurasikan SMTP terlebih dahulu melalui Account > Pengaturan SMTP.');
+  const selected = await smtp.getSettings(settings.smtpAccountId);
+  if (settings.enabled && !selected.configured) throw invalid('Konfigurasikan SMTP terlebih dahulu melalui Account > Pengaturan SMTP.');
   await pool.query(`INSERT INTO policy_reminder_settings (id, settings, secret) VALUES (1, $1, '') ON CONFLICT(id) DO UPDATE SET settings = EXCLUDED.settings`, [settings]);
   return getSettings();
 }
 async function testEmail(to) {
   if (!email(to)) throw invalid('Email tujuan tes tidak valid.');
   const { settings } = await read();
-  const {mailer,from} = await smtp.createMailer();
+  const {mailer,from} = await smtp.createMailer(settings.smtpAccountId);
   try { await smtp.send(mailer, { from, to, ...renderMessage(settings, { title: 'Kebijakan Keamanan Informasi (contoh)', owner: 'CISO', last_review: '2026-01-15', review_cycle: 'Annual' }, '2027-01-15') }); }
   finally { mailer.close?.(); }
   return { message: 'Email tes diterima oleh server SMTP.' };
@@ -101,7 +102,7 @@ async function runReminders(now = new Date()) {
     if (!locked) return;
     const { settings } = await read();
     if (!settings.enabled) return;
-    const delivery = await smtp.createMailer();
+    const delivery = await smtp.createMailer(settings.smtpAccountId);
     mailer = delivery.mailer;
     const policies = await client.query('SELECT id, title, owner, review_cycle, last_review::text FROM policy_register');
     for (const policy of policies.rows) {

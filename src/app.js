@@ -34,6 +34,7 @@ app.use((req, res, next) => {
 
 	next();
 });
+app.use('/api', auditRequest);
 app.use(express.json({ limit: '10mb' }));
 app.use((req, res, next) => {
 	if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
@@ -46,7 +47,7 @@ app.use((req, res, next) => {
 	}
 	return next();
 });
-app.use('/api/auth', auditRequest, authRoutes);
+app.use('/api/auth', authRoutes);
 // Only demonstration screenshots are public. Other workspace files require auth.
 app.use('/landing-media', express.static(path.join(publicRoot, 'landing-media'), {
 	index: false,
@@ -64,7 +65,7 @@ app.get('/login', (req, res) => {
 });
 
 console.error('[app] Mounting /api routes with requireAuth');
-app.use('/api', requireAuth, auditRequest, apiRoutes);
+app.use('/api', requireAuth, apiRoutes);
 
 app.get(['/', '/index.html'], (req, res) => res.sendFile(path.join(publicRoot, 'landing.html')));
 app.get('/app', requireAuth, (req, res) => res.sendFile(vueWorkspaceIndex));

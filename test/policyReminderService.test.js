@@ -17,9 +17,9 @@ test('scheduler skips unassigned policies, records success, deduplicates, and re
   const { runReminders } = require('../src/services/policyReminderService');
   let sent = 0;
   let fail = true;
-  const savedSettings = { ...settings };
+  const savedSettings = { ...settings, smtpAccountId:'aabbccdd-1234-4321-abcd-123456789abc' };
   const deliveries = new Set();
-  t.mock.method(smtp, 'createMailer', async () => ({ from:'sender@example.com', mailer:{ sendMail: async () => {
+  t.mock.method(smtp, 'createMailer', async id => (assert.equal(id,savedSettings.smtpAccountId), { from:'sender@example.com', mailer:{ sendMail: async () => {
     sent++;
     if (fail) throw new Error('SMTP unavailable');
     return { accepted: ['owner@example.com'], rejected: [] };
@@ -57,7 +57,7 @@ test('scheduler skips unassigned policies, records success, deduplicates, and re
   assert.equal(sent, before + 6);
 });
 test('reminder settings validate recipients and schedule independently of SMTP', () => {
-  assert.deepEqual(validate(settings), { ...settings, startUnit:'days',repeatDaily:false,repeatEvery:1,repeatUnit:'days',maxDeliveries:366, ...require('../src/services/policyReminderService').templateDefaults });
+  assert.deepEqual(validate(settings), { ...settings, smtpAccountId:'default', startUnit:'days',repeatDaily:false,repeatEvery:1,repeatUnit:'days',maxDeliveries:366, ...require('../src/services/policyReminderService').templateDefaults });
   for (const changes of [{ startUnit:'years' },{ repeatEvery:0 },{ repeatUnit:'weeks' },{ repeatDaily:'yes' },{maxDeliveries:0},{maxDeliveries:367},{daysBefore:37,startUnit:'months'}, { daysBefore: -1 }, { owners: [] }, { owners: [{ owner: 'CISO', email: 'bad' }] }, { owners: [...settings.owners, ...settings.owners] }]) assert.throws(() => validate({ ...settings, ...changes }), { status: 400 });
 });
 

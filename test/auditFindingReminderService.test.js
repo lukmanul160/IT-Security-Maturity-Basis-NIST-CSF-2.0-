@@ -4,7 +4,7 @@ const service = require('../src/services/auditFindingReminderService');
 const smtp = require('../src/services/smtpService');
 const { pool } = require('../src/config/database');
 test('settings validate recipients and refuse module SMTP credentials', () => {
-  assert.deepEqual(service.validate({enabled:true,daysBefore:7,recipients:['A@example.com','a@example.com']}), {...service.templateDefaults,enabled:true,daysBefore:7,repeatDaily:false,startUnit:'days',repeatEvery:1,repeatUnit:'days',maxDeliveries:366,recipients:['a@example.com']});
+  assert.deepEqual(service.validate({enabled:true,daysBefore:7,recipients:['A@example.com','a@example.com']}), {...service.templateDefaults,smtpAccountId:'default',enabled:true,daysBefore:7,repeatDaily:false,startUnit:'days',repeatEvery:1,repeatUnit:'days',maxDeliveries:366,recipients:['a@example.com']});
   for (const change of [{recipients:[]},{recipients:['invalid']},{daysBefore:-1},{repeatDaily:'yes'},{startUnit:'years'},{repeatUnit:'weeks'},{repeatEvery:0},{repeatEvery:1.5},{repeatEvery:37,repeatUnit:'months'},{daysBefore:37,startUnit:'months'},{maxDeliveries:0},{maxDeliveries:367},{maxDeliveries:1.5},{maxDeliveries:'3'},{password:'secret'}]) assert.throws(()=>service.validate({enabled:true,daysBefore:7,recipients:['a@example.com'],...change}),{status:400});
 });
 test('reminders include audit title and finding, skip closed/undated/future and stop after due date', () => {
@@ -35,6 +35,7 @@ test('saved templates survive reloading settings and schedule-only updates', asy
     if(sql.startsWith('INSERT')) stored=JSON.parse(JSON.stringify(params[0]));
     return {rows:stored ? [{settings:stored}] : []};
   });
+  t.mock.method(smtp,'listAccounts',async()=>[]);
   t.mock.method(smtp,'getSettings',async()=>({configured:false}));
   const templates={subjectTemplate:'Tindak lanjut {{finding}}',bodyTemplate:'Yth. {{owner}},\nMohon selesai sebelum {{dueDate}}.'};
   const saved=await service.saveSettings({enabled:false,daysBefore:7,recipients:[],...templates});
@@ -56,7 +57,7 @@ test('custom content validates templates and renders plain text without recursiv
 });
 test('scheduler retries failed delivery and deduplicates successful delivery', async t => {
   const delivered=new Set();let sends=0,closed=0;
-  const settings={enabled:true,daysBefore:7,repeatDaily:true,recipients:['test@example.com'],subjectTemplate:'Custom {{finding}}',bodyTemplate:'Audit {{auditTitle}}'};
+  const settings={smtpAccountId:'aabbccdd-1234-4321-abcd-123456789abc',enabled:true,daysBefore:7,repeatDaily:true,recipients:['test@example.com'],subjectTemplate:'Custom {{finding}}',bodyTemplate:'Audit {{auditTitle}}'};
   t.mock.method(pool,'query',async()=>({rows:[{settings}]}));
   const row={id:'finding-1',kind:'finding',auditTitle:'Audit',data:{title:'Finding',status:'Open',dueDate:'2026-09-20'}};
   t.mock.method(pool,'connect',async()=>({release(){},async query(sql,params){
@@ -66,7 +67,7 @@ test('scheduler retries failed delivery and deduplicates successful delivery', a
     if(sql.startsWith('INSERT'))delivered.add(JSON.stringify(params));
     return {rows:[]};
   }}));
-  t.mock.method(smtp,'createMailer',async()=>({from:'admin@example.com',mailer:{close(){closed++;}}}));
+  t.mock.method(smtp,'createMailer',async id=>(assert.equal(id,settings.smtpAccountId),{from:'admin@example.com',mailer:{close(){closed++;}}}));
   t.mock.method(smtp,'send',async(mailer,message)=>{assert.equal(message.subject,'Custom Finding');assert.equal(message.text,'Audit Audit');sends++;if(sends===1)throw Error('failure');});
   await service.runReminders(new Date(2026,8,19,12));assert.equal(delivered.size,0);
   await service.runReminders(new Date(2026,8,19,12));await service.runReminders(new Date(2026,8,19,12));

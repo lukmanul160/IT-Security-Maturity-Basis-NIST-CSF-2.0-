@@ -1,8 +1,14 @@
 # Email reminder Policy Register
 
+SMTP mendukung beberapa akun. Buka **Account > 6. Pengaturan SMTP**, klik **Tambah akun SMTP**, isi nama dan koneksi, lalu simpan. Pilih akun pada daftar untuk mengedit atau menguji koneksinya. Koneksi lama tersedia sebagai **SMTP bawaan**.
+
+Pilih **Akun SMTP** pada pengaturan reminder Policy Register dan Audit Finding Tracker, kemudian simpan reminder masing-masing. Kedua modul dapat memakai akun berbeda. Email percobaan modul dan reminder otomatis menggunakan akun yang tersimpan. Pengaturan lama tetap menggunakan akun bawaan. Akun yang belum dikonfigurasi tidak dapat dipakai untuk mengaktifkan reminder.
+
+API akun tambahan: `GET/POST /api/smtp-settings/accounts`, `PUT /api/smtp-settings/accounts/:id`. Email tes SMTP menerima `smtpAccountId`; pengaturan reminder menyimpan `smtpAccountId` masing-masing. Password setiap akun tetap terenkripsi dan tidak dikembalikan ke browser.
+
 Restart server setelah pembaruan; tabel pengaturan dan riwayat pengiriman dibuat otomatis saat startup. Build frontend dengan `npm run build:client`.
 
-Login sebagai admin, buka **Account > 5. Pengaturan SMTP**. Isi SMTP host, port, STARTTLS atau TLS, username/password sesuai penyedia SMTP, serta email pengirim yang diizinkan. Simpan SMTP terpusat. Tombol email percobaan di sini menguji koneksi menggunakan pesan umum, tanpa mengubah jadwal reminder.
+Login sebagai admin, buka **Account > 6. Pengaturan SMTP**. Isi SMTP host, port, STARTTLS atau TLS, username/password sesuai penyedia SMTP, serta email pengirim yang diizinkan. Simpan SMTP terpusat. Tombol email percobaan di sini menguji koneksi menggunakan pesan umum, tanpa mengubah jadwal reminder.
 
 Selanjutnya buka **Policy Register > Pengaturan email reminder** untuk mengatur status aktif, jadwal, penerima, serta subjek/isi pengingat kebijakan. Tautan pada kedua halaman memungkinkan perpindahan langsung. Pengaturan reminder tidak lagi memuat atau menyimpan host, username, password, atau email pengirim.
 
@@ -16,4 +22,4 @@ Password SMTP disimpan terenkripsi di database; kunci lokal berada di `data/smtp
 
 Saat startup versi baru, koneksi SMTP lama dipindahkan ke `app_smtp_settings` dalam transaksi. Ciphertext password disalin tanpa perubahan, sedangkan jadwal, penerima, template, dan riwayat pengiriman tetap di modul kebijakan. Migrasi dapat dijalankan ulang tanpa menimpa SMTP terpusat yang telah diedit. Jalankan seluruh instance dengan versi baru agar tidak ada proses lama yang masih membaca koneksi dari tabel kebijakan.
 
-API SMTP terpusat: `GET/PUT /api/smtp-settings`, `POST /api/smtp-settings/test` (admin). API reminder kebijakan tetap pada `/api/policy-register/reminder-settings`, tetapi menolak field koneksi SMTP. Reminder menggunakan `smtpService.createMailer()` dan layanan pengiriman bersama. Reminder otomatis yang tersedia saat ini adalah review Policy Register; kalender atau deadline modul lain belum otomatis mengirim email.
+API SMTP terpusat: `GET/PUT /api/smtp-settings`, `POST /api/smtp-settings/test` (admin). API reminder kebijakan tetap pada `/api/policy-register/reminder-settings`, tetapi menolak field koneksi SMTP. Reminder Policy Register dan Audit Finding menggunakan akun SMTP yang dipilih melalui layanan pengiriman bersama.

@@ -13,6 +13,7 @@ function previewPolicySmtp() {
 $('policySmtpSubject').addEventListener('input', previewPolicySmtp);
 $('policySmtpBody').addEventListener('input', previewPolicySmtp);
 function populatePolicySmtp(data) {
+  populateSmtpAccountOptions('policySmtpAccount', data.smtpAccounts || [], data.smtpAccountId);
   $('policySmtpSubject').value = data.subjectTemplate || '';
   $('policySmtpBody').value = data.bodyTemplate || '';
   previewPolicySmtp();
@@ -24,7 +25,7 @@ function populatePolicySmtp(data) {
   $('policySmtpMaxDeliveries').value = data.maxDeliveries ?? 366;
   $('policySmtpEnabled').checked = data.enabled;
   $('policySmtpOwners').value = data.owners.map(row => `${row.owner} = ${row.email}`).join('\n');
-  $('policyReminderConnectionStatus').textContent = data.smtpConfigured ? 'SMTP terpusat sudah dikonfigurasi. Reminder menggunakan koneksi email organisasi.' : 'SMTP belum dikonfigurasi. Buka pengaturan SMTP sebelum mengaktifkan reminder.';
+  $('policyReminderConnectionStatus').textContent = data.smtpConfigured ? 'Akun SMTP tersimpan sudah dikonfigurasi.' : 'SMTP belum dikonfigurasi. Buka pengaturan SMTP sebelum mengaktifkan reminder.';
 }
 $('policySmtpOpen').addEventListener('click', async () => {
   if (currentUserRole !== 'admin') return;
@@ -45,7 +46,7 @@ $('policySmtpForm').addEventListener('submit', async event => {
       if (index < 1) throw new Error('Format penerima harus Owner = email.');
       return { owner: line.slice(0, index).trim(), email: line.slice(index + 1).trim() };
     });
-    const data = await policySmtpRequest('PUT', '', { enabled: $('policySmtpEnabled').checked, daysBefore: Number($('policySmtpDays').value), startUnit: $('policySmtpStartUnit').value, repeatDaily: $('policySmtpRepeat').checked, repeatEvery: Number($('policySmtpRepeatEvery').value), repeatUnit: $('policySmtpRepeatUnit').value, maxDeliveries: Number($('policySmtpMaxDeliveries').value), subjectTemplate: $('policySmtpSubject').value, bodyTemplate: $('policySmtpBody').value, owners });
+    const data = await policySmtpRequest('PUT', '', { smtpAccountId: $('policySmtpAccount').value, enabled: $('policySmtpEnabled').checked, daysBefore: Number($('policySmtpDays').value), startUnit: $('policySmtpStartUnit').value, repeatDaily: $('policySmtpRepeat').checked, repeatEvery: Number($('policySmtpRepeatEvery').value), repeatUnit: $('policySmtpRepeatUnit').value, maxDeliveries: Number($('policySmtpMaxDeliveries').value), subjectTemplate: $('policySmtpSubject').value, bodyTemplate: $('policySmtpBody').value, owners });
     populatePolicySmtp(data);
     $('policySmtpStatus').textContent = data.enabled ? 'Pengaturan tersimpan. Reminder otomatis aktif; jadwal review diperiksa paling lambat satu jam lagi.' : 'Pengaturan tersimpan. Reminder otomatis nonaktif. Anda tetap dapat mengirim email percobaan.';
   } catch (error) { $('policySmtpStatus').textContent = error.message; }

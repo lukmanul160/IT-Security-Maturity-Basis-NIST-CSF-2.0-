@@ -4,6 +4,52 @@ const smtp=require('../src/services/smtpService');
 const policy=require('../src/services/policyReminderService');
 const {pool}=require('../src/config/database');
 const connection={host:'smtp.example.com',port:587,security:'starttls',username:'service',from:'sender@example.com'};
+const audit=require('../src/services/auditFindingReminderService');
+const selectedId='aabbccdd-1234-4321-abcd-123456789abc';
+test('registering an SMTP account creates a separate record and validates its name',async t=>{
+  let row;
+  t.mock.method(pool,'query',async(sql,params)=>{
+    assert.ok(sql.includes('app_smtp_accounts'));
+    if(sql.startsWith('INSERT')) row={id:params[0],settings:params[1],secret:params[2]};
+    return {rows:[row]};
+  });
+  const saved=await smtp.createAccount({...connection,name:'Policy'});
+  assert.equal(saved.id,row.id);assert.equal(saved.name,'Policy');assert.equal(saved.configured,true);assert.equal(saved.secret,undefined);
+  await assert.rejects(smtp.createAccount({...connection,name:''}),{status:400});
+});
+test('registered accounts are listed without exposing encrypted secrets',async t=>{
+  t.mock.method(pool,'query',async sql=>({rows:sql.includes('app_smtp_accounts') ? [{id:selectedId,settings:{...connection,name:'Audit'},secret:'ciphertext'}] : [{settings:connection,secret:'legacy-secret'}]}));
+  const accounts=await smtp.listAccounts();
+  assert.equal(accounts.length,2);assert.equal(accounts[0].id,'default');assert.equal(accounts[1].id,selectedId);
+  assert.equal(accounts[1].hasPassword,true);assert.equal(accounts[1].secret,undefined);assert.equal(accounts[1].password,undefined);
+});
+test('editing one registered SMTP account preserves its secret and leaves the default untouched',async t=>{
+  let row={settings:{...connection,name:'Audit'},secret:'encrypted-existing'};
+  t.mock.method(pool,'query',async(sql,params)=>{
+    assert.ok(sql.includes('app_smtp_accounts'));
+    if(sql.startsWith('UPDATE')) {assert.equal(params[2],selectedId);row={settings:params[0],secret:params[1]};}
+    else assert.equal(params[0],selectedId);
+    return {rows:[row]};
+  });
+  const saved=await smtp.saveSettings({host:'audit.example.com',password:''},selectedId);
+  assert.equal(saved.host,'audit.example.com');assert.equal(saved.hasPassword,true);assert.equal(row.secret,'encrypted-existing');
+});
+test('policy and audit test emails use their own saved SMTP selection',async t=>{
+  const used=[];
+  t.mock.method(pool,'query',async sql=>({rows:[{settings:{smtpAccountId:sql.includes('policy_reminder_settings') ? selectedId : 'default'}}]}));
+  t.mock.method(smtp,'createMailer',async id=>{used.push(id);return {from:connection.from,mailer:{close(){}}};});
+  t.mock.method(smtp,'send',async()=>{});
+  await policy.testEmail('receiver@example.com');await audit.testEmail('receiver@example.com');
+  assert.deepEqual(used,[selectedId,'default']);
+});
+test('unknown SMTP accounts cannot be saved even for a disabled reminder',async t=>{
+  let writes=0;
+  t.mock.method(pool,'query',async(sql,params)=>{if(sql.startsWith('INSERT'))writes++;return {rows:[]};});
+  await assert.rejects(policy.saveSettings({enabled:false,smtpAccountId:selectedId}),/tidak ditemukan/);
+  await assert.rejects(audit.saveSettings({enabled:false,smtpAccountId:selectedId}),/tidak ditemukan/);
+  assert.equal(writes,0);
+  assert.throws(()=>smtp.accountId('../invalid'),{status:400});
+});
 test('SMTP validates TLS, port, sender and header injection',()=>{
   assert.deepEqual(smtp.validate(connection),connection);
   for(const change of [{port:0},{security:'none'},{host:'host\r\nInjected'},{from:'bad'},{password:123}])assert.throws(()=>smtp.validate({...connection,...change}),{status:400});
@@ -21,6 +67,7 @@ test('SMTP updates preserve encrypted password and never change reminder setting
 });
 test('reminder API hides legacy credentials and saves only module settings',async t=>{
   let stored={...connection,enabled:false,daysBefore:30,owners:[]};let written;
+  t.mock.method(smtp,'listAccounts',async()=>[]);
   t.mock.method(smtp,'getSettings',async()=>({configured:true}));
   t.mock.method(pool,'query',async(sql,params)=>{assert.ok(sql.includes('policy_reminder_settings'));if(params){written=params[0];stored=written;}return {rows:[{settings:stored,secret:'legacy-secret'}]};});
   const visible=await policy.getSettings();assert.equal(visible.host,undefined);assert.equal(visible.username,undefined);assert.equal(visible.hasPassword,undefined);assert.equal(visible.smtpConfigured,true);

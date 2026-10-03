@@ -36,7 +36,7 @@
           <div id="policySmtpPanel" hidden>
             <form id="policySmtpForm" class="smtp-settings">
               <div class="smtp-heading"><p class="eyebrow">EMAIL REMINDER</p><h3>Pengaturan pengingat review</h3><p>Atur jadwal, penerima, dan konten pengingat review kebijakan.</p></div>
-              <div class="smtp-card"><p id="policyReminderConnectionStatus" role="status">Memuat status SMTP?</p><button type="button" class="button button-quiet" id="policyOpenGlobalSmtp">Buka pengaturan SMTP terpusat</button></div><div>
+              <div class="smtp-card"><label>Akun SMTP<select id="policySmtpAccount"></select></label><p id="policyReminderConnectionStatus" role="status">Memuat status SMTP?</p><button type="button" class="button button-quiet" id="policyOpenGlobalSmtp">Buka pengaturan SMTP terpusat</button></div><div>
                 <section class="smtp-card" aria-labelledby="smtpScheduleTitle">
                   <div class="smtp-card-heading"><span class="smtp-step">1</span><div><h4 id="smtpScheduleTitle">Jadwal &amp; penerima</h4><p>Tentukan kapan dan kepada siapa pengingat dikirim.</p></div></div>
                   <label class="smtp-check smtp-enable"><input id="policySmtpEnabled" type="checkbox"><span><strong>Aktifkan reminder otomatis</strong><small>Berlaku setelah pengaturan disimpan.</small></span></label>

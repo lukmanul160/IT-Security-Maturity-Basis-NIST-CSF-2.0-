@@ -8,6 +8,7 @@ function importData(file) {
       const nextState = normalizeState(imported);
       const response = await fetch('/api/assessment', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nextState) });
       if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Penyimpanan assessment gagal');
+      await recordTransferActivity('import', 'assessment', file.name);
       state = nextState;
       if (fileData.uploadFolderName) localStorage.setItem(uploadFolderStorageKey, fileData.uploadFolderName);
       if (fileData.ui) localStorage.setItem(uiStorageKey, JSON.stringify(fileData.ui));
@@ -22,7 +23,8 @@ function importData(file) {
   };
   reader.readAsText(file);
 }
-function exportData() {
+async function exportData() {
+  try { await recordTransferActivity('export', 'assessment', 'nist-csf-2.0-assessment.json'); } catch (error) { $('saveState').textContent = error.message; return; }
   const fileData = JSON.stringify({ framework: 'NIST CSF 2.0', exportVersion: 2, exportedAt: new Date().toISOString(), uploadFolderName: localStorage.getItem(uploadFolderStorageKey) || '', ui: { view: uiState.view, function: activeFunction }, assessment: state }, null, 2);
   const blob = new Blob([fileData], { type: 'application/json' });
   const link = document.createElement('a');

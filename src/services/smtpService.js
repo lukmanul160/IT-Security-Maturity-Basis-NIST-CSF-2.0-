@@ -49,16 +49,28 @@ async function ensureStore() {
       FROM policy_reminder_settings WHERE id = 1 ON CONFLICT (id) DO NOTHING`);
     await client.query(`UPDATE policy_reminder_settings SET settings = settings - ARRAY['host','port','security','username','from'], secret = ''
       WHERE id = 1 AND EXISTS (SELECT 1 FROM app_smtp_settings WHERE id = 1)`);
+    await client.query(`CREATE TABLE IF NOT EXISTS app_smtp_accounts (id UUID PRIMARY KEY, settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT '')`);
     await client.query('COMMIT');
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }
 }
-async function read() {
+function accountId(value) {
+  if (value === undefined || value === null || value === '' || value === 'default') return 'default';
+  if (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) throw invalid('Akun SMTP tidak valid.');
+  return value;
+}
+async function read(id) {
+  id = accountId(id);
+  if (id !== 'default') {
+    const result = await pool.query('SELECT settings, secret FROM app_smtp_accounts WHERE id=$1', [id]);
+    if (!result.rows.length) throw invalid('Akun SMTP tidak ditemukan.');
+    return { settings: { ...defaults, ...result.rows[0].settings }, secret: result.rows[0].secret || '' };
+  }
   const result = await pool.query('SELECT settings, secret FROM app_smtp_settings WHERE id = 1');
   return { settings: { ...defaults, ...result.rows[0]?.settings }, secret: result.rows[0]?.secret || '' };
 }
-async function getSettings() {
-  const {settings,secret} = await read();
+async function getSettings(id) {
+  const {settings,secret} = await read(id);
   return {...settings,hasPassword:Boolean(secret),configured:Boolean(settings.host && email(settings.from))};
 }
 function validate(data) {
@@ -73,24 +85,47 @@ function validate(data) {
   if (data.password !== undefined && (typeof data.password !== 'string' || data.password.length > 4096)) throw invalid('Password tidak valid.');
   return {...settings,port:data.port,security:data.security};
 }
-async function saveSettings(data) {
+async function saveSettings(data, id) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw invalid('Pengaturan SMTP tidak valid.');
-  const current = await read();
+  id = accountId(id);
+  const current = await read(id);
   const settings = validate({...current.settings,...data});
+  settings.name = validateName(data.name ?? current.settings.name ?? 'SMTP bawaan');
   const secret = data.clearPassword === true ? '' : data.password ? await encrypt(data.password) : current.secret;
+  if (id !== 'default') {
+    await pool.query('UPDATE app_smtp_accounts SET settings=$1, secret=$2 WHERE id=$3', [settings,secret,id]);
+    return getSettings(id);
+  }
   await pool.query(`INSERT INTO app_smtp_settings (id, settings, secret) VALUES (1, $1, $2)
     ON CONFLICT (id) DO UPDATE SET settings = EXCLUDED.settings, secret = EXCLUDED.secret`, [settings,secret]);
   return getSettings();
 }
-async function createMailer() {
-  const {settings,secret} = await read();
+async function createMailer(id) {
+  const {settings,secret} = await read(id);
   return {mailer:await transport(settings,secret),from:settings.from};
 }
-async function testEmail(to) {
+async function testEmail(to, id) {
   if (!email(to)) throw invalid('Email tujuan tes tidak valid.');
-  const {mailer,from} = await createMailer();
+  const {mailer,from} = await createMailer(id);
   try { await send(mailer,{from,to,subject:'NIST Basis — Tes koneksi SMTP',text:'Email percobaan dari pengaturan SMTP terpusat NIST Basis.'}); }
   finally { mailer.close?.(); }
   return {message:'Email tes diterima oleh server SMTP.'};
 }
-module.exports = {ensureStore,getSettings,saveSettings,validate,createMailer,send,testEmail,email};
+function validateName(name) {
+  if (typeof name !== 'string' || !name.trim() || name.length > 100 || /[\r\n]/.test(name)) throw invalid('Nama akun SMTP wajib diisi (maksimum 100 karakter).');
+  return name.trim();
+}
+async function listAccounts() {
+  const legacy = await getSettings();
+  const result = await pool.query(`SELECT id, settings, secret FROM app_smtp_accounts ORDER BY settings->>'name', id`);
+  return [{...legacy,id:'default',name:legacy.name || 'SMTP bawaan'}, ...result.rows.map(row => ({...defaults,...row.settings,id:row.id,hasPassword:Boolean(row.secret),configured:Boolean(row.settings.host && email(row.settings.from))}))];
+}
+async function createAccount(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw invalid('Pengaturan SMTP tidak valid.');
+  const settings = {...validate({...defaults,...data}),name:validateName(data.name)};
+  const id = crypto.randomUUID();
+  const secret = data.clearPassword === true || !data.password ? '' : await encrypt(data.password);
+  await pool.query('INSERT INTO app_smtp_accounts (id,settings,secret) VALUES ($1,$2,$3)', [id,settings,secret]);
+  return {...await getSettings(id),id};
+}
+module.exports = {accountId,listAccounts,createAccount,ensureStore,getSettings,saveSettings,validate,createMailer,send,testEmail,email};

@@ -86,7 +86,10 @@ npm run test:risk-options-browser
 
 Backend dan dev frontend dijalankan pada terminal terpisah. Perubahan frontend
 memerlukan build; perubahan backend/config memerlukan restart. Session ada dalam
-memori, sehingga pengguna login kembali setelah restart.
+memori, sehingga pengguna login kembali setelah restart. Setiap akun hanya
+memiliki satu sesi aktif: login berhasil dari browser/perangkat lain mengakhiri
+sesi sebelumnya. Tab dalam browser yang sama berbagi sesi. Batas sesi ini
+berlaku untuk satu proses backend; beberapa proses memerlukan session store bersama.
 
 Database adalah sumber utama data operasional. Evidence berada di upload/ atau
 storage tambahan; password SMTP terenkripsi memerlukan data/smtp-secret.key.

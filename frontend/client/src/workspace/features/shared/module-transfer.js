@@ -1,3 +1,27 @@
+async function recordTransferActivity(action, module, filename, count, outcome = 'success', message, error) {
+  let response;
+  try {
+    response = await fetch('/api/audit/activity', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, module, filename, count, outcome, message, error }), keepalive: true });
+  } catch (error) { throw new Error('Pencatatan aktivitas gagal: server tidak dapat dihubungi. Periksa koneksi dan pastikan backend berjalan.'); }
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    const hint = response.status === 404 ? ' Restart backend agar endpoint audit terbaru aktif.' : response.status === 401 ? ' Sesi berakhir; silakan login kembali.' : '';
+    throw new Error(`Pencatatan aktivitas gagal (HTTP ${response.status}): ${detail.error || response.statusText || 'Respons server tidak valid'}.${hint}${detail.requestId ? ` Request ID: ${detail.requestId}` : ''}`);
+  }
+}
+async function runAuditedTransfer(action, module, filename, operation, message) {
+  await recordTransferActivity(action, module, filename, undefined, 'initiated', 'Aktivitas dimulai.');
+  let result;
+  try { result = await operation(); }
+  catch (error) {
+    try { await recordTransferActivity(action, module, filename, error.completedCount, 'failed', 'Aktivitas gagal.', error.message); }
+    catch (auditError) { throw new Error(`${error.message} ${auditError.message}`); }
+    throw error;
+  }
+  try { await recordTransferActivity(action, module, filename, Number.isSafeInteger(result) ? result : undefined, 'success', message); }
+  catch (error) { throw new Error(`Aktivitas selesai, tetapi hasil audit gagal dicatat. ${error.message}`); }
+  return result;
+}
 // Shared transfer UI uses the existing authenticated APIs and their write permissions.
 const moduleTransfer = (() => {
   const section = (key, title, url, columns, options = {}) => ({ key, title, url, columns: columns.split(' '), ...options });
@@ -119,9 +143,9 @@ const moduleTransfer = (() => {
         }
       }
       return completed;
-    } catch (error) { throw new Error(`${completed} data sudah tersimpan; import dihentikan. ${error.message}`); }
+    } catch (error) { const failure = new Error(`${completed} data sudah tersimpan; import dihentikan. ${error.message}`); failure.completedCount = completed; throw failure; }
   }
-  function preview(key, payload, status) {
+  function preview(key, payload, status, filename) {
     const dialog = document.createElement('dialog');
     const count = modules[key].sections.map(item => `${item.title}: ${item.assessment ? 1 : payload.data[item.key].length}`).join(' · ');
     dialog.innerHTML = `<h2>Import ${escape(modules[key].title)}</h2><p>${escape(count)}</p><p>ID yang sama diperbarui, data baru ditambahkan. Assessment diganti dengan isi file. File evidence tidak disertakan; referensinya memerlukan file yang sudah tersedia di server. Gunakan file dari instalasi yang sama agar ID tetap cocok.</p><p>Jika ada kegagalan, data yang sudah tersimpan tetap tersimpan. Detail hasil akan ditampilkan.</p><button type="button" data-confirm>Import sekarang</button> <button type="button" data-cancel>Batal</button><p role="status"></p>`;
@@ -133,7 +157,7 @@ const moduleTransfer = (() => {
       const message = dialog.querySelector('[role="status"]');
       const blockClose = event => event.preventDefault(); dialog.addEventListener('cancel', blockClose);
       try {
-        const count = await importPayload(key, payload, count => { message.textContent = `${count} data tersimpan…`; });
+        const count = await runAuditedTransfer('import', key, filename, () => importPayload(key, payload, count => { message.textContent = `${count} data tersimpan…`; }), 'Import selesai; jumlah record tersimpan tercatat pada count.');
         status.textContent = `${count} data berhasil diimport.`;
         window.location.reload();
       } catch (error) { message.textContent = error.message; status.textContent = error.message; }
@@ -151,9 +175,13 @@ const moduleTransfer = (() => {
       const status = toolbar.querySelector('[role="status"]');
       const templateButton = document.createElement('button');
       templateButton.type = 'button'; templateButton.textContent = 'Template Import';
-      templateButton.onclick = () => {
-        download(`${key}-import-template.json`, JSON.stringify(template(key), null, 2), 'application/json');
-        status.textContent = `Template ${config.title} diunduh. Baca instructions dan headers, lalu isi bagian data sebelum import.`;
+      templateButton.onclick = async () => {
+        templateButton.disabled = true;
+        try {
+          await runAuditedTransfer('download', key, `${key}-import-template.json`, () => download(`${key}-import-template.json`, JSON.stringify(template(key), null, 2), 'application/json'), 'Template import berhasil dibuat dan unduhan dimulai.');
+          status.textContent = `Template ${config.title} berhasil dibuat; unduhan dimulai.`;
+        } catch (error) { status.textContent = error.message; }
+        finally { templateButton.disabled = false; }
       };
       toolbar.insertBefore(templateButton, status);
       const guide = document.createElement('details');
@@ -163,12 +191,23 @@ const moduleTransfer = (() => {
       toolbar.querySelector('[data-import]').onclick = () => { input.value = ''; input.click(); };
       input.onchange = async () => {
         const file = input.files[0]; if (!file) return;
-        try { if (file.size > 10 * 1024 * 1024) throw new Error('Ukuran file maksimal 10 MB.'); preview(key, validate(key, JSON.parse(await file.text())), status); }
-        catch (error) { status.textContent = error.message; }
+        try { if (file.size > 10 * 1024 * 1024) throw new Error('Ukuran file maksimal 10 MB.'); preview(key, validate(key, JSON.parse(await file.text())), status, file.name); }
+        catch (error) {
+          try { await recordTransferActivity('import', key, file.name, 0, 'failed', 'File import ditolak sebelum penyimpanan.', error.message); }
+          catch (auditError) { error.message += ` ${auditError.message}`; }
+          status.textContent = error.message;
+        }
       };
       for (const action of ['export', 'report']) toolbar.querySelector(`[data-${action}]`).onclick = async event => {
         const button = event.currentTarget; button.disabled = true; status.textContent = 'Mengambil data…';
-        try { const payload = await collect(key); download(`${key}-${new Date().toISOString().slice(0, 10)}.${action === 'export' ? 'json' : 'html'}`, action === 'export' ? JSON.stringify(payload, null, 2) : report(key, payload), action === 'export' ? 'application/json' : 'text/html'); status.textContent = action === 'export' ? 'Export selesai.' : 'Buka file report HTML untuk mencetak / menyimpan PDF.'; }
+        const filename = `${key}-${new Date().toISOString().slice(0, 10)}.${action === 'export' ? 'json' : 'html'}`;
+        try {
+          await runAuditedTransfer(action, key, filename, async () => {
+            const payload = await collect(key);
+            download(filename, action === 'export' ? JSON.stringify(payload, null, 2) : report(key, payload), action === 'export' ? 'application/json' : 'text/html');
+          }, action === 'export' ? 'Export JSON berhasil dibuat; unduhan dimulai.' : 'Report HTML berhasil dibuat; unduhan dimulai. Pencetakan atau penyimpanan PDF dilakukan pengguna.');
+          status.textContent = action === 'export' ? 'Export JSON berhasil; unduhan dimulai.' : 'Report berhasil dibuat. Buka HTML untuk mencetak / menyimpan PDF.';
+        }
         catch (error) { status.textContent = error.message; }
         finally { button.disabled = false; }
       };

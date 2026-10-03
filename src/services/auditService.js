@@ -31,14 +31,19 @@ async function record(event) {
   ]);
 }
 
-async function list({ limit = 100, offset = 0, actor = '', eventType = '' } = {}) {
+async function list({ limit = 100, offset = 0, actor = '', eventType = '', from = '', to = '' } = {}) {
   const values = [];
   const filters = [];
   if (actor) { values.push(String(actor)); filters.push(`actor_username = $${values.length}`); }
   if (eventType) { values.push(String(eventType)); filters.push(`event_type = $${values.length}`); }
+  for (const [value, operator] of [[from, '>='], [to, '<=']]) {
+    if (!value) continue;
+    if (!Number.isFinite(Date.parse(value))) throw Object.assign(new Error('Tanggal audit tidak valid'), { status: 400 });
+    values.push(new Date(value).toISOString()); filters.push(`created_at ${operator} $${values.length}::timestamptz`);
+  }
   values.push(Math.min(500, Math.max(1, Number(limit) || 100)));
   values.push(Math.max(0, Number(offset) || 0));
-  const result = await pool.query(`SELECT id, request_id AS "requestId", actor_username AS "actorUsername", actor_role AS "actorRole", event_type AS "eventType", method, path, status_code AS "statusCode", ip_address AS "ipAddress", user_agent AS "userAgent", duration_ms AS "durationMs", details, created_at AS "createdAt" FROM audit_events ${filters.length ? `WHERE ${filters.join(' AND ')}` : ''} ORDER BY created_at DESC LIMIT $${values.length - 1} OFFSET $${values.length}`, values);
+  const result = await pool.query(`SELECT id, request_id AS "requestId", actor_username AS "actorUsername", actor_role AS "actorRole", event_type AS "eventType", method, path, status_code AS "statusCode", ip_address AS "ipAddress", user_agent AS "userAgent", duration_ms AS "durationMs", details, created_at AS "createdAt" FROM audit_events ${filters.length ? `WHERE ${filters.join(' AND ')}` : ''} ORDER BY created_at DESC, id DESC LIMIT $${values.length - 1} OFFSET $${values.length}`, values);
   return result.rows;
 }
 

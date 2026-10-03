@@ -26,6 +26,8 @@ function createSession(user) {
 		if (Date.now() - session.createdAt >= sessionLifetime) sessions.delete(token);
 	}
 	const token = crypto.randomBytes(32).toString('hex');
+	// A successful login replaces any previous login for the same account.
+	destroyUserSessions(user.username);
 	sessions.set(token, { username: user.username, role: user.role, createdAt: Date.now() });
 	return token;
 }

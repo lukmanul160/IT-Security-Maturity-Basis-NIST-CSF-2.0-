@@ -42,9 +42,23 @@ async function start() {
   await require('./services/auditFindingReminderService').ensureStore();
   await ensureBackupRoot();
   await pool.query(await fs.readFile(usersFile, 'utf8'));
-  app.listen(port, () => console.log(`NIST CSF Express server: http://localhost:${port}`));
+  await new Promise((resolve, reject) => {
+    app.listen(port, error => {
+      if (error) return reject(error);
+      console.log(`NIST CSF Express server: http://localhost:${port}`);
+      resolve();
+    });
+  });
   require('./services/policyReminderService').startScheduler();
   require('./services/auditFindingReminderService').startScheduler();
 }
 
-start().catch(error => { console.error(error); process.exitCode = 1; });
+start().catch(async error => {
+  process.exitCode = 1;
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Gagal menjalankan server: port ${port} sudah digunakan. Hentikan server lama atau gunakan PORT lain di .env.`);
+  } else {
+    console.error(error);
+  }
+  await pool.end();
+});

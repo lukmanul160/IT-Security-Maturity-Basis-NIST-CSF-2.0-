@@ -27,6 +27,7 @@ async function login(req, res) {
     return res.status(401).json({ error: 'Username atau password salah' });
   }
   loginAttempts.delete(key);
+  req.user = user;
   const token = createSession(user);
   res.cookie(sessionCookie, token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 8 * 60 * 60 * 1000 });
   return res.json({ username: user.username, role: user.role });
