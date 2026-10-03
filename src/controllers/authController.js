@@ -11,9 +11,13 @@ async function login(req, res) {
   const { username, password } = req.body || {};
   const key = loginKey(req, username);
   const now = Date.now();
+  for (const [attemptKey, record] of loginAttempts) {
+    if (now - record.firstFailure > loginWindow && !(record.blockedUntil > now)) loginAttempts.delete(attemptKey);
+  }
   const attempt = loginAttempts.get(key);
   if (attempt && attempt.blockedUntil > now) return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi nanti.' });
   if (attempt && now - attempt.firstFailure > loginWindow) loginAttempts.delete(key);
+  if (!loginAttempts.has(key) && loginAttempts.size >= 10000) return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi nanti.' });
   const user = await authenticate(username, password);
   if (!user) {
     const current = loginAttempts.get(key) || { failures: 0, firstFailure: now };

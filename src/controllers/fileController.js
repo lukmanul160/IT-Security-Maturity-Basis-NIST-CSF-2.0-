@@ -18,8 +18,7 @@ const inlineFileTypes = new Set([
 const upload = multer({
 	storage: multer.diskStorage({
 		destination: (req, file, callback) => {
-			const folder = req.body.kind === 'policy' ? 'Policy' : 'Practice';
-			const destination = path.join(uploadRoot, safeSegment(req.body.functionName), folder);
+			const destination = path.join(uploadRoot, '.incoming');
 			fs.mkdir(destination, { recursive: true }, error => callback(error, destination));
 		},
 		filename: (req, file, callback) => {
@@ -53,7 +52,7 @@ const replacementUpload = multer({
 async function list(req, res) { const detailed = req.query.details === 'true'; const files = await (detailed ? evidenceAccess.searchableList(req.user) : evidenceAccess.list(req.user)); res.set('Cache-Control','no-store').json(detailed ? files : files.map(file => file.path)); }
 async function create(req, res) {
 	if (!req.file) return res.status(400).json({ error: 'File is required' });
-
+	try {
 	fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
 	fileService.validateUploadMetadata(req.body.functionName, req.body.kind, req.file.originalname);
 	const file = await fileService.saveFile({
@@ -64,10 +63,14 @@ async function create(req, res) {
 		rejectDuplicate: req.body.rejectDuplicate === 'true',
 	});
 	res.status(201).json(file);
+	} finally {
+		await fs.promises.rm(req.file.path, { force: true });
+	}
 }
 
 async function createBatch(req, res) {
 	if (!req.files?.length) return res.status(400).json({ error: 'At least one file is required' });
+	try {
 	if (req.files.reduce((total, file) => total + file.size, 0) > 200 * 1024 * 1024) {
 		await Promise.all(req.files.map(file => fs.promises.rm(file.path, { force: true })));
 		return res.status(413).json({ error: 'Upload batch is too large' });
@@ -83,6 +86,9 @@ async function createBatch(req, res) {
 		rejectDuplicate: req.body.rejectDuplicate === 'true',
 	});
 	res.status(201).json(files);
+	} finally {
+		await Promise.all(req.files.map(file => fs.promises.rm(file.path, { force: true })));
+	}
 }
 const filePath = req => Array.isArray(req.params.path) ? req.params.path.join('/') : req.params.path;
 async function download(req, res) {
@@ -94,6 +100,8 @@ async function download(req, res) {
 		? 'inline'
 		: 'attachment';
 	res.set('Content-Disposition', `${disposition}; filename="${safeSegment(path.basename(relativePath))}"`);
+	// Isolate uploaded content, including forged MIME types, from the application origin.
+	res.set('Content-Security-Policy', "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'");
 	res.type(file.type).send(file.content);
 }
 async function access(req, res) { res.json({ canModify: await evidenceAccess.canModify(filePath(req), req.user) }); }

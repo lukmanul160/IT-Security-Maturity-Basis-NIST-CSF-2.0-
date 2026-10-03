@@ -34,7 +34,13 @@
             <button class="nav-item" data-view="privacy-manage" type="button" title="Manage Privacy" aria-label="Manage Privacy"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg></span><span>Manage Privacy</span></button>
             <button class="nav-item" data-view="csf-manage" type="button" title="Manage CSF" aria-label="Manage CSF"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg></span><span>Manage CSF</span></button>
             <button class="nav-item" data-view="files" type="button" title="Uploaded files" aria-label="Uploaded files"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h7l2 2h9v12H3V6Z"/><path d="M3 6V4h6l2 2"/></svg></span><span>Uploaded files</span></button>
+          </div>
+        </section>
+        <section class="sidebar-group" id="backupNavGroup">
+          <button class="sidebar-group-toggle" type="button" aria-controls="backupNav" aria-expanded="false"><span>Backup System</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
+          <div class="sidebar-group-items" id="backupNav">
             <button class="nav-item" data-view="backups" type="button" title="Database Backup" aria-label="Database Backup"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg></span><span>Database Backup</span></button>
+            <button class="nav-item" data-view="file-backups" type="button" title="File Backup" aria-label="File Backup"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg></span><span>File Backup</span></button>
           </div>
         </section>
         <div class="sidebar-footer">

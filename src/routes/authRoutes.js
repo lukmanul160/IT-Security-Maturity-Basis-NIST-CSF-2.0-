@@ -4,7 +4,7 @@ const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/authorization');
 
 const router = express.Router();
-router.post('/login', controller.login);
+router.post('/login', require('../middleware/loginRateLimit').createLoginRateLimit(), controller.login);
 router.post('/logout', controller.logout);
 router.get('/me', requireAuth, controller.currentUser);
 router.put('/me', requireAuth, controller.updateProfile);

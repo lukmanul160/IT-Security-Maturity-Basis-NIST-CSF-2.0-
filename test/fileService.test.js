@@ -7,6 +7,7 @@ const { after } = require('node:test');
 const { pool } = require('../src/config/database');
 const { uploadRoot } = require('../src/config/paths');
 const fileService = require('../src/services/fileService');
+const storage = require('../src/services/storageService');
 
 after(() => pool.end());
 
@@ -28,7 +29,7 @@ test('replaceFile keeps the evidence path and updates its content and metadata',
 
     assert.equal(result.path, `upload/${relativePath}`);
     assert.equal(result.name, 'evidence.pdf');
-    assert.deepEqual(await fs.readFile(target), replacement);
+    assert.deepEqual(await storage.read(relativePath), replacement);
     const stored = await pool.query('SELECT name, mime_type FROM evidence_files WHERE path = $1', [relativePath]);
     assert.deepEqual(stored.rows[0], { name: 'evidence.pdf', mime_type: 'application/pdf' });
 
@@ -37,6 +38,7 @@ test('replaceFile keeps the evidence path and updates its content and metadata',
       { status: 400 }
     );
   } finally {
+    await storage.remove(relativePath);
     await pool.query('DELETE FROM evidence_files WHERE path = $1', [relativePath]);
     await fs.rm(target, { force: true });
     await fs.rmdir(path.dirname(target)).catch(() => {});

@@ -2,6 +2,11 @@
   "name": "nist-csf-maturity-tool",
   "version": "1.0.0",
   "private": true,
+  "overrides": {
+    "gaxios": {
+      "uuid": "^11.1.1"
+    }
+  },
   "description": "NIST CSF 2.0 maturity assessment powered by Node.js",
   "main": "src/server.js",
   "scripts": {
@@ -9,13 +14,14 @@
     "build:client": "npm run prepare:client && vite build --config frontend/client/vite.config.js",
     "build": "npm run build:css && npm run build:client",
     "build:css": "tailwindcss -i ./frontend/tailwind.css -o ./frontend/public/tailwind.css --minify",
-    "test": "node --test test/roleActionPermissions.test.js test/fileService.test.js test/personnelCertificationService.test.js test/personnelAuthorization.test.js test/userModuleAccess.test.js test/policyRegisterService.test.js test/questionnaireTemplateService.test.js test/policyReminderService.test.js test/moduleTransfer.test.js test/smtpService.test.js test/auditFindingService.test.js test/auditFindingReminderService.test.js test/evidenceAccessService.test.js test/backupService.test.js test/threatModelService.test.js test/riskDropdownService.test.js",
+    "test": "node --test test/publicPagePerformance.test.js test/roleActionPermissions.test.js test/fileService.test.js test/personnelCertificationService.test.js test/personnelAuthorization.test.js test/userModuleAccess.test.js test/policyRegisterService.test.js test/questionnaireTemplateService.test.js test/policyReminderService.test.js test/moduleTransfer.test.js test/smtpService.test.js test/auditFindingService.test.js test/auditFindingReminderService.test.js test/evidenceAccessService.test.js test/backupService.test.js test/fileBackupService.test.js test/threatModelService.test.js test/riskDropdownService.test.js test/storageService.test.js",
     "test:browser": "node scripts/test-vue-browser.js",
     "test:threat-browser": "node scripts/test-threat-modelling-browser.js",
     "test:risk-options-browser": "node scripts/test-risk-options-browser.js",
     "db:setup": "node scripts/provision-db.js",
     "admin:create": "node scripts/create-admin.js",
     "test:admin-setup": "node --test test/createAdmin.test.js",
+    "test:security": "node --test test/securityHardening.test.js",
     "seed:iso27001": "node scripts/generate-iso-27001-seed.js",
     "seed:personnel-certifications": "node scripts/generate-personnel-certification-seed.js",
     "start": "node src/server.js",
@@ -23,23 +29,28 @@
     "dev:client": "npm run prepare:client && vite --config frontend/client/vite.config.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@google-cloud/storage": "^8.2.0",
+    "archiver": "^7.0.1",
     "bcryptjs": "^3.0.3",
+    "crc-32": "^1.2.2",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
-    "multer": "^2.2.0",
-    "nodemailer": "^10.0.1",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.0.13",
     "pdf-lib": "^1.17.1",
     "pg": "^8.16.3",
     "vue": "^3.5.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "yauzl": "^3.4.0"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.3.3",
+    "@tailwindcss/cli": "4.3.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^7.0.0"
+    "vite": "^7.3.6"
   }
 }

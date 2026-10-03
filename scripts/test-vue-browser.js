@@ -149,7 +149,7 @@ async function run() {
       return true;
     })()`);
     try {
-    await waitFor(client, `location.pathname === '/app' && document.documentElement.dataset.frontend === 'vue'`, 'Vue workspace', 25000);
+    await waitFor(client, `location.pathname === '/app' && document.documentElement?.dataset.frontend === 'vue'`, 'Vue workspace', 25000);
     } catch (error) {
       const diagnostic = await evaluate(client, `({ path: location.pathname, title: document.title, text: document.body.innerText.slice(0, 500) })`);
       throw new Error(`${error.message}: ${JSON.stringify(diagnostic)}; browser errors: ${JSON.stringify(errors)}`);
@@ -182,7 +182,7 @@ async function run() {
       await evaluate(client, `document.querySelector('#aftNew').click()`);
       assert.equal(await evaluate(client, `document.querySelector('#aftModal').open`), true);
       await evaluate(client, `document.querySelector('#aftModal').close()`);
-      assert.equal(await evaluate(client, `document.querySelector('#organizationPersonnelNewButton').hidden && document.querySelector('#fileStorageSettings').hidden && document.querySelector('#riskRegisterResetButton').hidden`), true);
+      assert.equal(await evaluate(client, `document.querySelector('#organizationPersonnelNewButton').hidden && document.querySelector('[data-account-tab="storage"]').hidden && document.querySelector('#riskRegisterResetButton').hidden`), true);
       console.log('PASS: user input forms across operational modules; admin personnel, storage and reset controls remain restricted');
       return;
     }
@@ -343,7 +343,7 @@ async function run() {
     if (process.env.BROWSER_TEST_FOCUS === 'admin-tabs') {
       await evaluate(client, `document.querySelector('#accountButton').click()`);
       await waitFor(client, `!document.querySelector('#accountAdminPanel').hidden`, 'admin account loaded');
-      for (const [tab, panel] of [['permissions','permissionManagementPanel'],['matrix','accountAccessMatrixPanel'],['users','accountUsersPanel'],['audit','accountAuditPanel'],['smtp','accountSmtpPanel']]) {
+      for (const [tab, panel] of [['permissions','permissionManagementPanel'],['matrix','accountAccessMatrixPanel'],['users','accountUsersPanel'],['audit','accountAuditPanel'],['smtp','accountSmtpPanel'],['storage','accountStoragePanel']]) {
         await evaluate(client, `document.querySelector('[data-account-tab="${tab}"]').click()`);
         assert.equal(await evaluate(client, `!document.querySelector('#${panel}').hidden && document.querySelector('[data-account-tab="${tab}"]').getAttribute('aria-selected') === 'true'`), true, `${tab}: ${errors.join('; ')}`);
       }
@@ -534,14 +534,40 @@ async function run() {
     assert.deepEqual(runtime.duplicateIds, []);
     assert.deepEqual(await evaluate(client, `fetch('/app').then(response => response.text()).then(html => html.includes('/vue/assets/'))`), true);
 
-    const views = ['framework', 'csf', 'csf-manage', 'privacy', 'privacy-manage', 'iso27001', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'backups'];
+    const views = ['framework', 'csf', 'csf-manage', 'privacy', 'privacy-manage', 'iso27001', 'risk-acceptance', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'backups', 'file-backups'];
     for (const view of views) {
       const opened = await evaluate(client, `(() => { const button = document.querySelector('[data-view="${view}"]'); if (!button || button.hidden || button.disabled) return false; button.click(); return true; })()`);
       assert.equal(opened, true, `Navigation unavailable: ${view}`);
       await delay(180);
     }
+    assert.deepEqual(await evaluate(client, `(() => {
+      const panel = document.querySelector('#fileBackupsView');
+      const group = document.querySelector('#backupNavGroup');
+      const input = document.querySelector('#fileBackupRestoreInput');
+      const button = document.querySelector('#fileBackupRestoreButton');
+      const initiallyDisabled = button.disabled;
+      const transfer = new DataTransfer();
+      transfer.items.add(new File(['test archive'], 'browser-check.zip', { type: 'application/zip' }));
+      input.files = transfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      const selectionWorks = !button.disabled && document.querySelector('#fileBackupRestoreFileName').textContent === 'browser-check.zip';
+      const originalConfirm = window.confirm;
+      window.confirm = () => false;
+      button.click();
+      window.confirm = originalConfirm;
+      input.value = '';
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      return { active: panel.classList.contains('active-view'), grouped: group.contains(document.querySelector('[data-view="backups"]')) && group.contains(document.querySelector('[data-view="file-backups"]')), initiallyDisabled, selectionWorks, cleared: button.disabled };
+    })()`), { active: true, grouped: true, initiallyDisabled: true, selectionWorks: true, cleared: true }, 'File Backup navigation and restore selection must work');
+    if (process.env.BROWSER_TEST_FOCUS === 'file-backups') {
+      assert.deepEqual(errors, [], 'Browser errors');
+      assert.deepEqual(failedResponses, [], 'Failed requests');
+      console.log(JSON.stringify({ status: 'passed', focus: 'file-backups', viewsChecked: views.length, restoreSelection: true }));
+      return;
+    }
     assert.equal(await evaluate(client, `(() => { const button = document.querySelector('#accountButton'); if (!button || button.hidden || button.disabled) return false; button.click(); return document.querySelector('#accountView').classList.contains('active-view'); })()`), true, `Account navigation unavailable: ${JSON.stringify(errors)}`);
-    assert.deepEqual(await evaluate(client, `([...document.querySelectorAll('#accountView [data-account-tab]')].map(button => button.textContent.trim()))`), ['1. Account Management', '2. ROLE ACCESS', '3. ADMINISTRATION', '4. AUDIT TRAIL', '5. Pengaturan SMTP'], 'Account tabs are incomplete');
+    assert.deepEqual(await evaluate(client, `([...document.querySelectorAll('#accountView [data-account-tab]')].map(button => button.textContent.trim()))`), ['1. Account Management', '2. ROLE ACCESS', '3. USER ACCESS MATRIX', '4. ADMINISTRATION', '5. AUDIT TRAIL', '6. Pengaturan SMTP', '7. Storage Setting'], 'Account tabs are incomplete');
+    assert.deepEqual(await evaluate(client, `(() => { document.querySelector('[data-account-tab="storage"]').click(); return { visible: !document.querySelector('#accountStoragePanel').hidden, inAccount: document.querySelector('#accountStoragePanel #fileStorageForm') !== null, removedFromFiles: document.querySelector('#filesView #fileStorageForm') === null }; })()`), { visible: true, inAccount: true, removedFromFiles: true }, 'Storage settings must be in the Account storage tab');
     assert.equal(await evaluate(client, `(() => { const button = document.querySelector('#accountView [data-account-tab="audit"]'); button?.click(); return document.querySelector('#accountAuditPanel')?.hidden === false && document.querySelector('#accountProfilePanel')?.hidden === true; })()`), true, 'Account audit tab unavailable');
     assert.equal(await evaluate(client, `(() => { document.querySelector('#accountView [data-account-tab="profile"]')?.click(); return document.querySelector('#accountProfilePanel')?.hidden === false; })()`), true, 'Account profile tab unavailable');
 

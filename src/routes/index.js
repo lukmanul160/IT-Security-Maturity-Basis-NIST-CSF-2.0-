@@ -38,5 +38,6 @@ router.use('/questionnaire-templates', questionnaireTemplateRoutes);
 router.use('/policy-register', policyRegisterRoutes);
 router.use('/audit', auditRoutes);
 router.use('/backups', backupRoutes);
+router.use('/file-backups', require('./fileBackupRoutes'));
 
 module.exports = router;

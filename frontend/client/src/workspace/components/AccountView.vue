@@ -10,6 +10,7 @@
               <button class="button button-quiet" type="button" data-account-tab="users" aria-controls="accountUsersPanel" aria-selected="false">4. ADMINISTRATION</button>
               <button class="button button-quiet" type="button" data-account-tab="audit" aria-controls="accountAuditPanel" aria-selected="false">5. AUDIT TRAIL</button>
               <button class="button button-quiet" type="button" data-account-tab="smtp" aria-controls="accountSmtpPanel" aria-selected="false">6. Pengaturan SMTP</button>
+              <button class="button button-quiet" type="button" data-account-tab="storage" aria-controls="accountStoragePanel" aria-selected="false">7. Storage Setting</button>
             </span>
           </nav>
           <section id="accountProfilePanel" class="account-tab-panel">
@@ -20,6 +21,40 @@
             </form>
           </section>
           <div id="accountAdminPanel" hidden>
+          <section id="accountStoragePanel" class="account-tab-panel file-storage-settings" hidden>
+            <div class="section-heading compact"><div><p class="eyebrow">STORAGE SETTING</p><h3>Pengaturan penyimpanan upload</h3></div></div>
+            <form id="fileStorageForm">
+              <p>Pilih lokasi untuk upload evidence dan lampiran kebijakan berikutnya. File yang sudah ada tetap menggunakan lokasi asal; mengganti file juga memakai lokasi asal.</p>
+              <fieldset id="fileStorageFields" disabled>
+                <label for="fileStorageMode">Lokasi penyimpanan</label>
+                <select id="fileStorageMode"><option value="local">Lokal — folder upload aplikasi</option><option value="shared">Storage file — folder jaringan / NAS</option><option value="s3">AWS S3</option><option value="gcs">Google Cloud Storage</option></select>
+                <p id="fileStorageLocal" class="muted"></p>
+                <div id="fileStorageDirectoryGroup" hidden>
+                  <label for="fileStorageDirectory">Path folder storage di server</label>
+                  <input id="fileStorageDirectory" type="text" placeholder="Contoh: \\NAS\dokumen\nist atau D:\NistStorage" autocomplete="off">
+                  <p class="muted">Gunakan folder khusus yang sudah tersedia. Akun yang menjalankan server harus memiliki izin baca, tulis, dan hapus. Folder ini berada di server/NAS, bukan di komputer browser.</p>
+                </div>
+                <div id="fileStorageCloudGroup" hidden>
+                  <label for="fileStorageBucket">Nama bucket</label>
+                  <input id="fileStorageBucket" maxlength="222" placeholder="nist-evidence" autocomplete="off">
+                  <label for="fileStoragePrefix">Prefix folder (opsional)</label>
+                  <input id="fileStoragePrefix" maxlength="500" placeholder="evidence/production" autocomplete="off">
+                  <div id="fileStorageRegionGroup" hidden>
+                    <label for="fileStorageRegion">AWS region</label>
+                    <input id="fileStorageRegion" maxlength="64" placeholder="ap-southeast-1" autocomplete="off">
+                  </div>
+                  <div id="fileStorageProjectGroup" hidden>
+                    <label for="fileStorageProject">Google Cloud project ID (opsional)</label>
+                    <input id="fileStorageProject" maxlength="100" placeholder="my-project" autocomplete="off">
+                  </div>
+                  <p class="muted">Bucket harus sudah tersedia. Kredensial dikonfigurasi di server: AWS IAM role atau AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY; Google Cloud service account atau GOOGLE_APPLICATION_CREDENTIALS. Akun server membutuhkan izin baca, tulis, dan hapus objek.</p>
+                </div>
+                <div class="csf-form-actions"><button id="fileStorageTest" class="button button-quiet" type="button">Tes akses storage</button><button id="fileStorageSave" class="button button-accent" type="submit">Simpan pengaturan</button></div>
+              </fieldset>
+              <p id="fileStorageStatus" role="status" aria-live="polite">Buka tab Storage Setting untuk memuat lokasi penyimpanan.</p>
+              <p class="muted">Penyimpanan memerlukan metadata database. Sertakan semua folder file yang digunakan saat melakukan backup.</p>
+            </form>
+          </section>
             <section id="permissionManagementPanel" class="permission-panel account-tab-panel" hidden>
               <div class="section-heading compact"><div><p class="eyebrow">ROLE ACCESS</p><h3>Pengaturan Hak Akses</h3></div><span class="muted" id="permissionStatus">Configure page access by role</span></div><div class="permission-toolbar"><label>Role<select id="permissionRoleSelect"></select></label><button class="button button-accent" id="permissionSaveButton" type="button">Save permissions</button></div><div><div class="permission-edit-panel"><div class="permission-section-label"><strong>Selected role access</strong><span>Page access for the chosen role</span></div><div id="permissionChecks" class="permission-checks"></div></div></div>
             </section>
@@ -45,3 +80,68 @@
           </div>
         </section>
 </template>
+
+<style>
+#accountStoragePanel {
+  max-width: 1040px;
+  padding: clamp(20px, 3vw, 32px);
+  background: #fff;
+  border: 1px solid var(--line, #dbe3ec);
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgb(15 35 60 / 5%);
+}
+#accountStoragePanel .section-heading { margin-bottom: 20px; }
+#accountStoragePanel h3 { margin: 6px 0 0; font-size: 22px; line-height: 1.35; }
+#fileStorageForm { display: grid; gap: 20px; }
+#fileStorageForm p { margin: 0; line-height: 1.7; overflow-wrap: anywhere; }
+#fileStorageForm > p:first-child { max-width: 78ch; color: var(--muted, #64748b); font-size: 14px; }
+#fileStorageFields {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 24px;
+  border: 1px solid #e3eaf2;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+#fileStorageFields label { display: block; font-size: 13px; font-weight: 600; color: var(--navy, #18324d); }
+#fileStorageFields input, #fileStorageFields select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 11px 14px;
+  background: #fff;
+  border: 1px solid #cfd9e5;
+  border-radius: 9px;
+  color: var(--ink, #1e293b);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color .15s, box-shadow .15s;
+}
+#fileStorageFields input::placeholder { color: #8492a6; }
+#fileStorageFields input:focus-visible, #fileStorageFields select:focus-visible {
+  border-color: #477db3;
+  outline: 2px solid #477db3;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgb(71 125 179 / 10%);
+}
+#fileStorageDirectoryGroup:not([hidden]), #fileStorageCloudGroup:not([hidden]),
+#fileStorageRegionGroup:not([hidden]), #fileStorageProjectGroup:not([hidden]) { display: grid; gap: 10px; }
+#fileStorageDirectoryGroup, #fileStorageCloudGroup { margin-top: 8px; padding-top: 20px; border-top: 1px solid #e3eaf2; }
+#fileStorageForm .muted { color: var(--muted, #64748b); font-size: 12px; }
+#fileStorageLocal { padding: 10px 14px; border-radius: 8px; background: #eef3f8; }
+#fileStorageFields .csf-form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 12px; padding-top: 20px; border-top: 1px solid #e3eaf2; }
+#fileStorageFields .button { min-height: 44px; padding: 11px 18px; border-radius: 9px; }
+#fileStorageTest { background: #fff; border: 1px solid #cfd9e5; }
+#fileStorageFields:disabled { opacity: .65; }
+#fileStorageStatus:not(:empty) { padding: 12px 16px; border: 1px solid #dce7f2; border-radius: 9px; background: #f0f6fc; color: #365b80; font-size: 13px; }
+@media (max-width: 600px) {
+  #accountStoragePanel { padding: 18px; border-radius: 12px; }
+  #accountStoragePanel h3 { font-size: 20px; }
+  #fileStorageFields { padding: 16px; }
+  #fileStorageFields .csf-form-actions { flex-direction: column; }
+  #fileStorageFields .button { width: 100%; }
+}
+</style>

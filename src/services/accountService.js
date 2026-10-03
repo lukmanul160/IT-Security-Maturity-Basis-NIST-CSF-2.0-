@@ -1,11 +1,12 @@
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/database');
+const { destroyUserSessions } = require('../config/auth');
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 const validRoles = ['admin', 'approver', 'editor', 'viewer', 'user'];
 
 function validatePassword(password) {
-  if (typeof password !== 'string' || !passwordPattern.test(password)) throw Object.assign(new Error('Password harus 8-72 karakter dan mengandung huruf besar, huruf kecil, serta angka'), { status: 400 });
+  if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 72 || !passwordPattern.test(password)) throw Object.assign(new Error('Password harus 8-72 karakter, maksimal 72 byte, dan mengandung huruf besar, huruf kecil, serta angka'), { status: 400 });
 }
 
 function publicUser(row) {
@@ -41,6 +42,7 @@ async function updateProfile(username, data) {
     passwordHash = await bcrypt.hash(data.newPassword, 12);
   }
   const result = await pool.query('UPDATE app_users SET full_name = $1, password_hash = $2, updated_at = NOW() WHERE id = $3 RETURNING id, username, full_name, role, created_at, updated_at', [fullName, passwordHash, user.id]);
+  if (passwordHash !== user.password_hash) destroyUserSessions(username);
   return publicUser(result.rows[0]);
 }
 
@@ -52,6 +54,7 @@ async function updatePassword(username, data) {
   validatePassword(data.newPassword);
   const passwordHash = await bcrypt.hash(data.newPassword, 12);
   await pool.query('UPDATE app_users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [passwordHash, user.id]);
+  destroyUserSessions(username);
   return getProfile(username);
 }
 
@@ -81,6 +84,7 @@ async function updateUser(id, data) {
   fields.push('updated_at'); values.push(new Date()); values.push(id);
   const assignments = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
   const result = await pool.query(`UPDATE app_users SET ${assignments} WHERE id = $${values.length} RETURNING id, username, full_name, role, created_at, updated_at`, values);
+  if (data.role !== undefined || data.password !== undefined) destroyUserSessions(existing.rows[0].username);
   return publicUser(result.rows[0]);
 }
 
@@ -89,6 +93,7 @@ async function deleteUser(id, currentUsername) {
   if (!existing.rowCount) throw Object.assign(new Error('User not found'), { status: 404 });
   if (existing.rows[0].username === currentUsername) throw Object.assign(new Error('Akun yang sedang digunakan tidak dapat dihapus'), { status: 400 });
   await pool.query('DELETE FROM app_users WHERE id = $1', [id]);
+  destroyUserSessions(existing.rows[0].username);
 }
 
 module.exports = { getByUsername, getProfile, listUsers, updateProfile, updatePassword, createUser, updateUser, deleteUser };

@@ -8,6 +8,7 @@ const dummyPasswordHash = '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVS
 
 async function authenticate(username, password) {
 	if (typeof username !== 'string' || typeof password !== 'string') return null;
+	if (!/^[a-zA-Z0-9._-]{3,50}$/.test(username) || Buffer.byteLength(password, 'utf8') > 72) return null;
 
 	const result = await pool.query(
 		'SELECT username, password_hash, role FROM app_users WHERE username = $1',
@@ -21,6 +22,9 @@ async function authenticate(username, password) {
 }
 
 function createSession(user) {
+	for (const [token, session] of sessions) {
+		if (Date.now() - session.createdAt >= sessionLifetime) sessions.delete(token);
+	}
 	const token = crypto.randomBytes(32).toString('hex');
 	sessions.set(token, { username: user.username, role: user.role, createdAt: Date.now() });
 	return token;
@@ -44,6 +48,12 @@ function destroySession(token) {
 	if (token) sessions.delete(token);
 }
 
+function destroyUserSessions(username) {
+	for (const [token, session] of sessions) {
+		if (session.username === username) sessions.delete(token);
+	}
+}
+
 function parseCookies(header = '') {
 	const cookies = {};
 
@@ -63,4 +73,4 @@ function parseCookies(header = '') {
 	return cookies;
 }
 
-module.exports = { authenticate, createSession, getSession, destroySession, parseCookies, sessionCookie };
+module.exports = { authenticate, createSession, getSession, destroySession, destroyUserSessions, parseCookies, sessionCookie };

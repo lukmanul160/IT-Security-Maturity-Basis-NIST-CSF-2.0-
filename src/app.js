@@ -12,11 +12,11 @@ const app = express();
 app.disable('x-powered-by');
 const vueWorkspaceIndex = path.join(publicRoot, 'vue', 'index.html');
 
-// Log all requests
+// Enable request tracing only when troubleshooting; avoid duplicate console I/O.
 app.use((req, res, next) => {
-	const msg = `[app] ${req.method} ${req.originalUrl}`;
-	console.error(msg);
-	console.log(msg);
+	if (process.env.LOG_HTTP_REQUESTS === 'true') {
+		console.log(`[app] ${req.method} ${req.originalUrl}`);
+	}
 	next();
 });
 
@@ -47,6 +47,12 @@ app.use((req, res, next) => {
 	return next();
 });
 app.use('/api/auth', auditRequest, authRoutes);
+// Only demonstration screenshots are public. Other workspace files require auth.
+app.use('/landing-media', express.static(path.join(publicRoot, 'landing-media'), {
+	index: false,
+	maxAge: '1d',
+	fallthrough: false,
+}));
 // The login page shares the compiled theme with the authenticated workspace.
 app.get('/tailwind.css', (req, res) => res.sendFile(path.join(publicRoot, 'tailwind.css')));
 app.get('/login', (req, res) => {

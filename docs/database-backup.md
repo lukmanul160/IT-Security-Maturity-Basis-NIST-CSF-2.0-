@@ -1,5 +1,20 @@
 # Database Backup
 
+Sidebar **Backup System** mengelompokkan **Database Backup** dan **File Backup**.
+File Backup khusus administrator menyediakan pembuatan, unduh, dan hapus arsip ZIP
+di `backup/files`. Semua file yang terdaftar pada `evidence_files` dibaca melalui
+storage aplikasi, termasuk lokasi lokal, shared storage, serta konten database lama.
+ZIP menyimpan file dalam `upload/<path>` dan metadata dalam `manifest.json`.
+Jika satu file tidak bisa dibaca, pembuatan gagal dan arsip parsial dihapus.
+File Backup menyediakan restore ZIP (unggahan maksimal 500 MB, hasil ekstraksi
+maksimal 2 GB). Semua entri dan manifest divalidasi sebelum penulisan. File dipulihkan
+ke storage aktif dengan path asli, nama, tipe, pemilik yang masih terdaftar, dan halaman PDF.
+File dengan path sama diganti; file lain tidak dihapus. Jika penulisan storage gagal
+di tengah proses, pesan menunjukkan jumlah file yang sudah dipulihkan; restore
+dapat diulang setelah masalah diperbaiki. Pulihkan Database Backup terlebih dahulu
+jika referensi lampiran juga perlu dipulihkan. Konfigurasi server dan kunci SMTP
+tetap perlu salinan terpisah.
+
 Backup baru selalu memakai `pg_dump --format=custom` untuk database yang
 dikonfigurasi melalui `DATABASE_URL` atau `DB_*`. Tidak ada pembatasan schema
 atau tabel: semua modul, termasuk tabel baru, dicadangkan otomatis bersama

@@ -22,10 +22,11 @@ import part17 from './features/assessment/scoring.js?raw';
 import part18 from './features/privacy/assessment.js?raw';
 import part19 from './features/shared/import-export.js?raw';
 import part20 from './features/administration/audit-backup-accounts.js?raw';
+import fileBackups from './features/administration/file-backups.js?raw';
 import part21 from './features/shared/startup.js?raw';
 import part22 from './features/uploaded-files/editor-and-events.js?raw';
 import eventBindings from './features/shared/event-bindings.js?raw';
-import storageSettings from './features/uploaded-files/storage-settings.js?raw';
+import storageSettings from './features/administration/storage-settings.js?raw';
 import moduleTransfer from './features/shared/module-transfer.js?raw';
 import smtpSettings from './features/administration/smtp-settings.js?raw';
 
@@ -63,6 +64,7 @@ export default [
   part22,
   auditFindingTracker,
   eventBindings,
+  fileBackups,
   storageSettings,
   moduleTransfer,
   smtpSettings,

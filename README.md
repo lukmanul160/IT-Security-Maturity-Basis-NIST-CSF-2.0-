@@ -11,6 +11,7 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
   environment, build, akun awal, systemd/Task Scheduler, HTTPS, upgrade,
   backup/restore, migrasi antar-OS, dan troubleshooting.
 - [Panduan penggunaan](docs/USER_GUIDE.md): langkah penggunaan setiap modul.
+- [Penyimpanan upload](docs/file-storage.md): pilihan lokal/NAS, AWS S3, Google Cloud Storage, dan kredensial server.
 - [High-Level Design](docs/HIGH_LEVEL_DESIGN.md) dan
   [Low-Level Design](docs/LOW_LEVEL_DESIGN.md): arsitektur, data, dan API.
 - [Catatan proyek](docs/PROJECT_LEARNING.md): lokasi kode dan alur inisialisasi.

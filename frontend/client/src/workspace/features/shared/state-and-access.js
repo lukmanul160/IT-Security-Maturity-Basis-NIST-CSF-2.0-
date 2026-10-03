@@ -113,7 +113,8 @@ function applyUserAccess() {
   renderOrganizationPersonnelStructure();
   renderCertifications();
   setAccountTab();
-  $('fileStorageSettings').hidden = currentUserRole !== 'admin';
+  $('backupNavGroup').hidden = currentUserRole !== 'admin';
+  $('fileBackupsView').hidden = currentUserRole !== 'admin';
   $('policySmtpOpen').hidden = currentUserRole !== 'admin';
 
   $('roadmapCatalogNewButton').hidden = currentUserRole !== 'admin';

@@ -89,9 +89,52 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
     document.addEventListener('visibilitychange', updateMotion);
     updateMotion();
     const redirectToFrameworkChooser = () => { localStorage.removeItem('nist-maturity-ui'); window.location.replace('/app'); };
-    fetch('/api/auth/me', { cache: 'no-store' }).then(response => { if (response.ok) redirectToFrameworkChooser(); });
-    window.addEventListener('pageshow', () => { fetch('/api/auth/me', { cache: 'no-store' }).then(response => { if (response.ok) redirectToFrameworkChooser(); }); });
-    loginForm.addEventListener('submit', async event => { event.preventDefault(); loginError.textContent = ''; const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); if (response.ok) redirectToFrameworkChooser(); else loginError.textContent = (await response.json()).error || 'Login gagal'; });
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const submitButton = loginForm.querySelector('[type="submit"]');
+    let sessionCheck = null;
+    let submitting = false;
+    function checkSession() {
+      if (sessionCheck || submitting) return sessionCheck;
+      sessionCheck = fetch('/api/auth/me', { cache: 'no-store', signal: AbortSignal.timeout(10000) })
+        .then(response => { if (response.ok) redirectToFrameworkChooser(); })
+        .catch(() => {})
+        .finally(() => { sessionCheck = null; });
+      return sessionCheck;
+    }
+    // pageshow covers both initial navigation and restoration from the browser cache.
+    window.addEventListener('pageshow', checkSession);
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (submitting) return;
+      submitting = true;
+      loginError.textContent = '';
+      submitButton.disabled = true;
+      loginForm.setAttribute('aria-busy', 'true');
+      const originalLabel = submitButton.innerHTML;
+      submitButton.textContent = 'Memproses login...';
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(15000),
+          body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
+        });
+        if (response.ok) { redirectToFrameworkChooser(); return; }
+        const result = await response.json().catch(() => ({}));
+        loginError.textContent = result.error || 'Login gagal. Periksa kembali username dan password Anda.';
+      } catch (error) {
+        loginError.textContent = error.name === 'TimeoutError'
+          ? 'Permintaan terlalu lama. Silakan coba kembali.'
+          : 'Tidak dapat terhubung ke server. Silakan coba kembali.';
+      } finally {
+        submitting = false;
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalLabel;
+        loginForm.removeAttribute('aria-busy');
+      }
+    });
   </script>
 </body>
 </html>
