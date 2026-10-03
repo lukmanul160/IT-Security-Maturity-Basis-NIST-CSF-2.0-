@@ -60,7 +60,7 @@ function renderPermissionChecks(data) {
   const role=$('permissionRoleSelect').value;
   $('permissionChecks').innerHTML=`<div class="excel-wrap"><table class="excel-table"><thead><tr><th>Fitur</th>${permissionActions.map(([,label])=>`<th>${label}</th>`).join('')}</tr></thead><tbody>${data.permissions.map(([key,label])=>{
     const assignment=data.assignments.find(row=>row.role===role && row.permissionKey===key);
-    return `<tr><th>${escapeHtml(label)}</th>${permissionActions.map(([action,label])=>`<td><input type="checkbox" data-permission-key="${key}" data-permission-action="${action}" aria-label="${escapeHtml(label)} ${escapeHtml(key)}" ${assignment?.actions?.[action] ? 'checked' : ''} ${role==='admin' || key==='account' && action!=='read' ? 'disabled' : ''}></td>`).join('')}</tr>`;
+    return `<tr><th>${escapeHtml(label)}</th>${permissionActions.map(([action,label])=>`<td><input name="permission-key-${key}-${action}" type="checkbox" data-permission-key="${key}" data-permission-action="${action}" aria-label="${escapeHtml(label)} ${escapeHtml(key)}" ${assignment?.actions?.[action] ? 'checked' : ''} ${role==='admin' || key==='account' && action!=='read' ? 'disabled' : ''}></td>`).join('')}</tr>`;
   }).join('')}</tbody></table></div><p class="muted">Read/View wajib untuk aksi lainnya. Izin file tetap dibatasi pemilik file. Pengelolaan pegawai, katalog sertifikasi, akun, SMTP, dan reset tetap khusus admin.</p>`;
   $('permissionManagementPanel').dataset.permissions=JSON.stringify(data);
   $('permissionSaveButton').disabled=role==='admin';

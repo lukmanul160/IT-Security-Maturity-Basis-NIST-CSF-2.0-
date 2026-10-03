@@ -80,9 +80,6 @@ body.workspace-ui .search-box{background:#fff;border:1px solid #dce6f4;border-ra
 @media print{body.workspace-ui{background:white}body.workspace-ui .view.active-view{animation:none}body.workspace-ui :is(.stat-panel,.insight-panel,.excel-wrap){box-shadow:none}}
 
 /* Compact dashboard hierarchy and neutral secondary controls. */
-/* Collapsed sidebar keeps only its expand control, without empty menu targets. */
-body.workspace-ui .app-shell.sidebar-collapsed .sidebar > :not(.sidebar-toggle){display:none!important}
-body.workspace-ui .app-shell.sidebar-collapsed .sidebar .nav-icon{display:none!important}
 body.workspace-ui .page-heading h2{color:#0f172a;font-weight:650;font-size:clamp(23px,1.9vw,28px);letter-spacing:-.6px}
 body.workspace-ui .section-heading h3{color:#172338;font-size:16px}
 body.workspace-ui .stat-panel{position:relative;border-color:#e8edf4}

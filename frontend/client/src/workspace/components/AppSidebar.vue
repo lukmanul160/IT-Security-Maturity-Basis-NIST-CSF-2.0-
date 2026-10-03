@@ -1,7 +1,8 @@
 <!-- Static DOM retained for existing feature runtime. Keep IDs and classes stable. -->
 <template>
-<aside v-pre class="sidebar">
-        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Minimize sidebar" title="Minimize sidebar"><span>&lt;</span></button>
+<aside v-pre class="sidebar" aria-label="Main navigation">
+        <div class="sidebar-scroll">
+        <div class="sidebar-heading"><span class="sidebar-heading-mark" aria-hidden="true">N</span><span id="sidebarGreeting">Halo</span></div>
         <section class="sidebar-group" id="assessmentNavGroup">
           <button class="sidebar-group-toggle" id="assessmentNavToggle" type="button" aria-controls="assessmentNav" aria-expanded="true"><span>Assessment map</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="assessmentNav">
@@ -15,7 +16,7 @@
           </div>
         </section>
         <section class="sidebar-group" id="tprmNavGroup">
-          <button class="sidebar-group-toggle" id="tprmNavToggle" type="button" aria-controls="tprmNav" aria-expanded="false"><span>TPRM</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
+          <button class="sidebar-group-toggle" id="tprmNavToggle" type="button" aria-controls="tprmNav" aria-expanded="true"><span>TPRM</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="tprmNav">
             <button class="nav-item" data-view="tprm" type="button" title="TPRM Framework" aria-label="TPRM Framework"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg></span><span>TPRM Framework</span></button>
             <button class="nav-item" data-view="tprm-tiering" type="button" title="Vendor Tiering Matrix" aria-label="Vendor Tiering Matrix"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v17h17M8 15v-4m5 4V7m5 8v-6"/></svg></span><span>Vendor Tiering Matrix</span></button>
@@ -25,7 +26,7 @@
           </div>
         </section>
         <section class="sidebar-group" id="frameworkNavGroup">
-          <button class="sidebar-group-toggle" id="frameworkNavToggle" type="button" aria-controls="frameworkNav" aria-expanded="false"><span>Framework</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
+          <button class="sidebar-group-toggle" id="frameworkNavToggle" type="button" aria-controls="frameworkNav" aria-expanded="true"><span>Framework</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="frameworkNav">
             <button class="nav-item" data-view="csf" type="button" title="CSF 2.0" aria-label="CSF 2.0"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg></span><span>CSF 2.0</span></button>
             <button class="nav-item" data-view="privacy" type="button" title="Privacy Framework" aria-label="Privacy Framework"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg></span><span>Privacy Framework</span></button>
@@ -37,7 +38,7 @@
           </div>
         </section>
         <section class="sidebar-group" id="backupNavGroup">
-          <button class="sidebar-group-toggle" type="button" aria-controls="backupNav" aria-expanded="false"><span>Backup System</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
+          <button class="sidebar-group-toggle" type="button" aria-controls="backupNav" aria-expanded="true"><span>Backup System</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="backupNav">
             <button class="nav-item" data-view="backups" type="button" title="Database Backup" aria-label="Database Backup"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg></span><span>Database Backup</span></button>
             <button class="nav-item" data-view="file-backups" type="button" title="File Backup" aria-label="File Backup"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg></span><span>File Backup</span></button>
@@ -47,5 +48,7 @@
           <div class="framework-note"><span class="status-dot"></span><div><strong>Framework</strong><small>NIST CSF 2.0</small></div></div>
           <small>Local workspace<br>v1.0 assessment</small>
         </div>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar"><span class="sidebar-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 6-6 6 6 6"/></svg></span><span class="sidebar-toggle-label">Collapse</span></button>
       </aside>
 </template>

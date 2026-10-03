@@ -28,6 +28,7 @@ function addEvidenceSelectSearch(select) {
   if (select.dataset.searchable === 'true') return;
   select.dataset.searchable = 'true';
   const input = document.createElement('input');
+  input.name = `${select.id}-evidence-search`;
   input.type = 'search'; input.placeholder = 'Search file, policy subtitle or content...';
   input.setAttribute('aria-label','Search uploaded evidence');
   const preview = document.createElement('div');

@@ -10,7 +10,7 @@
   function renderLibrary() {
     const query = $('aftLibrarySearch').value.toLowerCase();
     const attached = new Set(evidenceFiles(editing).filter(file=>!removedAttachments.has(file.path)).map(file=>file.path));
-    $('aftLibraryList').innerHTML = libraryFiles.filter(file=>!attached.has(file.path) && evidenceMatches(file, query)).map(file=>`<label class="toolbar"><input type="checkbox" data-aft-library-path="${escapeHtml(file.path)}" ${selectedLibrary.has(file.path) ? 'checked' : ''}><span>${escapeHtml(file.name)} <small>${escapeHtml(file.source)}</small>${evidenceMatchPreview(file, query)}</span></label>`).join('') || '<p class="muted">Tidak ada file yang dapat dipilih.</p>';
+    $('aftLibraryList').innerHTML = libraryFiles.filter(file=>!attached.has(file.path) && evidenceMatches(file, query)).map(file=>`<label class="toolbar"><input name="aft-library-path-${escapeHtml(file.path)}" type="checkbox" data-aft-library-path="${escapeHtml(file.path)}" ${selectedLibrary.has(file.path) ? 'checked' : ''}><span>${escapeHtml(file.name)} <small>${escapeHtml(file.source)}</small>${evidenceMatchPreview(file, query)}</span></label>`).join('') || '<p class="muted">Tidak ada file yang dapat dipilih.</p>';
   }
   async function loadLibrary() {
     const version = ++libraryRequest;

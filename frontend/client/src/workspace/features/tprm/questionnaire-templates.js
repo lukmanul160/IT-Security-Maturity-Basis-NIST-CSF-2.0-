@@ -28,11 +28,11 @@ function renderTemplateSections() {
   container.innerHTML = templateDraftSections.map(([title, questions], sectionIndex) => `
     <fieldset class="questionnaire-section" data-template-section>
       <div class="template-section-header">
-        <label>Section title<input data-template-section-title value="${escapeHtml(title)}" maxlength="200" required></label>
+        <label>Section title<input name="template-section-${sectionIndex}-title" data-template-section-title value="${escapeHtml(title)}" maxlength="200" required></label>
         <button class="attachment-action-button danger" type="button" data-template-remove-section="${sectionIndex}">Remove section</button>
       </div>
       <div class="template-question-list">
-        ${questions.map((question, questionIndex) => `<div class="template-question-row"><label>Question ${questionIndex + 1}<textarea data-template-question rows="2" maxlength="1000" required>${escapeHtml(question)}</textarea></label><button class="attachment-action-button danger" type="button" data-template-remove-question="${sectionIndex}:${questionIndex}">Remove</button></div>`).join('')}
+        ${questions.map((question, questionIndex) => `<div class="template-question-row"><label>Question ${questionIndex + 1}<textarea name="template-section-${sectionIndex}-question-${questionIndex}" data-template-question rows="2" maxlength="1000" required>${escapeHtml(question)}</textarea></label><button class="attachment-action-button danger" type="button" data-template-remove-question="${sectionIndex}:${questionIndex}">Remove</button></div>`).join('')}
       </div>
       <button class="attachment-action-button" type="button" data-template-add-question="${sectionIndex}">Add question</button>
     </fieldset>

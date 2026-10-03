@@ -1,4 +1,5 @@
 upload/*
+backup/*
 !upload/.gitkeep
 node_modules/
 data/smtp-secret.key

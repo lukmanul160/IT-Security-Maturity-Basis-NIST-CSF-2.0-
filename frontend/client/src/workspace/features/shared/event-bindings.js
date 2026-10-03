@@ -9,9 +9,51 @@ $('chooseCsfButton').addEventListener('click', () => document.querySelector('[da
 $('choosePrivacyButton').addEventListener('click', () => document.querySelector('[data-view="privacy"]').click());
 $('chooseIso27001Button').addEventListener('click', () => document.querySelector('[data-view="iso27001"]').click());
 document.querySelector('[data-view="framework"]').addEventListener('click', () => { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('frameworkView').classList.add('active-view'); saveUiState('framework'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'framework')); });
-const sidebarToggle = $('sidebarToggle'); const setSidebarCollapsed = collapsed => { document.querySelector('.app-shell').classList.toggle('sidebar-collapsed', collapsed); sidebarToggle.querySelector('span').textContent = collapsed ? '>' : '<'; sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Minimize sidebar'); sidebarToggle.title = collapsed ? 'Expand sidebar' : 'Minimize sidebar'; localStorage.setItem(sidebarStorageKey, String(collapsed)); }; setSidebarCollapsed(localStorage.getItem(sidebarStorageKey) === 'true'); sidebarToggle.addEventListener('click', () => setSidebarCollapsed(!document.querySelector('.app-shell').classList.contains('sidebar-collapsed')));
-const sidebarGroups = [...document.querySelectorAll('.sidebar-group')]; const setSidebarGroupCollapsed = (group, collapsed) => { group.classList.toggle('is-collapsed', collapsed); group.querySelector('.sidebar-group-toggle').setAttribute('aria-expanded', String(!collapsed)); }; const syncSidebarGroups = () => { const activeItem = document.querySelector('.sidebar-group .nav-item.active'); sidebarGroups.forEach(group => setSidebarGroupCollapsed(group, !activeItem || !group.contains(activeItem))); }; sidebarGroups.forEach(group => group.querySelector('.sidebar-group-toggle').addEventListener('click', () => { const willOpen = group.classList.contains('is-collapsed'); sidebarGroups.forEach(item => setSidebarGroupCollapsed(item, item !== group || !willOpen)); })); document.querySelectorAll('.sidebar-group .nav-item').forEach(item => new MutationObserver(syncSidebarGroups).observe(item, { attributes: true, attributeFilter: ['class'] })); syncSidebarGroups();
-document.querySelector('[data-view="backups"]').addEventListener('click', showBackupsView); $('backupCreateButton').addEventListener('click', createBackup); $('backupRestoreInput').addEventListener('change', selectRestoreFile); $('backupRestoreButton').addEventListener('click', restoreBackup); $('backupBody').addEventListener('click', event => { const button = event.target.closest('[data-backup-delete]'); if (button) deleteBackup(button.dataset.backupDelete); }); $('accountButton').addEventListener('click', showAccountView); $('accountProfileForm').addEventListener('submit', saveAccountProfile); $('accountUserForm').addEventListener('submit', saveAccountUser); $('accountUserCancel').addEventListener('click', resetAccountUserForm); $('accountUsersBody').addEventListener('click', event => { const editButton = event.target.closest('[data-account-edit]'); const deleteButton = event.target.closest('[data-account-delete]'); if (editButton) editAccountUser(Number(editButton.dataset.accountEdit)); if (deleteButton) deleteAccountUser(Number(deleteButton.dataset.accountDelete)); }); $('logoutButton').addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login'; }); fetch('/api/auth/me').then(response => response.ok ? response.json() : null).then(user => { if (!user) return; currentUserRole = user.role; currentUserActions = user.actions || {}; currentUserOwnEvidenceDelete = user.ownEvidenceDelete === true; $('currentUser').textContent = user.fullName ? `${user.username} (${user.fullName})` : user.username; applyUserAccess(); if (typeof syncIsoRowActions === 'function') syncIsoRowActions(); privacyDataReady = loadPrivacyData(); privacyDataReady.catch(() => { $('saveState').textContent = 'Privacy Framework unavailable'; }); });
+const sidebarToggle = $('sidebarToggle');
+const sidebarShell = document.querySelector('.app-shell');
+const sidebarElement = document.querySelector('.sidebar');
+const updateSidebarToggle = () => {
+  const collapsed = sidebarShell.classList.contains('sidebar-collapsed') && !sidebarShell.classList.contains('sidebar-peek');
+  sidebarToggle.querySelector('.sidebar-toggle-icon').classList.toggle('is-collapsed', collapsed);
+  sidebarToggle.querySelector('.sidebar-toggle-label').textContent = collapsed ? 'Expand' : 'Collapse';
+  sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+  sidebarToggle.setAttribute('aria-expanded', String(!collapsed));
+  sidebarToggle.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+};
+const setSidebarCollapsed = collapsed => {
+  sidebarShell.classList.toggle('sidebar-collapsed', collapsed);
+  sidebarShell.classList.remove('sidebar-peek');
+  updateSidebarToggle();
+  localStorage.setItem(sidebarStorageKey, String(collapsed));
+};
+setSidebarCollapsed(false);
+sidebarToggle.addEventListener('click', () => setSidebarCollapsed(!sidebarShell.classList.contains('sidebar-collapsed')));
+const peekSidebar = open => {
+  sidebarShell.classList.toggle('sidebar-peek', open && sidebarShell.classList.contains('sidebar-collapsed'));
+  updateSidebarToggle();
+};
+let sidebarPointerInside = false;
+sidebarElement.addEventListener('mouseenter', () => { sidebarPointerInside = true; peekSidebar(true); });
+sidebarElement.addEventListener('mouseleave', () => { sidebarPointerInside = false; if (!sidebarElement.contains(document.activeElement)) peekSidebar(false); });
+sidebarElement.addEventListener('focusin', () => peekSidebar(true));
+sidebarElement.addEventListener('focusout', event => { if (!sidebarPointerInside && !sidebarElement.contains(event.relatedTarget)) peekSidebar(false); });
+sidebarElement.addEventListener('keydown', event => { if (event.key === 'Escape') { sidebarToggle.focus(); setSidebarCollapsed(true); } });
+const sidebarGroups = [...document.querySelectorAll('.sidebar-group')];
+const setSidebarGroupCollapsed = (group, collapsed) => {
+  group.classList.toggle('is-collapsed', collapsed);
+  group.querySelector('.sidebar-group-toggle').setAttribute('aria-expanded', String(!collapsed));
+};
+const syncActiveSidebarGroup = () => {
+  const activeItem = document.querySelector('.sidebar-group .nav-item.active');
+  sidebarGroups.forEach(group => setSidebarGroupCollapsed(group, !activeItem || !group.contains(activeItem)));
+};
+sidebarGroups.forEach(group => {
+  group.querySelector('.sidebar-group-toggle').addEventListener('click', () => setSidebarGroupCollapsed(group, !group.classList.contains('is-collapsed')));
+});
+const sidebarActiveObserver = new MutationObserver(syncActiveSidebarGroup);
+document.querySelectorAll('.sidebar-group .nav-item').forEach(item => sidebarActiveObserver.observe(item, { attributes: true, attributeFilter: ['class'] }));
+syncActiveSidebarGroup();
+document.querySelector('[data-view="backups"]').addEventListener('click', showBackupsView); $('backupCreateButton').addEventListener('click', createBackup); $('backupRestoreInput').addEventListener('change', selectRestoreFile); $('backupRestoreButton').addEventListener('click', restoreBackup); $('backupBody').addEventListener('click', event => { const button = event.target.closest('[data-backup-delete]'); if (button) deleteBackup(button.dataset.backupDelete); }); $('accountButton').addEventListener('click', showAccountView); $('accountProfileForm').addEventListener('submit', saveAccountProfile); $('accountUserForm').addEventListener('submit', saveAccountUser); $('accountUserCancel').addEventListener('click', resetAccountUserForm); $('accountUsersBody').addEventListener('click', event => { const editButton = event.target.closest('[data-account-edit]'); const deleteButton = event.target.closest('[data-account-delete]'); if (editButton) editAccountUser(Number(editButton.dataset.accountEdit)); if (deleteButton) deleteAccountUser(Number(deleteButton.dataset.accountDelete)); }); $('logoutButton').addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login'; }); fetch('/api/auth/me').then(response => response.ok ? response.json() : null).then(user => { if (!user) return; currentUserRole = user.role; currentUserActions = user.actions || {}; currentUserOwnEvidenceDelete = user.ownEvidenceDelete === true; $('currentUser').textContent = user.role === 'viewer' ? 'view' : user.role; $('sidebarGreeting').textContent = `Halo ${user.fullName || user.username}`; applyUserAccess(); if (typeof syncIsoRowActions === 'function') syncIsoRowActions(); privacyDataReady = loadPrivacyData(); privacyDataReady.catch(() => { $('saveState').textContent = 'Privacy Framework unavailable'; }); });
 Promise.all([loadIso27001Data(), loadIso27001SoaData(), loadIsoObjectives()]).then(() => renderUploadedFiles()).catch(() => {}); loadDefaultFile().then(loaded => { if (loaded) { renderOverview(); renderCsfTable(); renderUploadedFiles(); $('saveState').textContent = 'Data database dimuat'; } });
  $('csfSearchInput').addEventListener('input', () => { csfCorePage = 1; renderCsfTable(); }); $('csfFunctionFilter').addEventListener('change', () => { csfCorePage = 1; renderCsfTable(); }); $('csfSort').addEventListener('change', () => { csfSort = $('csfSort').value; csfCorePage = 1; renderCsfTable(); }); $('csfAssessmentButton').addEventListener('click', () => showAssessment('GV')); document.querySelector('[data-view="csf"]').addEventListener('click', () => { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('csfView').classList.add('active-view'); saveUiState('csf'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'csf')); renderCsfTable(); });
  $('privacyStartButton').addEventListener('click', () => $('privacySearchInput').focus()); $('privacySearchInput').addEventListener('input', () => { privacyAssessmentPage = 1; renderPrivacy(); }); $('privacyFunctionFilter').addEventListener('change', () => { privacyAssessmentPage = 1; renderPrivacy(); }); $('privacySort').addEventListener('change', () => { privacySort = $('privacySort').value; privacyAssessmentPage = 1; renderPrivacy(); }); document.querySelector('[data-view="privacy"]').addEventListener('click', () => { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('privacyView').classList.add('active-view'); saveUiState('privacy'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'privacy')); renderPrivacy(); });

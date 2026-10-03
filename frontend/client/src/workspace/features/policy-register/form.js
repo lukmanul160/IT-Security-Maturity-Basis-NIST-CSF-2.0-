@@ -53,8 +53,8 @@ function renderPolicyRegisterItems(items = []) {
   const rows = items.length ? items : [{}];
   container.innerHTML = rows.map((item, index) => `
     <div class="policy-item-row" data-policy-item-id="${item.id || ''}">
-      <label>Subtitle<input type="text" data-policy-item-subtitle value="${escapeHtml(item.subtitle || '')}" maxlength="200"></label>
-      <label>Content<textarea data-policy-item-content rows="3" maxlength="5000">${escapeHtml(item.content || '')}</textarea></label>
+      <label>Subtitle<input name="policy-item-${index}-subtitle" type="text" data-policy-item-subtitle value="${escapeHtml(item.subtitle || '')}" maxlength="200"></label>
+      <label>Content<textarea name="policy-item-${index}-content" data-policy-item-content rows="3" maxlength="5000">${escapeHtml(item.content || '')}</textarea></label>
       <button class="attachment-action-button danger" type="button" data-policy-item-remove${rows.length === 1 ? ' hidden' : ''}>Remove</button>
     </div>
   `).join('');

@@ -137,7 +137,7 @@ function renderPolicyDropdownOptions() {
   
   container.innerHTML = policyDropdownEditingOptions.map((opt, idx) => `
     <div class="dropdown-option-item">
-      <input type="text" value="${escapeHtml(opt)}" data-option-index="${idx}" class="policy-dropdown-option-input">
+      <input name="option-index-${idx}" type="text" value="${escapeHtml(opt)}" data-option-index="${idx}" class="policy-dropdown-option-input">
       <button type="button" class="dropdown-option-delete" data-delete-index="${idx}">Delete</button>
     </div>
   `).join('');

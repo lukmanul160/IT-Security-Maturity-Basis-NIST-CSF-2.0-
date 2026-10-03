@@ -171,7 +171,7 @@ const moduleTransfer = (() => {
       if (!view || view.querySelector('[data-module-transfer]')) continue;
       const toolbar = document.createElement('div'); toolbar.dataset.moduleTransfer = key;
       toolbar.className = 'module-transfer-toolbar';
-      toolbar.innerHTML = '<button type="button" data-import>Import JSON</button><button type="button" data-export>Export JSON</button><button type="button" data-report>Report / PDF</button><input type="file" accept=".json,application/json" hidden><span role="status" aria-live="polite"></span>';
+      toolbar.innerHTML = '<button type="button" data-import>Import JSON</button><button type="button" data-export>Export JSON</button><button type="button" data-report>Report / PDF</button><input name="module-transfer-input-1" type="file" accept=".json,application/json" hidden><span role="status" aria-live="polite"></span>';
       const status = toolbar.querySelector('[role="status"]');
       const templateButton = document.createElement('button');
       templateButton.type = 'button'; templateButton.textContent = 'Template Import';
