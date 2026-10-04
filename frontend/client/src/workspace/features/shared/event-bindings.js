@@ -213,3 +213,11 @@ const radarResizeObserver = new ResizeObserver(entries => {
   }
 });
 ['maturityRadar', 'privacyMaturityRadar'].forEach(id => radarResizeObserver.observe($(id)));
+
+// Canvas labels are drawn pixels and therefore need an explicit redraw.
+window.addEventListener('nist:language-change', () => {
+  renderRadar();
+  renderPrivacyRadar();
+  $('radarTooltip').style.display = 'none';
+  $('privacyRadarTooltip').style.display = 'none';
+});

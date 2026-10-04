@@ -96,3 +96,13 @@ storage tambahan; password SMTP terenkripsi memerlukan data/smtp-secret.key.
 Backup PostgreSQL tidak menyertakan file evidence, kunci SMTP, atau konfigurasi
 server. Ikuti panduan recovery untuk salinan lengkap. Workbook Risk Register
 operasional tidak diperlukan untuk clone dan tidak boleh dimasukkan ke repository.
+# Bahasa antarmuka / Interface language
+
+Beranda, login, dan workspace menyediakan pilihan **Indonesia** dan **English** melalui pemilih **Bahasa / Language**. Preferensi disimpan pada browser dan digunakan ketika membuka halaman berikutnya. Bahasa awal adalah Indonesia.
+
+Terjemahan antarmuka dikelola dalam `frontend/public/i18n.js` dan bekerja tanpa layanan terjemahan eksternal. Kamus mencakup navigasi serta label, tombol, placeholder, dan pesan antarmuka utama; teks yang belum tercantum dalam kamus tetap memakai bahasa sumber. Dokumen, isi kerangka kerja, data tabel pengguna, serta nilai formulir tidak diterjemahkan. Tambahkan pasangan `[teksIndonesia, teksEnglish]` untuk memperluas cakupan. Gunakan `data-no-translate` pada elemen yang harus mempertahankan teks aslinya.
+
+Run `npm run test:i18n` to check language persistence, dynamic translation, and form/data preservation. Browser checks use installed Chrome (or `CHROME_PATH`). Run `npm run build:client` after changing the Vue entry point; the shared translation script is served directly.
+
+Konten dashboard CSF, privasi, dan risiko mengikuti pilihan bahasa, termasuk ringkasan kematangan, penghitung kontrol, deskripsi fungsi, legenda tingkat kematangan, label ringkasan, dan label grafik radar. Label tabel ringkasan menggunakan `data-translate-ui`; data tabel lain tetap dipertahankan. Grafik radar digambar ulang ketika bahasa berubah tanpa mengubah skor atau target.
+

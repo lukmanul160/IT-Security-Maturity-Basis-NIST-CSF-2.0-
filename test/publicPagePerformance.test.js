@@ -15,6 +15,11 @@ test('landing screenshots load publicly with caching while workspace remains pro
   const html = await landing.text();
   assert.ok(Buffer.byteLength(html) < 120000, 'landing HTML should stay below 120 KB');
   assert.ok(!html.includes('data:image/webp;base64,'));
+  assert.ok(html.includes('src="/i18n.js"'));
+  const languageScript = await fetch(base + '/i18n.js');
+  assert.equal(languageScript.status, 200);
+  assert.match(languageScript.headers.get('content-type'), /javascript/);
+  assert.ok((await languageScript.text()).includes('nist-basis-language'));
   const images = [...html.matchAll(/src="(\/landing-media\/[^\"]+)"/g)].map(match => match[1]);
   assert.equal(images.length, 12);
   for (const image of images) {

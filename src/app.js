@@ -56,6 +56,7 @@ app.use('/landing-media', express.static(path.join(publicRoot, 'landing-media'),
 }));
 // The login page shares the compiled theme with the authenticated workspace.
 app.get('/tailwind.css', (req, res) => res.sendFile(path.join(publicRoot, 'tailwind.css')));
+app.get('/i18n.js', (req, res) => res.sendFile(path.join(publicRoot, 'i18n.js')));
 app.get('/login', (req, res) => {
 	const token = parseCookies(req.headers.cookie)[sessionCookie];
 	if (getSession(token)) return res.redirect('/app');

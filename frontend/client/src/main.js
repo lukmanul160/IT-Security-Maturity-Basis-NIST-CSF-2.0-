@@ -12,8 +12,10 @@ import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';
 async function bootstrap() {
   createApp(App).mount('#app');
   await nextTick();
+  window.NistI18n?.mount();
   await bootstrapWorkspaceRuntime({ app: workspaceRuntime, enhancements: workspaceEnhancements });
   document.documentElement.dataset.frontend = 'vue';
+  window.NistI18n?.refresh();
   window.dispatchEvent(new CustomEvent('vue:workspace-ready'));
 }
 
