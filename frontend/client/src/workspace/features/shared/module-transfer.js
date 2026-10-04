@@ -27,6 +27,9 @@ const moduleTransfer = (() => {
   const section = (key, title, url, columns, options = {}) => ({ key, title, url, columns: columns.split(' '), ...options });
   const controls = 'id function category subcategory implementation minimumEvidence applicability evidence';
   const modules = {
+    'tprm-questionnaire': { title: 'Vendor Due Diligence Questionnaire', views: ['tprmQuestionnaireView'], sections: [section('questionnaires', 'Vendor assessments', '/api/tprm-questionnaires', 'id vendorName status reviewDate result reviewer notes responses')] },
+    'questionnaire-templates': { title: 'Questionnaire Templates', views: ['questionnaireTemplateView'], sections: [section('templates', 'Questionnaire templates', '/api/questionnaire-templates', 'id template_name description sections is_default')] },
+    'tprm-register': { title: 'Third-Party Risk Register', views: ['tprmRegisterView'], sections: [section('register', 'Third-party risk register', '/api/tprm', 'id thirdParty questionnaireId serviceDependency riskLevel assessmentStatus relationshipStatus nextReview notes riskRegisterIds dueDiligenceAssessment')] },
     csf: { title: 'NIST CSF Assessment', views: ['assessmentView', 'csfView'], sections: [section('assessment', 'Maturity assessment', '/api/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true })] },
     privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true })] },
     iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'year objective indicator baseline targetValue owner evaluationFrequency periodTargets notes')] },
@@ -69,6 +72,9 @@ const moduleTransfer = (() => {
         'Risk register: riskCategory, effectedAsset, deviceName, identificationRisk wajib diisi; likelihood dan impact berupa angka 1–5. Risk ID baru dapat dikosongkan.',
         'Risk Acceptance: requestorName, assetName, department, riskDescription, benefitJustification, mitigationPlan wajib diisi; businessOwnerDecision: temporary/one_year/denied; cisDecision: approved/denied/conditional.',
         'Policy: title, category, owner, reviewCycle, approvalStatus wajib diisi. Personnel: personnelName wajib; sertifikasi: personnelId dan certificationName wajib.'
+        , 'Vendor questionnaire: vendorName wajib; status: Draft/In progress/Complete/Expired/Final; result: Pending/Approved/Approved with Conditions/Rejected. responses berisi jawaban dan referensi dokumen.',
+        'Questionnaire Templates: template_name wajib; sections berupa [["Judul bagian", ["Pertanyaan"]]]; is_default berupa boolean.',
+        'TPRM: thirdParty dan serviceDependency wajib; questionnaireId harus menunjuk vendor assessment yang sudah tersedia dengan vendorName yang sama. Import vendor questionnaire terlebih dahulu dan sesuaikan ID lokal. nextReview: YYYY-MM-DD. riskRegisterIds menunjuk Risk Register yang sudah tersedia; dueDiligenceAssessment berisi penilaian CIA.'
       ], headers,
       examples: key === 'risk-management' ? { register: [{ riskCategory: 'Technical', effectedAsset: 'Laptop User', deviceName: 'Laptop-001', identificationRisk: 'Akses tidak sah', riskOwner: 'IT Security', likelihood: 3, impact: 4, treatmentAction: 'Mitigation', deadline: '2026-12-31' }] } : {},
       data
@@ -94,6 +100,15 @@ const moduleTransfer = (() => {
     if (key === 'personnel') {
       const ids = new Set(payload.data.personnel.map(row => String(row.id)));
       if (payload.data.personnel.some(row => row.id == null) || payload.data.certifications.some(row => row.personnelId == null || !ids.has(String(row.personnelId)))) throw new Error('Relasi pegawai dan sertifikasi dalam file tidak valid.');
+    }
+    if (key === 'tprm-questionnaire') for (const row of payload.data.questionnaires) {
+      if (!String(row.vendorName || '').trim() || !['Draft', 'In progress', 'Complete', 'Expired', 'Final'].includes(row.status) || !['Pending', 'Approved', 'Approved with Conditions', 'Rejected'].includes(row.result) || (row.responses !== undefined && !object(row.responses))) throw new Error('Vendor questionnaire: nama, status, result, atau responses tidak valid.');
+    }
+    if (key === 'questionnaire-templates') for (const row of payload.data.templates) {
+      if (!String(row.template_name || '').trim() || !Array.isArray(row.sections) || !row.sections.length || row.sections.some(part => !Array.isArray(part) || part.length !== 2 || typeof part[0] !== 'string' || !part[0].trim() || !Array.isArray(part[1]) || !part[1].length || part[1].some(question => typeof question !== 'string' || !question.trim())) || (row.is_default !== undefined && typeof row.is_default !== 'boolean')) throw new Error('Questionnaire template: nama, sections, atau is_default tidak valid.');
+    }
+    if (key === 'tprm-register') for (const row of payload.data.register) {
+      if (!String(row.thirdParty || '').trim() || !String(row.serviceDependency || '').trim() || !Number.isSafeInteger(Number(row.questionnaireId)) || Number(row.questionnaireId) < 1 || (row.riskRegisterIds !== undefined && (!Array.isArray(row.riskRegisterIds) || row.riskRegisterIds.some(id => typeof id !== 'string'))) || (row.dueDiligenceAssessment !== undefined && !object(row.dueDiligenceAssessment))) throw new Error('TPRM: vendor, serviceDependency, questionnaireId, atau penilaian tidak valid.');
     }
     return payload;
   }
@@ -124,12 +139,21 @@ const moduleTransfer = (() => {
     let completed = 0;
     const personnelIds = new Map();
     try {
+      if (key === 'tprm-register' && payload.data.register.length) {
+        const vendors = await request('/api/tprm-questionnaires');
+        const linkedIds = payload.data.register.flatMap(row => row.riskRegisterIds || []);
+        const risks = linkedIds.length ? await request('/api/risk-management') : [];
+        for (const row of payload.data.register) {
+          if (!vendors.some(vendor => String(vendor.id) === String(row.questionnaireId) && vendor.vendorName === String(row.thirdParty).trim())) throw new Error('Referensi vendor tidak cocok. Import Vendor Due Diligence Questionnaire terlebih dahulu dan sesuaikan questionnaireId.');
+          if ((row.riskRegisterIds || []).some(id => !risks.some(risk => risk.riskId === id))) throw new Error('Referensi Risk Register tidak tersedia. Import Risk Management terlebih dahulu.');
+        }
+      }
       for (const item of modules[key].sections) {
         if (item.assessment) { await request(item.url, 'PUT', payload.data[item.key]); completed++; continue; }
         const existing = await request(item.url);
         for (const original of payload.data[item.key]) {
           const row = { ...original };
-          for (const field of Object.keys(row)) if (/Date$|^deadline$|^lastReview$/.test(field) && typeof row[field] === 'string') row[field] = row[field].slice(0, 10);
+          for (const field of Object.keys(row)) if (/Date$|^deadline$|^lastReview$|^nextReview$/.test(field) && typeof row[field] === 'string') row[field] = row[field].slice(0, 10);
           if (item.control) row.minimum_evidence = row.minimumEvidence;
           if (key === 'personnel' && item.key === 'certifications') {
             if (!personnelIds.has(String(row.personnelId))) throw new Error(`Pegawai ${row.personnelId} tidak terdapat dalam file.`);

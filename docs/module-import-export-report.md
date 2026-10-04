@@ -1,7 +1,8 @@
 # Import, export, dan report modul
 
 Toolbar tersedia pada NIST CSF Assessment, NIST Privacy Assessment, ISO 27001,
-Risk Acceptance, Risk Management, Policy Register, dan Personnel Certification.
+Risk Acceptance, Risk Management, Policy Register, Personnel Certification,
+Vendor Due Diligence Questionnaire, Questionnaire Templates, dan TPRM Risk Register.
 Risk Acceptance mengikuti nama modul aplikasi yang sudah ada.
 
 - **Template Import** mengunduh JSON khusus modul dengan `format`, `version`,
@@ -32,6 +33,11 @@ tetap dapat digunakan. PDF per formulir Risk Acceptance juga tetap tersedia.
 
 Referensi evidence dan attachment disertakan dalam JSON; berkas biner tidak
 disertakan. Berkas tersebut harus tersedia di server untuk dapat dibuka.
+Vendor questionnaire menyertakan responses dan referensi dokumen. Questionnaire
+Templates menyertakan sections dan is_default. TPRM menyertakan penilaian CIA,
+questionnaireId, serta riskRegisterIds. Import vendor questionnaire dan Risk
+Management terlebih dahulu jika referensinya belum tersedia, lalu sesuaikan ID
+lokal pada file TPRM. Referensi vendor dan risiko diperiksa sebelum penulisan TPRM.
 Endpoint API tetap memeriksa izin baca/tulis pengguna. Import berjalan berurutan;
 jika satu request gagal, proses berhenti dan menampilkan jumlah data yang telah
 tersimpan. Proses ini bukan transaksi atomik untuk seluruh file. Tinjau data

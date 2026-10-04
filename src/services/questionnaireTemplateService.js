@@ -161,13 +161,13 @@ async function list() {
 }
 
 async function create(data) {
-  const { template_name, description = '', sections = [] } = data;
+  const { template_name, description = '', sections = [], is_default = false } = data;
   if (!template_name) throw new Error('template_name is required');
   const normalizedSections = normalizeSections(sections);
 
   const result = await pool.query(
-    'INSERT INTO questionnaire_templates (template_name, description, sections) VALUES ($1, $2, $3) RETURNING *',
-    [template_name, description, JSON.stringify(normalizedSections)]
+    'INSERT INTO questionnaire_templates (template_name, description, sections, is_default) VALUES ($1, $2, $3, $4) RETURNING *',
+    [template_name, description, JSON.stringify(normalizedSections), is_default]
   );
 
   const row = result.rows[0];

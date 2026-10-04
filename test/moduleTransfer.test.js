@@ -8,7 +8,42 @@ function load(fetch = async () => { throw new Error('Unexpected request'); }) {
   return context.api;
 }
 function payload(module, data) { return { format: 'nist-basis-module', version: 1, module, exportedAt: '2026-09-14', data }; }
-test('every requested module exposes a transfer definition', () => { assert.equal(Object.keys(load().modules).length, 7); });
+test('every requested module exposes a transfer definition', () => { assert.equal(Object.keys(load().modules).length, 10); });
+
+test('TPRM exports include questionnaires, template sections, and CIA assessments in reports', async () => {
+  const records = {
+    '/api/tprm-questionnaires': [{ id: 1, vendorName: 'Vendor A', status: 'Draft', result: 'Pending', responses: { answer: '<answer>' } }],
+    '/api/questionnaire-templates': [{ id: 2, template_name: 'Security', sections: [['Program', ['MFA enabled?']]], is_default: true }],
+    '/api/tprm': [{ id: 3, thirdParty: 'Vendor A', questionnaireId: 1, serviceDependency: 'Hosting', dueDiligenceAssessment: { confidentiality: 4 }, riskRegisterIds: ['CSR-001'] }]
+  };
+  const api = load(async url => ({ ok: true, json: async () => records[url] }));
+  for (const key of ['tprm-questionnaire', 'questionnaire-templates', 'tprm-register']) {
+    const file = await api.collect(key);
+    api.validate(key, file);
+    const html = api.report(key, file);
+    assert.ok(html.includes(key === 'tprm-questionnaire' ? '&lt;answer&gt;' : key === 'questionnaire-templates' ? 'MFA enabled?' : 'confidentiality'));
+  }
+});
+
+test('TPRM checks vendor and risk references before writes and normalizes nextReview', async () => {
+  const calls = [];
+  const api = load(async (url, options) => {
+    calls.push({ url, ...options });
+    return { ok: true, json: async () => url === '/api/tprm-questionnaires' ? [{ id: 8, vendorName: 'Vendor A' }] : url === '/api/risk-management' ? [{ riskId: 'CSR-001' }] : options.method === 'GET' ? [{ id: 3 }] : {} };
+  });
+  const row = { id: 3, thirdParty: 'Vendor A', questionnaireId: 8, serviceDependency: 'Hosting', riskRegisterIds: ['CSR-001'], nextReview: '2026-12-01T00:00:00Z' };
+  await api.importPayload('tprm-register', payload('tprm-register', { register: [row] }));
+  assert.equal(JSON.parse(calls.at(-1).body).nextReview, '2026-12-01');
+  calls.length = 0;
+  await assert.rejects(api.importPayload('tprm-register', payload('tprm-register', { register: [{ ...row, questionnaireId: 99 }] })), /0 data.*Referensi vendor/);
+  assert.ok(calls.every(call => call.method === 'GET'));
+  await assert.rejects(api.importPayload('tprm-register', payload('tprm-register', { register: [{ ...row, riskRegisterIds: ['missing'] }] })), /Referensi Risk Register/);
+});
+
+test('invalid questionnaires and template sections are rejected before requests', async () => {
+  await assert.rejects(load().importPayload('tprm-questionnaire', payload('tprm-questionnaire', { questionnaires: [{ vendorName: 'A', status: 'Unknown', result: 'Pending' }] })), /tidak valid/);
+  await assert.rejects(load().importPayload('questionnaire-templates', payload('questionnaire-templates', { templates: [{ template_name: 'A', sections: [['Section', []]] }] })), /tidak valid/);
+});
 
 test('each module template has matching headers and passes its import format validation', () => {
   const api = load();

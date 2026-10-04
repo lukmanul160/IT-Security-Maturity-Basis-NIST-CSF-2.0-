@@ -39,4 +39,20 @@ test('ensureStore falls back when template markdown files are missing', async ()
   restore();
 });
 
+test('creating an imported template preserves its default flag and sections', async () => {
+  const sections = [['Security', ['Is MFA enabled?']]];
+  require.cache[databasePath] = { id: databasePath, filename: databasePath, loaded: true, exports: { pool } };
+  pool.query = async (sql, values) => {
+    assert.ok(sql.includes('sections, is_default'));
+    assert.equal(values[3], true);
+    return { rows: [{ id: 5, template_name: values[0], sections: values[2], is_default: values[3] }] };
+  };
+  try {
+    delete require.cache[servicePath];
+    const saved = await require(servicePath).create({ template_name: 'Imported template', sections, is_default: true });
+    assert.deepEqual(saved.sections, sections);
+    assert.equal(saved.is_default, true);
+  } finally { restore(); }
+});
+
 process.on('exit', restore);
