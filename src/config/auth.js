@@ -2,11 +2,15 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { pool } = require('./database');
 const sessions = new Map();
+let restoring = false;
+let sessionGeneration = 0;
 const sessionCookie = 'nist_session';
 const sessionLifetime = 8 * 60 * 60 * 1000;
 const dummyPasswordHash = '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a';
 
 async function authenticate(username, password) {
+	const generation = sessionGeneration;
+	if (restoring) return null;
 	if (typeof username !== 'string' || typeof password !== 'string') return null;
 	if (!/^[a-zA-Z0-9._-]{3,50}$/.test(username) || Buffer.byteLength(password, 'utf8') > 72) return null;
 
@@ -18,10 +22,12 @@ async function authenticate(username, password) {
 	const passwordHash = user?.password_hash || dummyPasswordHash;
 	if (!(await bcrypt.compare(password, passwordHash)) || !user) return null;
 
+	if (restoring || generation !== sessionGeneration) return null;
 	return { username: user.username, role: user.role };
 }
 
 function createSession(user) {
+	if (restoring) throw Object.assign(new Error('Database restore sedang berlangsung. Coba login kembali nanti.'), { status: 503 });
 	for (const [token, session] of sessions) {
 		if (Date.now() - session.createdAt >= sessionLifetime) sessions.delete(token);
 	}
@@ -33,6 +39,7 @@ function createSession(user) {
 }
 
 function getSession(token) {
+	if (restoring) return null;
 	if (!token) return null;
 
 	const session = sessions.get(token);
@@ -75,4 +82,16 @@ function parseCookies(header = '') {
 	return cookies;
 }
 
-module.exports = { authenticate, createSession, getSession, destroySession, destroyUserSessions, parseCookies, sessionCookie };
+function beginDatabaseRestore() {
+	if (restoring) throw Object.assign(new Error('Database restore sedang berlangsung.'), { status: 409 });
+	restoring = true;
+	sessionGeneration++;
+	sessions.clear();
+}
+function endDatabaseRestore() {
+	sessions.clear();
+	sessionGeneration++;
+	restoring = false;
+}
+
+module.exports = { authenticate, createSession, getSession, destroySession, destroyUserSessions, parseCookies, sessionCookie, beginDatabaseRestore, endDatabaseRestore };

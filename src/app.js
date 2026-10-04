@@ -65,7 +65,7 @@ app.get('/login', (req, res) => {
 });
 
 console.error('[app] Mounting /api routes with requireAuth');
-app.use('/api', requireAuth, apiRoutes);
+app.use('/api', requireAuth, require('./middleware/uploadCapacity').createUploadCapacity(), apiRoutes);
 
 app.get(['/', '/index.html'], (req, res) => res.sendFile(path.join(publicRoot, 'landing.html')));
 app.get('/app', requireAuth, (req, res) => res.sendFile(vueWorkspaceIndex));

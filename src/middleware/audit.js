@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const auditService = require('../services/auditService');
 const { getSession, parseCookies, sessionCookie } = require('../config/auth');
+const recovery = require('../services/auditRecoveryService').createAuditRecovery({ writeEvent: event => auditService.record(event) });
 
 function sanitize(value, depth = 0) {
   if (depth > 5) return '[truncated]';
@@ -39,7 +40,7 @@ function auditRequest(req, res, next) {
     const actor = req.user || initialActor;
     const action = req.auditDetails?.action || classify(req, res);
     const files = req.file ? [req.file] : Array.isArray(req.files) ? req.files : Object.values(req.files || {}).flat();
-    auditService.record({
+    recovery.save({
       requestId, actorUsername: actor?.username, actorRole: actor?.role,
       eventType: aborted || res.statusCode >= 400 ? 'request.error' : action,
       method: req.method, path: req.originalUrl.split('?')[0], statusCode: aborted ? 499 : res.statusCode,
@@ -56,4 +57,4 @@ function auditRequest(req, res, next) {
   res.on('close', () => { if (!res.writableFinished) record(true); });
   next();
 }
-module.exports = { auditRequest, sanitize, classify };
+module.exports = { auditRequest, sanitize, classify, startAuditRecovery: () => recovery.start() };

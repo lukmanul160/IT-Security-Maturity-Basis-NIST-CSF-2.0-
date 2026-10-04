@@ -1,5 +1,7 @@
 # Pemeriksaan keamanan OWASP — 3 Oktober 2026
 
+Status tindak lanjut: empat temuan telah ditangani di kode; lihat [catatan perbaikan](OWASP-REMEDIATION-2026-10-03.md). Isi berikut merekam keadaan sebelum perbaikan.
+
 Referensi: [OWASP Top 10:2025](https://top10.owasp.org/2025/).
 
 Lingkup: review kode backend Express, autentikasi, otorisasi, evidence, backup/restore, unggahan, audit, konfigurasi, dan sebagian rendering frontend. Pemeriksaan dilakukan pada working tree saat ini, termasuk perubahan lokal pengguna. Kode aplikasi tidak diubah. Tidak melakukan restore database nyata, serangan beban, atau pentest deployment.

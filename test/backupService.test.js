@@ -8,6 +8,7 @@ function load(error) {
   const calls = [];
   const removed = [];
   let queries = 0;
+  const restoreLifecycle = [];
   const mocks = {
     fs: { promises: { mkdir: async () => {}, stat: async () => ({ size: 100, mtime: new Date() }), rm: async file => removed.push(file) } },
     path,
@@ -17,9 +18,10 @@ function load(error) {
     '../config/paths': { backupRoot: path.join('test', 'backups') },
     '../config/database': { pool: { query: () => { queries++; throw new Error('Unexpected partial snapshot'); } } }
   };
+  mocks['../config/auth'] = { beginDatabaseRestore: () => restoreLifecycle.push('begin'), endDatabaseRestore: () => restoreLifecycle.push('end') };
   const context = vm.createContext({ require: name => mocks[name], module: { exports: {} }, process: { platform: 'linux', env: { PG_DUMP_PATH: 'configured-pg-dump', PG_RESTORE_PATH: 'configured-pg-restore' } } });
   vm.runInContext(fs.readFileSync('src/services/backupService.js', 'utf8'), context);
-  return { api: context.module.exports, calls, removed, queries: () => queries };
+  return { api: context.module.exports, calls, removed, restoreLifecycle, queries: () => queries };
 }
 
 test('backup dumps the whole configured database without table or schema exclusions', async () => {
@@ -52,4 +54,12 @@ test('dump restore uses one transaction for all database objects', async () => {
   assert.equal(stub.calls[0].file, 'configured-pg-restore');
   assert.ok(stub.calls[0].args.includes('--single-transaction'));
   assert.ok(stub.calls[0].args.includes('--clean'));
+  assert.deepEqual(stub.restoreLifecycle, ['begin', 'end']);
+});
+
+test('failed restore releases authentication lock and removes the uploaded archive', async () => {
+  const stub = load(new Error('restore failed'));
+  await assert.rejects(stub.api.restoreBackup({ path: 'temporary.dump', originalname: 'nist-basis-20261002T000000Z.dump' }), /restore failed/);
+  assert.deepEqual(stub.restoreLifecycle, ['begin', 'end']);
+  assert.deepEqual(stub.removed, ['temporary.dump']);
 });

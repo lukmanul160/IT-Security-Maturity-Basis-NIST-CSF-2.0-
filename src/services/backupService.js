@@ -5,6 +5,7 @@ const { promisify } = require('util');
 const { database } = require('../config/env');
 const { backupRoot } = require('../config/paths');
 const { pool } = require('../config/database');
+const { beginDatabaseRestore, endDatabaseRestore } = require('../config/auth');
 
 const execFileAsync = promisify(execFile);
 const backupNamePattern = /^nist-basis-\d{8}T\d{6}Z\.(dump|json)$/;
@@ -103,7 +104,10 @@ async function restoreBackup(file) {
   }
   const environment = { ...process.env };
   if (!database.url && database.password) environment.PGPASSWORD = database.password;
+  let restoreStarted = false;
   try {
+    beginDatabaseRestore();
+    restoreStarted = true;
     if (path.extname(file.originalname).toLowerCase() === '.json') {
       await restoreJsonSnapshot(file.path);
     } else {
@@ -120,6 +124,7 @@ async function restoreBackup(file) {
     failure.status = error.status || 500;
     throw failure;
   } finally {
+    if (restoreStarted) endDatabaseRestore();
     await fs.rm(file.path, { force: true });
   }
 }

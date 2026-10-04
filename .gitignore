@@ -3,6 +3,7 @@ backup/*
 !upload/.gitkeep
 node_modules/
 data/smtp-secret.key
+data/audit-pending/
 .env
 .key
 .env.*

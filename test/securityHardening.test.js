@@ -6,6 +6,30 @@ const accounts = require('../src/services/accountService');
 const { createLoginRateLimit } = require('../src/middleware/loginRateLimit');
 test.after(() => pool.end());
 
+test('database restore revokes old sessions and prevents authentication until completed', async t => {
+  const token = auth.createSession({ username: 'restore-target', role: 'admin' });
+  auth.beginDatabaseRestore();
+  try {
+    assert.equal(auth.getSession(token), null);
+    assert.throws(() => auth.createSession({ username: 'restore-target', role: 'admin' }), { status: 503 });
+    assert.throws(() => auth.beginDatabaseRestore(), { status: 409 });
+    assert.equal(await auth.authenticate('restore-target', 'Password123'), null);
+  } finally { auth.endDatabaseRestore(); }
+  assert.equal(auth.getSession(token), null);
+  const fresh = auth.createSession({ username: 'restore-target', role: 'viewer' });
+  assert.equal(auth.getSession(fresh).role, 'viewer');
+  auth.destroySession(fresh);
+});
+
+test('password verification rejects oversized current password before bcrypt', async t => {
+  t.mock.method(pool, 'query', async () => ({ rows: [{ id: 1, username: 'target', password_hash: 'unused' }] }));
+  const bcrypt = require('bcryptjs');
+  let comparisons = 0;
+  t.mock.method(bcrypt, 'compare', async () => { comparisons++; return true; });
+  await assert.rejects(accounts.updatePassword('target', { currentPassword: 'a'.repeat(73), newPassword: 'Replacement123', confirmPassword: 'Replacement123' }), { status: 400 });
+  assert.equal(comparisons, 0);
+});
+
 test('new login replaces same account session without affecting other accounts', () => {
   const first = auth.createSession({ username: 'single-device', role: 'user' });
   const other = auth.createSession({ username: 'independent-device', role: 'viewer' });

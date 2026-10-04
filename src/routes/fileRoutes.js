@@ -17,7 +17,10 @@ router.get('/access/*path', controller.access);
 router.get('/open/*path', controller.open);
 router.get('/open-page/*path', controller.getOpenPage);
 router.put('/open-page/*path', controller.setOpenPage);
-router.put('/*path', controller.replacementUpload.single('file'), controller.replace);
+router.put('/*path', async (req, res, next) => {
+  await require('../services/evidenceAccessService').assertAccess(Array.isArray(req.params.path) ? req.params.path.join('/') : req.params.path, req.user);
+  next();
+}, controller.replacementUpload.single('file'), controller.replace);
 // All file operations, including open/download, enforce uploader ownership in the controller.
 router.get('/*path', controller.download);
 router.delete('/*path', controller.remove);

@@ -38,6 +38,7 @@ async function start() {
   await ensurePolicyRegisterStore();
   await require('./services/policyReminderService').ensureStore();
   await ensureAuditStore();
+  require('./middleware/audit').startAuditRecovery();
   await require('./services/auditFindingService').ensureStore();
   await require('./services/auditFindingReminderService').ensureStore();
   await ensureBackupRoot();

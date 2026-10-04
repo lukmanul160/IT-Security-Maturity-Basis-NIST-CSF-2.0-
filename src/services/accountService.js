@@ -36,7 +36,7 @@ async function updateProfile(username, data) {
   if (fullName.length > 120) throw Object.assign(new Error('Nama maksimal 120 karakter'), { status: 400 });
   let passwordHash = user.password_hash;
   if (data.newPassword !== undefined || data.confirmPassword !== undefined || data.currentPassword !== undefined) {
-    if (typeof data.currentPassword !== 'string' || !(await bcrypt.compare(data.currentPassword, user.password_hash))) throw Object.assign(new Error('Password saat ini salah'), { status: 400 });
+    if (typeof data.currentPassword !== 'string' || Buffer.byteLength(data.currentPassword, 'utf8') > 72 || !(await bcrypt.compare(data.currentPassword, user.password_hash))) throw Object.assign(new Error('Password saat ini salah'), { status: 400 });
     if (data.newPassword !== data.confirmPassword) throw Object.assign(new Error('Konfirmasi password tidak cocok'), { status: 400 });
     validatePassword(data.newPassword);
     passwordHash = await bcrypt.hash(data.newPassword, 12);
@@ -49,7 +49,7 @@ async function updateProfile(username, data) {
 async function updatePassword(username, data) {
   const user = await getByUsername(username);
   if (!user) throw Object.assign(new Error('User not found'), { status: 404 });
-  if (typeof data.currentPassword !== 'string' || !(await bcrypt.compare(data.currentPassword, user.password_hash))) throw Object.assign(new Error('Password saat ini salah'), { status: 400 });
+  if (typeof data.currentPassword !== 'string' || Buffer.byteLength(data.currentPassword, 'utf8') > 72 || !(await bcrypt.compare(data.currentPassword, user.password_hash))) throw Object.assign(new Error('Password saat ini salah'), { status: 400 });
   if (data.newPassword !== data.confirmPassword) throw Object.assign(new Error('Konfirmasi password tidak cocok'), { status: 400 });
   validatePassword(data.newPassword);
   const passwordHash = await bcrypt.hash(data.newPassword, 12);

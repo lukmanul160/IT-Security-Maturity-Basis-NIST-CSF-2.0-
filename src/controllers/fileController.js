@@ -1,7 +1,6 @@
 const fileService = require('../services/fileService');
 const evidenceAccess = require('../services/evidenceAccessService');
 const multer = require('multer');
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { uploadRoot } = require('../config/paths');
@@ -16,16 +15,7 @@ const inlineFileTypes = new Set([
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
 ]);
 const upload = multer({
-	storage: multer.diskStorage({
-		destination: (req, file, callback) => {
-			const destination = path.join(uploadRoot, '.incoming');
-			fs.mkdir(destination, { recursive: true }, error => callback(error, destination));
-		},
-		filename: (req, file, callback) => {
-			const uniqueName = `${Date.now()}-${crypto.randomBytes(12).toString('hex')}-${safeSegment(file.originalname)}`;
-			callback(null, uniqueName);
-		},
-	}),
+	storage: require('../services/boundedUploadStorage').createBoundedUploadStorage(path.join(uploadRoot, '.incoming')),
 	fileFilter: (req, file, callback) => {
 		try {
 			fileService.validateUploadFile(file.originalname, file.mimetype);
