@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 import { createApp, nextTick } from 'vue';
 import App from './App.vue';
 import './vue-shell.css';

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 const app = require('./app');
 const { port } = require('./config/env');
 const { ensureUploadRoot } = require('./services/fileService');
