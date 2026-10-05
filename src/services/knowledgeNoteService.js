@@ -22,6 +22,7 @@ async function ensureStore() {
     EXECUTE format('DROP INDEX IF EXISTS %I.knowledge_notes_title_unique',table_schema);
   END $$`);
   await pool.query('CREATE TABLE IF NOT EXISTS knowledge_note_folders (path TEXT PRIMARY KEY)');
+  await require('./knowledgeImageService').ensureStore();
 }
 const selection = 'id, title, content, folder, version, updated_at AS "updatedAt"';
 async function folders() { return (await pool.query('SELECT path FROM knowledge_note_folders ORDER BY path')).rows.map(row=>row.path); }
@@ -42,6 +43,7 @@ async function moveFolder(source, destination) {
     for (let i=0;i<subtree.length;i++) await client.query('UPDATE knowledge_note_folders SET path=$1 WHERE path=$2',[targets[i],subtree[i]]);
     await storeFolder(client,destination);
     await client.query("UPDATE knowledge_notes SET folder=$2 || SUBSTRING(folder FROM $3::integer), version=version+1, updated_at=NOW() WHERE folder=$1 OR starts_with(folder,$1 || '/')",[source,destination,[...source].length+1]);
+    await client.query("UPDATE knowledge_note_images SET path=$2 || SUBSTRING(path FROM $3::integer),folder=$2 || SUBSTRING(folder FROM $3::integer) WHERE folder=$1 OR starts_with(folder,$1 || '/')",[source,destination,[...source].length+1]);
     await client.query('COMMIT');
   } catch(error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   return {folders:await folders(),notes:await list()};
@@ -53,8 +55,9 @@ async function removeFolder(path, mode = 'empty') {
   try {
     await client.query('BEGIN');
     await client.query('LOCK TABLE knowledge_note_folders, knowledge_notes IN SHARE ROW EXCLUSIVE MODE');
-    if (mode === 'all') await client.query("DELETE FROM knowledge_notes WHERE folder=$1 OR starts_with(folder,$1 || '/')",[path]);
+    if (mode === 'all') {await client.query("DELETE FROM knowledge_notes WHERE folder=$1 OR starts_with(folder,$1 || '/')",[path]);await client.query("DELETE FROM knowledge_note_images WHERE folder=$1 OR starts_with(folder,$1 || '/')",[path]);}
     else if((await client.query("SELECT id FROM knowledge_notes WHERE folder=$1 OR starts_with(folder,$1 || '/') LIMIT 1",[path])).rowCount) throw fail('Folder masih berisi catatan. Gunakan Hapus semua isi folder untuk menghapus folder beserta catatannya.',409);
+    if(mode==='empty'&&(await client.query("SELECT id FROM knowledge_note_images WHERE folder=$1 OR starts_with(folder,$1 || '/') LIMIT 1",[path])).rowCount)throw fail('Folder masih berisi gambar. Gunakan Hapus semua isi folder.',409);
     if(!(await client.query("DELETE FROM knowledge_note_folders WHERE path=$1 OR starts_with(path,$1 || '/')",[path])).rowCount) throw fail('Folder tidak ditemukan.',404);
     await client.query('COMMIT');
   } catch(error) {await client.query('ROLLBACK');throw error;}finally{client.release();}
@@ -77,10 +80,12 @@ async function update(id,data) {
     return result.rows[0];
   } catch(error) { if(error.code === '23505') throw fail(`Catatan ${note.folder ? note.folder+'/' : ''}${note.title} sudah ada di folder yang sama.`,409); throw error; }
 }
-async function importNotes(notes, folderPaths = []) {
+async function importNotes(notes, folderPaths = [], images = []) {
+  if(!Array.isArray(images)||images.length>100)throw fail('Impor maksimal 100 gambar sekaligus.');
+  images.forEach(image=>require('./knowledgeImageService').validate(image));
   if (!Array.isArray(folderPaths) || folderPaths.length > 500) throw fail('Daftar folder tidak valid (maksimal 500).');
   const importedFolders = folderPaths.map(validateFolder);
-  if (!Array.isArray(notes) || (!notes.length && !importedFolders.length) || notes.length > 200) throw fail('Impor maksimal 200 catatan sekaligus.');
+  if (!Array.isArray(notes) || (!notes.length && !importedFolders.length && !images.length) || notes.length > 200) throw fail('Impor maksimal 200 catatan sekaligus.');
   const values = notes.map(validate);
   const paths = new Set();
   for (const note of values) {
@@ -92,6 +97,7 @@ async function importNotes(notes, folderPaths = []) {
   try {
     await client.query('BEGIN');
     for (const folder of importedFolders) await storeFolder(client,folder);
+    for(const image of images){await storeFolder(client,image.path.split('/').slice(0,-1).join('/'));await require('./knowledgeImageService').store(client,image);}
     for (const note of values) { await storeFolder(client,note.folder); await client.query('INSERT INTO knowledge_notes (title,content,folder) VALUES ($1,$2,$3)',[note.title,note.content,note.folder]); }
     await client.query('COMMIT');
   } catch(error) { await client.query('ROLLBACK'); if(error.code === '23505') throw fail('Catatan dengan folder dan judul yang sama sudah ada. Impor dibatalkan; gunakan folder lain atau ubah judul catatan di folder tersebut.',409); throw error; }

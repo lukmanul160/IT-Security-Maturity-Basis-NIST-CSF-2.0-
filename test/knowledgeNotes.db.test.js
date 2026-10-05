@@ -6,7 +6,7 @@ test('legacy migration and folder API preserve notes through moves, conflicts an
   const acquire=savedConnect.bind(pool);
   const raw=async(sql,values)=>{const client=await acquire();try{return await client.query(sql,values);}finally{client.release();}};
   const schema=`notes_api_test_${process.pid}_${Date.now()}`;
-  const rewrite=sql=>sql.replace(/\b(knowledge_notes|knowledge_note_folders)\b/g,`"${schema}".$1`);
+  const rewrite=sql=>sql.replace(/\b(knowledge_notes|knowledge_note_folders|knowledge_note_images)\b/g,`"${schema}".$1`);
   let server;
   pool.options.connectionTimeoutMillis=30000;
   try {
@@ -21,7 +21,7 @@ test('legacy migration and folder API preserve notes through moves, conflicts an
     const legacy=(await service.list())[0];assert.equal(legacy.content,'preserved');assert.equal(legacy.folder,'');
     await service.createFolder('Security/Policies/Drafts');await service.createFolder('Archive');await service.createFolder('Empty');
     const note=await service.create({title:'Policy',folder:'Security/Policies',content:'[[Legacy]]'});
-    const express=require('express'),app=express();app.use(express.json());app.use((req,res,next)=>{req.user={role:'admin'};next();});app.use('/notes',require('../src/routes/knowledgeNoteRoutes'));app.use((error,req,res,next)=>res.status(error.status||500).json({error:error.message}));
+    const express=require('express'),app=express();app.use(express.json());app.use((req,res,next)=>{req.user={role:req.get('x-test-role')||'admin'};next();});app.use('/notes',require('../src/routes/knowledgeNoteRoutes'));app.use((error,req,res,next)=>res.status(error.status||500).json({error:error.message}));
     server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
     const base=`http://127.0.0.1:${server.address().port}/notes`;
     const request=(url,method='GET',body)=>fetch(base+url,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
@@ -89,6 +89,27 @@ test('legacy migration and folder API preserve notes through moves, conflicts an
     const link=wikiLinkRanges(index.content,loaded,index.folder)[0];
     assert.equal(link.id,String(target.id),'root Index resolves the explicit nested folder even with duplicate titles');
     assert.equal(noteIdFromHash(new URL(link.href,'http://localhost').hash),String(target.id),'generated URL opens the saved nested note');
+    const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+    const withImages=(notes,imagePath)=>{const body=new FormData();body.append('payload',JSON.stringify({notes,folders:[]}));body.append('paths',JSON.stringify([imagePath]));body.append('images',new Blob([png],{type:'image/png'}),'picture.png');return body;};
+    response=await fetch(base+'/import-with-images',{method:'POST',body:withImages([{title:'Photo note',folder:'Pictures',content:'![[picture.png]]'}],'Pictures/picture.png')});
+    assert.equal(response.status,201,await response.clone().text());
+    const importedImages=await (await request('/images')).json();
+    const image=importedImages.find(image=>image.path==='Pictures/picture.png');
+    assert.ok(image);
+    assert.equal((await fetch(base+'/images/'+image.id,{headers:{'x-test-role':'no-access'}})).status,403,'image downloads require Knowledge Notes access');
+    assert.equal((await fetch(base+'/images',{headers:{'x-test-role':'no-access'}})).status,403,'image paths require Knowledge Notes access');
+    response=await request('/images/'+image.id);
+    assert.equal(response.headers.get('content-type'),'image/png');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()),png);
+    response=await fetch(base+'/import-with-images',{method:'POST',body:withImages([{title:'Photo note',folder:'Pictures',content:''}],'Rollback/picture.png')});
+    assert.equal(response.status,409);
+    assert.ok(!(await (await request('/images')).json()).some(image=>image.path==='Rollback/picture.png'),'note conflicts roll back image uploads');
+    const zip=Buffer.from(await (await request('/export')).arrayBuffer());
+    assert.ok(zip.includes(Buffer.from('Pictures/picture.png')),'ZIP export includes original image bytes and paths');
+    await service.moveFolder('Pictures','MovedPictures');
+    assert.ok((await (await request('/images')).json()).some(image=>image.id===importedImages[0].id&&image.path==='MovedPictures/picture.png'));
+    assert.equal((await request('/folders','DELETE',{path:'MovedPictures',mode:'all'})).status,200);
+    assert.equal((await request('/images/'+image.id)).status,404);
   } finally {
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
     pool.query=savedQuery;pool.connect=savedConnect;

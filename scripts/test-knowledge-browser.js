@@ -12,13 +12,13 @@ class Cdp {
   async connect(){await new Promise((resolve,reject)=>{this.socket.addEventListener('open',resolve);this.socket.addEventListener('error',reject);});this.socket.addEventListener('message',event=>{const message=JSON.parse(event.data);if(message.id){const handler=this.pending.get(message.id);this.pending.delete(message.id);if(handler)message.error?handler.reject(new Error(message.error.message)):handler.resolve(message.result);}if(message.method==='Runtime.exceptionThrown')this.errors.push(message.params.exceptionDetails.exception?.description||message.params.exceptionDetails.text);});}
   send(method,params={}){return new Promise((resolve,reject)=>{const id=++this.id,timer=setTimeout(()=>{this.pending.delete(id);reject(new Error('CDP timeout: '+method));},60000);this.pending.set(id,{resolve:value=>{clearTimeout(timer);resolve(value);},reject:error=>{clearTimeout(timer);reject(error);}});this.socket.send(JSON.stringify({id,method,params}));});}
   async evaluate(expression){const result=await this.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(result.exceptionDetails)throw new Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result.value;}
-  async wait(expression){for(let i=0;i<400;i++){if(await this.evaluate(`Boolean(${expression})`))return;await delay(100);}throw new Error('Timed out: '+expression);}
+  async wait(expression){for(let i=0;i<400;i++){try{if(await this.evaluate(`Boolean(${expression})`))return;}catch(error){if(!/Inspected target navigated|Cannot find context|Execution context.*destroyed/i.test(error.message))throw error;}await delay(100);}throw new Error('Timed out: '+expression);}
 }
 async function run(){
   const schema=`notes_test_${process.pid}_${Date.now()}`;
   const savedQuery=pool.query,originalConnect=pool.connect.bind(pool);
   const originalQuery=async(sql,...args)=>{const connection=await originalConnect();try{return await connection.query(sql,...args);}finally{connection.release();}};
-  const rewrite=sql=>typeof sql==='string'?sql.replace(/\b(knowledge_notes|knowledge_note_folders)\b/g,`"${schema}".$1`):sql;
+  const rewrite=sql=>typeof sql==='string'?sql.replace(/\b(knowledge_notes|knowledge_note_folders|knowledge_note_images)\b/g,`"${schema}".$1`):sql;
   const profile=path.join(os.tmpdir(),`nist-notes-browser-${process.pid}-${Date.now()}`);
   let server,chrome,client,vite;
   try {
@@ -29,6 +29,8 @@ async function run(){
     await service.createFolder('Security/Policies');await service.createFolder('Archive');
     const home=await service.create({title:'Home',content:'[[Policy]]',folder:''});
     const policy=await service.create({title:'Policy',content:'**important** [[Home]]',folder:'Security/Policies'});
+    const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+    await service.importNotes([{title:'Image example',folder:'Examples',content:'# Pedoman\n\nText before\n\n![[flowchart.png]]\n\nText after [[Home]]'}],[],[{path:'Examples/flowchart.png',content:png}]);
     const stale={...policy};await service.update(policy.id,{...policy,content:'**important** [[Home]]'});
     await assert.rejects(()=>service.update(stale.id,stale),{status:409});
     await assert.rejects(()=>service.removeFolder('Security'),{status:409});
@@ -57,7 +59,7 @@ async function run(){
     await search('folder:Security file:Policy.md');await client.wait('document.querySelectorAll("[data-search-note]").length===1');
     await search('Home','title');await client.wait(`document.querySelector('[data-search-note="${home.id}"]')`);
     await client.evaluate(`document.querySelector('[data-search-note="${home.id}"]').click()`);
-    await client.wait(`document.querySelector('[aria-label="Judul catatan"]')?.value==="Home"`);
+    await client.wait('document.querySelector(".layout main>input")?.value==="Home"');
     await search('');await client.wait('document.querySelector(".search-results")===null');
     console.log('Browser: file/path, body snippets, field operators, title filter and result navigation');
     assert.equal(await client.evaluate(`document.querySelector('[data-folder="Security/Policies"]')===null`),true);
@@ -93,7 +95,7 @@ async function run(){
     assert.ok(await client.evaluate('document.querySelector(".wiki-suggestions [role=option]").textContent.includes("Home.md")'));
     await key('Enter','Enter');await client.wait('document.querySelector(".wiki-suggestions")===null');
     assert.ok(await client.evaluate('document.querySelector(".tiptap").textContent.includes("[[Home]] [[Home]]")'));
-    await client.send('Input.insertText',{text:' [[]]'});await client.wait('document.querySelectorAll(".wiki-suggestions [role=option]").length===2');
+    await client.send('Input.insertText',{text:' [[]]'});await client.wait('document.querySelectorAll(".wiki-suggestions [role=option]").length===3');
     await client.evaluate('Array.from(document.querySelectorAll(".wiki-suggestions [role=option]")).find(b=>b.textContent.includes("Archive/Policy.md")).click()');
     await client.wait('document.querySelector(".tiptap").textContent.includes("[[Archive/Policy]]")');
     assert.equal(await client.evaluate('document.querySelector(".tiptap").textContent.includes("[[]]")'),false);
@@ -109,13 +111,13 @@ async function run(){
     await client.send('Page.reload');await client.wait('document.documentElement.dataset.frontend === "vue"');await client.wait(`document.querySelector('[data-note="${policy.id}"]')`);await client.evaluate(`document.querySelector('[data-note="${policy.id}"]').click()`);
     await client.wait('document.querySelectorAll(".tiptap ol>li").length===2');
     await client.evaluate(`(()=>{const el=document.querySelector('.tiptap'),data=new DataTransfer();data.setData('text/html','<img src=x onerror="window.editorXss=1"><script>window.editorXss=1</script><a href="javascript:window.editorXss=1">unsafe</a>');el.focus();el.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));})()`);
-    assert.equal(await client.evaluate('Boolean(window.editorXss || document.querySelector(".tiptap img,.tiptap script,.tiptap a[href^=javascript]"))'),false);
+    assert.equal(await client.evaluate('Boolean(window.editorXss || document.querySelector(".tiptap img[onerror],.tiptap script,.tiptap a[href^=javascript]"))'),false);
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');await delay(100);
     console.log('Browser: numbering, list nesting, Markdown persistence, wikilinks and safe paste');
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Graf hubungan").click()');
     await client.wait('document.querySelector(".knowledge-graph canvas")?.width > 0');
     await client.evaluate('Array.from(document.querySelectorAll(".zoom-tools button")).find(b=>b.textContent==="Jeda").click()');await delay(100);
-    assert.equal(await client.evaluate('document.querySelector(".graph-info").textContent.includes("2 catatan")'),true);
+    assert.equal(await client.evaluate('document.querySelector(".graph-info").textContent.includes("3 catatan")'),true);
     const originalZoom=await client.evaluate('document.querySelector(".zoom-tools span").textContent');
     const rect=await client.evaluate('document.querySelector(".knowledge-graph canvas").getBoundingClientRect().toJSON()');
     await client.send('Input.dispatchMouseEvent',{type:'mouseWheel',x:rect.x+rect.width/2,y:rect.y+rect.height/2,deltaX:0,deltaY:-200});await delay(100);
@@ -134,6 +136,42 @@ async function run(){
     await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:nodePoint.x+70,y:nodePoint.y+35,button:'left',clickCount:1});
     await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:nodePoint.x+70,y:nodePoint.y+35,button:'left',clickCount:1});await client.wait('document.querySelector("#knowledgeNotesView .tiptap")');
     console.log('Browser: canvas wheel zoom, background pan, node drag and click-to-open');
+    await search('Image example','title');await client.wait('document.querySelectorAll("[data-search-note]").length===1');
+    await client.evaluate('document.querySelector("[data-search-note]").click()');
+    await client.wait('document.querySelector(".tiptap img")?.naturalWidth>0');
+    assert.ok(await client.evaluate('document.querySelector(".tiptap").textContent.includes("Text before")&&document.querySelector(".tiptap").textContent.includes("Text after")'));
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Pratinjau").click()');
+    await client.wait('document.querySelector(".is-readonly .tiptap img")?.naturalWidth>0');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Editor").click()');
+    await client.wait('document.querySelector(".tiptap [data-note-id]")');
+    const wikiRect=await client.evaluate('(()=>{const link=document.querySelector(".tiptap [data-note-id]");link.scrollIntoView({block:"center"});return link.getBoundingClientRect().toJSON();})()');
+    await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:wikiRect.x+wikiRect.width/2,y:wikiRect.y+wikiRect.height/2,button:'left',clickCount:1,modifiers:2});
+    await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:wikiRect.x+wikiRect.width/2,y:wikiRect.y+wikiRect.height/2,button:'left',clickCount:1,modifiers:2});
+    await client.wait('document.querySelector(".layout main>input")?.value==="Home"');
+    console.log('Browser: text plus embedded image renders in editor and preview; Ctrl+click opens linked note');
+    for(const nested of [false,true]){
+      const title=nested?'Imported nested':'Imported mixed';
+      const selector=nested?'input[webkitdirectory]':'input[accept^=".md"]';
+      await client.evaluate(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(png.toString('base64'))}),c=>c.charCodeAt(0));const data=new DataTransfer();const note=new File(['# Imported\\n\\n![[demo.png]]'],'${title}.md',{type:'text/markdown'});const image=new File([bytes],'demo.png',{type:'image/png'});if(${nested}){Object.defineProperty(note,'webkitRelativePath',{value:'DemoFolder/Subfolder/'+note.name});Object.defineProperty(image,'webkitRelativePath',{value:'DemoFolder/Subfolder/demo.png'});}data.items.add(note);data.items.add(image);const input=document.querySelector(${JSON.stringify(selector)});input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+      await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("gambar berhasil diimpor")');
+      const imported=(await service.list()).find(note=>note.title===title);assert.ok(imported);
+      assert.equal(imported.folder,nested?'DemoFolder/Subfolder':'');
+      await search(title,'title');await client.wait('document.querySelectorAll("[data-search-note]").length===1');
+      await client.evaluate('document.querySelector("[data-search-note]").click()');
+      await client.wait('document.querySelector(".tiptap img")?.naturalWidth>0');
+      // Return to the root note so the next import has a root destination.
+      await search('Home','title');await client.wait(`document.querySelector('[data-search-note="${home.id}"]')`);await client.evaluate(`document.querySelector('[data-search-note="${home.id}"]').click()`);
+    }
+    console.log('Browser: both file import and nested folder import retain Markdown plus image attachments');
+    await search('Imported nested','title');await client.wait('document.querySelectorAll("[data-search-note]").length===1');await client.evaluate('document.querySelector("[data-search-note]").click()');await client.wait('document.querySelector(".tiptap img")?.naturalWidth>0');
+    await client.evaluate(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(png.toString('base64'))}),c=>c.charCodeAt(0));const data=new DataTransfer();data.items.add(new File([bytes],'inserted.png',{type:'image/png'}));const input=document.querySelector('.knowledge-text-editor input[type=file]');input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+    await client.wait('document.querySelector(".knowledge-text-editor [role=status]")?.textContent.includes("Gambar dimasukkan")');
+    await client.wait('document.querySelectorAll(".tiptap img").length===2');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
+    await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Catatan disimpan")');
+    assert.ok((await service.list()).find(note=>note.title==='Imported nested').content.includes('inserted.png]]'));
+    console.log('Browser: inserting a new image uploads, renders, and persists its reference with the note');
+
     assert.deepEqual(client.errors,[]);
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Graf hubungan").click()');await delay(150);
     await fs.mkdir(path.join(__dirname,'../output/knowledge-notes'),{recursive:true});

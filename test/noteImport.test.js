@@ -53,7 +53,7 @@ test('unavailable files and directories do not discard readable siblings',async(
  const onUnreadable=(path,error)=>failures.push(path);
  const root={name:'Root',async *values(){
   yield {kind:'file',name:'missing.md',getFile:async()=>{throw new Error('Not found');}};
-  yield {kind:'file',name:'image.png',getFile:async()=>{throw new Error('Must not read unsupported files');}};
+  yield {kind:'file',name:'image.pdf',getFile:async()=>{throw new Error('Must not read unsupported files');}};
   yield {kind:'directory',name:'broken',async *values(){throw new Error('Directory not found');}};
   yield {kind:'directory',name:'good',async *values(){yield {kind:'file',name:'Note.md',getFile:async()=>file('Note.md','','Readable')};}};
  }};

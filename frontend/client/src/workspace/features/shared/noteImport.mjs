@@ -9,9 +9,9 @@ export async function collectDirectoryFiles(directory, parent = '', { onUnreadab
     if (entry.kind === 'directory') {
       files.push(...await collectDirectoryFiles(entry,prefix,{onUnreadable,onFolder}));
     } else if (entry.kind === 'file') {
-      if (!/\.(md|txt)$/i.test(entry.name)) continue;
+      if (!/\.(md|txt|png|jpe?g|gif|webp)$/i.test(entry.name)) continue;
       const file = await entry.getFile();
-      files.push({ name:file.name,size:file.size,webkitRelativePath:prefix+'/'+file.name,text:()=>file.text() });
+      files.push({ name:file.name,size:file.size,webkitRelativePath:prefix+'/'+file.name,text:()=>file.text(),originalFile:file });
     }
     } catch (error) { if (!onUnreadable) throw error; onUnreadable(entryPath,error); }
   }} catch (error) { if (!onUnreadable) throw error; onUnreadable(prefix,error); }

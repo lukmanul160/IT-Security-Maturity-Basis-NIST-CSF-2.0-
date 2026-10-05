@@ -1,6 +1,6 @@
 export function links(content) {
   const text = content.replace(/```[\s\S]*?```/g,'').replace(/`[^`\n]*`/g,'');
-  return [...new Set([...text.matchAll(/\[\[([^\]\n]+)\]\]/g)].map(match=>match[1].split('|')[0].split('#')[0].trim()).filter(Boolean))];
+  return [...new Set([...text.matchAll(/(?<!!)\[\[([^\]\n]+)\]\]/g)].map(match=>match[1].split('|')[0].split('#')[0].trim()).filter(Boolean))];
 }
 export function resolveNote(notes, target, sourceFolder = '') {
   const key=target.trim().replace(/\.(md|txt)$/i,'');
