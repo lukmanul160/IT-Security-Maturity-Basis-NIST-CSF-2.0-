@@ -36,6 +36,40 @@ Restore dump memakai satu transaksi agar kegagalan tidak meninggalkan hasil
 restore setengah selesai. Restore JSON lama tetap tersedia untuk kompatibilitas
 dan hanya memulihkan data tabel pada schema yang sudah tersedia.
 
+Restore `.dump` memakai `--no-owner --no-acl`: objek yang dibuat menjadi milik
+role database tujuan, dan GRANT/REVOKE dari instalasi asal tidak dipulihkan.
+Ini memungkinkan pemindahan dari role `postgres`/`nist_app` ke `blackowl` pada
+Docker tanpa harus membuat role asal. Hak database tambahan perlu diatur
+kembali oleh DBA jika instalasi menggunakan beberapa role.
+
+## Jika restore gagal pada Docker
+
+Catat pesan error pada halaman restore, lalu periksa:
+
+```text
+docker compose --env-file .env.docker logs --tail 100 app db
+docker compose --env-file .env.docker exec app pg_restore --version
+```
+
+- `role ... does not exist`: gunakan versi aplikasi yang sudah memakai
+  `--no-owner --no-acl`, lalu rebuild image sesuai [panduan update](UPDATE_DOCKER.md).
+- `unsupported version ... in file header` atau SQL yang tidak didukung:
+  periksa versi PostgreSQL pembuat backup. Docker saat ini memakai PostgreSQL
+  dan client tools 17; restore dari versi lebih baru ke server lebih lama tidak
+  dijamin kompatibel. Jangan mengganti major image pada volume lama secara
+  langsung; siapkan target yang kompatibel dan migrasi terencana.
+- `Only valid NIST Basis ...`: gunakan nama asli backup aplikasi, berbentuk
+  `nist-basis-YYYYMMDDTHHMMSSZ.dump` atau `.json`; file SQL/ZIP bukan Database Backup.
+- `permission denied to set parameter session_replication_role`: snapshot JSON
+  lama memerlukan hak yang sesuai; gunakan backup `.dump` jika tersedia.
+- Setelah restore berhasil, login kembali menggunakan akun/password dalam
+  backup; sesi sebelumnya berakhir dan password terbaru sebelum restore dapat
+  berbeda dari password pada backup.
+
+Simpan backup database tujuan sebelum mencoba restore ulang karena restore
+mengganti objek/data yang tercakup dalam backup. Jangan menghapus volume untuk
+memperbaiki restore. Pesan error diperlukan untuk menentukan langkah selanjutnya.
+
 Cakupan adalah satu database aplikasi, bukan semua database pada server
 PostgreSQL atau role global server. File evidence/upload, konfigurasi server,
 dan kunci enkripsi SMTP berada di luar database dan perlu salinan terpisah.

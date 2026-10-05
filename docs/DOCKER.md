@@ -176,6 +176,9 @@ tambahkan environment kredensial atau mount service-account sendiri sesuai
 
 ## Operasi dan pembaruan
 
+Untuk urutan lengkap mulai dari pull repository, backup, rebuild, hingga
+pemulihan akun, ikuti [panduan update Docker dan login](UPDATE_DOCKER.md).
+
 ```bash
 # Hentikan container dengan mempertahankan volume.
 docker compose --env-file .env.docker down

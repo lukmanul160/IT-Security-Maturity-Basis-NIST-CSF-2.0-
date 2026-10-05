@@ -189,6 +189,9 @@ aplikasi mati karena ICMP dapat diblokir; periksa TCP dan HTTP secara langsung.
 
 ## 6. Login awal dan HTTPS produksi
 
+Jika login menampilkan **Username atau password salah**, ikuti
+[pull versi terbaru, rebuild, dan pemulihan login](UPDATE_DOCKER.md).
+
 Untuk akun yang baru dibuat seed:
 
 | Username | Password awal |

@@ -60,8 +60,10 @@ async function createBackup() {
 }
 
 function pgRestoreArguments(filePath) {
-  if (database.url) return ['--dbname', database.url, '--clean', '--if-exists', '--single-transaction', filePath];
-  return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, '--clean', '--if-exists', '--single-transaction', filePath];
+  // Restore into the target installation's role; source roles may not exist here.
+  const restoreOptions = ['--clean', '--if-exists', '--no-owner', '--no-acl', '--single-transaction', filePath];
+  if (database.url) return ['--dbname', database.url, ...restoreOptions];
+  return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, ...restoreOptions];
 }
 
 async function restoreJsonSnapshot(filePath) {

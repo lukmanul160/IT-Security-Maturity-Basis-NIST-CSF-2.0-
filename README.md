@@ -7,6 +7,8 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Dokumentasi
 
+- [Pull terbaru, rebuild Docker, dan pemulihan login](docs/UPDATE_DOCKER.md):
+  langkah update server dengan data lama tetap tersimpan.
 - [Akses jaringan 192.168.130.12:5000](docs/NETWORK_ACCESS.md): pengaturan binding,
   firewall Windows/Linux, dan diagnosis akses LAN untuk Docker/manual.
 - [Instalasi langkah demi langkah: manual atau Docker](docs/INSTALL_STEP_BY_STEP.md):
