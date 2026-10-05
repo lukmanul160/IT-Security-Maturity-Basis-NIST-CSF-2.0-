@@ -13,6 +13,7 @@ test('legacy migration and folder API preserve notes through moves, conflicts an
     await raw(`CREATE SCHEMA "${schema}"`);
     await raw(`CREATE TABLE "${schema}".knowledge_notes (id BIGSERIAL PRIMARY KEY,title TEXT NOT NULL,content TEXT NOT NULL DEFAULT '',version INTEGER NOT NULL DEFAULT 1,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
     await raw(`INSERT INTO "${schema}".knowledge_notes (title,content) VALUES ('Legacy','preserved')`);
+    await raw(`CREATE UNIQUE INDEX knowledge_notes_title_unique ON "${schema}".knowledge_notes (LOWER(title))`);
     pool.query=(sql,values)=>raw(rewrite(sql),values);
     pool.connect=async()=>{const client=await acquire();return {query:(sql,values)=>client.query(rewrite(sql),values),release:()=>client.release()};};
     const service=require('../src/services/knowledgeNoteService');
@@ -66,6 +67,15 @@ test('legacy migration and folder API preserve notes through moves, conflicts an
     assert.equal(response.status,201);
     const emptyImported=await service.folders();
     assert.ok(emptyImported.includes('ImportedEmpty/Subfolder'),'empty subfolders persist without a note');
+    response=await request('/import','POST',{notes:[{title:'Same',folder:'First',content:'First copy'},{title:'Same',folder:'Second',content:'Second copy'}]});
+    assert.equal(response.status,201,'matching titles in different folders import together');
+    await service.ensureStore();
+    assert.equal((await service.list()).filter(note=>note.title==='Same').length,2,'migration remains idempotent with folder-scoped duplicates');
+    response=await request('/import','POST',{notes:[{title:'NewRollback',folder:'First',content:''},{title:'same',folder:'First',content:''}]});
+    assert.equal(response.status,409,'same title in the same folder remains protected');
+    assert.ok(!(await service.list()).some(note=>note.title==='NewRollback'),'conflicting imports roll back the entire batch');
+    const second=(await service.list()).find(note=>note.title==='Same'&&note.folder==='Second');
+    assert.equal((await request('/'+second.id,'PUT',{...second,folder:'First'})).status,409,'moving notes cannot overwrite a matching title');
   } finally {
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
     pool.query=savedQuery;pool.connect=savedConnect;

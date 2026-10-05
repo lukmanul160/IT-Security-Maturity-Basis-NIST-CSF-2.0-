@@ -70,3 +70,18 @@ test('wiki links generate stable URLs, support aliases and ignore code and missi
  assert.equal(noteIdFromHash('#other=42'),null);
  assert.equal(noteUrl('a/b'),'/app#knowledge-note=a%2Fb');
 });
+
+test('duplicate titles resolve in the source folder and ambiguous cross-folder links require a path',async()=>{
+ const {resolveNote,graph}=await import('../frontend/client/src/workspace/features/shared/noteLinks.mjs');
+ const {wikiLinkRanges}=await import('../frontend/client/src/workspace/features/shared/noteNavigation.mjs');
+ const notes=[{id:1,title:'Policy',folder:'A',content:''},{id:2,title:'Policy',folder:'B',content:''},{id:3,title:'Home',folder:'B',content:'[[Policy]]'}];
+ assert.equal(resolveNote(notes,'Policy','A').id,1);
+ assert.equal(resolveNote(notes,'Policy','B').id,2);
+ assert.equal(resolveNote(notes,'Policy','Elsewhere'),undefined);
+ assert.equal(resolveNote(notes,'A/Policy.md','B').id,1);
+ assert.equal(resolveNote(notes,'Missing/Policy.md','B'),undefined);
+ assert.deepEqual(graph(notes),[{source:3,target:2,title:'Policy'}]);
+ assert.equal(wikiLinkRanges('[[Policy]]',notes,'B')[0].id,'2');
+ assert.equal(wikiLinkRanges('[[Policy]]',notes,'Elsewhere').length,0);
+ await assert.rejects(service.importNotes([{title:'Same',content:'',folder:'A'},{title:'same',content:'',folder:'A'}]),/duplikat/);
+});

@@ -15,8 +15,12 @@ function validate(note) {
 }
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS knowledge_notes (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL DEFAULT '', version INTEGER NOT NULL DEFAULT 1, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-  await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS knowledge_notes_title_unique ON knowledge_notes (LOWER(title))');
   await pool.query("ALTER TABLE knowledge_notes ADD COLUMN IF NOT EXISTS folder TEXT NOT NULL DEFAULT ''");
+  await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS knowledge_notes_folder_title_unique ON knowledge_notes (folder, LOWER(title))');
+  await pool.query(`DO $$ DECLARE table_schema TEXT; BEGIN
+    SELECT n.nspname INTO table_schema FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.oid='knowledge_notes'::regclass;
+    EXECUTE format('DROP INDEX IF EXISTS %I.knowledge_notes_title_unique',table_schema);
+  END $$`);
   await pool.query('CREATE TABLE IF NOT EXISTS knowledge_note_folders (path TEXT PRIMARY KEY)');
 }
 const selection = 'id, title, content, folder, version, updated_at AS "updatedAt"';
@@ -61,7 +65,7 @@ async function create(data) {
   const note = validate(data);
   await storeFolder(pool,note.folder);
   try { return (await pool.query(`INSERT INTO knowledge_notes (title,content,folder) VALUES ($1,$2,$3) RETURNING ${selection}`, [note.title,note.content,note.folder])).rows[0]; }
-  catch (error) { if (error.code === '23505') throw fail('Judul catatan sudah ada.',409); throw error; }
+  catch (error) { if (error.code === '23505') throw fail(`Catatan ${note.folder ? note.folder+'/' : ''}${note.title} sudah ada di folder yang sama.`,409); throw error; }
 }
 async function update(id,data) {
   const note = validate(data);
@@ -71,22 +75,26 @@ async function update(id,data) {
     const result = await pool.query(`UPDATE knowledge_notes SET title=$1,content=$2,folder=$5,version=version+1,updated_at=NOW() WHERE id=$3 AND version=$4 RETURNING ${selection}`,[note.title,note.content,id,data.version,note.folder]);
     if (!result.rowCount) throw fail('Catatan berubah atau dihapus. Ekspor perubahan lokal sebelum memuat ulang.',409);
     return result.rows[0];
-  } catch(error) { if(error.code === '23505') throw fail('Judul catatan sudah ada.',409); throw error; }
+  } catch(error) { if(error.code === '23505') throw fail(`Catatan ${note.folder ? note.folder+'/' : ''}${note.title} sudah ada di folder yang sama.`,409); throw error; }
 }
 async function importNotes(notes, folderPaths = []) {
   if (!Array.isArray(folderPaths) || folderPaths.length > 500) throw fail('Daftar folder tidak valid (maksimal 500).');
   const importedFolders = folderPaths.map(validateFolder);
   if (!Array.isArray(notes) || (!notes.length && !importedFolders.length) || notes.length > 200) throw fail('Impor maksimal 200 catatan sekaligus.');
   const values = notes.map(validate);
-  const titles = values.map(note=>note.title.toLowerCase());
-  if (new Set(titles).size !== titles.length) throw fail('Ada judul duplikat dalam impor.');
+  const paths = new Set();
+  for (const note of values) {
+    const key=JSON.stringify([note.folder,note.title.toLowerCase()]);
+    if(paths.has(key))throw fail(`Catatan duplikat dalam impor: ${note.folder ? note.folder+'/' : ''}${note.title}. Judul yang sama hanya diperbolehkan di folder berbeda.`);
+    paths.add(key);
+  }
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     for (const folder of importedFolders) await storeFolder(client,folder);
     for (const note of values) { await storeFolder(client,note.folder); await client.query('INSERT INTO knowledge_notes (title,content,folder) VALUES ($1,$2,$3)',[note.title,note.content,note.folder]); }
     await client.query('COMMIT');
-  } catch(error) { await client.query('ROLLBACK'); if(error.code === '23505') throw fail('Judul sudah ada. Impor dibatalkan; ubah judul duplikat terlebih dahulu.',409); throw error; }
+  } catch(error) { await client.query('ROLLBACK'); if(error.code === '23505') throw fail('Catatan dengan folder dan judul yang sama sudah ada. Impor dibatalkan; gunakan folder lain atau ubah judul catatan di folder tersebut.',409); throw error; }
   finally { client.release(); }
   return list();
 }

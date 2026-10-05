@@ -13,7 +13,7 @@ import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { wikiLinkRanges } from '../features/shared/noteNavigation.mjs';
 
-const props=defineProps({modelValue:{type:String,default:''},editable:Boolean,readonly:Boolean,notes:{type:Array,default:()=>[]}});
+const props=defineProps({modelValue:{type:String,default:''},editable:Boolean,readonly:Boolean,folder:{type:String,default:''},notes:{type:Array,default:()=>[]}});
 const emit=defineEmits(['update:modelValue','save','open-note']);
 const wikiNavigation=Extension.create({
  name:'wikiNavigation',
@@ -24,7 +24,7 @@ const wikiNavigation=Extension.create({
     if(node.type.name==='codeBlock')return false;
     if(!node.isTextblock)return;
     const text=node.textBetween(0,node.content.size,'\n','\ufffc');
-    for(const range of wikiLinkRanges(text,props.notes)){
+    for(const range of wikiLinkRanges(text,props.notes,props.folder)){
      let code=false;node.nodesBetween(range.from,range.to,child=>{if(child.marks.some(mark=>mark.type.name==='code'))code=true;});
      if(!code)decorations.push(Decoration.inline(pos+1+range.from,pos+1+range.to,{nodeName:'a',href:range.href,'data-note-id':range.id,class:'wiki-note-link',title:'Ctrl + klik untuk membuka catatan'}));
     }
@@ -69,7 +69,7 @@ const editor=useEditor({
 });
 watch(()=>props.modelValue,value=>{if(editor.value&&markdownContent(editor.value)!==value)editor.value.commands.setContent(value,{contentType:'markdown',emitUpdate:false});});
 watch(()=>[props.editable,props.readonly],()=>editor.value?.setEditable(props.editable&&!props.readonly,false));
-watch(()=>props.notes,()=>{if(editor.value)editor.value.view.dispatch(editor.value.state.tr);});
+watch(()=>[props.notes,props.folder],()=>{if(editor.value)editor.value.view.dispatch(editor.value.state.tr);});
 const buttons=[['bold','Bold'],['italic','Italic'],['strike','Coret'],['heading1','H1'],['heading2','H2'],['bulletList','Bullet'],['orderedList','Numbering'],['taskList','Checklist'],['indent','Indent'],['outdent','Outdent'],['blockquote','Kutipan'],['code','Code'],['codeBlock','Blok kode'],['link','Tautan'],['wiki','Tautan catatan'],['undo','Undo'],['redo','Redo']];
 function active(kind){return editor.value?.isActive(kind.startsWith('heading')?'heading':kind,kind.startsWith('heading')?{level:Number(kind.at(-1))}:undefined)||false;}
 function format(kind){
