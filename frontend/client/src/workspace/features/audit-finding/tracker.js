@@ -204,9 +204,16 @@
     const row = rows.find(r => r.id === id); if (!row) return;
     if (button.dataset.aftOpen) { cardFilter = null; path = [...ancestors(row), row]; $('aftSearch').value = ''; $('aftFilter').value = ''; render(); }
     else if (button.dataset.aftEdit) openForm(row);
-    else if (confirm(`Hapus "${row.data.title}"? Data dengan turunan tidak dapat dihapus.`)) {
+    else {
+      const children = rows.filter(item => item.parentId === id);
+      if (children.length) {
+        status(`Tidak dapat menghapus "${row.data.title}": masih memiliki ${children.length} data turunan. Buka data ini, lalu hapus evidence, follow-up, dan finding dari tingkat paling bawah terlebih dahulu.`);
+        return;
+      }
+      if (!confirm(`Hapus "${row.data.title}"?`)) return;
       button.disabled = true;
-      try { await request('/' + id, { method: 'DELETE' }); await load(); } catch (error) { status(error.message); button.disabled = false; }
+      status('Menghapus data...');
+      try { await request('/' + id, { method: 'DELETE' }); await load(); if (ready) status('Data berhasil dihapus.'); } catch (error) { status(error.message); button.disabled = false; }
     }
   });
   form.addEventListener('submit', guardFormSubmission(async event => {
@@ -217,7 +224,7 @@
     if (selectedFiles.some(file=>!file.size || file.size > 10 * 1024 * 1024)) { $('aftFormStatus').textContent = 'Setiap file harus berukuran 1 byte hingga 10 MB.'; return; }
     if ((editing?.kind || kinds[path.length]) === 'evidence') {
       const count = evidenceFiles(editing).length - removedAttachments.size + selectedFiles.length + [...selectedLibrary].filter(path=>!evidenceFiles(editing).some(file=>file.path===path && !removedAttachments.has(path))).length;
-      if (count < 1 || count > 10) { $('aftFormStatus').textContent = 'Evidence harus memiliki 1 hingga 10 file. Tambahkan pengganti sebelum menghapus file terakhir.'; return; }
+      if ((!editing && count < 1) || count > 10) { $('aftFormStatus').textContent = 'Evidence baru harus memiliki minimal satu file; maksimum 10 file.'; return; }
     }
     body.set('existingAttachments', JSON.stringify([...selectedLibrary]));
     body.set('removeAttachments', JSON.stringify([...removedAttachments]));

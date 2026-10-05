@@ -29,13 +29,21 @@ function uploadedLibraryRecords() {
 }
 async function deleteUploadedLibraryFile(recordId) {
   const record = uploadedFileRecordMap.get(recordId);
-  if (!canEditUploadedFile(record) || !confirm(`Hapus file ${record.name}?`)) return;
+  if (!canEditUploadedFile(record) || !confirm(`Hapus file utama ${record.name}? File dan seluruh referensinya di assessment, policy, questionnaire, dan audit akan dihapus. Data lainnya tetap tersedia.`)) return;
+  const status = message => { $('uploadedFilesStatus').textContent = message; $('saveState').textContent = message; };
+  status(`Menghapus file ${record.name}...`);
   try {
     const response = await fetch(`${apiFileUrl(record.path)}?library=true`, { method: 'DELETE' });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'File gagal dihapus.');
+    const matches = file => String(file?.path || '').replace(/^uploads?\//, '') === record.path.replace(/^uploads?\//, '');
+    for (const owner of [state, privacyState]) for (const [key, files] of Object.entries(owner.attachments || {})) {
+      if (Array.isArray(files)) owner.attachments[key] = files.filter(file => !matches(file));
+    }
+    for (const row of [...iso27001Rows, ...iso27001SoaRows]) if (Array.isArray(row.evidence)) row.evidence = row.evidence.filter(file => !matches(file));
+    for (const row of policyRegisterRows) if (matches({path:row.attachmentPath})) { row.attachmentPath=''; row.attachmentName=''; row.attachmentType=''; }
     await refreshEvidenceLibrary();
-    $('saveState').textContent = 'File berhasil dihapus.';
-  } catch (error) { $('saveState').textContent = error.message; }
+    status('File berhasil dihapus.');
+  } catch (error) { status(error.message); }
 }
 function renderUploadedFiles() {
   const query = $('uploadedFileSearch').value.toLowerCase(); const kindFilter = $('uploadedFileKindFilter').value;
@@ -143,15 +151,14 @@ function isoRecordContext(key) { const [, framework, ...idParts] = String(key).s
 function isoAttachmentFor(key, index) { return isoRecordContext(key).row?.evidence?.[index]; }
 async function openAttachment(key, index) { const attachment = key === 'policy-register' ? policyRegisterFiles().find(file => file.sourceIndex === index) : key.startsWith('iso|') ? isoAttachmentFor(key, index) : (attachmentStateFor(key).attachments[key] || [])[index]; if (attachment) window.open(apiFileOpenUrl(attachment.path), '_blank', 'noopener'); }
 async function downloadAttachment(key, index) { const attachment = key === 'policy-register' ? policyRegisterFiles().find(file => file.sourceIndex === index) : key.startsWith('iso|') ? isoAttachmentFor(key, index) : (attachmentStateFor(key).attachments[key] || [])[index]; if (attachment) { const link = document.createElement('a'); link.href = apiFileUrl(attachment.path); link.download = attachment.name; link.click(); } }
-async function deleteAttachment(key, index) { if (key === 'policy-register') { const policyId = document.querySelector(`#uploadedFilesBody [data-delete-attachment="policy-register"][data-attachment-index="${index}"]`)?.dataset.policyId; const row = policyRegisterRows.find(item => String(item.id) === String(policyId)) || policyRegisterRows[index]; if (!row || !confirm(`Hapus policy ${row.title || row.attachmentName}?`)) return; const response = await fetch(`/api/policy-register/${encodeURIComponent(row.id)}`, { method: 'DELETE' }); if (response.ok) await loadPolicyRegisterRows(); else $('saveState').textContent = 'Policy Register gagal dihapus'; return; } if (key.startsWith('iso|')) { const { id, isSoa, row } = isoRecordContext(key); if (!row) return; const attachments = [...(row.evidence || [])]; const attachment = attachments[index]; if (!attachment || !confirm(`Hapus lampiran ${attachment.name}?`)) return; attachments.splice(index, 1); if ((await updateIsoEvidence(isSoa ? 'soa' : 'clauses', id, attachments)).ok) { row.evidence = attachments; renderUploadedFiles(); isSoa ? renderIso27001SoaManager() : renderIso27001Manager(); } return; } const owner = attachmentStateFor(key); const attachments = owner.attachments[key] || []; const attachment = attachments[index];
+async function deleteAttachment(key, index) { if (key === 'policy-register') { const policyId = document.querySelector(`#uploadedFilesBody [data-delete-attachment="policy-register"][data-attachment-index="${index}"]`)?.dataset.policyId; const row = policyRegisterRows.find(item => String(item.id) === String(policyId)) || policyRegisterRows[index]; if (!row || !confirm(`Lepaskan referensi file ${row.attachmentName}? File utama tetap tersedia.`)) return; const response = await fetch(`/api/policy-register/${encodeURIComponent(row.id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...row, removeAttachment: true }) }); if (response.ok) await loadPolicyRegisterRows(); else $('saveState').textContent = 'Referensi file Policy Register gagal dilepas'; return; } if (key.startsWith('iso|')) { const { id, isSoa, row } = isoRecordContext(key); if (!row) return; const attachments = [...(row.evidence || [])]; const attachment = attachments[index]; if (!attachment || !confirm(`Hapus lampiran ${attachment.name}?`)) return; attachments.splice(index, 1); if ((await updateIsoEvidence(isSoa ? 'soa' : 'clauses', id, attachments)).ok) { row.evidence = attachments; renderUploadedFiles(); isSoa ? renderIso27001SoaManager() : renderIso27001Manager(); } return; } const owner = attachmentStateFor(key); const attachments = owner.attachments[key] || []; const attachment = attachments[index];
   if (!attachment || !confirm(`Hapus lampiran ${attachment.name}?`)) return;
   try {
     const next = attachments.filter((_, position) => position !== index);
     const response = await fetch(key.startsWith('privacy-') ? '/api/privacy/assessment' : '/api/assessment', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...owner, attachments: { ...owner.attachments, [key]: next } }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Lampiran gagal dilepas.');
     owner.attachments[key] = next;
-    const deletion = await fetch(`${apiFileUrl(attachment.path)}?library=true`, { method: 'DELETE' });
-    $('saveState').textContent = deletion.ok ? 'Lampiran dan file berhasil dihapus.' : 'Lampiran dilepas. File tetap tersedia di Uploaded Files karena masih digunakan atau belum dapat dihapus.';
+    $('saveState').textContent = 'Referensi lampiran dilepas. File utama tetap tersedia di Uploaded files.';
     await refreshEvidenceLibrary(); renderCsfTable();
     if ($('privacyView').classList.contains('active-view')) renderPrivacy();
   } catch (error) { $('saveState').textContent = error.message; }

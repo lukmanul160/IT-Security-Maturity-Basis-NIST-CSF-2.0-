@@ -44,7 +44,7 @@ async function list(user) {
   const owned = new Set((await evidenceAccess.list(user)).map(file => evidenceAccess.normalize(file.path)));
   return rows.map(row => {
     const items = attachments(row).map(file => ({...file,canManageFile:owned.has(file.path)}));
-    return {...row,attachments:items,canManageFile:row.kind === 'evidence' && items.length > 0 && items.every(file=>file.canManageFile)};
+    return {...row,attachments:items,canManageFile:row.kind === 'evidence' && items.every(file=>file.canManageFile)};
   });
 }
 async function save(kind, id, parentId, input, file, user) {
@@ -95,9 +95,9 @@ async function save(kind, id, parentId, input, file, user) {
       retained.push({path:attachmentPath,name,size:upload.size});
     }
     if (kind === 'evidence') {
-      if (!retained.length || retained.length > 10) fail('Evidence harus memiliki 1 hingga 10 file. Tambahkan pengganti sebelum menghapus file terakhir.');
+      if ((!id && !retained.length) || retained.length > 10) fail('Evidence baru harus memiliki minimal satu file; maksimum 10 file.');
       data.attachments = retained;
-      data.attachmentPath = retained[0].path;
+      if (retained.length) data.attachmentPath = retained[0].path;
     }
     const filename = retained[0]?.name || null;
     const result = id

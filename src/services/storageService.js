@@ -204,11 +204,11 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
       throw Object.assign(new Error('File gagal disimpan. Periksa koneksi storage dan database; lokasi tidak dialihkan otomatis.'), { status: 503 });
     } finally { client.release(); }
   }
-  async function remove(relativePath) {
+  async function remove(relativePath, { client = db } = {}) {
     const normalized = normalizePath(relativePath);
     const loc = await location(normalized);
     await removePhysical(loc);
-    await db.query('DELETE FROM file_storage_locations WHERE path = $1', [normalized]);
+    await client.query('DELETE FROM file_storage_locations WHERE path = $1', [normalized]);
   }
   return { ensureStore, getSettings, validateSettings, testSettings, saveSettings, read, exists, put, remove };
 }

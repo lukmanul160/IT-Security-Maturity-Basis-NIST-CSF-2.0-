@@ -68,7 +68,6 @@ test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { s
     assert.equal(multiple.data.attachments.length,3);
     const secondPath=multiple.data.attachments[1].path;
     const thirdPath=multiple.data.attachments[2].path;
-    await assert.rejects(require('../src/services/fileService').deleteFile(thirdPath,{library:true}),{status:409});
     assert.deepEqual((await service.download(evidence.id,alice,secondPath)).content,second.buffer);
     await assert.rejects(service.download(evidence.id,bob,secondPath),{status:403});
     await assert.rejects(service.download(evidence.id,alice,'audit-finding/unrelated'),{status:404});
@@ -78,8 +77,10 @@ test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { s
     assert.equal(reduced.data.attachments.length,2);
     assert.equal(reduced.data.attachments[1].path,thirdPath);
     await assert.rejects(service.download(evidence.id,alice,secondPath),{status:404});
-    await assert.rejects(service.save('evidence',evidence.id,null,{title:'Empty',removeAttachments:JSON.stringify(reduced.data.attachments.map(item=>item.path))},[],alice),{status:400});
-    assert.equal((await service.list(alice)).find(row=>row.id===evidence.id).attachments.length,2);
+    const empty = await service.save('evidence',evidence.id,null,{title:'Empty',removeAttachments:JSON.stringify(reduced.data.attachments.map(item=>item.path))},[],alice);
+    assert.deepEqual(empty.data.attachments, []);
+    assert.equal((await client.query('SELECT path FROM evidence_files WHERE path=$1',[thirdPath])).rowCount,1,'removing a reference retains the main file');
+    assert.equal((await service.list(alice)).find(row=>row.id===evidence.id).attachments.length,0);
     await client.query(migration);
     await assert.rejects(service.remove(audit.id), { status: 409 });
     await service.remove(evidence.id, alice);

@@ -159,10 +159,19 @@ async function referenceCounts(relativePath) {
 }
 async function deleteFile(relativePath, { library = false } = {}) {
 	const normalized = storagePath(relativePath);
-	const counts = await referenceCounts(normalized);
-	if (library && Object.values(counts).some(count => Number(count) > 0)) {
-		throw Object.assign(new Error('File masih digunakan. Lepaskan lampiran dari lokasi penggunaannya sebelum menghapus file.'), { status: 409 });
+	if (library) {
+		const client = await pool.connect();
+		try {
+			await client.query('BEGIN');
+			await require('./fileReferenceService').detach(client, normalized);
+			await storage.remove(normalized, { client });
+			await client.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
+			await client.query('COMMIT');
+		} catch (error) { await client.query('ROLLBACK'); throw error; }
+		finally { client.release(); }
+		return;
 	}
+	const counts = await referenceCounts(normalized);
 	// The assessment UI removes its own reference after this request succeeds.
 	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0) return;
 	await storage.remove(normalized);

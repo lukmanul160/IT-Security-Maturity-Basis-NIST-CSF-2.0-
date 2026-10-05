@@ -4,6 +4,7 @@
 
           <div class="page-heading"><div><p class="eyebrow">EVIDENCE LIBRARY</p><h2>Uploaded files</h2><p class="lede">Kelola file yang Anda upload. Admin dapat mengelola seluruh file.</p></div><span class="file-count" id="uploadedFileCount">0 files</span></div>
           <div class="toolbar"><label class="search-box"><span>/</span><input id="uploadedFileSearch" type="search" placeholder="Search uploaded files..." autocomplete="off"></label><select id="uploadedFileKindFilter" aria-label="Filter file type"><option value="all">Policy & Practice</option><option value="policy">Policy</option><option value="practice">Practice</option></select></div>
+          <p id="uploadedFilesStatus" role="status" aria-live="polite"></p>
           <div class="uploaded-files-wrap"><table class="uploaded-files-table"><thead><tr><th>File</th><th>Assessment</th><th>Function</th><th>Category</th><th>Subcategory</th><th>Type</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody id="uploadedFilesBody"></tbody></table><div class="assessment-pagination" id="uploadedFilesPagination"></div></div>
           <dialog id="uploadedFileEditModal" class="certification-modal">
             <form id="uploadedFileEditForm" class="risk-register-form uploaded-file-edit-form">

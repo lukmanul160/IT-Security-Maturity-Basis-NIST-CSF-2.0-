@@ -1,5 +1,4 @@
 const { pool } = require('../config/database');
-const { removeUnreferencedFile } = require('./fileService');
 
 const tableName = 'policy_register';
 const itemTableName = 'policy_register_items';
@@ -353,13 +352,12 @@ async function update(id, data) {
 }
 
 async function remove(id) {
-  // Fetch record to get attachment path for cleanup
+  // Verify the policy exists before deleting its record
   const existing = await pool.query(`SELECT attachment_path FROM ${tableName} WHERE id = $1`, [id]);
   if (!existing.rows.length) {
     throw invalid('Policy not found');
   }
 
-  const attachmentPath = existing.rows[0].attachment_path;
   
   // Delete from database
   const result = await pool.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
@@ -367,16 +365,7 @@ async function remove(id) {
     throw invalid('Failed to delete policy');
   }
 
-  // Cleanup file from disk
-  if (attachmentPath) {
-    try {
-      const cleanPath = attachmentPath.replace(/^(upload|uploads)\//, '');
-      await removeUnreferencedFile(cleanPath);
-    } catch (err) {
-      // Log but don't fail if file cleanup fails
-      console.error(`[policyRegisterService] File cleanup failed for ${attachmentPath}:`, err.message);
-    }
-  }
+  // Deleting a policy removes its reference, not the file in the upload library.
 
   return { id, deleted: true };
 }
