@@ -206,8 +206,13 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
   }
   async function remove(relativePath, { client = db } = {}) {
     const normalized = normalizePath(relativePath);
-    const loc = await location(normalized);
+    const loc = await location(normalized, client);
     await removePhysical(loc);
+    // Explicit deletion also retires legacy copies of this logical file.
+    if(loc.managed) {
+      await removePhysical({root:localRoot,key:normalized});
+      if(!cloudConfig(loc) && loc.root!==localRoot && loc.key!==normalized) await removePhysical({root:loc.root,key:normalized});
+    }
     await client.query('DELETE FROM file_storage_locations WHERE path = $1', [normalized]);
   }
   return { ensureStore, getSettings, validateSettings, testSettings, saveSettings, read, exists, put, remove };

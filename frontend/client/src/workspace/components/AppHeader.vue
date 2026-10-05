@@ -2,7 +2,7 @@
 <template>
 <header v-pre class="topbar tw-accent-line tw-surface">
       <div class="brand-block">
-        <img class="brand-mark" src="/brand-logo.jpeg" alt="Logo Black Owl Governance" width="38" height="38" style="object-fit:contain;background:white;border-radius:50%">
+        <img class="brand-mark" src="/brand-logo.png" alt="Logo Black Owl Governance" width="38" height="38" style="object-fit:contain;background:transparent;border-radius:50%">
         <div>
           <strong class="brand-title">Black Owl Governance</strong>
           <p class="eyebrow">Align Your IT With Business need</p>

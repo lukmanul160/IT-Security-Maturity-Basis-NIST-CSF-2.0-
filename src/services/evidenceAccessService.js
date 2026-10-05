@@ -40,6 +40,7 @@ async function searchableList(user) {
   return files.map(file=>({...file,source:details.has(normalize(file.path)) ? 'Policy Register' : file.source,policyDetails:details.get(normalize(file.path)) || []}));
 }
 async function assertReadAccess(value, user) {
+  if(!await require('./permissionService').hasFileAction(user?.role,'read')) throw invalid('Read access to files is required.');
   return assertAccess(value, user);
 }
 async function canModify(value, user) {

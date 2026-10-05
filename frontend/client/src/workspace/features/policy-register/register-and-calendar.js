@@ -143,7 +143,7 @@ function renderPolicyRegisterRows() {
       <td>${escapeHtml(row.approvalStatus || '-')}</td>
       <td>${row.lastReview ? new Date(row.lastReview).toLocaleDateString('id-ID') : '-'}</td>
       <td>${row.attachmentName ? `<a href="/api/files/${encodeURIComponent(String(row.attachmentPath || '').replace(/^upload\//, ''))}" target="_blank" rel="noreferrer">${escapeHtml(row.attachmentName)}</a>` : '-'}</td>
-      <td>${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>
+      <td class="policy-register-actions">${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>
     </tr>
   `).join('') || '<tr><td colspan="8">No policy records found.</td></tr>';
 }
@@ -290,17 +290,41 @@ async function savePolicyRegister(event) {
   resetPolicyRegisterForm();
 }
 
+function setPolicyDeletionStatus(message) {
+  for (const id of ['policyRegisterStatus', 'policyRegisterListStatus']) {
+    const element = $(id);
+    if (element) element.textContent = message;
+  }
+}
+
+const pendingPolicyDeletions = new Set();
 async function deletePolicyRegister(id) {
-  if (!id || !confirm('Delete this policy record?')) return;
-  const response = await fetch(`/api/policy-register/${encodeURIComponent(id)}`, { method: 'DELETE' });
-  if (!response.ok) {
-    $('policyRegisterStatus').textContent = 'Delete failed';
+  if (!id || pendingPolicyDeletions.has(String(id))) return;
+  if (!canManagePolicyRegister('delete')) {
+    setPolicyDeletionStatus('Anda memerlukan izin Delete untuk Policy Register di Access Settings.');
     return;
   }
-  policyRegisterRows = policyRegisterRows.filter(row => String(row.id) !== String(id));
-  renderPolicyRegisterRows();
-  resetPolicyRegisterForm();
-  $('policyRegisterStatus').textContent = 'Policy deleted';
+  if (!confirm('Hapus policy ini beserta subjudul dan referensi lampirannya? File asli tetap tersedia.')) return;
+  pendingPolicyDeletions.add(String(id));
+  setPolicyDeletionStatus('Menghapus policy...');
+  try {
+    const response = await fetch(`/api/policy-register/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!response.ok && response.status !== 404) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Penghapusan policy gagal (HTTP ${response.status}).`);
+    }
+    policyRegisterRows = policyRegisterRows.filter(row => String(row.id) !== String(id));
+    renderPolicyRegisterRows();
+    resetPolicyRegisterForm();
+    if ($('policyRegisterModal')?.open) $('policyRegisterModal').close();
+    setPolicyDeletionStatus('Policy dihapus. File asli tetap tersedia.');
+    // Refreshing the file list must not turn a successful policy deletion into a failure.
+    await refreshEvidenceLibrary({ force: true }).catch(() => {});
+  } catch (error) {
+    setPolicyDeletionStatus(error.message || 'Tidak dapat menghapus policy. Periksa koneksi lalu coba lagi.');
+  } finally {
+    pendingPolicyDeletions.delete(String(id));
+  }
 }
 
 function showPolicyRegisterView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('policyRegisterView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'policy-register')); saveUiState('policy-register'); loadPolicyDropdownOptions(); loadPolicyRegisterRows().catch(() => { $('policyRegisterStatus').textContent = 'Database unavailable'; }); }

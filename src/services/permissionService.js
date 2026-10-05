@@ -94,19 +94,8 @@ async function has(role,key,action='read') {
   const result=await pool.query('SELECT allowed, actions FROM role_permissions WHERE role=$1 AND permission_key=$2',[role,key]);
   return effectiveActions(role,key,result.rows[0])[normalizeAction(action)];
 }
-async function hasFileAction(role,action) {
-  if(role==='admin')return true;
-  if(!validRoles.includes(role))return false;
-  const result=await pool.query("SELECT allowed, actions FROM role_permissions WHERE role=$1 AND permission_key='files'",[role]);
-  // Preserve existing owner-only file access until action settings are configured.
-  const row=result.rows[0];
-  return row?.actions ? effectiveActions(role,'files',row)[normalizeAction(action)] : true;
-}
-async function canDeleteOwnedEvidence(role) {
-  if(role!=='user')return false;
-  const result=await pool.query("SELECT allowed, actions FROM role_permissions WHERE role=$1 AND permission_key='audit-finding-tracker'",[role]);
-  return Boolean(result.rows[0]?.allowed && !result.rows[0]?.actions && await hasFileAction(role,'delete'));
-}
+async function hasFileAction(role,action) { return has(role,'files',action); }
+async function canDeleteOwnedEvidence(role) { return has(role,'audit-finding-tracker','delete'); }
 async function update(role,data) {
   const invalid=message=>Object.assign(new Error(message),{status:400});
   if(!validRoles.includes(role) || !Array.isArray(data?.permissions))throw invalid('Role and permissions are required');

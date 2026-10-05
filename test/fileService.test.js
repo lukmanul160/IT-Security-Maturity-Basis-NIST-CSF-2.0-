@@ -45,3 +45,21 @@ test('replaceFile keeps the evidence path and updates its content and metadata',
     await fs.rmdir(path.join(uploadRoot, 'Test Replace')).catch(() => {});
   }
 });
+
+
+test('standalone library upload keeps successful files when a later upload fails and enforces Add', async () => {
+ const vm=require('node:vm'),fs=require('node:fs');
+ const source=fs.readFileSync('frontend/client/src/workspace/features/uploaded-files/editor-and-events.js','utf8');
+ const fragment=source.slice(source.indexOf('let uploadedFilesUploading = false;'),source.indexOf("$('uploadedFilesUploadButton').addEventListener"));
+ const elements={uploadedFilesStatus:{textContent:''},uploadedFilesUploadButton:{disabled:false},uploadedFilesUploadKind:{value:'policy'},uploadedFileSearch:{value:'old'},uploadedFileKindFilter:{value:'all'}};
+ let allowed=true,requests=0;
+ const context=vm.createContext({FormData,canPerform:()=>allowed,$:id=>elements[id],evidenceLibrary:[],evidenceLibraryError:'',renderUploadedFiles(){},refreshEvidenceLibrary:async()=>{},fetch:async(url,options)=>{
+  requests++;assert.equal(url,'/api/files');assert.equal(options.body.get('functionName'),'Uploaded files');
+  return requests===1?{ok:true,json:async()=>({name:'a.pdf',path:'upload/Uploaded files/Policy/id/a.pdf'})}:{ok:false,status:500,json:async()=>({error:'Storage unavailable'})};
+ }});
+ vm.runInContext(fragment,context);
+ const files=[new Blob(['a'],{type:'application/pdf'}),new Blob(['b'],{type:'application/pdf'})];files[0].name='a.pdf';files[1].name='b.pdf';
+ await context.uploadLibraryFiles(files);
+ assert.equal(context.evidenceLibrary.length,1);assert.match(elements.uploadedFilesStatus.textContent,/1\/2.*Storage unavailable/);assert.equal(elements.uploadedFilesUploadButton.disabled,false);
+ allowed=false;await context.uploadLibraryFiles(files);assert.equal(requests,2);assert.match(elements.uploadedFilesStatus.textContent,/Izin Add/);
+});

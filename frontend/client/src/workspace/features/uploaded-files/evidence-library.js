@@ -1,6 +1,7 @@
 // The server supplies an uploader-scoped library; never derive picker options from shared assessments.
 let evidenceLibrary = [];
 let evidenceLibraryPending = null;
+let evidenceLibraryError = "";
 function selectableEvidenceRecords() { return evidenceLibrary; }
 function evidenceReference(file) {
   const { policyDetails, ...reference } = file;
@@ -60,16 +61,16 @@ function updateEvidencePicker(picker, html) {
     if (selection && replacement) { try { replacement.setSelectionRange(...selection); } catch {} }
   }
 }
-async function refreshEvidenceLibrary() {
-  if (evidenceLibraryPending) return evidenceLibraryPending;
+async function refreshEvidenceLibrary({force=false}={}) {
+  if (evidenceLibraryPending) { if(!force) return evidenceLibraryPending; await evidenceLibraryPending; }
   evidenceLibraryPending = (async () => {
     try {
-      const response = await fetch('/api/files?details=true');
-      if (!response.ok) throw new Error('Daftar evidence tidak dapat dimuat.');
+      const response = await fetch('/api/files?details=true',{cache:'no-store'});
+      if (!response.ok) { if(response.status===403) evidenceLibrary=[]; const detail=await response.json().catch(()=>({})); throw new Error(`Daftar evidence gagal dimuat (HTTP ${response.status}): ${detail.error || 'Periksa akses dan koneksi server.'}`); }
       const records = await response.json();
       if (!Array.isArray(records) || records.some(file => typeof file?.path !== 'string' || typeof file?.name !== 'string')) throw new Error('Daftar evidence tidak valid. Muat ulang server dan halaman.');
-      evidenceLibrary = records;
-    } catch (error) { evidenceLibrary = []; $('saveState').textContent = error.message; }
+      evidenceLibrary = records; evidenceLibraryError="";
+    } catch (error) { evidenceLibraryError=error.message; $('saveState').textContent = error.message; if($('uploadedFilesStatus')) $('uploadedFilesStatus').textContent=error.message; }
     finally { evidenceLibraryPending = null; }
     document.querySelectorAll('[data-existing-picker]').forEach(picker => updateEvidencePicker(picker, existingFilePicker(picker.dataset.existingPicker, picker.querySelector('input')?.value || '')));
     document.querySelectorAll('[data-privacy-existing-picker]').forEach(picker => updateEvidencePicker(picker, privacyFilePicker(picker.dataset.privacyExistingPicker, picker.querySelector('input')?.value || '')));

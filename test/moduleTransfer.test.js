@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
-function load(fetch = async () => { throw new Error('Unexpected request'); }) {
-  const context = vm.createContext({ fetch, document: { getElementById: () => null, querySelector: () => null } });
+function load(fetch = async () => { throw new Error('Unexpected request'); }, canPerform = () => true) {
+  const context = vm.createContext({ fetch, canPerform, document: { getElementById: () => null, querySelector: () => null } });
   vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/shared/module-transfer.js', 'utf8') + '\nthis.api = moduleTransfer;', context);
   return context.api;
 }
@@ -150,4 +150,13 @@ test('audit failure after completion reports that operation already succeeded', 
   let calls = 0;
   const api = loadAuditHelpers(async () => ++calls === 1 ? { ok: true } : { ok: false, status: 503, json: async () => ({ error: 'Database unavailable' }) });
   await assert.rejects(api.runAuditedTransfer('download', 'csf', 'template.json', async () => {}, 'Template berhasil dibuat'), /Aktivitas selesai.*HTTP 503.*Database unavailable/);
+});
+
+test('import uses Add for new records and Edit for existing records',async()=>{
+  for(const existing of [false,true]) {
+    const calls=[];
+    const api=load(async(url,options)=>{calls.push(options.method);return {ok:true,json:async()=>existing ? [{id:1}] : []};},(_key,action)=>action!==(existing ? 'update' : 'create'));
+    await assert.rejects(api.importPayload('questionnaire-templates',payload('questionnaire-templates',{templates:[{id:1,template_name:'Permission test',sections:[['Section',['Question?']]]}]})),/Izin (Add|Edit) diperlukan/);
+    assert.ok(calls.every(method=>method==='GET'),'denied action sends no mutation');
+  }
 });

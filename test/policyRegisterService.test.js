@@ -82,3 +82,74 @@ test('policy register service supports CRUD and attachment metadata', async () =
 });
 
 process.on('exit', restore);
+
+test('policy deletion handles missing and other-owner attachments while enforcing Delete',async t=>{
+  const client=await pool.connect();let server;
+  try {
+    await client.query('CREATE TEMP TABLE policy_register(id BIGINT PRIMARY KEY,attachment_path TEXT)');
+    await client.query('CREATE TEMP TABLE policy_register_items(id BIGINT,policy_id BIGINT REFERENCES policy_register(id) ON DELETE CASCADE)');
+    await client.query('CREATE TEMP TABLE evidence_files(path TEXT PRIMARY KEY,uploaded_by BIGINT)');
+    await client.query("INSERT INTO policy_register VALUES(1,'policy-register/missing.pdf'),(2,'policy-register/other-owner.pdf')");
+    await client.query('INSERT INTO policy_register_items VALUES(1,1),(2,2)');
+    await client.query("INSERT INTO evidence_files VALUES('policy-register/other-owner.pdf',2)");
+    t.mock.method(pool,'query',client.query.bind(client));
+    let allowed=false;
+    t.mock.method(require('../src/services/permissionService'),'has',async(_role,key,action)=>allowed&&key==='policy-register'&&action==='delete');
+    const ownership=t.mock.method(require('../src/services/evidenceAccessService'),'assertAccess',async()=>{throw Object.assign(new Error('Missing or other-owner file'),{status:403});});
+    const physical=t.mock.method(require('../src/services/storageService'),'remove',async()=>{throw new Error('Policy deletion must not delete the original file');});
+    const app=require('express')();app.use((req,res,next)=>{req.user={role:'editor',username:'test'};next();});app.use('/policy',require('../src/routes/policyRegisterRoutes'));
+    server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+    const url=`http://127.0.0.1:${server.address().port}/policy`;
+    assert.equal((await fetch(url+'/1',{method:'DELETE'})).status,403);
+    assert.equal((await client.query('SELECT * FROM policy_register')).rowCount,2);
+    allowed=true;
+    for(const id of [1,2])assert.equal((await fetch(url+'/'+id,{method:'DELETE'})).status,204);
+    assert.equal((await client.query('SELECT * FROM policy_register')).rowCount,0);
+    assert.equal((await client.query('SELECT * FROM policy_register_items')).rowCount,0);
+    assert.equal((await client.query('SELECT * FROM evidence_files')).rowCount,1,'original file remains available');
+    assert.equal(ownership.mock.callCount(),0);
+    assert.equal(physical.mock.callCount(),0);
+  }finally {
+    if(server)await new Promise(resolve=>server.close(resolve));
+    await client.query('DROP TABLE IF EXISTS pg_temp.policy_register_items,pg_temp.policy_register,pg_temp.evidence_files');client.release();await pool.end();
+  }
+});
+
+test('failed policy deletion shows the server error and keeps the dialog open',async()=>{
+  const fs=require('node:fs'),vm=require('node:vm');
+  const source=fs.readFileSync('frontend/client/src/workspace/features/policy-register/register-and-calendar.js','utf8');
+  const start=source.indexOf('function setPolicyDeletionStatus('),next=source.indexOf('\nfunction showPolicyRegisterView(',start);
+  const end=next<0 ? source.indexOf('\nasync function ',start+1) : next;
+  const fragment=source.slice(start,end);
+  const dialog={open:true,close(){this.open=false;}},status={textContent:''};
+  const context=vm.createContext({policyRegisterRows:[{id:3}],canManagePolicyRegister:()=>true,confirm:()=>true,fetch:async()=>({ok:false,status:403,json:async()=>({error:'Delete permission denied'})}),$:id=>id==='policyRegisterModal'?dialog:status,renderPolicyRegisterRows(){},resetPolicyRegisterForm(){},refreshEvidenceLibrary:async()=>{}});
+  vm.runInContext(fragment,context);
+  await context.deletePolicyRegister(3);
+  assert.equal(status.textContent,'Delete permission denied');
+  assert.equal(dialog.open,true);
+  assert.equal(context.policyRegisterRows.length,1);
+});
+
+
+test('policy deletion completes even when refreshing files fails, and reports network errors', async () => {
+  const fs = require('node:fs'), vm = require('node:vm');
+  const source = fs.readFileSync('frontend/client/src/workspace/features/policy-register/register-and-calendar.js', 'utf8');
+  const fragment = source.slice(source.indexOf('function setPolicyDeletionStatus('), source.indexOf('function showPolicyRegisterView('));
+  const dialog = { open: true, close() { this.open = false; } };
+  const status = { textContent: '' };
+  let fail = true;
+  const context = vm.createContext({ policyRegisterRows: [{ id: 3 }], canManagePolicyRegister: () => true, confirm: () => true,
+    fetch: async () => { if (fail) throw new Error('Connection lost'); return { ok: true, status: 204 }; },
+    $: id => id === 'policyRegisterModal' ? dialog : status, renderPolicyRegisterRows() {}, resetPolicyRegisterForm() {},
+    refreshEvidenceLibrary: async () => { throw new Error('File list unavailable'); } });
+  vm.runInContext(fragment, context);
+  await context.deletePolicyRegister(3);
+  assert.equal(status.textContent, 'Connection lost');
+  assert.equal(context.policyRegisterRows.length, 1);
+  assert.equal(dialog.open, true);
+  fail = false;
+  await context.deletePolicyRegister(3);
+  assert.equal(context.policyRegisterRows.length, 0);
+  assert.equal(dialog.open, false);
+  assert.equal(status.textContent, 'Policy dihapus. File asli tetap tersedia.');
+});

@@ -29,3 +29,23 @@ test('Tiptap parses and serializes an imported image as an image node',async()=>
  assert.ok(JSON.stringify(document).includes('"type":"image"'));
  assert.ok(manager.serialize(document).includes('/api/knowledge-notes/images/a1'));
 });
+
+
+test('image display widths survive Obsidian embeds, Markdown serialization and reload', async () => {
+ const { displayImageMarkdown, restoreImageMarkdown } = await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
+ const { NoteImage } = await import('../frontend/client/src/workspace/features/shared/noteImageExtension.mjs');
+ const { MarkdownManager } = await import('@tiptap/markdown');
+ const { default: StarterKit } = await import('@tiptap/starter-kit');
+ const manager = new MarkdownManager({ extensions: [StarterKit, NoteImage] });
+ const images = [{ id:'a1', path:'Images/photo.png' }];
+ const shown = displayImageMarkdown('![[Images/photo.png|180]]', images);
+ const doc = manager.parse(shown);
+ const image = doc.content.find(node => node.type === 'image') || doc.content[0].content.find(node => node.type === 'image');
+ assert.equal(image.attrs.width,180);
+ image.attrs.width=480;
+ const stored = restoreImageMarkdown(manager.serialize(doc),images);
+ assert.equal(stored,'![[Images/photo.png|480]]');
+ const reloaded=manager.parse(displayImageMarkdown(stored,images));
+ assert.ok(JSON.stringify(reloaded).includes('"width":480'));
+ assert.equal(restoreImageMarkdown(displayImageMarkdown('`![[Images/photo.png|180]]`',images),images),'`![[Images/photo.png|180]]`');
+});

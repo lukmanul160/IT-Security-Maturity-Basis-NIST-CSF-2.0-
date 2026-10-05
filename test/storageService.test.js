@@ -108,3 +108,19 @@ test('rejects invalid bucket, missing S3 region and unsafe prefix', async () => 
     }
   } finally { await f.cleanup(); }
 });
+
+test('explicit deletion removes the managed object and the original legacy upload only',async()=>{
+  const f=await fixture();
+  try {
+    await fs.mkdir(require('node:path').join(f.localRoot,'policy-register'));
+    await fs.writeFile(require('node:path').join(f.localRoot,'policy-register','original.pdf'),'legacy');
+    await fs.writeFile(require('node:path').join(f.localRoot,'policy-register','keep.pdf'),'keep');
+    await f.service.put('policy-register/original.pdf',{buffer:Buffer.from('managed'),name:'original.pdf',mimeType:'application/pdf'},{replace:true});
+    const managed=require('node:path').join(f.localRoot,f.locations.get('policy-register/original.pdf').object_key);
+    assert.equal((await fs.readFile(require('node:path').join(f.localRoot,'policy-register','original.pdf'))).toString(),'legacy');
+    await f.service.remove('policy-register/original.pdf');
+    await assert.rejects(fs.access(managed),{code:'ENOENT'});
+    await assert.rejects(fs.access(require('node:path').join(f.localRoot,'policy-register','original.pdf')),{code:'ENOENT'});
+    assert.equal((await fs.readFile(require('node:path').join(f.localRoot,'policy-register','keep.pdf'))).toString(),'keep');
+  } finally {await f.cleanup();}
+});

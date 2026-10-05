@@ -61,6 +61,7 @@ async function storeAttachment(req, payload) {
   if (!req.file) return;
   const relativePath = `policy-register/${req.file.filename}`;
   try {
+    if(!await require('../services/permissionService').hasFileAction(req.user?.role,'create')) throw Object.assign(new Error('Add access to files is required.'),{status:403});
     fileService.validateUploadFile(req.file.originalname, req.file.mimetype);
     await storage.put(relativePath, { sourcePath: req.file.path, name: req.file.originalname, mimeType: req.file.mimetype || 'application/octet-stream', uploadedBy: await evidenceAccess.userId(req.user) });
     payload.attachmentName = req.file.originalname;
@@ -212,8 +213,7 @@ const remove = async (req, res, next) => {
   console.log('[policyRegisterController.remove] Handler called');
   try {
     const { id } = req.params;
-    const previous = (await pool.query('SELECT attachment_path FROM policy_register WHERE id=$1', [id])).rows[0]?.attachment_path;
-    if (previous) await evidenceAccess.assertAccess(previous, req.user);
+    // The route checks Policy Delete; deleting this reference never modifies its original file.
     await service.remove(id);
     return res.status(204).send();
   } catch (error) {

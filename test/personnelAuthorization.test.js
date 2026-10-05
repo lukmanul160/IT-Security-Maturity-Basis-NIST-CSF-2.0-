@@ -5,10 +5,11 @@ const { pool } = require('../src/config/database');
 const service = require('../src/services/personnelCertificationService');
 const router = require('../src/routes/personnelCertificationRoutes');
 
-test('employee administration is admin-only; users can add certificates but cannot edit or delete', async t => {
+test('personnel actions follow Access Settings for employees and certificates', async t => {
   // Exercise the real routes and permission middleware with isolated service/database stubs.
   let pageAllowed = true;
-  t.mock.method(pool, 'query', async () => ({ rows: [{ allowed: pageAllowed }] }));
+  let actions = {read:true,create:false,update:false,delete:false};
+  t.mock.method(pool, 'query', async () => ({ rows: [{ allowed: pageAllowed, actions }] }));
   const calls = [];
   for (const method of ['createOrganizationPersonnel', 'updateOrganizationPersonnel', 'removeOrganizationPersonnel', 'create', 'update', 'remove', 'updateLayout']) {
     t.mock.method(service, method, async () => { calls.push(method); return { id: 1 }; });
@@ -30,12 +31,17 @@ test('employee administration is admin-only; users can add certificates but cann
   for (const [method, path, status] of [['POST', '/organization-personnel', 201], ['PUT', '/organization-personnel/1', 200], ['DELETE', '/organization-personnel/1', 204]]) {
     assert.equal((await request('admin', method, path)).status, status);
   }
+  actions = {read:true,create:true,update:false,delete:false};
+  assert.equal((await request('user', 'POST', '/organization-personnel')).status,201);
   assert.equal((await request('user', 'POST', '')).status, 201);
   for (const [method, path] of [['PUT', '/1'], ['PUT', '/1/layout'], ['DELETE', '/1']]) {
     assert.equal((await request('user', method, path)).status, 403);
   }
-  assert.equal((await request('viewer', 'POST', '')).status, 403);
+  assert.equal((await request('viewer', 'POST', '')).status, 201, 'configured Add overrides viewer defaults');
   assert.equal((await request('editor', 'POST', '')).status, 201);
+  actions = {read:true,create:false,update:true,delete:true};
+  for(const [method,path,status] of [['PUT','/organization-personnel/1',200],['DELETE','/organization-personnel/1',204],['PUT','/1',200],['DELETE','/1',204]]) assert.equal((await request('user',method,path)).status,status);
+  assert.equal((await request('user','POST','')).status,403);
   pageAllowed = false;
   assert.equal((await request('user', 'POST', '')).status, 403, 'page permission is still required');
 });

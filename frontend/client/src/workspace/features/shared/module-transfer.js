@@ -149,7 +149,7 @@ const moduleTransfer = (() => {
         }
       }
       for (const item of modules[key].sections) {
-        if (item.assessment) { await request(item.url, 'PUT', payload.data[item.key]); completed++; continue; }
+        if (item.assessment) { if(!canPerform(key==='csf' ? 'assessment' : 'privacy-assessment','update')) throw new Error('Izin Edit diperlukan untuk impor assessment.'); await request(item.url, 'PUT', payload.data[item.key]); completed++; continue; }
         const existing = await request(item.url);
         for (const original of payload.data[item.key]) {
           const row = { ...original };
@@ -161,6 +161,8 @@ const moduleTransfer = (() => {
           }
           const idField = item.id || 'id';
           const match = existing.find(record => row[idField] != null && String(record[idField]) === String(row[idField]));
+          const permission=key==='personnel' ? 'personnel-certification' : item.key==='soa' ? 'iso27001-soa' : key;
+          if(!canPerform(permission,match ? 'update' : 'create')) throw new Error(`Izin ${match ? 'Edit' : 'Add'} diperlukan untuk ${item.title}.`);
           const saved = await request(match ? `${item.url}/${encodeURIComponent(match[idField])}` : item.url, match ? 'PUT' : 'POST', row);
           if (key === 'personnel' && item.key === 'personnel') personnelIds.set(String(original.id), saved.id);
           completed++; progress?.(completed);

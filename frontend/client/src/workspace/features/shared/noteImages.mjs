@@ -13,7 +13,7 @@ const outsideCode=(content,transform)=>content.split(/(`{3,}[\s\S]*?`{3,}|~{3,}[
 export function displayImageMarkdown(content,images,folder=''){
  return outsideCode(content,part=>part.replace(/!\[\[([^\]\n]+)\]\]/g,(original,target)=>{
   if(!isImageFile(target.split('|')[0].trim()))return original;
-  const image=resolveImage(images,target,folder);return image?'![gambar]('+imageUrl(image.id)+')':original;
+  const image=resolveImage(images,target,folder);const width=/^\d+(?:x\d+)?$/.test(target.split('|')[1]||'')?Math.max(48,Math.min(1600,Number(target.split('|')[1].split('x')[0]))):null;return image?'![gambar]('+imageUrl(image.id)+(width?' \"kn-width:'+width+'\"':'')+')':original;
  }).replace(/!\[([^\]\n]*)\]\(([^)\n]+)\)/g,(original,alt,target)=>{
   if(/^(?:https?:|data:|\/api\/)/i.test(target))return original;
   let path;try{path=decodeURIComponent(target.replace(/^<|>$/g,''));}catch{return original;}
@@ -21,7 +21,7 @@ export function displayImageMarkdown(content,images,folder=''){
  }));
 }
 export function restoreImageMarkdown(content,images){
- return outsideCode(content,part=>part.replace(/!\[([^\]\n]*)\]\(\/api\/knowledge-notes\/images\/([a-zA-Z0-9-]+)\)/g,(original,alt,id)=>{
-  const image=images.find(image=>image.id===id);return image?'![['+image.path+']]':original;
+ return outsideCode(content,part=>part.replace(/!\[([^\]\n]*)\]\(\/api\/knowledge-notes\/images\/([a-zA-Z0-9-]+)(?: \"([^\"]*)\")?\)/g,(original,alt,id,title)=>{
+  const image=images.find(image=>image.id===id);const width=/(?:^| )kn-width:(\d+)(?: |$)/.exec(title||'');return image?'![['+image.path+(width?'|'+width[1]:'')+']]':original;
  }));
 }

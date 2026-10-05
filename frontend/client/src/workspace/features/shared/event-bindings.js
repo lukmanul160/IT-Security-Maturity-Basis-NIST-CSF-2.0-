@@ -95,20 +95,14 @@ $('policyRegisterItems').addEventListener('click', event => {
   renderPolicyRegisterItems(rows);
 });
 $('policyRegisterCancel').addEventListener('click', () => $('policyRegisterModal')?.close());
-$('policyRegisterDelete').addEventListener('click', () => { 
-  const id = $('policyRegisterId').value;
-  if (confirm('Delete this policy record?')) { 
-    deletePolicyRegister(id);
-    $('policyRegisterModal')?.close();
-  }
-});
+$('policyRegisterDelete').addEventListener('click', () => deletePolicyRegister($('policyRegisterId').value));
 $('policyRegisterFileOpen').addEventListener('click', () => {
   const row = policyRegisterRows.find(item => String(item.id) === String($('policyRegisterId').value));
   if (row?.attachmentPath) window.open(`/api/files/${encodeURIComponent(String(row.attachmentPath).replace(/^upload\//, ''))}`, '_blank', 'noopener');
 });
 $('policyRegisterFileRemove').addEventListener('click', () => {
   const id = $('policyRegisterId').value;
-  if (!id) return;
+  if (!id || !confirm('Lepaskan referensi file dari policy ini? File asli/induk dan referensi di lokasi lain tetap tersedia.')) return;
   const formData = new FormData();
   formData.append('data', JSON.stringify({ 
     title: $('policyRegisterTitle').value.trim(),
@@ -121,13 +115,16 @@ $('policyRegisterFileRemove').addEventListener('click', () => {
     removeAttachment: true
   }));
   fetch(`/api/policy-register/${encodeURIComponent(id)}`, { method: 'PUT', body: formData })
-    .then(r => r.json())
-    .then(row => { 
+    .then(async response => { const row=await response.json().catch(()=>({})); if(!response.ok) throw new Error(row.error || 'Referensi file gagal dilepas.'); return row; })
+    .then(async row => {
       const idx = policyRegisterRows.findIndex(item => String(item.id) === String(row.id));
       if (idx >= 0) policyRegisterRows[idx] = row;
       $('policyRegisterFilePreview').hidden = true;
       $('policyRegisterFileName').textContent = '-';
-    });
+      renderPolicyRegisterRows();
+      await refreshEvidenceLibrary({force:true});
+      $('policyRegisterStatus').textContent='Referensi dilepas. File asli tetap tersedia di Uploaded files.';
+    }).catch(error=>{ $('policyRegisterStatus').textContent=error.message; });
 });
 $('policyRegisterBody').addEventListener('click', event => {
   const edit = event.target.closest('[data-policy-edit]');

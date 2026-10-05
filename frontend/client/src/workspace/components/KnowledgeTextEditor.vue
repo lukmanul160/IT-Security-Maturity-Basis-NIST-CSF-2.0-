@@ -1,6 +1,6 @@
 <script setup>
 import { watch, ref, computed, nextTick } from 'vue';
-import Image from '@tiptap/extension-image';
+import { NoteImage, imageWidth } from '../features/shared/noteImageExtension.mjs';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from '@tiptap/markdown';
@@ -15,11 +15,14 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { wikiLinkRanges } from '../features/shared/noteNavigation.mjs';
 import { displayImageMarkdown, restoreImageMarkdown, imageUrl } from '../features/shared/noteImages.mjs';
 
-const props=defineProps({modelValue:{type:String,default:''},editable:Boolean,readonly:Boolean,folder:{type:String,default:''},notes:{type:Array,default:()=>[]},images:{type:Array,default:()=>[]}});
+const props=defineProps({modelValue:{type:String,default:''},editable:Boolean,allowImageUpload:{type:Boolean,default:true},readonly:Boolean,folder:{type:String,default:''},notes:{type:Array,default:()=>[]},images:{type:Array,default:()=>[]}});
 const emit=defineEmits(['update:modelValue','save','open-note','image-added']);
 const imageInput=ref(null),imageBusy=ref(false),imageStatus=ref('');
+const selectedImage=ref(false),selectedImageWidth=ref(320);
+function syncImageSelection(instance){selectedImage.value=instance.isActive('image');selectedImageWidth.value=imageWidth(instance.getAttributes('image').width)||320;}
+function resizeImage(value){if(!props.editable||props.readonly||!editor.value?.isActive('image'))return;editor.value.chain().focus().updateAttributes('image',{width:imageWidth(value),height:null}).run();}
 async function insertImage(file){
- if(!file||!props.editable||imageBusy.value)return;
+ if(!file||!props.editable||!props.allowImageUpload||imageBusy.value)return;
  imageBusy.value=true;imageStatus.value='Mengunggah gambar...';const position=editor.value?.state.selection.from;
  try{
   if(file.size>10*1024*1024)throw new Error('Gambar maksimal 10 MB.');
@@ -76,12 +79,12 @@ const safeUrl=url=>/^https?:\/\//i.test(url);
 // Preserve Obsidian links outside fenced/inline code when Markdown escapes brackets.
 function markdownContent(instance){return restoreImageMarkdown(instance.getMarkdown().split(/(`{3,}[\s\S]*?`{3,}|~{3,}[\s\S]*?~{3,}|`+[^`]*`+)/g).map((part,index)=>index%2?part:part.replace(/\\\[\\\[([^\n]*?)\\\]\\\]/g,'[[$1]]')).join(''),props.images);}
 const editor=useEditor({
- extensions:[StarterKit.configure({underline:false,link:{openOnClick:false,autolink:false,linkOnPaste:false,isAllowedUri:safeUrl,HTMLAttributes:{target:'_blank',rel:'noopener noreferrer'}}}),TaskList,TaskItem.configure({nested:true}),TableKit.configure({table:{resizable:false}}),Markdown,wikiNavigation,Image.configure({allowBase64:false})],
+ extensions:[StarterKit.configure({underline:false,link:{openOnClick:false,autolink:false,linkOnPaste:false,isAllowedUri:safeUrl,HTMLAttributes:{target:'_blank',rel:'noopener noreferrer'}}}),TaskList,TaskItem.configure({nested:true}),TableKit.configure({table:{resizable:false}}),Markdown,wikiNavigation,NoteImage.configure({allowBase64:false})],
  content:displayImageMarkdown(props.modelValue,props.images,props.folder),contentType:'markdown',editable:props.editable&&!props.readonly,
  editorProps:{attributes:{'aria-label':'Isi catatan','role':'textbox','aria-multiline':'true'},transformPastedHTML:html=>DOMPurify.sanitize(html,{FORBID_TAGS:['iframe','script','style','object','embed'],FORBID_ATTR:['style']}),handlePaste:(_view,event)=>{const file=[...(event.clipboardData?.files||[])].find(file=>file.type.startsWith('image/'));if(file&&props.editable){insertImage(file);return true;}return false;},handleKeyDown:(_view,event)=>{if(handleKey(event))return true;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();emit('save');return true;}return false;}},
  onUpdate:({editor})=>emit('update:modelValue',markdownContent(editor)),
- onSelectionUpdate:({editor})=>updateCompletion(editor),
- onTransaction:({editor})=>updateCompletion(editor),
+ onSelectionUpdate:({editor})=>{updateCompletion(editor);syncImageSelection(editor);},
+ onTransaction:({editor})=>{updateCompletion(editor);syncImageSelection(editor);},
  onFocus:({editor})=>updateCompletion(editor),
  onBlur:()=>{completion.value=null;},
 });
@@ -105,11 +108,11 @@ function format(kind){
 <template>
  <div class="knowledge-text-editor" :class="{'is-readonly':readonly}">
   <div v-if="!readonly" class="toolbar formatting" role="toolbar" aria-label="Format teks"><button v-for="[kind,label] in buttons" :key="kind" :data-format="kind" :disabled="!editable" :aria-pressed="active(kind)" @mousedown.prevent @click="format(kind)">{{ label }}</button></div>
-  <div v-if="!readonly" class="toolbar"><button :disabled="!editable||imageBusy" @mousedown.prevent @click="imageInput.click()">Masukkan gambar</button><input ref="imageInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" hidden @change="selectImage"><span role="status">{{ imageStatus }}</span></div><EditorContent :editor="editor" />
+  <div v-if="!readonly" class="toolbar"><button :disabled="!editable||!allowImageUpload||imageBusy" @mousedown.prevent @click="imageInput.click()">Masukkan gambar</button><input ref="imageInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" hidden @change="selectImage"><span role="status">{{ imageStatus }}</span></div><div v-if="selectedImage&&!readonly" class="toolbar image-sizing" aria-label="Ukuran gambar"><label>Lebar gambar <input type="number" min="48" max="1600" step="10" :value="selectedImageWidth" :disabled="!editable" @change="resizeImage($event.target.value)"> px</label><button v-for="[width,label] in [[160,'Kecil'],[320,'Sedang'],[640,'Besar']]" :key="width" :disabled="!editable" @mousedown.prevent @click="resizeImage(width)">{{label}}</button><button :disabled="!editable" @mousedown.prevent @click="resizeImage(null)">Otomatis</button></div><EditorContent :editor="editor" />
   <div v-if="completion" class="wiki-suggestions" :style="{left:completion.left+'px',top:completion.top+'px'}" role="listbox" aria-label="Cari tautan catatan">
    <strong>{{ completion.query?'Hasil pencarian: '+completion.query:'Pilih catatan yang sudah ada' }}</strong>
    <button v-for="(note,index) in matches" :key="note.id" role="option" :aria-selected="index===selected" :class="{'wiki-selected':index===selected}" @mousedown.prevent @click="choose(note)"><span data-no-translate>{{ note.title }}</span><small data-no-translate>{{ note.path }}</small></button>
-   <p v-if="!matches.length">Tidak ada catatan yang cocok.</p><small>↑ ↓ pilih · Enter / Tab sisipkan · Esc tutup</small>
+   <p v-if="!matches.length">Tidak ada catatan yang cocok.</p><small>â†‘ â†“ pilih Â· Enter / Tab sisipkan Â· Esc tutup</small>
   </div>
   <small v-if="!readonly" class="editor-help">Numbering: Enter untuk nomor berikutnya, Tab / Shift+Tab untuk tingkat daftar. Ctrl+B / Ctrl+I untuk format; Ctrl+S untuk simpan. Ctrl+klik (Mac: Cmd+klik) pada [[catatan]] untuk membuka catatan tujuan.</small>
  </div>
@@ -127,7 +130,10 @@ function format(kind){
 .knowledge-text-editor :deep(ul[data-type=taskList]){list-style:none!important;padding-left:0}.knowledge-text-editor :deep(li[data-type=taskItem]){display:flex;gap:10px;align-items:baseline}.knowledge-text-editor :deep(li[data-type=taskItem]>div){flex:1}.knowledge-text-editor :deep(input[type=checkbox]){width:auto!important}
 .knowledge-text-editor :deep(table){border-collapse:collapse;width:100%}.knowledge-text-editor :deep(td),.knowledge-text-editor :deep(th){border:1px solid #d8dce8;padding:8px}
 .formatting button[aria-pressed=true]{background:#eee6ff;border-color:#8b5cf6}.editor-help{display:block;margin-top:10px}.is-readonly :deep(.tiptap){border:0;padding:8px 0}
-.knowledge-text-editor :deep(img){max-width:100%;height:auto;border-radius:6px;margin:12px 0}
+.knowledge-text-editor :deep(img){display:block;max-width:100%;height:auto;border-radius:6px;margin:10px 0;object-fit:contain;object-position:left center}
+.knowledge-text-editor :deep(img:not([width])){max-width:min(100%,320px);max-height:280px}
+.knowledge-text-editor :deep(img.ProseMirror-selectednode){outline:2px solid #8b5cf6;outline-offset:3px}
+.image-sizing label{display:flex;gap:6px;align-items:center;font-size:12px}.image-sizing input{width:80px!important;padding:5px!important}
 .knowledge-text-editor :deep(.wiki-note-link){color:#6148af;text-decoration:underline;cursor:pointer}
 .wiki-suggestions{position:fixed;z-index:10000;width:min(320px,calc(100vw - 16px));max-height:260px;overflow:auto;padding:8px;background:white;border:1px solid #d8dce8;border-radius:8px;box-shadow:0 8px 28px #25203d33}.wiki-suggestions strong{display:block;font-size:12px;padding:5px}.wiki-suggestions button{display:block;width:100%;text-align:left;margin:3px 0;padding:7px 10px}.wiki-suggestions button span,.wiki-suggestions button small{display:block}.wiki-suggestions>small{font-size:10px}.wiki-selected{background:#eee6ff!important;border-color:#8b5cf6!important}
 </style>

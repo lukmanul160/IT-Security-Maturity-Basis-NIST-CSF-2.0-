@@ -44,6 +44,7 @@ async function loadPolicyDropdownOptionsFromServer() {
 }
 
 async function savePolicyDropdownOption(key, value) {
+  if (!canManagePolicyRegister('create')) return;
   if (!value || !value.trim()) return;
   const normalized = value.trim();
   const current = getPolicyDropdownOptions(key);
@@ -65,18 +66,7 @@ async function savePolicyDropdownOption(key, value) {
       reviewCycles: 'policyReviewCycles',
       approvalStatuses: 'policyApprovalStatuses'
     }[key]);
-  } catch (error) {
-    console.warn('Falling back to local storage for policy dropdown', error);
-    current.push(normalized);
-    policyDropdownState[key] = current;
-    localStorage.setItem(`policyDropdown_${key}`, JSON.stringify(current));
-    updatePolicyDatalist(key, {
-      categories: 'policyCategories',
-      owners: 'policyOwners',
-      reviewCycles: 'policyReviewCycles',
-      approvalStatuses: 'policyApprovalStatuses'
-    }[key]);
-  }
+  } catch (error) { $('saveState').textContent = error.message; }
 }
 
 function updatePolicyDatalist(key, datalistId) {
@@ -113,10 +103,12 @@ function loadPolicyDropdownOptions() {
 
 let policyDropdownManagerKey = null;
 let policyDropdownEditingOptions = [];
+let policyDropdownEditingOriginals = [];
 
 function openPolicyDropdownManager(key) {
   policyDropdownManagerKey = key;
   policyDropdownEditingOptions = [...getPolicyDropdownOptions(key)];
+  policyDropdownEditingOriginals = [...policyDropdownEditingOptions];
   
   const labels = {
     categories: 'Categories',
@@ -152,19 +144,21 @@ function renderPolicyDropdownOptions() {
   container.querySelectorAll('.dropdown-option-delete').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = Number(btn.dataset.deleteIndex);
-      if (idx >= 0) policyDropdownEditingOptions.splice(idx, 1);
+      if (idx >= 0 && canManagePolicyRegister('delete')) { policyDropdownEditingOptions.splice(idx, 1); policyDropdownEditingOriginals.splice(idx, 1); }
       renderPolicyDropdownOptions();
     });
   });
 }
 
 function addPolicyDropdownOption() {
+  if (!canManagePolicyRegister('create')) return;
   const input = $('policyDropdownNewOption');
   const value = input?.value.trim();
   if (!value) return;
   
   if (!policyDropdownEditingOptions.includes(value)) {
     policyDropdownEditingOptions.push(value);
+    policyDropdownEditingOriginals.push(null);
     input.value = '';
     renderPolicyDropdownOptions();
   }
@@ -179,41 +173,29 @@ async function savePolicyDropdownOptions() {
     const response = await fetch('/api/policy-register/dropdowns', { cache: 'no-store' });
     const existing = response.ok ? await response.json() : [];
     const currentField = (existing || []).filter(item => (item.fieldName || item.field_name) === fieldName);
-    const keepValueMap = new Map(currentField.map(item => [(item.optionValue || item.option_value), item.id]));
 
-    for (const item of currentField) {
-      const value = item.optionValue || item.option_value;
-      if (!filtered.includes(value)) {
-        await fetch(`/api/policy-register/dropdowns/${item.id}`, { method: 'DELETE' });
-      }
+    if (!response.ok) throw new Error('Daftar pilihan gagal dimuat.');
+    const planned = filtered.map((value,index) => {
+      const original=policyDropdownEditingOriginals[policyDropdownEditingOptions.indexOf(value)];
+      const record=currentField.find(item=>(item.optionValue || item.option_value)===original);
+      return {value,index,record};
+    });
+    const retained=new Set(planned.filter(item=>item.record).map(item=>item.record.id));
+    const operations=currentField.filter(item=>!retained.has(item.id)).map(item=>({action:'delete',url:'/api/policy-register/dropdowns/'+item.id,method:'DELETE'}));
+    for(const {value,index,record} of planned) {
+      if(record && value===(record.optionValue || record.option_value))continue;
+      operations.push({action:record?'update':'create',url:'/api/policy-register/dropdowns'+(record?'/'+record.id:''),method:record?'PUT':'POST',data:{fieldName,optionValue:value,sortOrder:index}});
     }
-
-    for (let index = 0; index < filtered.length; index += 1) {
-      const value = filtered[index];
-      const existingId = keepValueMap.get(value);
-      if (existingId) {
-        await fetch(`/api/policy-register/dropdowns/${existingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fieldName, optionValue: value, sortOrder: index })
-        });
-      } else {
-        await fetch('/api/policy-register/dropdowns', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fieldName, optionValue: value, sortOrder: index })
-        });
-      }
+    for(const operation of operations) if(!canManagePolicyRegister(operation.action)) throw new Error('Izin '+operation.action+' diperlukan untuk perubahan pilihan ini.');
+    for(const operation of operations) {
+      const saved=await fetch(operation.url,{method:operation.method,...(operation.data?{headers:{'Content-Type':'application/json'},body:JSON.stringify(operation.data)}:{})});
+      if(!saved.ok)throw new Error((await saved.json().catch(()=>({}))).error || 'Pilihan gagal disimpan.');
     }
 
     const list = filtered.slice();
     policyDropdownState[fieldName] = list;
     localStorage.setItem(`policyDropdown_${fieldName}`, JSON.stringify(list));
-  } catch (error) {
-    policyDropdownState[fieldName] = filtered;
-    localStorage.setItem(`policyDropdown_${fieldName}`, JSON.stringify(filtered));
-    console.warn('Unable to persist policy dropdown to server, saved locally', error);
-  }
+  } catch (error) { $('saveState').textContent=error.message; return; }
 
   const datalistMap = {
     categories: 'policyCategories',

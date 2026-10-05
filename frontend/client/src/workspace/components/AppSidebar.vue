@@ -2,7 +2,7 @@
 <template>
 <aside v-pre class="sidebar" aria-label="Main navigation">
         <div class="sidebar-scroll">
-        <div class="sidebar-heading"><img class="sidebar-heading-mark" src="/brand-logo.jpeg" alt="Logo Black Owl Governance" width="44" height="44" style="object-fit:contain;background:white;border-radius:50%;padding:0"><span id="sidebarGreeting">Halo</span></div>
+        <div class="sidebar-heading"><img class="sidebar-heading-mark" src="/brand-logo.png" alt="Logo Black Owl Governance" width="44" height="44" style="object-fit:contain;background:transparent;border-radius:50%;padding:0"><span id="sidebarGreeting">Halo</span></div>
         <section class="sidebar-group" id="assessmentNavGroup">
           <button class="sidebar-group-toggle" id="assessmentNavToggle" type="button" aria-controls="assessmentNav" aria-expanded="true"><span>Assessment map</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="assessmentNav">
@@ -34,7 +34,6 @@
             <button class="nav-item" data-view="iso27001-soa" type="button" hidden title="SOA (Statement of Applicability)" aria-label="SOA (Statement of Applicability)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H5v20h14V7l-5-5Z"/><path d="M14 2v6h5M8 12h8m-8 4h6"/></svg></span><span>SOA (Statement of Applicability)</span></button>
             <button class="nav-item" data-view="privacy-manage" type="button" title="Manage Privacy" aria-label="Manage Privacy"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg></span><span>Manage Privacy</span></button>
             <button class="nav-item" data-view="csf-manage" type="button" title="Manage CSF" aria-label="Manage CSF"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg></span><span>Manage CSF</span></button>
-            <button class="nav-item" data-view="files" type="button" title="Uploaded files" aria-label="Uploaded files"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h7l2 2h9v12H3V6Z"/><path d="M3 6V4h6l2 2"/></svg></span><span>Uploaded files</span></button>
           </div>
         </section>
         <section class="sidebar-group" id="backupNavGroup">
@@ -45,6 +44,9 @@
           </div>
         </section>
         <section class="sidebar-group"><div class="sidebar-group-items"><button class="nav-item" data-view="knowledge-notes" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 3h12l4 4v14H4zM16 3v5h4M8 12h8M8 16h6"/></svg></span><span>Knowledge Notes</span></button></div></section>
+        <section class="sidebar-group"><div class="sidebar-group-items">
+            <button class="nav-item" data-view="files" type="button" title="Uploaded files" aria-label="Uploaded files"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h7l2 2h9v12H3V6Z"/><path d="M3 6V4h6l2 2"/></svg></span><span>Uploaded files</span></button>
+        </div></section>
         <div class="sidebar-footer">
           <div class="framework-note"><span class="status-dot"></span><div><strong>Framework</strong><small>NIST CSF 2.0</small></div></div>
           <small>Local workspace<br>v1.0 assessment</small>

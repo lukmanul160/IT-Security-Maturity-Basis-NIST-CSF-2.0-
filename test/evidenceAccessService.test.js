@@ -12,6 +12,8 @@ test('evidence path validation rejects traversal and absolute paths', () => {
 test('uploader isolation across upload, file routes, assessment and framework references', {skip:process.env.RUN_EVIDENCE_DB_TESTS!=='1'}, async t => {
   const client=await pool.connect(); const directory=await fs.mkdtemp(path.join(os.tmpdir(),'evidence-owner-')); let server;
   try {
+    await client.query('CREATE TEMP TABLE role_permissions(role TEXT,permission_key TEXT,allowed BOOLEAN,actions JSONB)');
+    await client.query("INSERT INTO role_permissions VALUES('user','files',true,NULL)");
     await client.query('CREATE TEMP TABLE app_users(id BIGINT PRIMARY KEY,username TEXT UNIQUE)');
     await client.query("INSERT INTO app_users VALUES(1,'alice'),(2,'bob'),(3,'admin')");
     await client.query('CREATE TEMP TABLE evidence_files(path TEXT PRIMARY KEY,name TEXT,content BYTEA,mime_type TEXT,open_page INTEGER NOT NULL DEFAULT 1,updated_at TIMESTAMPTZ DEFAULT NOW())');
@@ -20,11 +22,11 @@ test('uploader isolation across upload, file routes, assessment and framework re
     await client.query('CREATE TEMP TABLE file_storage_settings(id INTEGER PRIMARY KEY,mode TEXT,directory TEXT,updated_at TIMESTAMPTZ DEFAULT NOW())');
     await client.query('CREATE TEMP TABLE file_storage_locations(path TEXT PRIMARY KEY,root TEXT,object_key TEXT,updated_at TIMESTAMPTZ DEFAULT NOW())');
     await client.query('CREATE TEMP TABLE assessment_state(id TEXT PRIMARY KEY,data JSONB,updated_at TIMESTAMPTZ DEFAULT NOW())');
-    await client.query('CREATE TEMP TABLE controls(framework_id TEXT,code TEXT,evidence JSONB)');
-    await client.query('CREATE TEMP TABLE policy_register(id BIGINT,title TEXT,attachment_path TEXT)');
+    await client.query('CREATE TEMP TABLE controls(framework_id TEXT,code TEXT,evidence JSONB,updated_at TIMESTAMPTZ)');
+    await client.query('CREATE TEMP TABLE policy_register(id BIGINT,title TEXT,attachment_path TEXT,attachment_name TEXT,attachment_type TEXT,updated_at TIMESTAMPTZ)');
     await client.query('CREATE TEMP TABLE policy_register_items(id BIGINT,policy_id BIGINT,subtitle TEXT,content TEXT,sort_order INTEGER)');
-    await client.query('CREATE TEMP TABLE tprm_due_diligence_questionnaires(responses JSONB)');
-    await client.query('CREATE TEMP TABLE audit_finding_records(data JSONB)');
+    await client.query('CREATE TEMP TABLE tprm_due_diligence_questionnaires(responses JSONB,updated_at TIMESTAMPTZ)');
+    await client.query('CREATE TEMP TABLE audit_finding_records(id TEXT,data JSONB,filename TEXT,content BYTEA,updated_at TIMESTAMPTZ)');
     const db={query:client.query.bind(client),connect:async()=>({query:client.query.bind(client),release(){}})};
     t.mock.method(pool,'query',db.query);t.mock.method(pool,'connect',db.connect);
     const storage=require('../src/services/storageService');
@@ -41,7 +43,7 @@ test('uploader isolation across upload, file routes, assessment and framework re
     assert.deepEqual(new Set((await access.list(alice)).map(f=>f.path)),new Set([a.path,aSecond.path]));
     assert.deepEqual((await access.list(bob)).map(f=>f.path),[b.path]);
     assert.equal((await access.list(admin)).length,4);
-    await client.query('INSERT INTO policy_register VALUES(1,$1,$2),(2,$3,$4)',['Access policy',a.path,'Private policy',b.path]);
+    await client.query('INSERT INTO policy_register(id,title,attachment_path) VALUES(1,$1,$2),(2,$3,$4)',['Access policy',a.path,'Private policy',b.path]);
     await client.query("INSERT INTO policy_register_items VALUES(1,1,'Access review','Review privileged accounts every quarter',0),(2,2,'Restricted subtitle','Private content Bob',0)");
     const searchable=await access.searchableList(alice);
     assert.equal(searchable.find(file=>file.path===a.path).policyDetails[0].content,'Review privileged accounts every quarter');
@@ -68,9 +70,9 @@ test('uploader isolation across upload, file routes, assessment and framework re
     await assert.rejects(assessment.update({user:alice,body:{attachments:{new:[{path:b.path}]}}},response),{status:403});
     await assessment.update({user:alice,body:{attachments:{existing:[{path:b.path}],new:[{path:a.path}]}}},response);
     const frameworks=require('../src/controllers/frameworkController');
-    await client.query("INSERT INTO controls VALUES('iso27001','4.1','[]')");
+    await client.query("INSERT INTO controls(framework_id,code,evidence) VALUES('iso27001','4.1','[]')");
     await assert.rejects(frameworks.updateControlEvidence({user:alice,params:{frameworkId:'iso27001',code:'4.1'},body:{evidence:[{path:b.path}]}},response),{status:403});
-    const permission=require('../src/services/permissionService');t.mock.method(permission,'has',async(_role,_page,action)=>action==='create');
+    const permission=require('../src/services/permissionService');let deniedAction=null;t.mock.method(permission,'has',async(role,_page,action)=>role==='admin' || action!==deniedAction);t.mock.method(permission,'hasFileAction',async(role,action)=>role==='admin' || action!==deniedAction);
     const express=require('express');const app=express();app.use(express.json());
     app.use((req,res,next)=>{req.user=req.get('x-test-user')==='admin'?admin:alice;next();});
     app.use('/files',require('../src/routes/fileRoutes'));
@@ -83,9 +85,8 @@ test('uploader isolation across upload, file routes, assessment and framework re
     for(const method of ['PUT','DELETE'])assert.equal((await fetch(base+'/files/'+access.normalize(b.path),{method})).status,403,method+' blocks other owner');
     assert.equal((await fetch(base+'/files/open-page/'+access.normalize(b.path), {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({openPage:2})})).status,403,'users cannot change another uploader PDF settings');
     assert.equal((await fetch(base+'/files/open-page/'+access.normalize(a.path), {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({openPage:2})})).status,200,'users can change their own PDF settings');
-    assert.equal((await fetch(base+'/files/'+access.normalize(a.path)+'?library=true',{method:'DELETE'})).status,409,'library deletion must not silently succeed or break linked assessment files');
     assert.equal((await fetch(base+'/files/'+access.normalize(b.path)+'?library=true',{method:'DELETE'})).status,403,'library delete cannot bypass ownership');
-    const replacement=new FormData();replacement.set('file',new Blob(['%PDF Replacement'],{type:'application/pdf'}),'same.pdf');assert.equal((await fetch(base+'/files/'+access.normalize(a.path),{method:'PUT',body:replacement})).status,200,'a regular user can replace their own file without Files update permission');
+    const replacement=new FormData();replacement.set('file',new Blob(['%PDF Replacement'],{type:'application/pdf'}),'same.pdf');assert.equal((await fetch(base+'/files/'+access.normalize(a.path),{method:'PUT',body:replacement})).status,200,'a regular user can replace their own file with Files Edit permission');
     assert.equal((await isolated.read(access.normalize(a.path))).toString(),'%PDF Replacement');
     await isolated.put('Custom/Policy/own.pdf',{buffer:Buffer.from('%PDF Own'),name:'own.pdf',mimeType:'application/pdf',uploadedBy:1});
     const customReplacement=new FormData();customReplacement.set('file',new Blob(['%PDF Custom'],{type:'application/pdf'}),'own.pdf');
@@ -99,13 +100,17 @@ test('uploader isolation across upload, file routes, assessment and framework re
     assert.equal((await fetch(base+'/files/audit-finding/fixture/proof.txt?library=true',{method:'DELETE'})).status,204);
     assert.equal((await fetch(base+'/files/'+access.normalize(b.path),{headers:{'x-test-user':'admin'}})).status,200);
     assert.equal((await (await fetch(base+'/files/access/'+access.normalize(b.path),{headers:{'x-test-user':'admin'}})).json()).canModify,true,'admin can modify all evidence');
-    assert.equal((await fetch(base+'/files?details=true')).status,403,'the file-library list still requires the Files read permission');
-    const form=new FormData();form.set('functionName','Govern');form.set('kind','policy');form.set('uploadedBy','2');form.set('file',new Blob(['%PDF New'],{type:'application/pdf'}),'new.pdf');
+    assert.equal((await fetch(base+'/files?details=true')).status,200);
+    for(const [action,method] of [['read','GET'],['update','PUT'],['delete','DELETE']]) { deniedAction=action; assert.equal((await fetch(base+'/files/'+access.normalize(a.path),{method})).status,403,'ownership cannot bypass '+action); }
+    deniedAction=null;
+    assert.equal((await fetch(base+'/files/'+access.normalize(a.path)+'?library=true',{method:'DELETE'})).status,204,'original deletion detaches all references');
+    await assert.rejects(access.assertAccess(a.path,alice),{status:403});
+    const form=new FormData();form.set('functionName','Uploaded files');form.set('kind','policy');form.set('uploadedBy','2');form.set('file',new Blob(['%PDF New'],{type:'application/pdf'}),'new.pdf');
     const uploaded=await fetch(base+'/files',{method:'POST',body:form});assert.equal(uploaded.status,201);
-    const item=await uploaded.json();assert.equal(String((await client.query('SELECT uploaded_by FROM evidence_files WHERE path=$1',[access.normalize(item.path)])).rows[0].uploaded_by),'1','body cannot spoof uploader');assert.equal((await fetch(base+'/files/'+access.normalize(item.path),{method:'DELETE'})).status,204,'a regular user can delete their own file without Files delete permission');
+    const item=await uploaded.json();assert.ok(item.path.startsWith('upload/Uploaded files/Policy/'));assert.ok((await access.list(alice)).some(file=>file.path===item.path),'standalone uploads appear in the reference library before attachment');assert.equal(String((await client.query('SELECT uploaded_by FROM evidence_files WHERE path=$1',[access.normalize(item.path)])).rows[0].uploaded_by),'1','body cannot spoof uploader');assert.equal((await fetch(base+'/files/'+access.normalize(item.path),{method:'DELETE'})).status,204,'a regular user can delete their own file with Files Delete permission');
   } finally {
     if(server)await new Promise(resolve=>server.close(resolve));
-    await client.query('DROP TABLE IF EXISTS pg_temp.audit_finding_records, pg_temp.tprm_due_diligence_questionnaires, pg_temp.policy_register_items, pg_temp.policy_register, pg_temp.controls, pg_temp.assessment_state, pg_temp.file_storage_locations, pg_temp.file_storage_settings, pg_temp.evidence_files, pg_temp.app_users');
+    await client.query('DROP TABLE IF EXISTS pg_temp.role_permissions, pg_temp.audit_finding_records, pg_temp.tprm_due_diligence_questionnaires, pg_temp.policy_register_items, pg_temp.policy_register, pg_temp.controls, pg_temp.assessment_state, pg_temp.file_storage_locations, pg_temp.file_storage_settings, pg_temp.evidence_files, pg_temp.app_users');
     client.release();await pool.end();
     // Directory is created above by mkdtemp, always below the OS temporary root.
     assert.equal(path.dirname(path.resolve(directory)),path.resolve(os.tmpdir()));

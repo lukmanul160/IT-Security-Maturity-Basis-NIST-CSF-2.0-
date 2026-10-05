@@ -49,8 +49,14 @@ app.use((req, res, next) => {
 	return next();
 });
 app.use('/api/auth', authRoutes);
-app.get(['/brand-logo.jpeg', '/favicon.ico'], (req, res) => {
+app.get('/brand-logo.jpeg', (req, res) => {
 	res.sendFile(path.join(publicRoot, 'brand-logo.jpeg'), error => {
+		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);
+	});
+});
+app.get(['/brand-logo.png', '/favicon.ico'], (req, res) => {
+	res.type('png');
+	res.sendFile(path.join(publicRoot, 'brand-logo.png'), error => {
 		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);
 	});
 });

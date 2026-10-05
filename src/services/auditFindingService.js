@@ -50,6 +50,7 @@ async function list(user) {
 async function save(kind, id, parentId, input, file, user) {
   const data = normalize(kind, input);
   const uploads = Array.isArray(file) ? file : file ? [file] : [];
+  if (uploads.length && user && !await require('./permissionService').hasFileAction(user.role,'create')) fail('Add access to files is required.',403);
   if (uploads.length > 10 || uploads.some(item => kind !== 'evidence' || !item.size || item.size > 10 * 1024 * 1024)) fail('Maksimum 10 file, masing-masing 1 byte hingga 10 MB.');
   let removed = [];
   try { removed = input.removeAttachments === undefined ? [] : JSON.parse(input.removeAttachments); } catch { fail('Daftar file yang dihapus tidak valid.'); }
@@ -109,14 +110,26 @@ async function save(kind, id, parentId, input, file, user) {
   finally { client.release(); }
 }
 async function remove(id, user) {
+  const client=await pool.connect();
   try {
-    const row = (await pool.query('SELECT kind,data,filename FROM audit_finding_records WHERE id=$1', [id])).rows[0];
+    await client.query('BEGIN');
+    // Freeze hierarchy writes while permissions are checked and children are deleted.
+    await client.query('LOCK TABLE audit_finding_records IN EXCLUSIVE MODE');
+    const subtree=(await client.query(`WITH RECURSIVE subtree AS (
+      SELECT id,kind,data,filename,0 AS depth FROM audit_finding_records WHERE id=$1
+      UNION ALL SELECT child.id,child.kind,child.data,child.filename,parent.depth+1
+      FROM audit_finding_records child JOIN subtree parent ON child.parent_id=parent.id
+    ) SELECT * FROM subtree ORDER BY depth DESC,id`,[id])).rows;
+    const row=subtree.find(item=>Number(item.depth)===0);
+    if(!row)fail('Data tidak ditemukan',404);
     const permissions = require('./permissionService');
-    if (user && !await permissions.has(user.role,'audit-finding-tracker','delete') && !(row?.kind === 'evidence' && await permissions.canDeleteOwnedEvidence(user.role))) fail('Role tidak memiliki izin hapus.',403);
-    if (row?.kind === 'evidence') for (const item of attachments(row)) await evidenceAccess.assertAccess(item.path, user);
-    const result = await pool.query('DELETE FROM audit_finding_records WHERE id=$1', [id]);
-    if (!result.rowCount) fail('Data tidak ditemukan', 404);
-  } catch (error) { if (['23503', '23001'].includes(error.code)) fail('Hapus data turunan terlebih dahulu', 409); throw error; }
+    if (user && !await permissions.has(user.role,'audit-finding-tracker','delete')) fail('Role tidak memiliki izin hapus.',403);
+    for(const record of subtree)if(record.kind==='evidence')for(const item of attachments(record))await evidenceAccess.assertAccess(item.path,user);
+    // Removing references never deletes the main files from Uploaded files.
+    for(const record of subtree)await client.query('DELETE FROM audit_finding_records WHERE id=$1',[record.id]);
+    await client.query('COMMIT');
+  } catch (error) { await client.query('ROLLBACK'); throw error; }
+  finally{client.release();}
 }
 async function download(id, user, requestedPath) {
   const row = (await pool.query("SELECT filename, data FROM audit_finding_records WHERE id=$1 AND kind='evidence'", [id])).rows[0];

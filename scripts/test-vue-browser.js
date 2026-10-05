@@ -158,6 +158,29 @@ async function run() {
     await waitFor(client, `document.querySelectorAll('.nav-item').length > 10`, 'workspace navigation');
     await delay(1500);
 
+    if (process.env.BROWSER_TEST_FOCUS === 'sidebar-alignment') {
+      const result = await evaluate(client, `(async()=>{
+        const shell=document.querySelector('.app-shell'), saved=shell.className;
+        const positions=()=>Array.from(document.querySelectorAll('.sidebar .nav-item')).filter(button=>button.getBoundingClientRect().width>0).map(button=>({
+          icon:button.querySelector('.nav-icon').getBoundingClientRect().left-button.getBoundingClientRect().left,
+          text:button.querySelector('span:not(.nav-icon)').getBoundingClientRect().left-button.getBoundingClientRect().left,
+          view:button.dataset.view,alignment:getComputedStyle(button).justifyContent
+        }));
+        try {
+          shell.classList.remove('sidebar-collapsed','sidebar-peek');await new Promise(r=>setTimeout(r,400));const expanded=positions();
+          shell.classList.add('sidebar-collapsed');await new Promise(r=>setTimeout(r,400));
+          document.querySelector('.sidebar').dispatchEvent(new MouseEvent('mouseenter'));await new Promise(r=>setTimeout(r,400));const hovered=positions();
+          return {expanded,hovered,peek:shell.classList.contains('sidebar-peek')};
+        } finally {shell.className=saved;}
+      })()`);
+      assert.equal(result.peek,true);
+      for(const rows of [result.expanded,result.hovered]) {
+        assert.ok(rows.length>=3);
+        for(const row of rows){assert.equal(row.alignment,'flex-start');assert.ok(Math.abs(row.icon-rows[0].icon)<1);assert.ok(Math.abs(row.text-rows[0].text)<1);}
+      }
+      console.log('Sidebar expanded and hover alignment passed');return;
+    }
+
     if (process.env.BROWSER_TEST_FOCUS === 'account-logout') {
       assert.deepEqual(errors, [], 'Workspace initializes without sidebar errors');
       const clickButton = async id => {
@@ -428,8 +451,58 @@ async function run() {
       return;
     }
 
+    if (process.env.BROWSER_TEST_FOCUS === 'policy-file-deletion') {
+      await waitFor(client, `currentUserRole === 'admin' && !evidenceLibraryPending`, 'evidence permissions');
+      assert.deepEqual(await evaluate(client, `(async()=>{
+        const saved={fetch:window.fetch,confirm:window.confirm,library:evidenceLibrary,policies:policyRegisterRows,id:document.getElementById('policyRegisterId').value};
+        const path='policy-register/policy-delete-verification.pdf';
+        const file={path:'upload/'+path,name:'policy-delete-verification.pdf'};
+        const keep={path:'upload/policy-register/keep.pdf',name:'keep.pdf'};
+        let request='';
+        try {
+          evidenceLibrary=[file,keep];
+          policyRegisterRows=[{id:'deletion-test',title:'Policy deletion verification',category:'Security',owner:'Test',reviewCycle:'Annual',approvalStatus:'Draft',lastReview:null,notes:'',items:[],attachmentPath:path,attachmentName:file.name,attachmentType:'application/pdf'}];
+          document.getElementById('policyRegisterId').value='deletion-test';
+          document.getElementById('policyRegisterFilePreview').hidden=false;
+          renderPolicyRegisterRows();
+          const before=document.getElementById('policyRegisterBody').textContent.includes(file.name);
+          uploadedFileRecordMap.set('deletion-test',file);
+          window.confirm=()=>true;
+          window.fetch=(url,options={})=>{
+            if(String(url).includes(path.split('/').map(encodeURIComponent).join('/')) && options.method==='DELETE') {request=String(url); return Promise.resolve(new Response(null,{status:204}));}
+            if(String(url)==='/api/files?details=true')return Promise.resolve(new Response(JSON.stringify([keep]),{status:200,headers:{'Content-Type':'application/json'}}));
+            return saved.fetch(url,options);
+          };
+          await deleteUploadedLibraryFile('deletion-test');
+          return {before,original:request.endsWith('?library=true'),removedFromPolicy:!document.getElementById('policyRegisterBody').textContent.includes(file.name),policyRemains:policyRegisterRows.length===1,previewHidden:document.getElementById('policyRegisterFilePreview').hidden,libraryKeepsOther:evidenceLibrary.length===1&&evidenceLibrary[0].path===keep.path};
+        }finally {window.fetch=saved.fetch;window.confirm=saved.confirm;evidenceLibrary=saved.library;policyRegisterRows=saved.policies;document.getElementById('policyRegisterId').value=saved.id;renderPolicyRegisterRows();renderUploadedFiles();}
+      })()`), {before:true,original:true,removedFromPolicy:true,policyRemains:true,previewHidden:true,libraryKeepsOther:true}, 'original deletion must immediately clear the source Policy attachment');
+      assert.deepEqual(errors,[], 'Browser errors'); console.log('Policy file deletion browser regression passed');return;
+    }
+
+    if (process.env.BROWSER_TEST_FOCUS === 'permissions') {
+      assert.deepEqual(await evaluate(client, `(() => {
+      const savedRole=currentUserRole, savedActions=currentUserActions;
+      const input=document.createElement('input'); input.type='file'; input.dataset.attachment='permission-test';
+      document.querySelector('#assessmentView').append(input);
+      try {
+        currentUserRole='viewer'; currentUserActions=Object.fromEntries(Object.keys(savedActions).map(key=>[key,{read:true,create:false,update:false,delete:false}]));
+        applyActionControls();
+        const denies=['csfManageNewButton','organizationPersonnelNewButton','roadmapCatalogNewButton','csfTopResetButton','riskRegisterResetButton'].every(id=>document.getElementById(id).classList.contains('role-action-denied'));
+        currentUserActions.files.create=true; applyActionControls(); const moduleDenies=input.dataset.actionDenied==='true';
+        currentUserActions.assessment.update=true; currentUserActions.files.create=false; applyActionControls(); const filesDenies=input.dataset.actionDenied==='true';
+        currentUserActions.files.create=true; applyActionControls(); const bothAllow=input.dataset.actionDenied==='false';
+        currentUserActions['personnel-certification'].create=true; applyActionControls(); const personnelAllows=!document.getElementById('organizationPersonnelNewButton').classList.contains('role-action-denied');
+        currentUserActions['personnel-certification'].read=false; applyActionControls(); const noReadDenies=document.getElementById('organizationPersonnelNewButton').classList.contains('role-action-denied');
+        return {denies,moduleDenies,filesDenies,bothAllow,personnelAllows,noReadDenies};
+      } finally { input.remove(); currentUserRole=savedRole; currentUserActions=savedActions; applyActionControls(); }
+    })()`), {denies:true,moduleDenies:true,filesDenies:true,bothAllow:true,personnelAllows:true,noReadDenies:true}, 'UI actions must follow feature permissions and require Read');
+
+      assert.deepEqual(errors, [], 'Browser errors'); console.log('Access Settings browser regression passed'); return;
+    }
+
     if (process.env.BROWSER_TEST_FOCUS === 'organization-png') {
-      await evaluate(client, `document.querySelector('[data-view="personnel-certification"]').click()`);
+    await evaluate(client, `document.querySelector('[data-view="personnel-certification"]').click()`);
       await new Promise(resolve => setTimeout(resolve, 1500));
       const result = await evaluate(client, `(async () => {
         organizationPersonnel = [{id: 991, personnelName: 'Direktur & Tim', personnelRole: 'Direktur', supervisorName: ''}, {id: 992, personnelName: 'Analis', personnelRole: 'Security Analyst', supervisorName: 'Direktur & Tim'}];
@@ -611,13 +684,13 @@ async function run() {
       return;
     }
     assert.equal(await evaluate(client, `(() => { const button = document.querySelector('#accountButton'); if (!button || button.hidden || button.disabled) return false; button.click(); return document.querySelector('#accountView').classList.contains('active-view'); })()`), true, `Account navigation unavailable: ${JSON.stringify(errors)}`);
-    assert.deepEqual(await evaluate(client, `([...document.querySelectorAll('#accountView [data-account-tab]')].map(button => button.textContent.trim()))`), ['1. Account Management', '2. ROLE ACCESS', '3. USER ACCESS MATRIX', '4. ADMINISTRATION', '5. AUDIT TRAIL', '6. Pengaturan SMTP', '7. Storage Setting'], 'Account tabs are incomplete');
+    assert.deepEqual(await evaluate(client, `([...document.querySelectorAll('#accountView [data-account-tab]')].map(button => button.dataset.accountTab))`), ['profile', 'permissions', 'matrix', 'users', 'audit', 'smtp', 'storage'], 'Account tabs are incomplete');
     assert.deepEqual(await evaluate(client, `(() => { document.querySelector('[data-account-tab="storage"]').click(); return { visible: !document.querySelector('#accountStoragePanel').hidden, inAccount: document.querySelector('#accountStoragePanel #fileStorageForm') !== null, removedFromFiles: document.querySelector('#filesView #fileStorageForm') === null }; })()`), { visible: true, inAccount: true, removedFromFiles: true }, 'Storage settings must be in the Account storage tab');
     assert.equal(await evaluate(client, `(() => { const button = document.querySelector('#accountView [data-account-tab="audit"]'); button?.click(); return document.querySelector('#accountAuditPanel')?.hidden === false && document.querySelector('#accountProfilePanel')?.hidden === true; })()`), true, 'Account audit tab unavailable');
     assert.equal(await evaluate(client, `(() => { document.querySelector('#accountView [data-account-tab="profile"]')?.click(); return document.querySelector('#accountProfilePanel')?.hidden === false; })()`), true, 'Account profile tab unavailable');
 
     await evaluate(client, `document.querySelector('[data-view="personnel-certification"]').click()`);
-    await waitFor(client, `document.querySelectorAll('[data-personnel-tab]').length === 3`, 'personnel tabs');
+    await waitFor(client, `['organization','map','reference'].every(tab=>document.querySelector('[data-personnel-tab="'+tab+'"]'))`, 'personnel tabs');
     assert.equal(await evaluate(client, `['assessmentView', 'privacyAssessmentView', 'iso27001View', 'riskAcceptanceView', 'riskManagementView', 'policyRegisterView', 'personnelCertificationView'].every(id => { const toolbar = document.querySelector('#' + id + ' [data-module-transfer]'); return toolbar && ['import', 'export', 'report'].every(action => toolbar.querySelector('[data-' + action + ']')); })`), true, 'Module import/export/report toolbars are incomplete');
     for (const tab of ['organization', 'map', 'reference']) {
       assert.equal(await evaluate(client, `(() => { const button = document.querySelector('[data-personnel-tab="${tab}"]'); button.click(); return !button.hidden; })()`), true);
@@ -627,7 +700,7 @@ async function run() {
       ['csf', 'data-csf-tab', ['overview', 'core']],
       ['privacy', 'data-privacy-tab', ['overview', 'core']],
       ['iso27001', 'data-iso-tab', ['dashboard', 'objectives', 'objective-calendar', 'clauses', 'soa']],
-      ['risk-management', 'data-risk-tab', ['register', 'indicators']],
+      ['risk-management', 'data-risk-tab', ['dashboard', 'register', 'options']],
       ['risk-acceptance', 'data-risk-acceptance-tab', ['dashboard', 'list']],
     ]) {
       await evaluate(client, `document.querySelector('[data-view="${view}"]').click()`);

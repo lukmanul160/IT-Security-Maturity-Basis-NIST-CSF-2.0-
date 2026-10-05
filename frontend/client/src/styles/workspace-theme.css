@@ -92,3 +92,7 @@ body.workspace-ui :is(.framework-badge,.function-badge){border-radius:6px;backgr
 body.workspace-ui :is(.risk-management-tabs,.csf-tabs,.privacy-tabs,.iso-tabs){background:#edf2f7;border-color:#e2e8f0;border-radius:9px}
 body.workspace-ui :is(.toolbar,.filter-toolbar){background:#fff;border-color:#e5ebf3}
 body.workspace-ui .smtp-card{border-radius:10px;box-shadow:0 1px 2px #0f172a08}
+
+body.workspace-ui #policyRegisterPanel .policy-register-actions{position:sticky;right:0;z-index:2;background:#fff;min-width:130px;white-space:nowrap;box-shadow:-3px 0 6px #0f172a0a}
+body.workspace-ui #policyRegisterPanel th.policy-register-actions{z-index:3;background:#f8fafc}
+body.workspace-ui #policyRegisterListStatus:empty{display:none}

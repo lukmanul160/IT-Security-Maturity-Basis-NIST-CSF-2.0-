@@ -62,6 +62,18 @@ async function run(){
     await client.wait('document.querySelector(".layout main>input")?.value==="Home"');
     await search('');await client.wait('document.querySelector(".search-results")===null');
     console.log('Browser: file/path, body snippets, field operators, title filter and result navigation');
+    const panelBefore=await client.evaluate('document.querySelector(".explorer").getBoundingClientRect().width');
+    const separator=await client.evaluate('document.querySelector(".files-resizer").getBoundingClientRect().toJSON()');
+    await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:separator.x+4,y:separator.y+100,button:'left',clickCount:1});
+    await client.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:separator.x+94,y:separator.y+100,buttons:1,button:'left'});
+    await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:separator.x+94,y:separator.y+100,button:'left',clickCount:1});
+    await client.wait('document.querySelector(".explorer").getBoundingClientRect().width>'+panelBefore);
+    const panelSaved=await client.evaluate('JSON.parse(localStorage.getItem("nist-note-panel-widths")).files');
+    assert.ok(panelSaved>=panelBefore+80);
+    await client.evaluate('document.querySelector(".files-resizer").dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowLeft",bubbles:true}))');
+    await client.wait('JSON.parse(localStorage.getItem("nist-note-panel-widths")).files==='+ (panelSaved-20));
+    console.log('Browser: panel widths support dragging, keyboard adjustment and persisted preferences');
+
     assert.equal(await client.evaluate(`document.querySelector('[data-folder="Security/Policies"]')===null`),true);
     await client.evaluate('document.querySelector("[data-folder=Security]").click()');await client.wait(`document.querySelector('[data-folder="Security/Policies"]')`);
     await client.evaluate(`document.querySelector('[data-folder="Security/Policies"]').click()`);await client.wait(`document.querySelector('[data-note="${policy.id}"]')`);
@@ -171,6 +183,22 @@ async function run(){
     await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Catatan disimpan")');
     assert.ok((await service.list()).find(note=>note.title==='Imported nested').content.includes('inserted.png]]'));
     console.log('Browser: inserting a new image uploads, renders, and persists its reference with the note');
+    assert.ok(await client.evaluate('document.querySelector(".tiptap img").getBoundingClientRect().width<=320'));
+    const imageRect=await client.evaluate('document.querySelector(".tiptap img").getBoundingClientRect().toJSON()');
+    await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:imageRect.x+imageRect.width/2,y:imageRect.y+imageRect.height/2,button:'left',clickCount:1});
+    await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:imageRect.x+imageRect.width/2,y:imageRect.y+imageRect.height/2,button:'left',clickCount:1});
+    await client.wait('document.querySelector(".image-sizing")');
+    await client.evaluate('Array.from(document.querySelectorAll(".image-sizing button")).find(b=>b.textContent==="Kecil").click()');
+    await client.wait('document.querySelector(".tiptap img[width]")?.getAttribute("width")==="160"');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
+    await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Catatan disimpan")');
+    assert.ok((await service.list()).find(note=>note.title==='Imported nested').content.includes('|160]]'));
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Pratinjau").click()');
+    await client.wait('document.querySelector(".tiptap img[width]")?.getAttribute("width")==="160"');
+    assert.equal(await client.evaluate('document.querySelector(".image-sizing")===null'),true);
+    assert.ok(await client.evaluate('document.querySelector(".tiptap img[width]").getBoundingClientRect().width<=160'));
+    console.log('Browser: image widths can be changed, saved, and restored in read-only preview');
+
 
     assert.deepEqual(client.errors,[]);
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Graf hubungan").click()');await delay(150);

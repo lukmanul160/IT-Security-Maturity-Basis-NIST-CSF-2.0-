@@ -17,6 +17,8 @@ test('tracker permission preserves role boundaries', () => {
 test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { skip: process.env.RUN_AFT_DB_TESTS !== '1' }, async t => {
   const client = await pool.connect();
   try {
+    await client.query('CREATE TEMP TABLE role_permissions(role TEXT,permission_key TEXT,allowed BOOLEAN,actions JSONB)');
+    await client.query("INSERT INTO role_permissions VALUES('user','files',true,NULL),('user','audit-finding-tracker',true,'{\"read\":true,\"create\":true,\"update\":true,\"delete\":false}')");
     await client.query('CREATE TEMP TABLE app_users(id BIGINT PRIMARY KEY, username TEXT)');
     await client.query("INSERT INTO app_users VALUES(1,'alice'),(2,'bob'),(3,'admin')");
     await client.query('CREATE TEMP TABLE evidence_files(path TEXT PRIMARY KEY,name TEXT,content BYTEA,mime_type TEXT,uploaded_by BIGINT,open_page INTEGER DEFAULT 1,updated_at TIMESTAMPTZ DEFAULT NOW())');
@@ -60,6 +62,7 @@ test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { s
     await assert.rejects(service.save('evidence',null,followup.id,{...selectInput,existingAttachments:JSON.stringify(['policy-register/missing.pdf'])},[],admin),{status:403});
     const adminLinked=await service.save('evidence',null,followup.id,selectInput,[],admin);
     assert.equal((await client.query('SELECT uploaded_by FROM evidence_files WHERE path=$1',[policyPath])).rows[0].uploaded_by,'1','reuse does not transfer ownership');
+    await client.query("UPDATE role_permissions SET actions=jsonb_set(actions,'{delete}','true') WHERE permission_key='audit-finding-tracker'");
     await service.remove(linked.id,alice);
     await service.remove(adminLinked.id,admin);
     const second={originalname:'second.pdf',buffer:Buffer.from('second'),size:6,mimetype:'application/pdf'};
@@ -82,9 +85,30 @@ test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { s
     assert.equal((await client.query('SELECT path FROM evidence_files WHERE path=$1',[thirdPath])).rowCount,1,'removing a reference retains the main file');
     assert.equal((await service.list(alice)).find(row=>row.id===evidence.id).attachments.length,0);
     await client.query(migration);
-    await assert.rejects(service.remove(audit.id), { status: 409 });
+    const otherFinding=await service.save('finding',null,audit.id,{title:'Sibling finding'});
+    const otherFollowup=await service.save('followup',null,otherFinding.id,{title:'Sibling follow-up'});
+    const otherEvidence=await service.save('evidence',null,otherFollowup.id,{title:'Sibling evidence'},file,bob);
+    const otherFilePath=otherEvidence.data.attachments[0].path;
+    const unrelatedAudit=await service.save('audit',null,null,{title:'Unrelated audit'});
+    const beforeDelete=(await service.list()).length;
+    const permissionMock=t.mock.method(require('../src/services/permissionService'),'has',async role=>['admin','approver'].includes(role));
+    await assert.rejects(service.remove(audit.id,{username:'alice',role:'approver'}),{status:403});
+    assert.equal((await service.list()).length,beforeDelete,'ownership failure leaves the entire hierarchy unchanged');
+    permissionMock.mock.restore();
+    const deletePermission=t.mock.method(require('../src/services/permissionService'),'has',async()=>true);
     await service.remove(evidence.id, alice);
-    for (const row of [followup, finding, audit]) await service.remove(row.id, admin);
+    deletePermission.mock.restore();
+    assert.ok((await service.list()).some(row=>row.id===followup.id),'removing evidence preserves its parent');
+    await service.remove(finding.id,admin);
+    const afterFinding=await service.list();
+    assert.ok(!afterFinding.some(row=>[finding.id,followup.id,evidence.id].includes(row.id)),'finding deletion removes its descendants');
+    assert.ok(afterFinding.some(row=>row.id===audit.id),'finding deletion preserves its audit');
+    assert.ok(afterFinding.some(row=>row.id===otherEvidence.id),'finding deletion preserves sibling branches');
+    await service.remove(audit.id,admin);
+    assert.deepEqual((await service.list()).map(row=>row.id),[unrelatedAudit.id],'audit deletion removes all descendants and preserves other audits');
+    assert.equal((await client.query('SELECT path FROM evidence_files WHERE path=$1',[otherFilePath])).rowCount,1,'cascade removes references, not the main uploaded file');
+    await assert.rejects(service.remove(audit.id,admin),{status:404});
+    await service.remove(unrelatedAudit.id,admin);
     assert.equal((await service.list()).length, 0);
-  } finally { await client.query('DROP TABLE IF EXISTS pg_temp.audit_finding_records, pg_temp.evidence_files, pg_temp.file_storage_locations, pg_temp.file_storage_settings, pg_temp.app_users'); client.release(); await pool.end(); }
+  } finally { await client.query('DROP TABLE IF EXISTS pg_temp.role_permissions, pg_temp.audit_finding_records, pg_temp.evidence_files, pg_temp.file_storage_locations, pg_temp.file_storage_settings, pg_temp.app_users'); client.release(); await pool.end(); }
 });

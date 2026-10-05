@@ -35,14 +35,14 @@
   function renderExistingFiles() {
     const items = evidenceFiles(editing);
     $('aftExistingFile').hidden = !items.length;
-    $('aftExistingFileList').innerHTML = items.map((item,index) => `<div class="toolbar"><span>${escapeHtml(item.name || 'File evidence')}${removedAttachments.has(item.path) ? ' (akan dihapus dari evidence)' : ''}</span>${item.canManageFile ? `<a class="button button-quiet" href="${escapeHtml(apiFileOpenUrl(item.path))}" target="_blank" rel="noopener noreferrer">Lihat file</a><a class="button button-quiet" href="/api/audit-finding-tracker/${encodeURIComponent(editing.id)}/download?path=${encodeURIComponent(item.path)}">Unduh</a><button class="button button-quiet" type="button" data-aft-remove-file="${index}">${removedAttachments.has(item.path) ? 'Batalkan hapus' : 'Hapus dari evidence'}</button>` : '<span>File milik akun lain</span>'}</div>`).join('');
+    $('aftExistingFileList').innerHTML = items.map((item,index) => `<div class="toolbar"><span>${escapeHtml(item.name || 'File evidence')}${removedAttachments.has(item.path) ? ' (akan dihapus dari evidence)' : ''}</span>${item.canManageFile ? `<a class="button button-quiet" href="${escapeHtml(apiFileOpenUrl(item.path))}" target="_blank" rel="noopener noreferrer">Lihat file</a><a class="button button-quiet" href="/api/audit-finding-tracker/${encodeURIComponent(editing.id)}/download?path=${encodeURIComponent(item.path)}">Unduh</a><button class="button button-quiet" type="button" data-aft-remove-file="${index}">${removedAttachments.has(item.path) ? 'Batalkan hapus' : 'Lepas referensi'}</button>` : '<span>File milik akun lain</span>'}</div>`).join('');
   }
   $('aftExistingFileList').addEventListener('click', event => {
     const button = event.target.closest('[data-aft-remove-file]');
     if (!button) return;
     const item = evidenceFiles(editing)[Number(button.dataset.aftRemoveFile)];
     if (!item?.canManageFile) return;
-    if (removedAttachments.has(item.path)) removedAttachments.delete(item.path); else removedAttachments.add(item.path);
+    if (removedAttachments.has(item.path)) removedAttachments.delete(item.path); else { if (!confirm(`Lepaskan referensi file ${item.name || 'File evidence'} dari evidence ini saat disimpan? File asli/induk dan referensi di lokasi lain tetap tersedia.`)) return; removedAttachments.add(item.path); }
     renderExistingFiles();
     renderLibrary();
   });
@@ -157,6 +157,14 @@
     if (scope) $('aftContext').textContent = `${scope.title} — ${visible.length} data. Pilih Semua Audit untuk kembali ke daftar audit.`;
     $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" ? "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
   }
+  window.addEventListener('evidence-file-deleted',event=>{
+    const normalized=value=>String(value || '').replace(/^uploads?\//,'');
+    const matches=file=>normalized(file.path)===normalized(event.detail.path);
+    for(const row of rows) { if(Array.isArray(row.data?.attachments)) row.data.attachments=row.data.attachments.filter(file=>!matches(file)); if(Array.isArray(row.attachments)) row.attachments=row.attachments.filter(file=>!matches(file)); if(normalized(row.data?.attachmentPath)===normalized(event.detail.path)) delete row.data.attachmentPath; }
+    libraryFiles=libraryFiles.filter(file=>!matches(file)); selectedLibrary.delete(normalized(event.detail.path));
+    if(editing) { editing=rows.find(row=>row.id===editing.id)||editing; removedAttachments.delete(normalized(event.detail.path)); renderExistingFiles(); renderLibrary(); }
+    render();
+  });
   async function load() {
     ready = false; render(); status('Memuat data…');
     try { rows = await request(); path = path.map(r => rows.find(item => item.id === r.id)).filter(Boolean); ready = true; render(); status('Data terbaru berhasil dimuat.'); }
@@ -205,12 +213,8 @@
     if (button.dataset.aftOpen) { cardFilter = null; path = [...ancestors(row), row]; $('aftSearch').value = ''; $('aftFilter').value = ''; render(); }
     else if (button.dataset.aftEdit) openForm(row);
     else {
-      const children = rows.filter(item => item.parentId === id);
-      if (children.length) {
-        status(`Tidak dapat menghapus "${row.data.title}": masih memiliki ${children.length} data turunan. Buka data ini, lalu hapus evidence, follow-up, dan finding dari tingkat paling bawah terlebih dahulu.`);
-        return;
-      }
-      if (!confirm(`Hapus "${row.data.title}"?`)) return;
+      const children = rows.filter(item => ancestors(item).some(parent=>parent.id===id));
+      if (!confirm(`Hapus "${row.data.title}"${children.length ? ` beserta ${children.length} data turunannya` : ''}? Induk dan data di cabang lain tetap tersedia. File utama tetap tersedia di Uploaded files.`)) return;
       button.disabled = true;
       status('Menghapus data...');
       try { await request('/' + id, { method: 'DELETE' }); await load(); if (ready) status('Data berhasil dihapus.'); } catch (error) { status(error.message); button.disabled = false; }

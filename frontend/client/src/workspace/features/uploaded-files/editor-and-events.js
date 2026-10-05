@@ -9,8 +9,8 @@ function editUploadedFile(recordId) {
   $('uploadedFileEditSource').textContent = uploadedFileSourceLabel(record);
   $('uploadedFileEditCurrentName').textContent = record.name || '-';
   $('uploadedFileEditCurrentPath').textContent = record.path || '-';
-  $('uploadedFileEditLocation').textContent = `${record.item.fn.name} · ${categoryLabel(record.item.category || 'CSF Core')}`;
-  $('uploadedFileEditControl').textContent = `${record.item.fn.id} · ${record.item.name || record.item.subcategory || '-'}`;
+  $('uploadedFileEditLocation').textContent = `${record.item.fn.name} Â· ${categoryLabel(record.item.category || 'CSF Core')}`;
+  $('uploadedFileEditControl').textContent = `${record.item.fn.id} Â· ${record.item.name || record.item.subcategory || '-'}`;
   $('uploadedFileEditInput').accept = extension || '.pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp';
   const isPdf = extension === '.pdf' || record.type === 'application/pdf';
   $('uploadedPdfOpenPageField').hidden = !isPdf;
@@ -85,3 +85,45 @@ async function replaceUploadedFile(event) {
     button.disabled = false;
   }
 }
+
+
+let uploadedFilesUploading = false;
+async function uploadLibraryFiles(files) {
+  if (uploadedFilesUploading || !files.length) return;
+  const status = $('uploadedFilesStatus');
+  if (!canPerform('files', 'create')) { status.textContent = 'Izin Add pada Uploaded files diperlukan.'; return; }
+  if (files.length > 20) { status.textContent = 'Pilih maksimal 20 file sekali upload.'; return; }
+  if (files.some(file => file.size > 50 * 1024 * 1024)) { status.textContent = 'Ukuran setiap file maksimal 50 MB.'; return; }
+  const kind = $('uploadedFilesUploadKind').value;
+  uploadedFilesUploading = true;
+  $('uploadedFilesUploadButton').disabled = true;
+  let uploaded = 0;
+  try {
+    for (const file of files) {
+      status.textContent = `Mengunggah ${uploaded + 1}/${files.length}: ${file.name}`;
+      const body = new FormData();
+      body.append('functionName', 'Uploaded files'); body.append('kind', kind); body.append('file', file, file.name);
+      const response = await fetch('/api/files', { method: 'POST', body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || `Upload gagal (HTTP ${response.status}).`);
+      uploaded++;
+      evidenceLibrary = [...evidenceLibrary.filter(item => item.path !== result.path), result];
+    }
+    $('uploadedFileSearch').value = ''; $('uploadedFileKindFilter').value = 'all';
+    renderUploadedFiles();
+    await refreshEvidenceLibrary({ force: true });
+    status.textContent = `${uploaded} file berhasil diupload dan tersedia sebagai referensi.${evidenceLibraryError ? ' ' + evidenceLibraryError : ''}`;
+  } catch (error) {
+    renderUploadedFiles();
+    status.textContent = `${uploaded}/${files.length} file berhasil diupload. ${error.message}`;
+  } finally {
+    uploadedFilesUploading = false;
+    $('uploadedFilesUploadButton').disabled = !canPerform('files', 'create');
+  }
+}
+$('uploadedFilesUploadButton').addEventListener('click', () => {
+  if (!uploadedFilesUploading && canPerform('files', 'create')) $('uploadedFilesUploadInput').click();
+});
+$('uploadedFilesUploadInput').addEventListener('change', event => {
+  const files = Array.from(event.target.files || []); event.target.value = ''; void uploadLibraryFiles(files);
+});
