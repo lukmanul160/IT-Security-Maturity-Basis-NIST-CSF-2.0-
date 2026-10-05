@@ -37,6 +37,52 @@ test('blocked storage and invalid saved preferences fall back to Indonesian', ()
   assert.equal(i18n.t('Batal'), 'Cancel');
 });
 
+test('all feature groups share bilingual labels, statuses and dynamic counts', () => {
+  const { i18n } = load('id');
+  const samples = [
+    ['Create CSF control', 'Buat kontrol CSF'],
+    ['Create Privacy control', 'Buat kontrol privasi'],
+    ['Create ISO 27001 requirement', 'Buat persyaratan ISO 27001'],
+    ['Create SOA control', 'Buat kontrol SOA'],
+    ['Save risk acceptance form', 'Simpan formulir penerimaan risiko'],
+    ['Vendor Risk Tiering Matrix', 'Matriks Tingkat Risiko Vendor'],
+    ['Vendor Due Diligence Questionnaire', 'Kuesioner Uji Tuntas Vendor'],
+    ['Certification details', 'Detail sertifikasi'],
+    ['User access matrix', 'Matriks akses pengguna'],
+    ['Save diagram', 'Simpan diagram'],
+    ['New note title', 'Judul catatan baru'],
+    ['Send test email', 'Kirim email percobaan'],
+    ['Create file backup', 'Buat cadangan file'],
+    ['Restore files', 'Pulihkan file'],
+    ['12 files found', '12 file ditemukan'],
+    ['24 policies', '24 kebijakan'],
+    ['3. Account Management', '3. Manajemen Akun'],
+    ['Tier 1 (High)', 'Tingkat 1 (Tinggi)'],
+    ['Within 48 hours', 'Dalam 48 jam'],
+    ['75% completion', '75% penyelesaian'],
+    ['Save failed', 'Gagal menyimpan'],
+    ['Discard unsaved note changes?', 'Abaikan perubahan catatan yang belum disimpan?']
+  ];
+  for (const [en, id] of samples) assert.equal(i18n.t(en), id, en);
+  i18n.setLanguage('en');
+  for (const [en, id] of samples) assert.equal(i18n.t(id), en, id);
+  assert.equal(i18n.t(null), null);
+});
+
+test('native dialogs translate their message while preserving prompt defaults and return values', () => {
+  const calls = [];
+  const context = {
+    alert: (...args) => calls.push(args),
+    confirm: (...args) => { calls.push(args); return false; },
+    prompt: (...args) => { calls.push(args); return 'user value'; },
+    dispatchEvent() {}, CustomEvent: class {}
+  };
+  vm.runInNewContext(fs.readFileSync('frontend/public/i18n.js', 'utf8'), context);
+  assert.equal(context.confirm('Delete this template?'), false);
+  assert.equal(context.prompt('New note title', 'Save'), 'user value');
+  assert.deepEqual(calls, [['Hapus template ini?'], ['Judul catatan baru', 'Save']]);
+});
+
 test('dashboard counters, maturity levels, recommendations and tooltips switch in both directions', () => {
   const { i18n } = load('id');
   const samples = [

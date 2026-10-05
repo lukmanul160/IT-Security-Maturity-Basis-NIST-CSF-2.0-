@@ -38,7 +38,7 @@ sidebarElement.addEventListener('mouseleave', () => { sidebarPointerInside = fal
 sidebarElement.addEventListener('focusin', () => peekSidebar(true));
 sidebarElement.addEventListener('focusout', event => { if (!sidebarPointerInside && !sidebarElement.contains(event.relatedTarget)) peekSidebar(false); });
 sidebarElement.addEventListener('keydown', event => { if (event.key === 'Escape') { sidebarToggle.focus(); setSidebarCollapsed(true); } });
-const sidebarGroups = [...document.querySelectorAll('.sidebar-group')];
+const sidebarGroups = [...document.querySelectorAll('.sidebar-group')].filter(group => group.querySelector('.sidebar-group-toggle'));
 const setSidebarGroupCollapsed = (group, collapsed) => {
   group.classList.toggle('is-collapsed', collapsed);
   group.querySelector('.sidebar-group-toggle').setAttribute('aria-expanded', String(!collapsed));

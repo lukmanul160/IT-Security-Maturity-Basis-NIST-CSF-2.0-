@@ -2,7 +2,7 @@
 <template>
 <aside v-pre class="sidebar" aria-label="Main navigation">
         <div class="sidebar-scroll">
-        <div class="sidebar-heading"><span class="sidebar-heading-mark" aria-hidden="true">N</span><span id="sidebarGreeting">Halo</span></div>
+        <div class="sidebar-heading"><img class="sidebar-heading-mark" src="/brand-logo.jpeg" alt="Logo Black Owl Governance" width="44" height="44" style="object-fit:contain;background:white;border-radius:50%;padding:0"><span id="sidebarGreeting">Halo</span></div>
         <section class="sidebar-group" id="assessmentNavGroup">
           <button class="sidebar-group-toggle" id="assessmentNavToggle" type="button" aria-controls="assessmentNav" aria-expanded="true"><span>Assessment map</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="assessmentNav">

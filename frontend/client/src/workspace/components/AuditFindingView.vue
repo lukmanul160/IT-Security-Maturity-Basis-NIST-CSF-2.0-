@@ -36,12 +36,12 @@
         <label class="smtp-wide">Isi email<textarea id="aftReminderBody" required maxlength="10000" rows="10" aria-describedby="aftReminderVariables"></textarea></label>
         <div class="smtp-wide" id="aftReminderVariables"><p>Teks di dalam {{...}} akan diganti otomatis dengan data finding saat email dikirim. Biarkan nama variabel tetap seperti contoh; kalimat lainnya bebas diedit.</p>
           <div class="excel-wrap"><table class="excel-table"><thead><tr><th>Variabel</th><th>Diisi otomatis dengan</th><th>Contoh</th></tr></thead><tbody>
-            <tr><td><code>{{auditTitle}}</code></td><td>Jenis / judul audit</td><td>Audit Keamanan Informasi</td></tr>
-            <tr><td><code>{{finding}}</code></td><td>Judul temuan</td><td>Review akses belum selesai</td></tr>
-            <tr><td><code>{{owner}}</code></td><td>PIC finding</td><td>PIC Audit</td></tr>
-            <tr><td><code>{{status}}</code></td><td>Status finding</td><td>Open</td></tr>
-            <tr><td><code>{{dueDate}}</code></td><td>Tanggal tenggat (tahun-bulan-tanggal)</td><td>2026-12-31</td></tr>
-            <tr><td><code>{{description}}</code></td><td>Deskripsi / rekomendasi finding</td><td>Lakukan review dan lampirkan evidence.</td></tr>
+            <tr><td><code>{{auditTitle}}</code></td><td data-translate-ui>Jenis / judul audit</td><td data-translate-ui>Audit Keamanan Informasi</td></tr>
+            <tr><td><code>{{finding}}</code></td><td data-translate-ui>Judul temuan</td><td data-translate-ui>Review akses belum selesai</td></tr>
+            <tr><td><code>{{owner}}</code></td><td data-translate-ui>PIC finding</td><td data-translate-ui>PIC Audit</td></tr>
+            <tr><td><code>{{status}}</code></td><td data-translate-ui>Status finding</td><td data-translate-ui>Open</td></tr>
+            <tr><td><code>{{dueDate}}</code></td><td data-translate-ui>Tanggal tenggat (tahun-bulan-tanggal)</td><td>2026-12-31</td></tr>
+            <tr><td><code>{{description}}</code></td><td data-translate-ui>Deskripsi / rekomendasi finding</td><td data-translate-ui>Lakukan review dan lampirkan evidence.</td></tr>
           </tbody></table></div><p>Contoh: "Mohon {{owner}} menyelesaikan temuan sebelum {{dueDate}}." menjadi "Mohon PIC Audit menyelesaikan temuan sebelum 2026-12-31." PIC yang disebut dalam isi tidak mengubah daftar email penerima.</p>
         </div>
         <div class="smtp-wide"><h4>Pratinjau dengan data contoh</h4><strong id="aftReminderPreviewSubject"></strong><pre id="aftReminderPreviewBody" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.7;background:#f3f8f5;padding:16px;border-radius:8px"></pre></div>

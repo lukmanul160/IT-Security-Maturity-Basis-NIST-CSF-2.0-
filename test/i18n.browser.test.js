@@ -21,6 +21,9 @@ test('browser translates dynamic UI, preserves form values and user data, and re
       <input id="name" value="Save" placeholder="Masukkan username">
       <table><tbody><tr><td id="user-data">Save</td><td><button id="action">Delete</button></td></tr></tbody></table>
       <p id="dynamic"></p><pre id="result"></pre>
+      <span data-no-translate id="note-title">Save</span>
+      <table><tbody><tr><td colspan="2" id="empty">No risks found.</td></tr></tbody></table>
+      <p id="module-counter">24 policies</p>
       ${dashboard}
       <script>document.addEventListener('DOMContentLoaded', async () => {
         const check = (condition, message) => { if (!condition) throw new Error(message); };
@@ -32,6 +35,9 @@ test('browser translates dynamic UI, preserves form values and user data, and re
           check(document.getElementById('name').value === 'Save', 'input data');
           check(document.getElementById('user-data').textContent === 'Save', 'table data');
           check(document.getElementById('action').textContent === 'Hapus', 'table action');
+          check(document.getElementById('note-title').textContent === 'Save', 'note title preserved');
+          check(document.getElementById('empty').textContent === 'Belum ada risiko.', 'empty table message');
+          check(document.getElementById('module-counter').textContent === '24 kebijakan', 'module counter');
           check(document.querySelector('#csfView h2').textContent === 'Pusat Kontrol CSF 2.0', 'dashboard title');
           check(document.getElementById('completionDetail').textContent === '0 dari 24 kontrol telah dinilai', 'dashboard counter');
           document.getElementById('csfSummaryBody').innerHTML = '<tr><td data-translate-ui>Overall Average Score</td><td>3.4</td></tr>';
@@ -42,6 +48,8 @@ test('browser translates dynamic UI, preserves form values and user data, and re
           const select = document.querySelector('[data-language-select]'); select.value = 'en'; select.dispatchEvent(new Event('change'));
           check(document.documentElement.lang === 'en', 'document language');
           check(save.textContent === 'Save' && dynamic.textContent === 'Save', 'restore original');
+          check(document.getElementById('empty').textContent === 'No risks found.', 'English empty table message');
+          check(document.getElementById('module-counter').textContent === '24 policies', 'English module counter');
           check(document.querySelector('#csfView h2').textContent === 'CSF 2.0 Control Room', 'dashboard English');
           document.getElementById('completionDetail').textContent = '17 of 106 controls scored'; await tick();
           NistI18n.setLanguage('id');

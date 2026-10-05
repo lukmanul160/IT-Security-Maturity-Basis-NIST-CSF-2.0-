@@ -48,6 +48,11 @@ app.use((req, res, next) => {
 	return next();
 });
 app.use('/api/auth', authRoutes);
+app.get(['/brand-logo.jpeg', '/favicon.ico'], (req, res) => {
+	res.sendFile(path.join(publicRoot, 'brand-logo.jpeg'), error => {
+		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);
+	});
+});
 // Only demonstration screenshots are public. Other workspace files require auth.
 app.use('/landing-media', express.static(path.join(publicRoot, 'landing-media'), {
 	index: false,

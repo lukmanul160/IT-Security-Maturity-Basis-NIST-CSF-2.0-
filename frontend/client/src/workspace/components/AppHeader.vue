@@ -2,9 +2,9 @@
 <template>
 <header v-pre class="topbar tw-accent-line tw-surface">
       <div class="brand-block">
-        <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg></div>
+        <img class="brand-mark" src="/brand-logo.jpeg" alt="Logo Black Owl Governance" width="38" height="38" style="object-fit:contain;background:white;border-radius:50%">
         <div>
-          <strong class="brand-title">IT Governance Tools</strong>
+          <strong class="brand-title">Black Owl Governance</strong>
           <p class="eyebrow">Align Your IT With Business need</p>
         </div>
       </div>

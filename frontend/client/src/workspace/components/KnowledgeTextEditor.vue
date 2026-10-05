@@ -65,7 +65,7 @@ function format(kind){
   <EditorContent :editor="editor" />
   <div v-if="completion" class="wiki-suggestions" :style="{left:completion.left+'px',top:completion.top+'px'}" role="listbox" aria-label="Cari tautan catatan">
    <strong>{{ completion.query?'Hasil pencarian: '+completion.query:'Pilih catatan yang sudah ada' }}</strong>
-   <button v-for="(note,index) in matches" :key="note.id" role="option" :aria-selected="index===selected" :class="{'wiki-selected':index===selected}" @mousedown.prevent @click="choose(note)"><span>{{ note.title }}</span><small>{{ note.path }}</small></button>
+   <button v-for="(note,index) in matches" :key="note.id" role="option" :aria-selected="index===selected" :class="{'wiki-selected':index===selected}" @mousedown.prevent @click="choose(note)"><span data-no-translate>{{ note.title }}</span><small data-no-translate>{{ note.path }}</small></button>
    <p v-if="!matches.length">Tidak ada catatan yang cocok.</p><small>↑ ↓ pilih · Enter / Tab sisipkan · Esc tutup</small>
   </div>
   <small v-if="!readonly" class="editor-help">Numbering: Enter untuk nomor berikutnya, Tab / Shift+Tab untuk tingkat daftar. Ctrl+B / Ctrl+I untuk format; Ctrl+S untuk simpan.</small>

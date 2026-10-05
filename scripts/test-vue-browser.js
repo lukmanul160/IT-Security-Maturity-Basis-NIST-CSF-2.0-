@@ -158,6 +158,27 @@ async function run() {
     await waitFor(client, `document.querySelectorAll('.nav-item').length > 10`, 'workspace navigation');
     await delay(1500);
 
+    if (process.env.BROWSER_TEST_FOCUS === 'account-logout') {
+      assert.deepEqual(errors, [], 'Workspace initializes without sidebar errors');
+      const clickButton = async id => {
+        const point = await evaluate(client, `(() => { const element=document.getElementById('${id}');const rect=element.getBoundingClientRect();return {x:rect.x+rect.width/2,y:rect.y+rect.height/2}; })()`);
+        await client.send('Input.dispatchMouseEvent', {type:'mousePressed',...point,button:'left',clickCount:1});
+        await client.send('Input.dispatchMouseEvent', {type:'mouseReleased',...point,button:'left',clickCount:1});
+      };
+      await clickButton('accountButton');
+      await waitFor(client, `document.querySelector('#accountView').classList.contains('active-view')`, 'Account button');
+      await evaluate(client, `document.querySelector('[data-view="knowledge-notes"]').click()`);
+      await waitFor(client, `document.querySelector('#knowledgeNotesView').classList.contains('active-view')`, 'Knowledge Notes navigation');
+      await clickButton('accountButton');
+      await waitFor(client, `document.querySelector('#accountView').classList.contains('active-view')`, 'Account from Knowledge Notes');
+      await clickButton('logoutButton');
+      await waitFor(client, `location.pathname === '/login' && document.querySelector('#loginForm')`, 'Logout redirects to login');
+      assert.equal(await evaluate(client, `(async()=>{const response=await fetch('/api/auth/me');return response.status;})()`),401,'Logout clears session');
+      assert.deepEqual(errors, [], 'Navigation and logout produce no browser errors');
+      console.log('Passed: Account clicks, Account from Knowledge Notes, Logout redirect and session invalidation');
+      return;
+    }
+
     if (process.env.BROWSER_TEST_FOCUS === 'user-entry') {
       await evaluate(client, `currentUserRole = 'user'; currentUserPermissions = permissionFallback.permissions.map(([key]) => key); applyUserAccess()`);
       for (const [view, tabSelector, buttonId, modalId] of [
