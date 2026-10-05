@@ -106,6 +106,9 @@ menyediakan database baru; data instalasi non-Docker tidak otomatis dipindahkan.
 
 ## Konfigurasi dan penyimpanan
 
+Untuk akses dari komputer lain, ikuti [panduan jaringan LAN](NETWORK_ACCESS.md),
+termasuk contoh `192.168.130.12:5000`, binding port, dan pemeriksaan firewall.
+
 | Pengaturan | Default | Kegunaan |
 | --- | --- | --- |
 | `BLACKOWL_DB_PASSWORD` | wajib diisi | Password PostgreSQL |

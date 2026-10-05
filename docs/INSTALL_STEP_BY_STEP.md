@@ -370,6 +370,10 @@ Ikuti pemeriksaan bagian C. Untuk start otomatis setelah reboot, gunakan
 
 ## D. Akses server dan pemeliharaan
 
+Untuk membuka aplikasi dari komputer lain melalui `192.168.130.12:5000`, ikuti
+[panduan akses jaringan](NETWORK_ACCESS.md). Panduan mencakup Docker/manual,
+firewall Windows/Linux, dan pemeriksaan TCP dari komputer pengguna.
+
 Untuk produksi, gunakan reverse proxy HTTPS ke port lokal aplikasi, pertahankan
 header Host asli, dan atur cookie Secure. Docker menggunakan
 `BLACKOWL_COOKIE_SECURE=true`; manual menggunakan `NODE_ENV=production`.
