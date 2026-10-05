@@ -76,6 +76,19 @@ test('legacy migration and folder API preserve notes through moves, conflicts an
     assert.ok(!(await service.list()).some(note=>note.title==='NewRollback'),'conflicting imports roll back the entire batch');
     const second=(await service.list()).find(note=>note.title==='Same'&&note.folder==='Second');
     assert.equal((await request('/'+second.id,'PUT',{...second,folder:'First'})).status,409,'moving notes cannot overwrite a matching title');
+    response=await request('/import','POST',{notes:[
+      {title:'Index',folder:'',content:'[[folder/subfolder/Kebijakan.md|Buka kebijakan]]'},
+      {title:'Kebijakan',folder:'folder/subfolder',content:'Kebijakan tujuan'},
+      {title:'Kebijakan',folder:'folder-lain',content:'Catatan lain dengan judul sama'}
+    ]});
+    assert.equal(response.status,201);
+    const loaded=await (await request('')).json();
+    const index=loaded.find(note=>note.title==='Index');
+    const target=loaded.find(note=>note.title==='Kebijakan'&&note.folder==='folder/subfolder');
+    const {wikiLinkRanges,noteIdFromHash}=await import('../frontend/client/src/workspace/features/shared/noteNavigation.mjs');
+    const link=wikiLinkRanges(index.content,loaded,index.folder)[0];
+    assert.equal(link.id,String(target.id),'root Index resolves the explicit nested folder even with duplicate titles');
+    assert.equal(noteIdFromHash(new URL(link.href,'http://localhost').hash),String(target.id),'generated URL opens the saved nested note');
   } finally {
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
     pool.query=savedQuery;pool.connect=savedConnect;
