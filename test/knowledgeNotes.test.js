@@ -56,3 +56,17 @@ test('folder moves reject cycles before acquiring a database connection',async()
   await assert.rejects(()=>service.moveFolder('A','../bad'),{status:400});
   await assert.rejects(()=>service.removeFolder(''),{status:400});
 });
+
+test('wiki links generate stable URLs, support aliases and ignore code and missing targets',async()=>{
+ const {wikiLinkRanges,noteUrl,noteIdFromHash}=await import('../frontend/client/src/workspace/features/shared/noteNavigation.mjs');
+ const notes=[{id:42,title:'Kebijakan',folder:'Security'}];
+ const text='[[kebijakan]] [[Security/Kebijakan.md#Bagian|Policy]] `[[kebijakan]]` [[missing]]';
+ const ranges=wikiLinkRanges(text,notes);
+ assert.equal(ranges.length,2);
+ assert.equal(text.slice(ranges[0].from,ranges[0].to),'[[kebijakan]]');
+ assert.ok(ranges.every(range=>range.href==='/app#knowledge-note=42'));
+ assert.equal(noteIdFromHash('#knowledge-note=42'),'42');
+ assert.equal(noteIdFromHash('#knowledge-note=%ZZ'),null);
+ assert.equal(noteIdFromHash('#other=42'),null);
+ assert.equal(noteUrl('a/b'),'/app#knowledge-note=a%2Fb');
+});

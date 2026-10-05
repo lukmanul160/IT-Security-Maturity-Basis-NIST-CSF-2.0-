@@ -8,9 +8,32 @@ import TaskItem from '@tiptap/extension-task-item';
 import { TableKit } from '@tiptap/extension-table';
 import DOMPurify from 'dompurify';
 import { wikiAtCursor, wikiSuggestions } from '../features/shared/wikiCompletion.mjs';
+import { Extension } from '@tiptap/core';
+import { Plugin } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { wikiLinkRanges } from '../features/shared/noteNavigation.mjs';
 
 const props=defineProps({modelValue:{type:String,default:''},editable:Boolean,readonly:Boolean,notes:{type:Array,default:()=>[]}});
-const emit=defineEmits(['update:modelValue','save']);
+const emit=defineEmits(['update:modelValue','save','open-note']);
+const wikiNavigation=Extension.create({
+ name:'wikiNavigation',
+ addProseMirrorPlugins(){return [new Plugin({props:{
+  decorations(state){
+   const decorations=[];
+   state.doc.descendants((node,pos)=>{
+    if(node.type.name==='codeBlock')return false;
+    if(!node.isTextblock)return;
+    const text=node.textBetween(0,node.content.size,'\n','\ufffc');
+    for(const range of wikiLinkRanges(text,props.notes)){
+     let code=false;node.nodesBetween(range.from,range.to,child=>{if(child.marks.some(mark=>mark.type.name==='code'))code=true;});
+     if(!code)decorations.push(Decoration.inline(pos+1+range.from,pos+1+range.to,{nodeName:'a',href:range.href,'data-note-id':range.id,class:'wiki-note-link',title:'Ctrl + klik untuk membuka catatan'}));
+    }
+   });
+   return DecorationSet.create(state.doc,decorations);
+  },
+  handleClick(_view,_pos,event){const link=event.target.closest?.('[data-note-id]');if(!link)return false;event.preventDefault();if(props.readonly||event.ctrlKey||event.metaKey)emit('open-note',link.dataset.noteId);return true;}
+ }})];}
+});
 const completion=ref(null),selected=ref(0),dismissed=ref('');
 const matches=computed(()=>wikiSuggestions(props.notes,completion.value?.query||''));
 function updateCompletion(instance){
@@ -35,7 +58,7 @@ const safeUrl=url=>/^https?:\/\//i.test(url);
 // Preserve Obsidian links outside fenced/inline code when Markdown escapes brackets.
 function markdownContent(instance){return instance.getMarkdown().split(/(`{3,}[\s\S]*?`{3,}|~{3,}[\s\S]*?~{3,}|`+[^`]*`+)/g).map((part,index)=>index%2?part:part.replace(/\\\[\\\[([^\n]*?)\\\]\\\]/g,'[[$1]]')).join('');}
 const editor=useEditor({
- extensions:[StarterKit.configure({underline:false,link:{openOnClick:false,autolink:false,linkOnPaste:false,isAllowedUri:safeUrl,HTMLAttributes:{target:'_blank',rel:'noopener noreferrer'}}}),TaskList,TaskItem.configure({nested:true}),TableKit.configure({table:{resizable:false}}),Markdown],
+ extensions:[StarterKit.configure({underline:false,link:{openOnClick:false,autolink:false,linkOnPaste:false,isAllowedUri:safeUrl,HTMLAttributes:{target:'_blank',rel:'noopener noreferrer'}}}),TaskList,TaskItem.configure({nested:true}),TableKit.configure({table:{resizable:false}}),Markdown,wikiNavigation],
  content:props.modelValue,contentType:'markdown',editable:props.editable&&!props.readonly,
  editorProps:{attributes:{'aria-label':'Isi catatan','role':'textbox','aria-multiline':'true'},transformPastedHTML:html=>DOMPurify.sanitize(html,{FORBID_TAGS:['img','iframe','script','style','object','embed'],FORBID_ATTR:['style']}),handleKeyDown:(_view,event)=>{if(handleKey(event))return true;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();emit('save');return true;}return false;}},
  onUpdate:({editor})=>emit('update:modelValue',markdownContent(editor)),
@@ -46,6 +69,7 @@ const editor=useEditor({
 });
 watch(()=>props.modelValue,value=>{if(editor.value&&markdownContent(editor.value)!==value)editor.value.commands.setContent(value,{contentType:'markdown',emitUpdate:false});});
 watch(()=>[props.editable,props.readonly],()=>editor.value?.setEditable(props.editable&&!props.readonly,false));
+watch(()=>props.notes,()=>{if(editor.value)editor.value.view.dispatch(editor.value.state.tr);});
 const buttons=[['bold','Bold'],['italic','Italic'],['strike','Coret'],['heading1','H1'],['heading2','H2'],['bulletList','Bullet'],['orderedList','Numbering'],['taskList','Checklist'],['indent','Indent'],['outdent','Outdent'],['blockquote','Kutipan'],['code','Code'],['codeBlock','Blok kode'],['link','Tautan'],['wiki','Tautan catatan'],['undo','Undo'],['redo','Redo']];
 function active(kind){return editor.value?.isActive(kind.startsWith('heading')?'heading':kind,kind.startsWith('heading')?{level:Number(kind.at(-1))}:undefined)||false;}
 function format(kind){
@@ -68,7 +92,7 @@ function format(kind){
    <button v-for="(note,index) in matches" :key="note.id" role="option" :aria-selected="index===selected" :class="{'wiki-selected':index===selected}" @mousedown.prevent @click="choose(note)"><span data-no-translate>{{ note.title }}</span><small data-no-translate>{{ note.path }}</small></button>
    <p v-if="!matches.length">Tidak ada catatan yang cocok.</p><small>↑ ↓ pilih · Enter / Tab sisipkan · Esc tutup</small>
   </div>
-  <small v-if="!readonly" class="editor-help">Numbering: Enter untuk nomor berikutnya, Tab / Shift+Tab untuk tingkat daftar. Ctrl+B / Ctrl+I untuk format; Ctrl+S untuk simpan.</small>
+  <small v-if="!readonly" class="editor-help">Numbering: Enter untuk nomor berikutnya, Tab / Shift+Tab untuk tingkat daftar. Ctrl+B / Ctrl+I untuk format; Ctrl+S untuk simpan. Ctrl+klik (Mac: Cmd+klik) pada [[catatan]] untuk membuka catatan tujuan.</small>
  </div>
 </template>
 <style scoped>
@@ -84,5 +108,6 @@ function format(kind){
 .knowledge-text-editor :deep(ul[data-type=taskList]){list-style:none!important;padding-left:0}.knowledge-text-editor :deep(li[data-type=taskItem]){display:flex;gap:10px;align-items:baseline}.knowledge-text-editor :deep(li[data-type=taskItem]>div){flex:1}.knowledge-text-editor :deep(input[type=checkbox]){width:auto!important}
 .knowledge-text-editor :deep(table){border-collapse:collapse;width:100%}.knowledge-text-editor :deep(td),.knowledge-text-editor :deep(th){border:1px solid #d8dce8;padding:8px}
 .formatting button[aria-pressed=true]{background:#eee6ff;border-color:#8b5cf6}.editor-help{display:block;margin-top:10px}.is-readonly :deep(.tiptap){border:0;padding:8px 0}
+.knowledge-text-editor :deep(.wiki-note-link){color:#6148af;text-decoration:underline;cursor:pointer}
 .wiki-suggestions{position:fixed;z-index:10000;width:min(320px,calc(100vw - 16px));max-height:260px;overflow:auto;padding:8px;background:white;border:1px solid #d8dce8;border-radius:8px;box-shadow:0 8px 28px #25203d33}.wiki-suggestions strong{display:block;font-size:12px;padding:5px}.wiki-suggestions button{display:block;width:100%;text-align:left;margin:3px 0;padding:7px 10px}.wiki-suggestions button span,.wiki-suggestions button small{display:block}.wiki-suggestions>small{font-size:10px}.wiki-selected{background:#eee6ff!important;border-color:#8b5cf6!important}
 </style>

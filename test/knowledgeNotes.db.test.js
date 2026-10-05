@@ -38,6 +38,34 @@ test('legacy migration and folder API preserve notes through moves, conflicts an
     assert.equal((await request('/folders','DELETE',{path:'Archive/Security'})).status,200);
     assert.ok(!(await service.folders()).some(p=>p.startsWith('Archive/Security')));
     assert.equal((await service.list()).find(n=>n.id===note.id).content,'[[Legacy]]');
+    const {readNoteImport}=await import('../frontend/client/src/workspace/features/shared/noteImport.mjs');
+    const payload=await readNoteImport([
+      {name:'file.md',webkitRelativePath:'folder1/folder2/file.md',size:7,text:async()=> '# Notes'},
+      {name:'other.md',webkitRelativePath:'folder1/folder3/deeper/other.md',size:7,text:async()=> '# Other'}
+    ]);
+    response=await request('/import','POST',payload);
+    assert.equal(response.status,201);
+    const imported=await response.json();
+    assert.equal(imported.find(n=>n.title==='file').folder,'folder1/folder2');
+    assert.equal(imported.find(n=>n.title==='other').folder,'folder1/folder3/deeper');
+    const savedFolders=await (await request('/folders')).json();
+    for(const path of ['folder1','folder1/folder2','folder1/folder3','folder1/folder3/deeper']) assert.ok(savedFolders.includes(path));
+    assert.equal((await (await request('')).json()).find(n=>n.title==='file').content,'# Notes','nested imports persist when reloaded');
+    await service.create({title:'Sibling',folder:'folder10',content:'Keep this'});
+    assert.equal((await request('/folders','DELETE',{path:'folder1',mode:'empty'})).status,409);
+    assert.equal((await request('/folders','DELETE',{path:'folder1',mode:'invalid'})).status,400);
+    assert.equal((await request('/folders','DELETE',{path:'',mode:'all'})).status,400);
+    assert.equal((await request('/folders','DELETE',{path:'folder1',mode:'all'})).status,200);
+    const remaining=await service.list();
+    assert.ok(!remaining.some(note=>['file','other'].includes(note.title)));
+    assert.ok(remaining.some(note=>note.title==='Sibling'),'similar folder prefixes are preserved');
+    assert.ok(remaining.some(note=>note.title==='Legacy'),'vault root notes are preserved');
+    assert.ok(!(await service.folders()).some(path=>path==='folder1'||path.startsWith('folder1/')));
+    assert.equal((await request('/folders','DELETE',{path:'folder1',mode:'all'})).status,404);
+    response=await request('/import','POST',{notes:[],folders:['ImportedEmpty','ImportedEmpty/Subfolder']});
+    assert.equal(response.status,201);
+    const emptyImported=await service.folders();
+    assert.ok(emptyImported.includes('ImportedEmpty/Subfolder'),'empty subfolders persist without a note');
   } finally {
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
     pool.query=savedQuery;pool.connect=savedConnect;

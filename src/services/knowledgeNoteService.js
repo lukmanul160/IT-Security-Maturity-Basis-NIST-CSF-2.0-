@@ -42,13 +42,15 @@ async function moveFolder(source, destination) {
   } catch(error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   return {folders:await folders(),notes:await list()};
 }
-async function removeFolder(path) {
+async function removeFolder(path, mode = 'empty') {
+  if (!['empty','all'].includes(mode)) throw fail('Opsi hapus folder tidak valid.');
   validateFolder(path); if(!path) throw fail('Vault utama tidak dapat dihapus.');
   const client=await pool.connect();
   try {
     await client.query('BEGIN');
     await client.query('LOCK TABLE knowledge_note_folders, knowledge_notes IN SHARE ROW EXCLUSIVE MODE');
-    if((await client.query("SELECT id FROM knowledge_notes WHERE folder=$1 OR starts_with(folder,$1 || '/') LIMIT 1",[path])).rowCount) throw fail('Folder masih berisi catatan. Pindahkan catatan terlebih dahulu.',409);
+    if (mode === 'all') await client.query("DELETE FROM knowledge_notes WHERE folder=$1 OR starts_with(folder,$1 || '/')",[path]);
+    else if((await client.query("SELECT id FROM knowledge_notes WHERE folder=$1 OR starts_with(folder,$1 || '/') LIMIT 1",[path])).rowCount) throw fail('Folder masih berisi catatan. Gunakan Hapus semua isi folder untuk menghapus folder beserta catatannya.',409);
     if(!(await client.query("DELETE FROM knowledge_note_folders WHERE path=$1 OR starts_with(path,$1 || '/')",[path])).rowCount) throw fail('Folder tidak ditemukan.',404);
     await client.query('COMMIT');
   } catch(error) {await client.query('ROLLBACK');throw error;}finally{client.release();}
