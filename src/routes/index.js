@@ -17,6 +17,7 @@ const backupRoutes = require('./backupRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
+router.use('/knowledge-notes', require('./knowledgeNoteRoutes'));
 router.use('/threat-modelling', require('./threatModelRoutes'));
 router.use('/audit-finding-tracker', require('./auditFindingRoutes'));
 router.use('/smtp-settings', require('./smtpRoutes'));

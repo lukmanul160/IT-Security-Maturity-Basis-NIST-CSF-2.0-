@@ -106,3 +106,65 @@ Run `npm run test:i18n` to check language persistence, dynamic translation, and 
 
 Konten dashboard CSF, privasi, dan risiko mengikuti pilihan bahasa, termasuk ringkasan kematangan, penghitung kontrol, deskripsi fungsi, legenda tingkat kematangan, label ringkasan, dan label grafik radar. Label tabel ringkasan menggunakan `data-translate-ui`; data tabel lain tetap dipertahankan. Grafik radar digambar ulang ketika bahasa berubah tanpa mengubah skor atau target.
 
+# Knowledge Notes
+
+Editor visual memakai Tiptap OSS 3 (MIT), berjalan lokal tanpa layanan cloud atau
+API key. Toolbar **Numbering** membuat daftar bernomor otomatis: Enter menambah
+item, Tab membuat subdaftar, Shift+Tab mengurangi tingkat. Bold, italic, coret,
+heading, bullet, checklist, kutipan, kode, undo/redo dan tautan juga tersedia.
+Tab **Markdown** mempertahankan akses langsung ke sumber untuk sintaks khusus.
+Paste HTML dibersihkan dengan DOMPurify; tautan editor dibatasi ke HTTP/HTTPS.
+Penyimpanan dan ekspor tetap menggunakan Markdown, termasuk `[[tautan catatan]]`.
+Ketik `[[` atau `[[]]` di editor visual untuk mencari catatan yang sudah ada
+berdasarkan judul/nama file dan jalur folder. Pilih dengan klik atau panah atas/
+bawah lalu Enter/Tab; Esc menutup saran. Tombol **Tautan catatan** juga membuka
+pencarian ini. Tautan yang dipilih menyertakan folder agar tujuan tetap jelas.
+
+Pencarian Knowledge Notes mencakup nama file Markdown/jalur lengkap, judul, isi,
+folder, tag, dan wiki-link. Pilih cakupan pada dropdown untuk mempersempit hasil.
+Hasil menampilkan jalur file, cuplikan isi, dan sorotan kata yang cocok; klik hasil
+untuk membuka catatan. Pencarian berlaku pada catatan yang telah diimpor/disimpan
+di modul ini. Pencarian graf memakai aturan yang sama.
+
+Beberapa kata memakai AND; tanda kutip mencari frasa dan minus mengecualikan kata.
+Contoh: `isi:"akses data" -tag:arsip`, `file:Policy.md folder:Keamanan`, atau
+`judul:"Audit Internal"`. Operator tersedia: `file:`, `judul:` / `title:`,
+`isi:` / `content:`, `folder:`, `tag:`, dan `tautan:` / `link:`.
+
+Menu **Knowledge Notes** menyediakan catatan Markdown tersimpan di PostgreSQL,
+pencarian isi/tag, tautan `[[Judul]]` atau `[[Judul|Label]]`, backlinks, dan graf
+hubungan yang dapat diklik. Menu berada paling bawah sidebar. Explorer menampilkan
+pohon folder/subfolder yang bisa dibuka dan ditutup, dengan status ekspansi tersimpan.
+Klik folder lalu buat subfolder atau catatan di dalamnya. Drag catatan/folder ke
+folder tujuan; drag ke Knowledge Vault untuk memindahkannya ke tingkat utama.
+Menu klik kanan atau tombol `⋯` menyediakan rename, subfolder baru, dan hapus folder
+kosong. Rename/pindah folder memperbarui seluruh subfolder dan catatan dalam satu
+transaksi. Hak baca/tulis mengikuti pengaturan izin modul.
+
+Graf memakai Canvas 2D dengan tata letak gaya pegas. Drag simpul untuk mengatur
+posisi, drag latar untuk pan, scroll atau tombol +/- untuk zoom, dan klik simpul
+untuk membuka catatan. Tersedia graf lokal, pencarian, filter catatan tanpa hubungan,
+warna berdasarkan folder, Fit, jeda simulasi, dan ekspor PNG. Tombol panah membantu
+navigasi keyboard; daftar catatan juga tersedia di bawah canvas.
+
+Toolbar editor menyediakan bold, italic, coret, heading, daftar, checklist,
+kutipan, kode, dan tautan. Pilih teks lalu klik format, atau gunakan Ctrl+B / Ctrl+I
+(Cmd pada macOS). Format disimpan sebagai Markdown dan ditampilkan pada Pratinjau.
+
+Impor beberapa file `.md` / `.txt`, atau backup `.json` hasil ekspor fitur ini.
+Judul berasal dari nama file dan harus unik; impor duplikat dibatalkan seluruhnya.
+Untuk vault Obsidian, gunakan **Impor folder** agar struktur subfolder dipertahankan.
+Lampiran biner dilewati. JSON dan ZIP mempertahankan folder termasuk folder kosong.
+Pratinjau menampilkan format dasar dan wiki-link secara aman tanpa menjalankan HTML.
+
+Ekspor catatan aktif ke `.md`, seluruh catatan ke JSON, atau ZIP berisi Markdown
+dan backup JSON. Ekstrak ZIP sebelum mengimpor; gunakan JSON untuk memulihkan
+seluruh catatan. Simpan perubahan terlebih dahulu sebelum ekspor seluruh vault.
+Jika judul berubah, perbarui tautan dari catatan lain yang memakai judul lama.
+
+Migrasi tabel `knowledge_notes` dan `knowledge_note_folders` dijalankan saat startup
+dan saat akses pertama modul. Restart server setelah pembaruan kode backend.
+Jalankan `npm run test:notes` untuk pemeriksaan logika, dan `npm run test:notes-browser`
+untuk pengujian browser/API dengan schema PostgreSQL sementara (memerlukan Chrome
+dan database aplikasi yang aktif). Data catatan pengguna tidak dipakai sebagai fixture.
+

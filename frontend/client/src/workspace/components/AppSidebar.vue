@@ -44,6 +44,7 @@
             <button class="nav-item" data-view="file-backups" type="button" title="File Backup" aria-label="File Backup"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg></span><span>File Backup</span></button>
           </div>
         </section>
+        <section class="sidebar-group"><div class="sidebar-group-items"><button class="nav-item" data-view="knowledge-notes" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 3h12l4 4v14H4zM16 3v5h4M8 12h8M8 16h6"/></svg></span><span>Knowledge Notes</span></button></div></section>
         <div class="sidebar-footer">
           <div class="framework-note"><span class="status-dot"></span><div><strong>Framework</strong><small>NIST CSF 2.0</small></div></div>
           <small>Local workspace<br>v1.0 assessment</small>
