@@ -35,7 +35,7 @@ $('policySmtpOpen').addEventListener('click', async () => {
   try { populatePolicySmtp(await policySmtpRequest('GET')); $('policySmtpStatus').textContent = 'Pengaturan siap diedit.'; controls.forEach(control => { control.disabled = false; }); }
   catch (error) { $('policySmtpStatus').textContent = `${error.message} Klik tab pengaturan untuk mencoba kembali.`; }
 });
-$('policySmtpForm').addEventListener('submit', async event => {
+$('policySmtpForm').addEventListener('submit', guardFormSubmission(async event => {
   event.preventDefault();
   const button = event.submitter;
   if (button) { button.disabled = true; button.textContent = 'Menyimpan pengaturan...'; }
@@ -51,7 +51,7 @@ $('policySmtpForm').addEventListener('submit', async event => {
     $('policySmtpStatus').textContent = data.enabled ? 'Pengaturan tersimpan. Reminder otomatis aktif; jadwal review diperiksa paling lambat satu jam lagi.' : 'Pengaturan tersimpan. Reminder otomatis nonaktif. Anda tetap dapat mengirim email percobaan.';
   } catch (error) { $('policySmtpStatus').textContent = error.message; }
   finally { if (button) { button.disabled = false; button.textContent = 'Simpan reminder kebijakan'; } }
-});
+}));
 $('policySmtpTest').addEventListener('click', async () => {
   const input = $('policySmtpTestTo');
   if (!input.value || !input.checkValidity()) { $('policySmtpStatus').textContent = 'Isi email tujuan tes yang valid.'; return; }

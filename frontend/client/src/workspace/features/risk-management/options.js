@@ -19,7 +19,7 @@ function ensureRiskDropdownManager() {
   });
   $('riskDropdownFilter').addEventListener('change', renderRiskDropdownManager);
   $('riskDropdownCancel').addEventListener('click', () => { $('riskDropdownForm').hidden = true; });
-  $('riskDropdownForm').addEventListener('submit', saveRiskDropdown);
+  $('riskDropdownForm').addEventListener('submit', guardFormSubmission(saveRiskDropdown));
   panel.addEventListener('click', event => {
     const edit = event.target.closest('[data-dropdown-edit]'); const remove = event.target.closest('[data-dropdown-delete]');
     if (edit) fillRiskDropdown(dropdownRows().find(row => String(row.id) === edit.dataset.dropdownEdit));

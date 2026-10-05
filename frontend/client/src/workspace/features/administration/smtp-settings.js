@@ -35,7 +35,7 @@ document.querySelector('[data-account-tab="smtp"]').addEventListener('click', as
     $('globalSmtpStatus').textContent = 'Pengaturan siap diedit.';
   } catch(error) { $('globalSmtpStatus').textContent = `${error.message} Klik tab SMTP untuk mencoba kembali.`; }
 });
-$('globalSmtpForm').addEventListener('submit',async event => {
+$('globalSmtpForm').addEventListener('submit',guardFormSubmission(async event => {
   event.preventDefault();const button=event.submitter;if(button)button.disabled=true;
   try {
     const payload={name:$('globalSmtpName').value.trim()};
@@ -46,7 +46,7 @@ $('globalSmtpForm').addEventListener('submit',async event => {
     $('globalSmtpStatus').textContent='SMTP tersimpan. Pilih akun ini pada pengaturan reminder Policy Register atau Audit.';
   } catch(error) { $('globalSmtpStatus').textContent=error.message; }
   finally {if(button)button.disabled=false;}
-});
+}));
 $('globalSmtpTest').addEventListener('click',async()=>{
   if (!globalSmtpAccountId) { $('globalSmtpStatus').textContent='Simpan akun terlebih dahulu.'; return; }
   const input=$('globalSmtpTestTo');if(!input.value||!input.reportValidity())return;

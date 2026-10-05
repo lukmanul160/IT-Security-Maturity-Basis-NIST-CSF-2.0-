@@ -209,7 +209,7 @@
       try { await request('/' + id, { method: 'DELETE' }); await load(); } catch (error) { status(error.message); button.disabled = false; }
     }
   });
-  form.addEventListener('submit', async event => {
+  form.addEventListener('submit', guardFormSubmission(async event => {
     event.preventDefault(); const body = new FormData(form);
     body.set('kind', editing?.kind || kinds[path.length]); body.set('parentId', path.at(-1)?.id || '');
     if (!form.elements.file.files.length) body.delete('file');
@@ -225,7 +225,7 @@
     try { await request(editing ? '/' + editing.id : '', { method: editing ? 'PUT' : 'POST', body }); $('aftModal').close(); await load(); await refreshEvidenceLibrary(); }
     catch (error) { $('aftFormStatus').textContent = error.message; }
     finally { $('aftSave').disabled = false; $('aftCancel').disabled = false; }
-  });
+  }));
   const reminderControls = () => [...$('aftReminderForm').elements, $('aftReminderTest')].filter(control => control.id !== 'aftReminderUseTemplate');
   const reminderTemplateFallback = {
   subjectTemplate: 'Pengingat tindak lanjut audit: {{auditTitle}} - {{finding}}',
@@ -275,7 +275,7 @@
   }
   $('aftReminderReload').addEventListener('click', loadReminder);
   $('aftReminderSmtp').addEventListener('click', () => { $('accountButton').click(); document.querySelector('[data-account-tab="smtp"]').click(); });
-  $('aftReminderForm').addEventListener('submit', async event => {
+  $('aftReminderForm').addEventListener('submit', guardFormSubmission(async event => {
     event.preventDefault();
     $('aftReminderSave').disabled = true;
     try {
@@ -288,7 +288,7 @@
       $('aftReminderStatus').textContent = data.enabled ? 'Reminder tersimpan dan aktif. Jadwal diperiksa paling lambat satu jam lagi.' : 'Pengaturan tersimpan. Reminder otomatis nonaktif.';
     } catch (error) { $('aftReminderStatus').textContent = error.message; }
     finally { $('aftReminderSave').disabled = false; }
-  });
+  }));
   $('aftReminderTest').addEventListener('click', async () => {
     const input = $('aftReminderTestTo');
     if (!input.value || !input.reportValidity()) { $('aftReminderStatus').textContent = 'Isi email tujuan percobaan yang valid.'; return; }

@@ -1,6 +1,7 @@
 // Ordered classic-script source: keep shared scope and initialization order intact.
 // See features/README.md before moving code between sections.
 import part01 from './features/shared/state-and-access.js?raw';
+import submissionGuard from './features/shared/submission-guard.js?raw';
 import part02 from './features/risk-acceptance/forms.js?raw';
 import part03 from './features/policy-register/dropdowns.js?raw';
 import part04 from './features/policy-register/form.js?raw';
@@ -37,6 +38,7 @@ import actionAccess from './features/shared/action-access.js?raw';
 import threatNavigation from './features/shared/threat-navigation.js?raw';
 
 export default [
+  submissionGuard,
   part01,
   evidenceLibrary,
   part02,

@@ -53,6 +53,6 @@ async function submitFileStorage(save) {
   } catch (error) { $('fileStorageStatus').textContent = error.message; }
   finally { $('fileStorageFields').disabled = false; }
 }
-$('fileStorageForm').addEventListener('submit', event => { event.preventDefault(); submitFileStorage(true); });
+$('fileStorageForm').addEventListener('submit', guardFormSubmission(event => { event.preventDefault(); return submitFileStorage(true); }));
 $('fileStorageTest').addEventListener('click', () => submitFileStorage(false));
 

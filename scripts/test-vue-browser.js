@@ -233,6 +233,30 @@ async function run() {
       return;
     }
 
+    if (process.env.BROWSER_TEST_FOCUS === 'submission-guard') {
+      await evaluate(client, `(() => {
+        window.submissionOriginalFetch = window.fetch;
+        window.submissionCalls = 0;
+        window.fetch = (url, options) => String(url) === '/api/auth/me' && options?.method === 'PUT'
+          ? (window.submissionCalls++, new Promise(resolve => { window.finishSubmission = () => resolve(new Response('{}', {status: 200})); }))
+          : window.submissionOriginalFetch(url, options);
+        const form = document.querySelector('#accountProfileForm');
+        form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+        form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+      })()`);
+      assert.equal(await evaluate(client, `window.submissionCalls`), 1);
+      assert.equal(await evaluate(client, `document.querySelector('#accountProfileForm').getAttribute('aria-busy')`), 'true');
+      await evaluate(client, `window.finishSubmission()`);
+      await waitFor(client, `!document.querySelector('#accountProfileForm').hasAttribute('aria-busy')`, 'submission lock released');
+      await evaluate(client, `document.querySelector('#accountProfileForm').dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}))`);
+      assert.equal(await evaluate(client, `window.submissionCalls`), 2);
+      await evaluate(client, `window.finishSubmission(); window.fetch = window.submissionOriginalFetch`);
+      await waitFor(client, `!document.querySelector('#accountProfileForm').hasAttribute('aria-busy')`, 'second submission completed');
+      assert.deepEqual(errors, []);
+      console.log('PASS: repeated form submits send once while pending and allow subsequent saves');
+      return;
+    }
+
     if (process.env.BROWSER_TEST_FOCUS === 'file-ownership') {
       await evaluate(client, `(() => {
         currentUserRole = 'user'; currentUserPermissions = ['files'];

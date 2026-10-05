@@ -285,7 +285,9 @@ async function savePolicyRegister(event) {
   }
   await loadPolicyRegisterRows();
   $('policyRegisterStatus').textContent = id ? 'Policy updated' : 'Policy saved';
-  setTimeout(() => { $('policyRegisterModal')?.close(); resetPolicyRegisterForm(); }, 800);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  $('policyRegisterModal')?.close();
+  resetPolicyRegisterForm();
 }
 
 async function deletePolicyRegister(id) {
