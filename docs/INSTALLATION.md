@@ -18,7 +18,7 @@ bawah. Kedua metode tersedia sebagai pilihan deployment aplikasi yang sama.
 
 | Komponen | Kebutuhan |
 | --- | --- |
-| Node.js | Gunakan Node.js **24 LTS** beserta npm. Build yang terpasang memakai Vite 7 dengan engine `^20.19.0 || >=22.12.0`; Node.js 18 tidak cukup untuk build meskipun `package.json` aplikasi masih mencantumkan `>=18`. |
+| Node.js | Gunakan Node.js **24** beserta npm. Engine aplikasi dan Vite 7 memerlukan `^20.19.0 || >=22.12.0`; Node.js 18 tidak cukup untuk build. |
 | PostgreSQL | Server PostgreSQL dan client tools `psql`, `pg_dump`, `pg_restore`. Lingkungan pengembangan memakai PostgreSQL 18. |
 | Source aplikasi | Clone Git atau ekstrak arsip lengkap, termasuk `data/`, `database/`, `scripts/`, dan `frontend/`. |
 | Browser | Browser modern untuk login, upload evidence, dan editor diagram SVG. |
