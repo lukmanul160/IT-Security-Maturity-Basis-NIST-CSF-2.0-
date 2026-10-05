@@ -84,6 +84,30 @@ async function recoveryZip(t, manifest, contentEntries) {
   await done;
   return target;
 }
+test('folder backup includes descendants and excludes folders with similar names', async t => {
+  const rows = ['Policy/a.pdf', 'Policy/2026/b.pdf', 'Policy-old/c.pdf', 'root.pdf'].map(key => ({ path: key, name: 'file.pdf', mime_type: 'application/pdf' }));
+  const read = [];
+  const { api } = await fixture(t, async key => { read.push(key); return Buffer.from('x'); }, rows);
+  assert.deepEqual(await api.folders(), ['Policy', 'Policy-old', 'Policy/2026']);
+  const backup = await api.create({ folder: 'Policy' });
+  assert.equal(backup.fileCount, 2);
+  assert.deepEqual(read, ['Policy/a.pdf', 'Policy/2026/b.pdf']);
+  await assert.rejects(api.create({ folder: '../Policy' }), /Invalid file path/);
+  await assert.rejects(api.create({ folder: 'missing' }), /tidak berisi/);
+});
+test('folder restore changes only descendants and rejects missing folders without writes', async t => {
+  const files = ['Policy/a.pdf', 'Policy/2026/b.pdf', 'Policy-old/c.pdf'].map(key => ({ path: key, name: 'file.pdf', mime_type: 'application/pdf', size: 1 }));
+  const manifest = { format: 'NIST Basis file backup', version: 1, files };
+  const entries = files.map(item => [`upload/${item.path}`, 'x']);
+  const written = [];
+  const api = createFileBackupService({ db: { query: async () => ({ rows: [] }) }, store: { normalizePath, put: async key => written.push(key) } });
+  const result = await api.restore({ path: await recoveryZip(t, manifest, entries) }, { folder: 'Policy' });
+  assert.equal(result.fileCount, 2);
+  assert.deepEqual(written, ['Policy/a.pdf', 'Policy/2026/b.pdf']);
+  written.length = 0;
+  await assert.rejects(api.restore({ path: await recoveryZip(t, manifest, entries) }, { folder: 'missing' }), /tidak ditemukan/);
+  assert.deepEqual(written, []);
+});
 test('restore rejects missing files and incorrect sizes before writing any live files', async t => {
   for (const size of [1, 3]) {
     const input = await recoveryZip(t, { format: 'NIST Basis file backup', version: 1, files: [{ path: 'test.pdf', name: 'test.pdf', mime_type: 'application/pdf', size }] }, size === 1 ? [] : [['upload/test.pdf', 'x']]);

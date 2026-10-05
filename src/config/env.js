@@ -2,6 +2,8 @@ require('dotenv').config();
 
 module.exports = {
   nodeEnv: process.env.NODE_ENV || 'development',
+  sessionCookieSecure: process.env.SESSION_COOKIE_SECURE === 'true' ||
+    (process.env.NODE_ENV === 'production' && process.env.SESSION_COOKIE_SECURE !== 'false'),
   port: Number(process.env.PORT) || 8000,
   database: {
     url: process.env.DATABASE_URL || '',

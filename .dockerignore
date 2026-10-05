@@ -1,0 +1,25 @@
+.git
+.env
+.env.*
+env.exsample
+node_modules
+upload
+backup
+output
+img
+Excel File
+*.xlsx
+*.log
+*.key
+data/*
+!data/csf-data.json
+!data/privacy-data.json
+!data/iso-27001-data.json
+!data/iso-27001-soa-data.json
+!data/personnel-certifications-seed.json
+!data/risk-indicators.json
+frontend/client/src/workspace/generated
+frontend/public/vue
+.vscode
+docs
+test

@@ -7,6 +7,7 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { requireAuth } = require('./middleware/auth');
 const { getSession, parseCookies, sessionCookie } = require('./config/auth');
 const { auditRequest } = require('./middleware/audit');
+const { sessionCookieSecure } = require('./config/env');
 
 const app = express();
 app.disable('x-powered-by');
@@ -28,7 +29,7 @@ app.use((req, res, next) => {
 		'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 	});
 
-	if (process.env.NODE_ENV === 'production') {
+	if (process.env.NODE_ENV === 'production' && sessionCookieSecure) {
 		res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 	}
 

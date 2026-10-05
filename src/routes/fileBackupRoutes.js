@@ -8,8 +8,9 @@ const upload = multer({ dest: path.join(os.tmpdir(), 'nist-file-backup-restore')
 
 router.use(requireAdmin);
 router.get('/', async (req, res) => res.json(await service.list()));
-router.post('/', async (req, res) => res.status(201).json(await service.create()));
-router.post('/restore', upload.single('backup'), async (req, res) => res.json(await service.restore(req.file)));
+router.get('/folders', async (req, res) => res.json(await service.folders()));
+router.post('/', async (req, res) => res.status(201).json(await service.create({ folder: req.body?.folder })));
+router.post('/restore', upload.single('backup'), async (req, res) => res.json(await service.restore(req.file, { folder: req.body?.folder })));
 router.get('/:fileName', async (req, res) => res.download(await service.resolve(req.params.fileName), req.params.fileName));
 router.delete('/:fileName', async (req, res) => { await service.remove(req.params.fileName); res.status(204).end(); });
 module.exports = router;

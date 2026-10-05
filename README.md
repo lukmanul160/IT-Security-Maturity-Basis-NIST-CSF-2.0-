@@ -24,6 +24,36 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Mulai cepat
 
+Aplikasi menyediakan dua pilihan deployment. Pilih salah satu sesuai lingkungan:
+
+| Pilihan | Yang dipasang pada komputer/server | Panduan |
+| --- | --- | --- |
+| Docker Compose | Docker dengan Compose v2; Node.js, npm, PostgreSQL, dan build frontend dijalankan di container | [Deployment Docker](docs/DOCKER.md) |
+| Instalasi langsung | Node.js beserta npm, PostgreSQL server, dan PostgreSQL client tools | [Instalasi Linux/Windows](docs/INSTALLATION.md) |
+
+### Opsi Docker
+
+Untuk opsi ini, Anda tidak perlu menginstal Node.js, npm, atau PostgreSQL pada
+host. Docker membangun frontend dan menjalankan backend serta database.
+Perintah `npm run admin:create` di bawah dijalankan di container melalui
+`docker compose exec`, sehingga tidak membutuhkan npm pada host.
+
+Nama aplikasi/container: **IT_Governance_BLACKOWL**. Database: **BlackOwl_DB_Gov**.
+Salin `docker.env.example` ke `.env.docker`, isi `BLACKOWL_DB_PASSWORD`, lalu:
+
+```bash
+docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker exec app npm run admin:create
+```
+
+Jalankan pembuatan admin setelah startup aplikasi selesai. Buka
+http://localhost:5000/login. PostgreSQL hanya diakses melalui `db:5432` di
+jaringan internal Docker, tanpa membuka port 5432 pada host. Database dan file
+memakai volume permanen.
+Lihat [panduan Docker](docs/DOCKER.md) untuk konfigurasi, HTTPS, backup, dan upgrade.
+
+### Instalasi tanpa Docker
+
 Instal Node.js 24 LTS, PostgreSQL server beserta client tools, lalu buka root
 project. Buat role database dan konfigurasikan kredensial sesuai panduan instalasi.
 Template environment di repository bernama **env.exsample**. Jangan menimpa

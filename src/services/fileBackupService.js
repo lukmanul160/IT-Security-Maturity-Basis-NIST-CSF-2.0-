@@ -18,7 +18,23 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
     if (typeof fileName !== 'string' || !pattern.test(fileName)) throw Object.assign(new Error('Invalid file backup filename'), { status: 400 });
     return path.join(root, fileName);
   }
-  async function create() {
+  function selection(folder) {
+    if (folder == null || folder === '') return '';
+    if (typeof folder !== 'string') throw Object.assign(new Error('Folder tidak valid.'), { status: 400 });
+    return store.normalizePath(folder);
+  }
+  const matches = (filePath, folder) => !folder || filePath.startsWith(`${folder}/`);
+  async function folders() {
+    const { rows } = await db.query('SELECT path FROM evidence_files ORDER BY path');
+    const result = new Set();
+    for (const row of rows) {
+      const parts = store.normalizePath(row.path).split('/');
+      for (let i = 1; i < parts.length; i++) result.add(parts.slice(0, i).join('/'));
+    }
+    return [...result].sort();
+  }
+  async function create({ folder: requestedFolder } = {}) {
+    const folder = selection(requestedFolder);
     await fs.promises.mkdir(root, { recursive: true });
     const createdAt = new Date().toISOString();
     const timestamp = createdAt.replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
@@ -35,8 +51,10 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
     try {
       const { rows } = await db.query('SELECT path, name, mime_type, open_page, updated_at, uploaded_by FROM evidence_files ORDER BY path');
       const files = [];
+      let total = 0;
       for (const row of rows) {
         const normalized = store.normalizePath(row.path);
+        if (!matches(normalized, folder)) continue;
         let content;
         try { content = await store.read(normalized); }
         catch (error) {
@@ -45,6 +63,8 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
           if (!legacy.rows[0]?.content) throw error;
           content = legacy.rows[0].content;
         }
+        total += content.length;
+        if (content.length > 500 * 1024 * 1024 || total > 2 * 1024 * 1024 * 1024 || files.length >= 49999) throw Object.assign(new Error('Backup melebihi batas restore: 500 MB per file, 2 GB total, atau 49.999 file. Pilih folder yang lebih kecil.'), { status: 400 });
         // Wait until each entry is consumed to avoid retaining every file in memory.
         await new Promise((accept, reject) => {
           const done = () => { archive.off('error', failed); output.off('error', failed); accept(); };
@@ -56,9 +76,13 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
         });
         files.push({ ...row, path: normalized, size: content.length });
       }
-      archive.append(JSON.stringify({ format: 'NIST Basis file backup', version: 1, createdAt, files }, null, 2), { name: 'manifest.json' });
+      if (folder && !files.length) throw Object.assign(new Error('Folder tidak berisi file untuk dibackup.'), { status: 400 });
+      const manifest = JSON.stringify({ format: 'NIST Basis file backup', version: 1, createdAt, folder, files }, null, 2);
+      if (Buffer.byteLength(manifest) > 10 * 1024 * 1024 || total + Buffer.byteLength(manifest) > 2 * 1024 * 1024 * 1024) throw Object.assign(new Error('Manifest atau total backup melebihi batas restore. Pilih folder yang lebih kecil.'), { status: 400 });
+      archive.append(manifest, { name: 'manifest.json' });
       await archive.finalize();
       await completion;
+      if ((await fs.promises.stat(temporary)).size > 500 * 1024 * 1024) throw Object.assign(new Error('ZIP melebihi batas unggahan restore 500 MB. Pilih folder yang lebih kecil.'), { status: 400 });
       await fs.promises.rename(temporary, target);
       return { fileName, createdAt, size: (await fs.promises.stat(target)).size, fileCount: files.length };
     } catch (error) {
@@ -79,13 +103,14 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
     return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
   async function remove(fileName) { await fs.promises.rm(await resolve(fileName), { force: true }); }
-  async function restore(file) {
+  async function restore(file, { folder: requestedFolder } = {}) {
     if (!file?.path) throw Object.assign(new Error('Pilih file backup ZIP.'), { status: 400 });
     const staging = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'nist-file-recovery-'));
     const invalid = message => Object.assign(new Error(message), { status: 400 });
     let zip;
     let restoredCount = 0;
     try {
+      const folder = selection(requestedFolder);
       zip = await new Promise((accept, reject) => yauzl.open(file.path, { lazyEntries: true, strictFileNames: true }, (error, value) => error ? reject(invalid('Arsip ZIP tidak valid.')) : accept(value)));
       const entries = new Map();
       let total = 0;
@@ -131,7 +156,9 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
       }
       if (entries.size !== paths.size + 1) throw invalid('Arsip berisi file yang tidak terdaftar pada manifest.');
       // Entire archive is checked before any live file is written.
-      for (const item of manifest.files) {
+      const selected = manifest.files.filter(item => matches(item.path, folder));
+      if (folder && !selected.length) throw invalid('Folder tidak ditemukan dalam arsip backup.');
+      for (const item of selected) {
         const owner = item.uploaded_by == null ? null : (await db.query('SELECT id FROM app_users WHERE id = $1', [item.uploaded_by])).rows[0]?.id || null;
         await store.put(item.path, { sourcePath: entries.get(`upload/${item.path}`).target, name: item.name, mimeType: item.mime_type, uploadedBy: owner });
         restoredCount++;
@@ -147,6 +174,6 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
       await fs.promises.rm(file.path, { force: true });
     }
   }
-  return { create, list, resolve, remove, restore };
+  return { create, folders, list, resolve, remove, restore };
 }
 module.exports = { ...createFileBackupService(), createFileBackupService };

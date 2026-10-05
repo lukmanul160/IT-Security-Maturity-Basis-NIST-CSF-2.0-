@@ -1,6 +1,7 @@
 const { authenticate, createSession, destroySession, parseCookies, sessionCookie } = require('../config/auth');
 const accountService = require('../services/accountService');
 const permissionService = require('../services/permissionService');
+const { sessionCookieSecure } = require('../config/env');
 const loginAttempts = new Map();
 const maxLoginFailures = 5;
 const loginWindow = 15 * 60 * 1000;
@@ -29,7 +30,7 @@ async function login(req, res) {
   loginAttempts.delete(key);
   req.user = user;
   const token = createSession(user);
-  res.cookie(sessionCookie, token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 8 * 60 * 60 * 1000 });
+  res.cookie(sessionCookie, token, { httpOnly: true, sameSite: 'lax', secure: sessionCookieSecure, maxAge: 8 * 60 * 60 * 1000 });
   return res.json({ username: user.username, role: user.role });
 }
 function logout(req, res) { destroySession(parseCookies(req.headers.cookie)[sessionCookie]); res.clearCookie(sessionCookie); res.status(204).end(); }

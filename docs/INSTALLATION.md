@@ -5,7 +5,16 @@ dari root repository, yaitu folder yang berisi `package.json`, kecuali disebutka
 lain. Instalasi Linux di bawah memakai Ubuntu/Debian dengan systemd; distribusi
 lain perlu menyesuaikan package manager dan service PostgreSQL.
 
-## 1. Kebutuhan
+## Pilih metode deployment
+
+Panduan di bawah khusus **instalasi langsung tanpa Docker**, dengan Node.js dan
+PostgreSQL dipasang pada host. Sebagai alternatif, gunakan
+[deployment Docker Compose](DOCKER.md): cukup pasang Docker dengan Compose v2;
+Node.js, npm, build frontend, PostgreSQL, dan client tools berjalan di container.
+Pengguna Docker tidak perlu mengikuti langkah instalasi Node.js/PostgreSQL di
+bawah. Kedua metode tersedia sebagai pilihan deployment aplikasi yang sama.
+
+## 1. Kebutuhan instalasi langsung
 
 | Komponen | Kebutuhan |
 | --- | --- |
