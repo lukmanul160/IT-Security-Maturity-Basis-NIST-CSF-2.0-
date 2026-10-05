@@ -26,6 +26,20 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Mulai cepat
 
+### Akun dan password awal
+
+Akun berikut otomatis dibuat pada instalasi baru, termasuk mode production:
+
+| Username | Password awal | Role |
+| --- | --- | --- |
+| `admin` | `AdminInitial123!` | admin |
+| `user` | `UserInitial123!` | user |
+
+**Segera ganti password kedua akun setelah login
+pertama** melalui **Account → Account Management → Save profile**, sebelum
+memberikan akses kepada pengguna lain. Seed tidak menimpa password akun lama.
+Perintah `admin:create` di bawah opsional untuk administrator tambahan.
+
 Aplikasi menyediakan dua pilihan deployment. Pilih salah satu sesuai lingkungan:
 
 | Pilihan | Yang dipasang pada komputer/server | Panduan |

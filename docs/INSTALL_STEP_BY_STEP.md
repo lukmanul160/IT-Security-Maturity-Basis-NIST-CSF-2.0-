@@ -115,8 +115,22 @@ Jika startup gagal, periksa log sebelum melanjutkan.
 
 Database **BlackOwl_DB_Gov**, schema, dan data referensi disiapkan otomatis saat
 startup. Tidak perlu menjalankan `db:setup` secara terpisah pada metode Docker.
+**Seed tetap berjalan pada mode production**: CSF, Privacy, ISO/SOA, indikator
+risiko, katalog sertifikasi, serta akun awal `admin` dan `user`.
+Lihat [rincian seed dan perintah eksplisit](DOCKER.md#instalasi-pertama).
+Data operasional tambahan perlu import/restore atau migrasi khusus; file SQL/JSON
+tambahan tidak otomatis dijalankan.
 
 ### A4. Buat administrator
+
+Administrator awal sudah dibuat otomatis. Login dengan `admin` /
+`AdminInitial123!`; akun `user` memakai password `UserInitial123!`.
+**Segera ubah password kedua akun** melalui **Account → Account Management**:
+isi password saat ini, password baru, dan konfirmasi, lalu klik **Save profile**.
+Login kembali dengan password baru. Selesaikan sebelum memberikan akses kepada
+pengguna lain. Restart/rebuild tidak menimpa password yang sudah diganti.
+
+Perintah berikut opsional untuk membuat administrator tambahan:
 
 ```text
 docker compose --env-file .env.docker exec app npm run admin:create
@@ -129,8 +143,8 @@ Jalankan dari terminal interaktif, tanpa opsi `-T`. Masukkan:
 3. Password 8–72 karakter, mengandung huruf besar, huruf kecil, dan angka.
 4. Konfirmasi password yang sama.
 
-Tunggu pesan bahwa administrator berhasil dibuat. Mode Docker tidak membuat
-akun demo. Pada instalasi ulang, gunakan akun yang sudah ada; jangan membuat
+Tunggu pesan bahwa administrator tambahan berhasil dibuat. Pada instalasi ulang,
+gunakan akun yang sudah ada; jangan membuat
 ulang username yang sama.
 
 ### A5. Login dan cek hasil
@@ -281,6 +295,10 @@ masalah execution policy `npm.ps1`.
 
 ### B5. Siapkan database dan admin
 
+`db:setup` membuat akun awal `admin` / `AdminInitial123!` dan
+`user` / `UserInitial123!`, termasuk pada production. Perintah `admin:create`
+di bawah opsional untuk membuat administrator tambahan dengan username baru.
+
 Windows:
 
 ```powershell
@@ -298,7 +316,7 @@ npm run admin:create
 Pastikan provisioning selesai dan menampilkan tabel yang siap. Masukkan username
 baru (default `nistadmin`), nama opsional, password, dan konfirmasinya.
 Password wajib 8–72 karakter dengan huruf besar, huruf kecil, dan angka.
-Gunakan akun yang dibuat ini untuk login; jangan mengandalkan password demo.
+Gunakan akun awal atau administrator tambahan untuk login.
 
 ### B6. Jalankan aplikasi
 
@@ -315,8 +333,13 @@ npm start
 ```
 
 Startup melengkapi tabel dan data referensi. Tunggu server siap, lalu buka
-**http://localhost:8000/login**. Login memakai akun dari B5. Biarkan terminal
-terbuka selama server dipakai; `Ctrl+C` menghentikan aplikasi.
+**http://localhost:8000/login**. Login memakai akun dari B5.
+**Segera ubah password akun `admin` dan `user`**
+melalui **Account → Account Management**, isi password saat ini, password baru,
+dan konfirmasi, lalu **Save profile**. Login kembali memakai password baru.
+Password baru harus 8–72 karakter dengan huruf besar, huruf kecil, dan angka.
+Jangan membuka akses kepada pengguna lain sebelum kedua password diganti.
+Biarkan terminal terbuka selama server dipakai; `Ctrl+C` menghentikan aplikasi.
 Ikuti pemeriksaan bagian C. Untuk start otomatis setelah reboot, gunakan
 [systemd atau Task Scheduler](INSTALLATION.md#6-menjalankan-terus-menerus).
 

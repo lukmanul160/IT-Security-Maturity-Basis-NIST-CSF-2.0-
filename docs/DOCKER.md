@@ -47,15 +47,59 @@ docker compose --env-file .env.docker ps
 docker compose --env-file .env.docker logs -f app
 ```
 
-Tunggu aplikasi siap, lalu buat admin melalui terminal interaktif:
+Tunggu aplikasi siap. Akun awal `admin` dan `user` dibuat otomatis, termasuk pada
+mode production. **Segera ganti password keduanya setelah login pertama**:
+
+| Username | Password awal | Role |
+| --- | --- | --- |
+| `admin` | `AdminInitial123!` | admin |
+| `user` | `UserInitial123!` | user |
+
+Buka **Account → Account Management**, isi password saat ini, password baru,
+dan konfirmasi, lalu klik **Save profile**. Login kembali dengan password baru.
+Lakukan untuk kedua akun sebelum membuka akses aplikasi ke pengguna lain.
+Seed tidak mengganti password akun yang sudah ada saat restart/rebuild.
+
+Jika ingin membuat administrator tambahan, jalankan dari terminal interaktif:
 
 ```bash
 docker compose --env-file .env.docker exec app npm run admin:create
 ```
 
-Pilih username dan password sendiri. Mode production tidak membuat akun demo.
-Database, tabel, dan seed kerangka kerja disiapkan otomatis ketika aplikasi
-startup; tidak perlu menjalankan `db:setup` lagi.
+Pilih username baru dan password sendiri. **Mode production menjalankan seed
+data aplikasi serta akun awal `admin`/`user`.**
+Startup memanggil provisioning database, lalu inisialisasi dan seed setiap modul:
+
+- NIST CSF dari `data/csf-data.json`.
+- NIST Privacy dari `data/privacy-data.json`.
+- ISO 27001 dan SOA dari `data/iso-27001-data.json` dan `data/iso-27001-soa-data.json`.
+- Indikator risiko dari `data/risk-indicators.json`.
+- Katalog roadmap sertifikasi dari `data/personnel-certifications-seed.json`.
+
+File tersebut disertakan dalam image Docker. Pada database baru, data awal
+dimasukkan sebelum server menerima koneksi. CSF, Privacy, dan indikator risiko
+diisi jika tabel/cakupannya kosong; katalog sertifikasi menambahkan nama yang
+belum ada. ISO/SOA juga memperbarui sejumlah kolom referensi saat startup.
+Mengubah file seed saja tidak menjamin seluruh perubahan masuk ke database lama.
+
+Tidak perlu menjalankan `db:setup` lagi karena provisioning tersebut sudah
+dipanggil oleh startup. Jika ingin menjalankannya secara eksplisit:
+
+```bash
+docker compose --env-file .env.docker exec app npm run db:setup
+```
+
+Perintah ini menyiapkan schema dasar dan katalog sertifikasi; **bukan pengganti
+startup untuk seluruh seed modul**. Untuk menjalankan kembali inisialisasi modul:
+
+```bash
+docker compose --env-file .env.docker restart app
+docker compose --env-file .env.docker logs -f app
+```
+
+Jika ada data operasional tambahan yang harus masuk, gunakan import/restore
+atau migrasi seed khusus sesuai format datanya. Docker tidak otomatis membaca
+semua file SQL/JSON tambahan dalam repository.
 
 Buka **http://localhost:5000/login** (sesuaikan dengan `BLACKOWL_PORT`). Docker
 menyediakan database baru; data instalasi non-Docker tidak otomatis dipindahkan.

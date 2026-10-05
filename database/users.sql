@@ -14,13 +14,11 @@ CREATE TABLE IF NOT EXISTS app_users (
 ALTER TABLE app_users
   ADD COLUMN IF NOT EXISTS full_name TEXT NOT NULL DEFAULT '';
 
-DO $$
-BEGIN
-  IF current_setting('app.seed_default_users', true) = 'true' THEN
-    INSERT INTO app_users (username, password_hash, role)
-    VALUES
-      ('admin', '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a', 'admin'),
-      ('user', '$2b$12$NthjzYiK6jgmWKoAc5IWwuQWvVC8lal8DomHNGdftAbsS8WmKXQGS', 'user')
-    ON CONFLICT (username) DO NOTHING;
-  END IF;
-END $$;
+-- Initial accounts for all environments, including production.
+-- Change both initial passwords after first login (see installation guide).
+-- Existing accounts and changed passwords are preserved on every startup.
+INSERT INTO app_users (username, password_hash, role)
+VALUES
+  ('admin', '$2b$12$lEwoOcAxzn78Gb2Xa1FVi.pn50XKQi3xdkV9Zzg.i1gKcKcHFgieC', 'admin'),
+  ('user', '$2b$12$H9ybtlawD2IqHPU6mH0lmuCU86aOaYVxsc3.Grl2PtfgCHRl8sHnu', 'user')
+ON CONFLICT (username) DO NOTHING;

@@ -6,6 +6,28 @@ dan izin aksi yang ditetapkan administrator.
 
 ## Login dan pengaturan akun
 
+Pada instalasi baru, seed menyediakan akun berikut pada mode manual maupun
+Docker, termasuk production:
+
+| Username | Password awal | Role |
+| --- | --- | --- |
+| `admin` | `AdminInitial123!` | admin |
+| `user` | `UserInitial123!` | user |
+
+Buka `http://localhost:8000/login` untuk instalasi manual atau
+`http://localhost:5000/login` untuk Docker dengan port default.
+**Segera ganti password kedua akun setelah login pertama**, sebelum memberikan
+akses kepada pengguna lain. Buka **Account → Account Management**, isi
+**Password saat ini**, **Password baru**, dan **Konfirmasi password**, lalu klik
+**Save profile**. Password baru harus 8–72 karakter, maksimal 72 byte, serta
+mengandung huruf besar, huruf kecil, dan angka. Login kembali dengan password
+baru dan ulangi untuk akun lainnya.
+
+Password awal hanya berlaku untuk akun yang baru dibuat oleh seed. Restart,
+rebuild, dan provisioning tidak menimpa akun/password yang sudah ada. Pada
+instalasi lama, gunakan password yang berlaku atau minta administrator mereset
+password melalui pengelolaan akun.
+
 1. Buka `/login` pada alamat aplikasi dan masuk dengan akun yang diberikan admin.
 2. Pilih **Account** untuk profil, perubahan password, dan pengaturan yang diizinkan.
 3. Administrator mengelola user, role, izin baca/tambah/edit/hapus, dan SMTP terpusat.

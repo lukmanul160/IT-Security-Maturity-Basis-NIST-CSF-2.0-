@@ -253,7 +253,8 @@ restart backend.
 
 ## 5. Login awal dan verifikasi
 
-Setelah `db:setup`, jalankan perintah setup admin dari terminal interaktif:
+Setelah `db:setup`, akun awal pada tabel di bawah sudah tersedia. Jika memerlukan
+administrator tambahan, jalankan perintah opsional dari terminal interaktif:
 
 ```bash
 npm run admin:create
@@ -265,16 +266,21 @@ Password ditampilkan sebagai bintang dan wajib 8–72 karakter, memuat huruf bes
 huruf kecil, dan angka. Perintah memakai validator serta bcrypt aplikasi dan
 menambahkan akun role admin; username duplikat ditolak.
 
-Login melalui `/login` memakai akun tersebut, lalu kelola akun/izin melalui
-**Account**. Pada instalasi lama, gunakan akun admin yang sudah berfungsi atau
-buat admin baru dengan username berbeda. SQL historis memuat seed akun demo;
-hash admin pada source yang diperiksa tidak cocok dengan password `admin`
-di README lama, sehingga panduan ini memakai setup admin eksplisit. Kelola/hapus
-akun demo yang tidak dipakai melalui Account Management.
+Seed membuat akun awal pada semua mode, termasuk `NODE_ENV=production`:
 
-Pada `NODE_ENV=production`, seed akun default tidak dijalankan. `admin:create`
-tetap bekerja setelah `db:setup`, sehingga admin dapat dibuat sebelum server
-produksi pertama kali dijalankan.
+| Username | Password awal | Role |
+| --- | --- | --- |
+| `admin` | `AdminInitial123!` | admin |
+| `user` | `UserInitial123!` | user |
+
+`admin:create` opsional untuk administrator tambahan. **Segera ganti password
+kedua akun awal setelah login pertama** melalui **Account → Account Management**:
+isi password saat ini, password baru, dan konfirmasi, lalu **Save profile**.
+Login kembali dengan password baru. Lakukan sebelum memberikan akses kepada
+pengguna lain. Seed memakai `ON CONFLICT DO NOTHING`, sehingga akun yang sudah
+ada dan password yang sudah diganti tidak ditimpa saat provisioning/startup.
+Pada instalasi lama, gunakan password lama atau reset melalui administrator
+yang sudah berfungsi; password awal di atas hanya berlaku untuk akun baru.
 
 Setelah login, buka `http://localhost:8000/api/health/db` di browser yang sama.
 Hasil sukses memuat `connected: true`. HTTP 401 berarti belum login, bukan

@@ -31,11 +31,7 @@ async function provisionDatabase() {
   await client.connect();
 
   await client.query(fs.readFileSync('database/schema.sql', 'utf8'));
-  if (process.env.NODE_ENV !== 'production') await client.query("SET app.seed_default_users = 'true'");
   await client.query(fs.readFileSync('database/users.sql', 'utf8'));
-  if (process.env.NODE_ENV === 'production') {
-    await client.query("DELETE FROM app_users WHERE (username = 'admin' AND password_hash = $1) OR (username = 'user' AND password_hash = $2)", ['$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a', '$2b$12$NthjzYi6jgmWKoAc5IWwuQWvVC8lal8DomHNGdftAbsS8WmKXQGS']);
-  }
   await client.query("ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check");
   await client.query("ALTER TABLE app_users ADD CONSTRAINT app_users_role_check CHECK (role IN ('admin', 'approver', 'editor', 'viewer', 'user'))");
 
