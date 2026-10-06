@@ -37,6 +37,17 @@ async function insertImage(file){
  }catch(error){imageStatus.value=error.message;}finally{imageBusy.value=false;}
 }
 function selectImage(event){const file=event.target.files[0];event.target.value='';insertImage(file);}
+function pasteContent(_view,event){
+ const file=[...(event.clipboardData?.files||[])].find(file=>file.type.startsWith('image/'));
+ if(file&&props.editable){insertImage(file);return true;}
+ if(!props.editable||props.readonly||editor.value?.isActive('code')||editor.value?.isActive('codeBlock'))return false;
+ const text=event.clipboardData?.getData('text/plain')||'';
+ const markdown=displayImageMarkdown(text,props.images,props.folder);
+ if(markdown===text||!markdown.includes('/api/knowledge-notes/images/'))return false;
+ event.preventDefault();
+ editor.value.chain().focus().insertContent(markdown,{contentType:'markdown'}).run();
+ return true;
+}
 const wikiNavigation=Extension.create({
  name:'wikiNavigation',
  addProseMirrorPlugins(){return [new Plugin({
@@ -100,7 +111,7 @@ function markdownContent(instance){return restoreImageMarkdown(instance.getMarkd
 const editor=useEditor({
  extensions:[StarterKit.configure({underline:false,link:{openOnClick:false,autolink:false,linkOnPaste:false,isAllowedUri:safeUrl,HTMLAttributes:{target:'_blank',rel:'noopener noreferrer'}}}),TaskList,TaskItem.configure({nested:true}),TableKit.configure({table:{resizable:false}}),Markdown,wikiNavigation,NoteImage.configure({allowBase64:false})],
  content:displayImageMarkdown(props.modelValue,props.images,props.folder),contentType:'markdown',editable:props.editable&&!props.readonly,
- editorProps:{attributes:{'aria-label':'Isi catatan','role':'textbox','aria-multiline':'true'},transformPastedHTML:html=>DOMPurify.sanitize(html,{FORBID_TAGS:['iframe','script','style','object','embed'],FORBID_ATTR:['style']}),handlePaste:(_view,event)=>{const file=[...(event.clipboardData?.files||[])].find(file=>file.type.startsWith('image/'));if(file&&props.editable){insertImage(file);return true;}return false;},handleKeyDown:(_view,event)=>{if(handleKey(event))return true;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();emit('save');return true;}return false;}},
+ editorProps:{attributes:{'aria-label':'Isi catatan','role':'textbox','aria-multiline':'true'},transformPastedHTML:html=>DOMPurify.sanitize(html,{FORBID_TAGS:['iframe','script','style','object','embed'],FORBID_ATTR:['style']}),handlePaste:pasteContent,handleKeyDown:(_view,event)=>{if(handleKey(event))return true;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();emit('save');return true;}return false;}},
  onUpdate:({editor})=>emit('update:modelValue',markdownContent(editor)),
  onSelectionUpdate:({editor})=>{updateCompletion(editor);syncImageSelection(editor);},
  onTransaction:({editor})=>{updateCompletion(editor);syncImageSelection(editor);},
@@ -110,7 +121,12 @@ const editor=useEditor({
 watch(()=>props.modelValue,value=>{if(editor.value&&markdownContent(editor.value)!==value)editor.value.commands.setContent(displayImageMarkdown(value,props.images,props.folder),{contentType:'markdown',emitUpdate:false});});
 watch(()=>[props.editable,props.readonly],()=>editor.value?.setEditable(props.editable&&!props.readonly,false));
 watch(()=>[props.notes,props.folder],()=>{if(editor.value)editor.value.view.dispatch(editor.value.state.tr);});
-watch(()=>[props.images,props.folder],()=>{if(editor.value)editor.value.commands.setContent(displayImageMarkdown(props.modelValue,props.images,props.folder),{contentType:'markdown',emitUpdate:false});});
+watch(()=>[props.images,props.folder],()=>{
+ if(!editor.value)return;
+ // Read current editor text: a newly resolved embed can be ahead of the parent's v-model.
+ const content=markdownContent(editor.value);
+ editor.value.commands.setContent(displayImageMarkdown(content,props.images,props.folder),{contentType:'markdown',emitUpdate:false});
+});
 const buttons=[['bold','Bold'],['italic','Italic'],['strike','Coret'],['heading1','H1'],['heading2','H2'],['bulletList','Bullet'],['orderedList','Numbering'],['taskList','Checklist'],['indent','Indent'],['outdent','Outdent'],['blockquote','Kutipan'],['code','Code'],['codeBlock','Blok kode'],['link','Tautan'],['wiki','Tautan catatan'],['undo','Undo'],['redo','Redo']];
 function active(kind){return editor.value?.isActive(kind.startsWith('heading')?'heading':kind,kind.startsWith('heading')?{level:Number(kind.at(-1))}:undefined)||false;}
 function format(kind){

@@ -1,6 +1,18 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+test('escaped embeds render after image catalog arrives and Windows paths match encoded spaces and letter case',async()=>{
+ const {displayImageMarkdown,resolveImage,missingImageReferences}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
+ const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image9.png';
+ const escaped='!\\[\\['+path+'\\]\\]';
+ const images=[{id:'image9',path}];
+ assert.deepEqual(missingImageReferences(escaped,[]),[path]);
+ assert.equal(displayImageMarkdown(escaped,images),'![gambar](/api/knowledge-notes/images/image9)');
+ assert.equal(resolveImage(images,encodeURI(path.toUpperCase())).id,'image9');
+ assert.equal(displayImageMarkdown('`'+escaped+'`',images),'`'+escaped+'`');
+ const duplicate=[...images,{id:'other',path:path.toUpperCase()}];
+ assert.equal(resolveImage(duplicate,path.toLowerCase()),undefined);
+});
 test('exact long image9 reference resolves only when its file exists and reports missing files outside code',async()=>{
  const {missingImageReferences,imageEmbedRanges}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
  const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image9.png';

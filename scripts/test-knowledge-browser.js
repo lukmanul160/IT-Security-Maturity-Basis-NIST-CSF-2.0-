@@ -164,6 +164,18 @@ async function run(){
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
     await client.wait('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").disabled && !Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Muat ulang daftar").disabled');
     console.log('Browser: exact long image9 path renders immediately when typed');
+    await client.send('Browser.grantPermissions',{origin:base,permissions:['clipboardReadWrite','clipboardSanitizedWrite']});
+    await client.evaluate(`navigator.clipboard.writeText(${JSON.stringify('![[PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image9.png]]')})`);
+    await client.evaluate(`(()=>{const el=document.querySelector('.tiptap');el.focus();const range=document.createRange();range.selectNodeContents(el);range.collapse(false);const sel=getSelection();sel.removeAllRanges();sel.addRange(range);})()`);
+    await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'v',code:'KeyV',windowsVirtualKeyCode:86,modifiers:2});
+    await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'v',code:'KeyV',windowsVirtualKeyCode:86,modifiers:2});
+    await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Pratinjau").click()');
+    await client.wait('document.querySelectorAll(".is-readonly .tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Editor").click()');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
+    await client.wait('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").disabled && !Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Muat ulang daftar").disabled');
+    console.log('Browser: long image9 reference pasted as plain text renders in editor and preview');
     const wikiRect=await client.evaluate('(()=>{const link=document.querySelector(".tiptap [data-note-id]");link.scrollIntoView({block:"center"});return link.getBoundingClientRect().toJSON();})()');
     await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:wikiRect.x+wikiRect.width/2,y:wikiRect.y+wikiRect.height/2,button:'left',clickCount:1,modifiers:2});
     await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:wikiRect.x+wikiRect.width/2,y:wikiRect.y+wikiRect.height/2,button:'left',clickCount:1,modifiers:2});
