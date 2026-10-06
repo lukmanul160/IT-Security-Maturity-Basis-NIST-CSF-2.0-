@@ -36,7 +36,7 @@ async function run(){
     await assert.rejects(()=>service.removeFolder('Security'),{status:409});
     const {createServer}=await import('vite'),vue=(await import('@vitejs/plugin-vue')).default;
     const root=path.join(__dirname,'../frontend/client');
-    vite=await createServer({configFile:false,root,plugins:[vue()],server:{middlewareMode:true},appType:'custom',logLevel:'error'});
+    vite=await createServer({configFile:false,root,plugins:[vue()],server:{middlewareMode:true,hmr:{port:20000+Math.floor(Math.random()*10000)}},appType:'custom',logLevel:'error'});
     const express=require('express'),app=express();app.use(express.json());
     app.get('/api/auth/me',(req,res)=>res.json({username:'test-admin',role:'admin'}));
     app.use('/api/knowledge-notes',(req,res,next)=>{req.user={role:'admin'};console.log('Browser API:',req.method,req.url);res.on('finish',()=>console.log('Browser API response:',req.method,req.url,res.statusCode));next();},require('../src/routes/knowledgeNoteRoutes'));
@@ -177,6 +177,13 @@ async function run(){
       await search('Home','title');await client.wait(`document.querySelector('[data-search-note="${home.id}"]')`);await client.evaluate(`document.querySelector('[data-search-note="${home.id}"]').click()`);
     }
     console.log('Browser: both file import and nested folder import retain Markdown plus image attachments');
+    await search('');
+    await client.wait(`document.querySelector('[data-image="DemoFolder/Subfolder/demo.png"]')`);
+    await client.evaluate(`document.querySelector('[data-image="DemoFolder/Subfolder/demo.png"]').click()`);
+    await client.wait('document.querySelector(".image-preview-dialog img")?.naturalWidth>0');
+    assert.equal(await client.evaluate('document.querySelector(".image-preview-dialog code").textContent'),'![[DemoFolder/Subfolder/demo.png]]');
+    await client.evaluate('document.querySelector(".image-preview-dialog button").click()');
+    console.log('Browser: image file is visible in its subfolder and opens a loaded preview');
     await search('Imported nested','title');await client.wait('document.querySelectorAll("[data-search-note]").length===1');await client.evaluate('document.querySelector("[data-search-note]").click()');await client.wait('document.querySelector(".tiptap img")?.naturalWidth>0');
     await client.evaluate(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(png.toString('base64'))}),c=>c.charCodeAt(0));const data=new DataTransfer();data.items.add(new File([bytes],'inserted.png',{type:'image/png'}));const input=document.querySelector('.knowledge-text-editor input[type=file]');input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
     await client.wait('document.querySelector(".knowledge-text-editor [role=status]")?.textContent.includes("Gambar dimasukkan")');
@@ -204,6 +211,17 @@ async function run(){
     assert.equal(await client.evaluate('document.querySelector(".image-sizing")===null'),true);
     assert.ok(await client.evaluate('document.querySelector(".tiptap img[width]").getBoundingClientRect().width<=160'));
     console.log('Browser: image widths can be changed, saved, and restored in read-only preview');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Editor").click()');
+    await client.wait('document.querySelector(".tiptap[contenteditable=true]")');
+    await client.evaluate(`(()=>{const el=document.querySelector('.tiptap');el.focus();const range=document.createRange();range.selectNodeContents(el);range.collapse(false);const sel=getSelection();sel.removeAllRanges();sel.addRange(range);})()`);
+    await client.send('Input.insertText',{text:' ![[demo.png]]'});
+    await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
+    await client.wait('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").disabled && !Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Muat ulang daftar").disabled');
+    await client.send('Page.reload');
+    await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
+    await client.wait(`document.querySelector('[data-image="DemoFolder/Subfolder/demo.png"]')`);
+    console.log('Browser: typed image reference renders immediately and survives save/reload with folder files');
 
 
     assert.deepEqual(client.errors,[]);

@@ -98,3 +98,16 @@ test('duplicate titles resolve in the source folder and ambiguous cross-folder l
  assert.equal(wikiLinkRanges('[[Policy]]',notes,'Elsewhere').length,0);
  await assert.rejects(service.importNotes([{title:'Same',content:'',folder:'A'},{title:'same',content:'',folder:'A'}]),/duplikat/);
 });
+
+ test('file tree displays images in their subfolders and reveals image search matches',async()=>{
+  const {treeRows}=await import('../frontend/client/src/workspace/features/shared/noteTree.mjs');
+  const images=[{id:'nested',path:'Security/Assets/diagram.png'},{id:'root',path:'logo.jpg'}];
+  const collapsed=treeRows([],[],new Set(),'','all',images);
+  assert.deepEqual(collapsed.map(row=>row.label),['Security','logo.jpg']);
+  assert.equal(collapsed[0].count,1);
+  const open=treeRows([],[],new Set(['Security','Security/Assets']),'','all',images);
+  assert.equal(open.find(row=>row.image?.id==='nested').depth,2);
+  const found=treeRows([],[],new Set(),'file:diagram.png','all',images);
+  assert.deepEqual(found.map(row=>row.label),['Security','Assets','diagram.png']);
+  assert.equal(treeRows([],[],new Set(),'diagram','content',images).length,0);
+ });
