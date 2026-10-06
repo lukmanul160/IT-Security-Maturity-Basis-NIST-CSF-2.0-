@@ -2,12 +2,26 @@ export const imageUrl=id=>'/api/knowledge-notes/images/'+encodeURIComponent(id);
 export const isImageFile=name=>/\.(png|jpe?g|gif|webp)$/i.test(name);
 function normalize(path){const result=[];for(const part of path.split('/')){if(!part||part==='.')continue;if(part==='..'){if(!result.length)return null;result.pop();}else result.push(part);}return result.join('/');}
 export function resolveImage(images,target,folder=''){
- const value=target.split('|')[0].trim();
+ const value=target.split('|')[0].trim().replaceAll('\\','/');
  const relative=normalize([folder,value].filter(Boolean).join('/'));
  const exact=images.find(image=>image.path===relative)||images.find(image=>image.path===normalize(value));
  if(exact)return exact;
- const matches=images.filter(image=>image.path.split('/').pop()===value);
+ const normalized=normalize(value);
+ const matches=images.filter(image=>normalized&&(image.path===normalized||image.path.endsWith('/'+normalized)));
  return matches.length===1?matches[0]:undefined;
+}
+export function imageEmbedRanges(text,images,folder=''){
+ const ranges=[];
+ for(const match of text.matchAll(/!\[\[([^\]\n]+)\]\]/g)){
+  const target=match[1];
+  if(!isImageFile(target.split('|')[0].trim()))continue;
+  const image=resolveImage(images,target,folder);
+  if(!image)continue;
+  const size=target.split('|')[1]||'';
+  const width=/^\d+(?:x\d+)?$/.test(size)?Math.max(48,Math.min(1600,Number(size.split('x')[0]))):null;
+  ranges.push({from:match.index,to:match.index+match[0].length,attrs:{src:imageUrl(image.id),alt:'gambar',width}});
+ }
+ return ranges;
 }
 const outsideCode=(content,transform)=>content.split(/(`{3,}[\s\S]*?`{3,}|~{3,}[\s\S]*?~{3,}|`+[^`]*`+)/g).map((part,index)=>index%2?part:transform(part)).join('');
 export function displayImageMarkdown(content,images,folder=''){

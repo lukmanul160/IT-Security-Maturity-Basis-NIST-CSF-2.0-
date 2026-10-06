@@ -13,7 +13,7 @@ import { Extension } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { wikiLinkRanges } from '../features/shared/noteNavigation.mjs';
-import { displayImageMarkdown, restoreImageMarkdown, imageUrl } from '../features/shared/noteImages.mjs';
+import { displayImageMarkdown, restoreImageMarkdown, imageUrl, imageEmbedRanges } from '../features/shared/noteImages.mjs';
 
 const props=defineProps({modelValue:{type:String,default:''},editable:Boolean,allowImageUpload:{type:Boolean,default:true},readonly:Boolean,folder:{type:String,default:''},notes:{type:Array,default:()=>[]},images:{type:Array,default:()=>[]}});
 const emit=defineEmits(['update:modelValue','save','open-note','image-added']);
@@ -38,7 +38,25 @@ async function insertImage(file){
 function selectImage(event){const file=event.target.files[0];event.target.value='';insertImage(file);}
 const wikiNavigation=Extension.create({
  name:'wikiNavigation',
- addProseMirrorPlugins(){return [new Plugin({props:{
+ addProseMirrorPlugins(){return [new Plugin({
+  appendTransaction(transactions,_oldState,state){
+   if(!transactions.some(transaction=>transaction.docChanged))return null;
+   const replacements=[];
+   state.doc.descendants((node,pos)=>{
+    if(node.type.name==='codeBlock')return false;
+    if(!node.isTextblock)return;
+    const text=node.textBetween(0,node.content.size,'\n','\ufffc');
+    for(const range of imageEmbedRanges(text,props.images,props.folder)){
+     let code=false;
+     node.nodesBetween(range.from,range.to,child=>{if(child.marks.some(mark=>mark.type.name==='code'))code=true;});
+     if(!code)replacements.push({...range,from:pos+1+range.from,to:pos+1+range.to});
+    }
+   });
+   if(!replacements.length)return null;
+   const transaction=state.tr;
+   for(const range of replacements.reverse())transaction.replaceRangeWith(range.from,range.to,state.schema.nodes.image.create(range.attrs));
+   return transaction;
+  },props:{
   decorations(state){
    const decorations=[];
    state.doc.descendants((node,pos)=>{

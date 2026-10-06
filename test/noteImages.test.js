@@ -1,6 +1,31 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+test('vault paths resolve beneath an imported root and completed embeds become image nodes',async()=>{
+ const {resolveImage,imageEmbedRanges,displayImageMarkdown}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
+ const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image10.png';
+ const images=[{id:'a1',path:'Imported Vault/'+path}];
+ assert.equal(resolveImage(images,path).id,'a1');
+ assert.ok(displayImageMarkdown('![[ '+path+' ]]',images).includes('/api/knowledge-notes/images/a1'));
+ assert.equal(resolveImage([...images,{id:'b2',path:'Another/'+path}],path),undefined);
+ assert.deepEqual(imageEmbedRanges('![[missing.png]]',images),[]);
+ assert.deepEqual(imageEmbedRanges('![[ '+path,images),[]);
+ const text='Before ![['+path+'|300]] after';
+ const ranges=imageEmbedRanges(text,images);
+ assert.equal(ranges.length,1);
+ assert.equal(ranges[0].attrs.width,300);
+ const {getSchema}=await import('@tiptap/core');
+ const {default:StarterKit}=await import('@tiptap/starter-kit');
+ const {NoteImage}=await import('../frontend/client/src/workspace/features/shared/noteImageExtension.mjs');
+ const {EditorState}=await import('@tiptap/pm/state');
+ const schema=getSchema([StarterKit,NoteImage]);
+ const state=EditorState.create({schema,doc:schema.node('doc',null,[schema.node('paragraph',null,[schema.text(text)])])});
+ const range=ranges[0];
+ const doc=state.tr.replaceRangeWith(1+range.from,1+range.to,schema.nodes.image.create(range.attrs)).doc;
+ doc.check();
+ assert.equal(doc.child(1).type.name,'image');
+ assert.equal(doc.textContent,'Before  after');
+});
 test('image imports validate bytes and prevent invalid paths and active-content formats',()=>{
  const {validate}=require('../src/services/knowledgeImageService');
  assert.equal(validate({path:'Vault/Images/a.png',content:png}).type,'image/png');
