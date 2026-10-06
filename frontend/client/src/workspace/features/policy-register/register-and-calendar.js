@@ -261,6 +261,10 @@ async function savePolicyRegister(event) {
   formData.append('data', JSON.stringify(payload));
 
   const file = $('policyRegisterFile').files?.[0];
+  if (file?.size > 100 * 1024 * 1024) {
+    $('policyRegisterStatus').textContent = 'Ukuran file maksimal 100 MB.';
+    return;
+  }
   if (file) formData.append('file', file);
 
   $('policyRegisterStatus').textContent = 'Saving...';

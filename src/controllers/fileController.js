@@ -4,6 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { uploadRoot } = require('../config/paths');
+const { MAX_FILE_SIZE_BYTES } = require('../config/upload');
 
 const safeSegment = value => path.basename(String(value || '')).replace(/[^a-zA-Z0-9._ -]/g, '_');
 const inlineFileTypes = new Set([
@@ -24,7 +25,7 @@ const upload = multer({
 			callback(error);
 		}
 	},
-	limits: { fileSize: 50 * 1024 * 1024, files: 20 },
+	limits: { fileSize: MAX_FILE_SIZE_BYTES, files: 20 },
 });
 const replacementUpload = multer({
 	storage: multer.memoryStorage(),
@@ -36,7 +37,7 @@ const replacementUpload = multer({
 			callback(error);
 		}
 	},
-	limits: { fileSize: 50 * 1024 * 1024, files: 1 },
+	limits: { fileSize: MAX_FILE_SIZE_BYTES, files: 1 },
 });
 
 async function list(req, res) { const detailed = req.query.details === 'true'; const files = await (detailed ? evidenceAccess.searchableList(req.user) : evidenceAccess.list(req.user)); res.set('Cache-Control','no-store').json(detailed ? files : files.map(file => file.path)); }

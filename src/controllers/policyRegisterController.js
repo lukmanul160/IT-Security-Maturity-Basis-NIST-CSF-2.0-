@@ -8,6 +8,7 @@ const storage = require('../services/storageService');
 const evidenceAccess = require('../services/evidenceAccessService');
 const { pool } = require('../config/database');
 const { uploadRoot } = require('../config/paths');
+const { MAX_FILE_SIZE_BYTES } = require('../config/upload');
 
 console.log('[policyRegisterController] Module loaded');
 
@@ -34,7 +35,7 @@ const upload = multer({
       cb(null, filename);
     },
   }),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+  limits: { fileSize: MAX_FILE_SIZE_BYTES },
   fileFilter: (req, file, cb) => {
     try {
       fileService.validateUploadFile(file.originalname, file.mimetype);

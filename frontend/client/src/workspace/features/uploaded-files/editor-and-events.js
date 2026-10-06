@@ -93,7 +93,7 @@ async function uploadLibraryFiles(files) {
   const status = $('uploadedFilesStatus');
   if (!canPerform('files', 'create')) { status.textContent = 'Izin Add pada Uploaded files diperlukan.'; return; }
   if (files.length > 20) { status.textContent = 'Pilih maksimal 20 file sekali upload.'; return; }
-  if (files.some(file => file.size > 50 * 1024 * 1024)) { status.textContent = 'Ukuran setiap file maksimal 50 MB.'; return; }
+  if (files.some(file => file.size > 100 * 1024 * 1024)) { status.textContent = 'Ukuran setiap file maksimal 100 MB.'; return; }
   const kind = $('uploadedFilesUploadKind').value;
   uploadedFilesUploading = true;
   $('uploadedFilesUploadButton').disabled = true;
