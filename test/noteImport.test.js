@@ -1,6 +1,20 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const file = (name, relativePath, content='', size=Buffer.byteLength(content)) => ({name,webkitRelativePath:relativePath,size,text:async()=>content});
+test('parallel note reads are bounded, report progress and preserve input order',async()=>{
+ const {readNoteImport}=await import('../frontend/client/src/workspace/features/shared/noteImport.mjs');
+ let active=0,peak=0;const progress=[];
+ const files=Array.from({length:20},(_,index)=>({...file(index+'.md',''),text:async()=>{
+  peak=Math.max(peak,++active);
+  await new Promise(resolve=>setTimeout(resolve,index%2?1:5));
+  active--;return String(index);
+ }}));
+ const result=await readNoteImport(files,'',{onProgress:value=>progress.push(value)});
+ assert.ok(peak>1&&peak<=8);
+ assert.deepEqual(result.notes.map(note=>note.content),files.map((_,index)=>String(index)));
+ assert.deepEqual(progress.map(value=>value.completed),Array.from({length:20},(_,index)=>index+1));
+ assert.equal(progress.at(-1).total,20);
+});
 test('folder import preserves root and nested Markdown paths and ignores configuration and assets',async()=>{
  const {readNoteImport}=await import('../frontend/client/src/workspace/features/shared/noteImport.mjs');
  const payload=await readNoteImport([

@@ -17,7 +17,7 @@ export async function collectDirectoryFiles(directory, parent = '', { onUnreadab
   }} catch (error) { if (!onUnreadable) throw error; onUnreadable(prefix,error); }
   return files;
 }
-export async function readNoteImport(files, destination = '', { onSkipped = () => {}, onUnreadable, folderPaths = [] } = {}) {
+export async function readNoteImport(files, destination = '', { onSkipped = () => {}, onUnreadable, onProgress = () => {}, folderPaths = [] } = {}) {
   const directory = files.some(file => Boolean(file.webkitRelativePath));
   const selected = directory ? files.filter(file => {
     const supported = /\.(md|txt)$/i.test(file.name);
@@ -28,10 +28,20 @@ export async function readNoteImport(files, destination = '', { onSkipped = () =
   if (selected.length > 200 || selected.reduce((sum,file)=>sum+file.size,0) > 6000000) throw new Error('Impor maksimal 200 file catatan / total 6 MB.');
   const notes = [], folders = folderPaths.map(folder=>[destination,folder].filter(Boolean).join('/'));
   const unreadablePaths = [];
-  for (const file of selected) {
-    if (file.size > 1000000) throw new Error(`File ${file.name} melebihi batas 1 MB.`);
+  for(const file of selected)if(file.size>1000000)throw new Error(`File ${file.name} melebihi batas 1 MB.`);
+  const reads=new Array(selected.length);
+  let next=0,completed=0;
+  await Promise.all(Array.from({length:Math.min(8,selected.length)},async()=>{
+    while(next<selected.length){
+      const index=next++,file=selected[index];
+      try{reads[index]={text:(await file.text()).replace(/^\uFEFF/,'')};}
+      catch(error){reads[index]={error};}
+      onProgress({completed:++completed,total:selected.length,path:file.webkitRelativePath||file.name});
+    }
+  }));
+  for (const [index,file] of selected.entries()) {
     let text;
-    try { text = (await file.text()).replace(/^\uFEFF/, ''); }
+    try { if(reads[index].error)throw reads[index].error;text=reads[index].text; }
     catch (error) { const failedPath=file.webkitRelativePath || file.name; unreadablePaths.push(failedPath); if(onUnreadable)onUnreadable(failedPath,error); continue; }
     if (!directory && /\.json$/i.test(file.name)) {
       const data = JSON.parse(text);

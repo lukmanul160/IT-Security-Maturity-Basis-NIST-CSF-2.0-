@@ -96,9 +96,14 @@ async function importNotes(notes, folderPaths = [], images = []) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    for (const folder of importedFolders) await storeFolder(client,folder);
-    for(const image of images){await storeFolder(client,image.path.split('/').slice(0,-1).join('/'));await require('./knowledgeImageService').store(client,image);}
-    for (const note of values) { await storeFolder(client,note.folder); await client.query('INSERT INTO knowledge_notes (title,content,folder) VALUES ($1,$2,$3)',[note.title,note.content,note.folder]); }
+    const allFolders=new Set();
+    for(const folder of [...importedFolders,...values.map(note=>note.folder),...images.map(image=>image.path.split('/').slice(0,-1).join('/'))]){
+      const parts=folder.split('/').filter(Boolean);
+      for(let i=1;i<=parts.length;i++)allFolders.add(parts.slice(0,i).join('/'));
+    }
+    if(allFolders.size)await client.query('INSERT INTO knowledge_note_folders (path) SELECT unnest($1::text[]) ON CONFLICT DO NOTHING',[[...allFolders]]);
+    for(const image of images)await require('./knowledgeImageService').store(client,image);
+    if(values.length)await client.query('INSERT INTO knowledge_notes (title,content,folder) SELECT * FROM unnest($1::text[],$2::text[],$3::text[])',[values.map(note=>note.title),values.map(note=>note.content),values.map(note=>note.folder)]);
     await client.query('COMMIT');
   } catch(error) { await client.query('ROLLBACK'); if(error.code === '23505') throw fail('Catatan dengan folder dan judul yang sama sudah ada. Impor dibatalkan; gunakan folder lain atau ubah judul catatan di folder tersebut.',409); throw error; }
   finally { client.release(); }

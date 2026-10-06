@@ -125,21 +125,34 @@ async function importFiles(event, unreadable=[],directoryFolders=[]){
   const assetPaths=imageFiles.map(file=>[destination,file.webkitRelativePath||file.name].filter(Boolean).join('/'));
   const assetFolders=assetPaths.map(path=>path.split('/').slice(0,-1).join('/')).filter(Boolean);
   const noteFiles=files.filter(file=>!isImageFile(file.name));
-  const payload=!noteFiles.length&&imageFiles.length ? {notes:[],folders:[...new Set([...directoryFolders,...assetFolders])]} : await readNoteImport(noteFiles,activeFolder.value==='*'?'':activeFolder.value,{onSkipped:path=>skipped.push(path),onUnreadable:(path,error)=>unreadable.push(path+': '+error.message),folderPaths:[...directoryFolders,...assetFolders.map(path=>destination&&path.startsWith(destination+'/')?path.slice(destination.length+1):path)]});
+  const payload=!noteFiles.length&&imageFiles.length ? {notes:[],folders:[...new Set([...directoryFolders,...assetFolders])]} : await readNoteImport(noteFiles,activeFolder.value==='*'?'':activeFolder.value,{onProgress:({completed,total,path})=>{status.value=`Membaca catatan ${completed}/${total}: ${path}`;},onSkipped:path=>skipped.push(path),onUnreadable:(path,error)=>unreadable.push(path+': '+error.message),folderPaths:[...directoryFolders,...assetFolders.map(path=>destination&&path.startsWith(destination+'/')?path.slice(destination.length+1):path)]});
   if(unreadable.length)throw new Error('Impor dibatalkan; belum ada file atau folder yang disimpan.');
   if(imageFiles.length){
    if(imageFiles.length>100||imageFiles.reduce((sum,file)=>sum+file.size,0)>100*1024*1024||imageFiles.some(file=>file.size>10*1024*1024))throw new Error('Maksimum 100 gambar / total 100 MB; setiap gambar maksimal 10 MB.');
    const body=new FormData();body.append('payload',JSON.stringify(payload));body.append('paths',JSON.stringify(assetPaths));
    imageFiles.forEach(file=>body.append('images',file.originalFile||file,file.name));
-   const response=await fetch('/api/knowledge-notes/import-with-images',{method:'POST',body});
-   const result=await response.json();if(!response.ok)throw new Error(result.error||'Impor gambar gagal.');notes.value=result;
-  }else notes.value=await request('/import','POST',payload);
-  noteImages.value=await request('/images');
-  folders.value=await request('/folders');
+   status.value=`Mengunggah ${imageFiles.length} gambar ke vault...`;
+   notes.value=await uploadImport(body);
+  }else {status.value='Menyimpan catatan dan folder ke vault...';notes.value=await request('/import','POST',payload);}
+  status.value='Memperbarui daftar gambar dan folder...';
+  const [loadedImages,loadedFolders]=await Promise.all([request('/images'),request('/folders')]);
+  noteImages.value=loadedImages;folders.value=loadedFolders;
   for(const folder of payload.folders)expandPath(folder);
   search.value='';
   status.value=payload.notes.length+' catatan dan '+payload.folders.length+' folder dan '+imageFiles.length+' gambar berhasil diimpor. Struktur folder dipertahankan.'+(skipped.length?' '+skipped.length+' file bukan .md/.txt tidak diimpor: '+skipped.slice(0,5).join(', ')+(skipped.length>5?' …':''):'');
  }catch(e){status.value=e.message;}finally{if(unreadable.length)status.value+=' '+unreadable.length+' lokasi gagal dibaca: '+unreadable.slice(0,5).join('; ')+(unreadable.length>5?' …':'')+'. Coba Pilih folder alternatif untuk membaca ulang.';busy.value=false;}
+}
+function uploadImport(body){
+ return new Promise((resolve,reject)=>{
+  const xhr=new XMLHttpRequest();
+  xhr.open('POST','/api/knowledge-notes/import-with-images');
+  xhr.responseType='json';
+  xhr.upload.onprogress=event=>{if(event.lengthComputable)status.value=`Mengunggah gambar ke vault: ${Math.round(event.loaded/event.total*100)}%`;};
+  xhr.upload.onload=()=>{status.value='Upload selesai. Menyimpan catatan dan gambar ke vault...';};
+  xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300)resolve(xhr.response);else reject(new Error(xhr.response?.error||'Impor gambar gagal.'));};
+  xhr.onerror=()=>reject(new Error('Koneksi terputus saat impor. Muat ulang daftar vault untuk memeriksa hasilnya.'));
+  xhr.send(body);
+ });
 }
 function open(){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active-view'));document.getElementById('knowledgeNotesView').classList.add('active-view');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view==='knowledge-notes'));try{const state=JSON.parse(localStorage.getItem('nist-maturity-ui')||'{}');localStorage.setItem('nist-maturity-ui',JSON.stringify({...state,view:'knowledge-notes'}));}catch{}if(!ready.value)load();}
 function unload(event){if(dirty.value){event.preventDefault();event.returnValue='';}}

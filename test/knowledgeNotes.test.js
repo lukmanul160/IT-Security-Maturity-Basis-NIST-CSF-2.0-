@@ -36,6 +36,19 @@ test('duplicate import rolls back the transaction',async()=>{
   try {await assert.rejects(()=>service.importNotes([{title:'Policy',content:''}]),{status:409});assert.equal(calls.at(-1),'ROLLBACK');assert.ok(released);}
   finally{pool.connect=original;}
 });
+test('import batches folder ancestors and notes while keeping one transaction',async()=>{
+ const originalConnect=pool.connect,originalQuery=pool.query,calls=[];
+ pool.connect=async()=>({query:async(sql,args)=>{calls.push({sql,args});return {rows:[]};},release(){}});
+ pool.query=async()=>({rows:[]});
+ try{
+  await service.importNotes([{title:'One',content:'1',folder:'Vault/A'},{title:'Two',content:'2',folder:'Vault/A'}],['Vault/A','Vault/Empty']);
+  const inserts=calls.filter(call=>call.sql.startsWith('INSERT'));
+  assert.equal(inserts.length,2);
+  assert.deepEqual(inserts[0].args,[['Vault','Vault/A','Vault/Empty']]);
+  assert.deepEqual(inserts[1].args,[['One','Two'],['1','2'],['Vault/A','Vault/A']]);
+  assert.equal(calls[0].sql,'BEGIN');assert.equal(calls.at(-1).sql,'COMMIT');
+ }finally{pool.connect=originalConnect;pool.query=originalQuery;}
+});
 test('file tree retains empty folders, collapses descendants and reveals search results',async()=>{
   const {treeRows}=await import('../frontend/client/src/workspace/features/shared/noteTree.mjs');
   const notes=[{id:1,title:'Policy',content:'secret',folder:'Security/Policies'},{id:2,title:'Home',content:'',folder:''}];
