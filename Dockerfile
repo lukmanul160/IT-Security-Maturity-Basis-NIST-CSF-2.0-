@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY frontend ./frontend
+COPY src/shared ./src/shared
 COPY scripts/prepare-vue-client.js ./scripts/prepare-vue-client.js
 RUN npm run build && npm prune --omit=dev
 
