@@ -33,6 +33,8 @@ router.post('/images',requirePermission('knowledge-notes','create'),upload.array
  try{const values=await uploadedImages(req);if(values.length!==1)throw Object.assign(new Error('Pilih satu gambar.'),{status:400});await service.importNotes([],[],values);res.status(201).json((await images.list()).find(image=>image.path===values[0].path));}
  finally{await cleanup(req);}
 });
+router.put('/images/:id',requirePermission('knowledge-notes','update'),async(req,res)=>res.json(await images.move(req.params.id,req.body?.folder)));
+router.delete('/images/:id',requirePermission('knowledge-notes','delete'),async(req,res)=>{await images.remove(req.params.id);res.sendStatus(204);});
 router.post('/import-with-images',requirePermission('knowledge-notes','create'),upload.array('images',100),async(req,res)=>{
  try{const payload=JSON.parse(req.body.payload||'{}');res.status(201).json(await service.importNotes(payload.notes,payload.folders,await uploadedImages(req)));}
  finally{await cleanup(req);}

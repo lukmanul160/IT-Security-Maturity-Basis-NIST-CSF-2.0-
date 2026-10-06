@@ -1,6 +1,19 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+test('moving images updates resolved references and preserves code, widths and other images',async()=>{
+ const {moveImageReferences}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
+ const images=[{id:'a',path:'A/pic.png'},{id:'b',path:'B/pic.png'}];
+ const content='![[pic.png|320]] ![[B/pic.png]] ![Photo](pic.png) `![[pic.png]]`\n```\n![[pic.png]]\n```';
+ assert.equal(moveImageReferences(content,images,'a','Target/pic.png','A'),'![[Target/pic.png|320]] ![[B/pic.png]] ![Photo](<Target/pic.png>) `![[pic.png]]`\n```\n![[pic.png]]\n```');
+});
+test('image mutations reject invalid IDs and folder traversal',async()=>{
+ const images=require('../src/services/knowledgeImageService');
+ await assert.rejects(()=>images.remove('invalid'),{status:404});
+ await assert.rejects(()=>images.move('invalid','A'),{status:404});
+ await assert.rejects(()=>images.move('00000000-0000-0000-0000-000000000000','../bad'),{status:400});
+ await assert.rejects(()=>images.move('00000000-0000-0000-0000-000000000000'),{status:400});
+});
 test('vault paths resolve beneath an imported root and completed embeds become image nodes',async()=>{
  const {resolveImage,imageEmbedRanges,displayImageMarkdown}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
  const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image10.png';

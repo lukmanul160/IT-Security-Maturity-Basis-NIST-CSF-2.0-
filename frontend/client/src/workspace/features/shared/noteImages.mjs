@@ -39,3 +39,16 @@ export function restoreImageMarkdown(content,images){
   const image=images.find(image=>image.id===id);const width=/(?:^| )kn-width:(\d+)(?: |$)/.exec(title||'');return image?'![['+image.path+(width?'|'+width[1]:'')+']]':original;
  }));
 }
+export function moveImageReferences(content,images,imageId,newPath,folder=''){
+ return outsideCode(content,part=>part.replace(/!\[\[([^\]\n]+)\]\]/g,(original,target)=>{
+  if(resolveImage(images,target,folder)?.id!==imageId)return original;
+  const size=target.includes('|')?'|'+target.split('|').slice(1).join('|'):'';
+  return '![['+newPath+size+']]';
+ }).replace(/!\[([^\]\n]*)\]\(([^)\n]+)\)/g,(original,alt,target)=>{
+  const match=/^(<[^>]+>|\S+)(.*)$/.exec(target);if(!match)return original;
+  let path;try{path=decodeURIComponent(match[1].replace(/^<|>$/g,''));}catch{return original;}
+  if(path===imageUrl(imageId))return original;
+  if(resolveImage(images,path,folder)?.id!==imageId)return original;
+  return '!['+alt+'](<'+newPath+'>'+match[2]+')';
+ }));
+}

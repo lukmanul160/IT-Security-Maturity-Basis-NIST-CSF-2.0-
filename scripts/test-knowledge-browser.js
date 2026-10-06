@@ -222,6 +222,31 @@ async function run(){
     await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
     await client.wait(`document.querySelector('[data-image="DemoFolder/Subfolder/demo.png"]')`);
     console.log('Browser: typed image reference renders immediately and survives save/reload with folder files');
+    const imageService=require('../src/services/knowledgeImageService');
+    const movedImage=(await imageService.list()).find(image=>image.path==='DemoFolder/Subfolder/demo.png');
+    await service.importNotes([],[],[{path:'Archive/demo.png',content:png}]);
+    await assert.rejects(()=>imageService.move(movedImage.id,'Archive'),{status:409});
+    assert.ok((await imageService.list()).some(image=>image.id===movedImage.id&&image.path==='DemoFolder/Subfolder/demo.png'));
+    await imageService.remove((await imageService.list()).find(image=>image.path==='Archive/demo.png').id);
+    await client.evaluate(`(()=>{const source=document.querySelector('[data-image="DemoFolder/Subfolder/demo.png"]').closest('.tree-row'),target=document.querySelector('[data-folder="Archive"]').closest('.tree-row'),data=new DataTransfer();source.dispatchEvent(new DragEvent('dragstart',{bubbles:true,dataTransfer:data}));target.dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:data}));})()`);
+    await client.wait(`document.querySelector('[data-image="Archive/demo.png"]')`);
+    assert.ok((await service.list()).find(note=>note.title==='Imported nested').content.includes('![[Archive/demo.png]]'));
+    await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
+    await client.send('Page.reload');
+    await client.wait(`document.querySelector('[data-image="Archive/demo.png"]')`);
+    await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
+    await client.evaluate(`(()=>{window.confirm=()=>false;document.querySelector('[data-image="Archive/demo.png"]').closest('.tree-row').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));})()`);
+    await client.evaluate('Array.from(document.querySelectorAll(".tree-menu button")).find(b=>b.textContent==="Hapus gambar").click()');
+    assert.ok((await imageService.list()).some(image=>image.id===movedImage.id));
+    await client.evaluate(`(()=>{window.confirm=()=>true;document.querySelector('[data-image="Archive/demo.png"]').closest('.tree-row').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));})()`);
+    await client.evaluate('Array.from(document.querySelectorAll(".tree-menu button")).find(b=>b.textContent==="Hapus gambar").click()');
+    await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Gambar dihapus")');
+    assert.equal(await client.evaluate(`document.querySelector('[data-image="Archive/demo.png"]')===null`),true);
+    assert.equal((await fetch(base+'/api/knowledge-notes/images/'+movedImage.id)).status,404);
+    await client.send('Page.reload');
+    await client.wait('document.querySelector(".tiptap")');
+    assert.equal(await client.evaluate(`document.querySelector('[data-image="Archive/demo.png"]')===null`),true);
+    console.log('Browser: image drag preserves references after reload, duplicate destination rolls back, delete cancellation and confirmed deletion persist');
 
 
     assert.deepEqual(client.errors,[]);

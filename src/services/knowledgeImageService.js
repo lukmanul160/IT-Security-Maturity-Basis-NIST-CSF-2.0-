@@ -25,4 +25,31 @@ async function store(client,image){
 }
 async function list(){return (await pool.query('SELECT id,path,mime_type AS type FROM knowledge_note_images ORDER BY path')).rows;}
 async function read(id){if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))throw fail('Gambar tidak ditemukan.',404);const row=(await pool.query('SELECT content,mime_type AS type FROM knowledge_note_images WHERE id=$1',[id])).rows[0];if(!row)throw fail('Gambar tidak ditemukan.',404);return row;}
-module.exports={ensureStore,validate,store,list,read};
+function validateId(id){if(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))throw fail('Gambar tidak ditemukan.',404);}
+async function move(id,folder){
+ validateId(id);require('./knowledgeNoteService').validateFolder(folder);
+ if(typeof folder!=='string')throw fail('Folder tujuan wajib diisi.');
+ const client=await pool.connect();
+ try{
+  await client.query('BEGIN');
+  await client.query('LOCK TABLE knowledge_note_folders, knowledge_notes, knowledge_note_images IN SHARE ROW EXCLUSIVE MODE');
+  const images=(await client.query('SELECT id,path FROM knowledge_note_images')).rows;
+  const image=images.find(image=>image.id===id);if(!image)throw fail('Gambar tidak ditemukan.',404);
+  const path=[folder,image.path.split('/').pop()].filter(Boolean).join('/');
+  require('./knowledgeNoteService').validateFolder(path);
+  if(images.some(image=>image.id!==id&&image.path===path))throw fail('Gambar dengan nama yang sama sudah ada di folder tujuan.',409);
+  const parts=folder.split('/').filter(Boolean);
+  for(let i=1;i<=parts.length;i++)await client.query('INSERT INTO knowledge_note_folders(path) VALUES($1) ON CONFLICT DO NOTHING',[parts.slice(0,i).join('/')]);
+  if(path!==image.path){
+   const {moveImageReferences}=await import('../../frontend/client/src/workspace/features/shared/noteImages.mjs');
+   for(const note of (await client.query('SELECT id,content,folder FROM knowledge_notes')).rows){
+    const content=moveImageReferences(note.content,images,id,path,note.folder);
+    if(content!==note.content)await client.query('UPDATE knowledge_notes SET content=$2,version=version+1,updated_at=NOW() WHERE id=$1',[note.id,content]);
+   }
+  }
+  const saved=(await client.query('UPDATE knowledge_note_images SET path=$2,folder=$3 WHERE id=$1 RETURNING id,path,mime_type AS type',[id,path,folder])).rows[0];
+  await client.query('COMMIT');return saved;
+ }catch(error){await client.query('ROLLBACK');if(error.code==='23505')throw fail('Gambar dengan nama yang sama sudah ada di folder tujuan.',409);throw error;}finally{client.release();}
+}
+async function remove(id){validateId(id);if(!(await pool.query('DELETE FROM knowledge_note_images WHERE id=$1',[id])).rowCount)throw fail('Gambar tidak ditemukan.',404);}
+module.exports={ensureStore,validate,store,list,read,move,remove};
