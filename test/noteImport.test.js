@@ -1,6 +1,15 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const file = (name, relativePath, content='', size=Buffer.byteLength(content)) => ({name,webkitRelativePath:relativePath,size,text:async()=>content});
+test('stalled file reads time out before importing and report the pending path',async()=>{
+ const {readNoteImport}=await import('../frontend/client/src/workspace/features/shared/noteImport.mjs');
+ const reading=[],failures=[];
+ const stuck={...file('stuck.md','Vault/stuck.md'),text:()=>new Promise(()=>{})};
+ await assert.rejects(readNoteImport([stuck],'',{readTimeoutMs:10,onReading:value=>reading.push(value),onUnreadable:(path,error)=>failures.push({path,error})}),/Impor dibatalkan/);
+ assert.equal(reading[0].path,'Vault/stuck.md');
+ assert.equal(reading[0].completed,0);
+ assert.match(failures[0].error.message,/melewati/);
+});
 test('parallel note reads are bounded, report progress and preserve input order',async()=>{
  const {readNoteImport}=await import('../frontend/client/src/workspace/features/shared/noteImport.mjs');
  let active=0,peak=0;const progress=[];

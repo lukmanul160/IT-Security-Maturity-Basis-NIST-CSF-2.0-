@@ -17,7 +17,7 @@ export async function collectDirectoryFiles(directory, parent = '', { onUnreadab
   }} catch (error) { if (!onUnreadable) throw error; onUnreadable(prefix,error); }
   return files;
 }
-export async function readNoteImport(files, destination = '', { onSkipped = () => {}, onUnreadable, onProgress = () => {}, folderPaths = [] } = {}) {
+export async function readNoteImport(files, destination = '', { onSkipped = () => {}, onUnreadable, onProgress = () => {}, onReading = () => {}, readTimeoutMs = 30000, folderPaths = [] } = {}) {
   const directory = files.some(file => Boolean(file.webkitRelativePath));
   const selected = directory ? files.filter(file => {
     const supported = /\.(md|txt)$/i.test(file.name);
@@ -30,12 +30,21 @@ export async function readNoteImport(files, destination = '', { onSkipped = () =
   const unreadablePaths = [];
   for(const file of selected)if(file.size>1000000)throw new Error(`File ${file.name} melebihi batas 1 MB.`);
   const reads=new Array(selected.length);
-  let next=0,completed=0;
+  let next=0,completed=0,readFailure;
   await Promise.all(Array.from({length:Math.min(8,selected.length)},async()=>{
     while(next<selected.length){
       const index=next++,file=selected[index];
-      try{reads[index]={text:(await file.text()).replace(/^\uFEFF/,'')};}
+      if(readFailure){reads[index]={error:readFailure};continue;}
+      onReading({completed,total:selected.length,path:file.webkitRelativePath||file.name});
+      let timer;
+      try{
+        const text=await Promise.race([Promise.resolve().then(()=>file.text()),new Promise((_,reject)=>{
+          timer=setTimeout(()=>{readFailure=new Error(`Pembacaan file melewati ${readTimeoutMs/1000} detik. Pastikan file tersedia secara lokal, lalu coba impor ulang.`);reject(readFailure);},readTimeoutMs);
+        })]);
+        reads[index]={text:text.replace(/^\uFEFF/,'')};
+      }
       catch(error){reads[index]={error};}
+      finally{clearTimeout(timer);}
       onProgress({completed:++completed,total:selected.length,path:file.webkitRelativePath||file.name});
     }
   }));

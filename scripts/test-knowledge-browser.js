@@ -162,10 +162,12 @@ async function run(){
     await client.wait('document.querySelector(".layout main>input")?.value==="Home"');
     console.log('Browser: text plus embedded image renders in editor and preview; Ctrl+click opens linked note');
     for(const nested of [false,true]){
+      const importStarted=performance.now();
       const title=nested?'Imported nested':'Imported mixed';
       const selector=nested?'input[webkitdirectory]':'input[accept^=".md"]';
       await client.evaluate(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(png.toString('base64'))}),c=>c.charCodeAt(0));const data=new DataTransfer();const note=new File(['# Imported\\n\\n![[demo.png]]'],'${title}.md',{type:'text/markdown'});const image=new File([bytes],'demo.png',{type:'image/png'});if(${nested}){Object.defineProperty(note,'webkitRelativePath',{value:'DemoFolder/Subfolder/'+note.name});Object.defineProperty(image,'webkitRelativePath',{value:'DemoFolder/Subfolder/demo.png'});}data.items.add(note);data.items.add(image);const input=document.querySelector(${JSON.stringify(selector)});input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
       await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("gambar berhasil diimpor")');
+      console.log(`Import timing (${nested?'nested folder':'Markdown + image'}): ${Math.round(performance.now()-importStarted)} ms`);
       const imported=(await service.list()).find(note=>note.title===title);assert.ok(imported);
       assert.equal(imported.folder,nested?'DemoFolder/Subfolder':'');
       await search(title,'title');await client.wait('document.querySelectorAll("[data-search-note]").length===1');
@@ -192,6 +194,10 @@ async function run(){
     await client.wait('document.querySelector(".tiptap img[width]")?.getAttribute("width")==="160"');
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
     await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Catatan disimpan")');
+    for(let attempt=0;attempt<100;attempt++){
+      if((await service.list()).find(note=>note.title==='Imported nested').content.includes('|160]]'))break;
+      await delay(100);
+    }
     assert.ok((await service.list()).find(note=>note.title==='Imported nested').content.includes('|160]]'));
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Pratinjau").click()');
     await client.wait('document.querySelector(".tiptap img[width]")?.getAttribute("width")==="160"');
