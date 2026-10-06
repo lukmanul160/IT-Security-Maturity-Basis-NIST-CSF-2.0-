@@ -1,6 +1,17 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+test('wrapped hash image embeds render across line breaks in imported Markdown and editor text',async()=>{
+ const {displayImageMarkdown,imageEmbedRanges}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
+ const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/9da1a6e790249d9f492f104b84698ab9f0afcbc0.png';
+ const images=[{id:'hash',path}];
+ for(const lineBreak of ['\n','\r\n','  \n','\\\n']){
+  const reference='![['+path.replace('and Network','and'+lineBreak+'Network')+']]';
+  assert.equal(displayImageMarkdown(reference,images),'![gambar](/api/knowledge-notes/images/hash)');
+  const ranges=imageEmbedRanges(reference,images);
+  assert.equal(ranges.length,1);assert.equal(ranges[0].to,reference.length);
+ }
+});
 test('escaped embeds render after image catalog arrives and Windows paths match encoded spaces and letter case',async()=>{
  const {displayImageMarkdown,resolveImage,missingImageReferences}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
  const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image9.png';

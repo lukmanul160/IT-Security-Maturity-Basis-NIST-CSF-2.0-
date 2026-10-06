@@ -2,7 +2,7 @@ export const imageUrl=id=>'/api/knowledge-notes/images/'+encodeURIComponent(id);
 export const isImageFile=name=>/\.(png|jpe?g|gif|webp)$/i.test(name);
 function normalize(path){const result=[];for(const part of path.split('/')){if(!part||part==='.')continue;if(part==='..'){if(!result.length)return null;result.pop();}else result.push(part);}return result.join('/');}
 export function resolveImage(images,target,folder=''){
- let value=target.split('|')[0].trim().replaceAll('\\','/');
+ let value=target.split('|')[0].trim().replace(/(?:\\)?[ \t]*\r?\n[ \t]*/g,' ').replaceAll('\\','/').replace(/\/ +/g,'/');
  try{value=decodeURIComponent(value);}catch{}
  const relative=normalize([folder,value].filter(Boolean).join('/'));
  const exact=images.find(image=>image.path===relative)||images.find(image=>image.path===normalize(value));
@@ -16,7 +16,7 @@ export function resolveImage(images,target,folder=''){
 }
 export function imageEmbedRanges(text,images,folder=''){
  const ranges=[];
- for(const match of text.matchAll(/!\[\[([^\]\n]+)\]\]/g)){
+ for(const match of text.matchAll(/!\[\[([^\]]+)\]\]/g)){
   const target=match[1];
   if(!isImageFile(target.split('|')[0].trim()))continue;
   const image=resolveImage(images,target,folder);
@@ -30,17 +30,17 @@ export function imageEmbedRanges(text,images,folder=''){
 const outsideCode=(content,transform)=>content.split(/(`{3,}[\s\S]*?`{3,}|~{3,}[\s\S]*?~{3,}|`+[^`]*`+)/g).map((part,index)=>index%2?part:transform(part)).join('');
 // Markdown serializers escape brackets when an embed has not resolved yet.
 // Restore these references before parsing them again when images become available.
-export const normalizeImageReferences=content=>outsideCode(content,part=>part.replace(/!\\\[\\\[([^\n]*?)\\\]\\\]/g,'![[$1]]'));
+export const normalizeImageReferences=content=>outsideCode(content,part=>part.replace(/!\\\[\\\[([\s\S]*?)\\\]\\\]/g,'![[$1]]'));
 export function missingImageReferences(content,images,folder=''){
  const missing=new Set();
- outsideCode(normalizeImageReferences(content),part=>{for(const match of part.matchAll(/!\[\[([^\]\n]+)\]\]/g)){
+ outsideCode(normalizeImageReferences(content),part=>{for(const match of part.matchAll(/!\[\[([^\]]+)\]\]/g)){
   const path=match[1].split('|')[0].trim();
   if(isImageFile(path)&&!resolveImage(images,path,folder))missing.add(path);
  }return part;});
  return [...missing];
 }
 export function displayImageMarkdown(content,images,folder=''){
- return outsideCode(normalizeImageReferences(content),part=>part.replace(/!\[\[([^\]\n]+)\]\]/g,(original,target)=>{
+ return outsideCode(normalizeImageReferences(content),part=>part.replace(/!\[\[([^\]]+)\]\]/g,(original,target)=>{
   if(!isImageFile(target.split('|')[0].trim()))return original;
   const image=resolveImage(images,target,folder);const width=/^\d+(?:x\d+)?$/.test(target.split('|')[1]||'')?Math.max(48,Math.min(1600,Number(target.split('|')[1].split('x')[0]))):null;return image?'![gambar]('+imageUrl(image.id)+(width?' \"kn-width:'+width+'\"':'')+')':original;
  }).replace(/!\[([^\]\n]*)\]\(([^)\n]+)\)/g,(original,alt,target)=>{
@@ -55,7 +55,7 @@ export function restoreImageMarkdown(content,images){
  }));
 }
 export function moveImageReferences(content,images,imageId,newPath,folder=''){
- return outsideCode(content,part=>part.replace(/!\[\[([^\]\n]+)\]\]/g,(original,target)=>{
+ return outsideCode(content,part=>part.replace(/!\[\[([^\]]+)\]\]/g,(original,target)=>{
   if(resolveImage(images,target,folder)?.id!==imageId)return original;
   const size=target.includes('|')?'|'+target.split('|').slice(1).join('|'):'';
   return '![['+newPath+size+']]';
