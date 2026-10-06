@@ -24,6 +24,14 @@ export function imageEmbedRanges(text,images,folder=''){
  return ranges;
 }
 const outsideCode=(content,transform)=>content.split(/(`{3,}[\s\S]*?`{3,}|~{3,}[\s\S]*?~{3,}|`+[^`]*`+)/g).map((part,index)=>index%2?part:transform(part)).join('');
+export function missingImageReferences(content,images,folder=''){
+ const missing=new Set();
+ outsideCode(content,part=>{for(const match of part.matchAll(/!\[\[([^\]\n]+)\]\]/g)){
+  const path=match[1].split('|')[0].trim();
+  if(isImageFile(path)&&!resolveImage(images,path,folder))missing.add(path);
+ }return part;});
+ return [...missing];
+}
 export function displayImageMarkdown(content,images,folder=''){
  return outsideCode(content,part=>part.replace(/!\[\[([^\]\n]+)\]\]/g,(original,target)=>{
   if(!isImageFile(target.split('|')[0].trim()))return original;

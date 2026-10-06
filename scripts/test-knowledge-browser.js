@@ -31,6 +31,7 @@ async function run(){
     const policy=await service.create({title:'Policy',content:'**important** [[Home]]',folder:'Security/Policies'});
     const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
     await service.importNotes([{title:'Image example',folder:'Examples',content:'# Pedoman\n\nText before\n\n![[flowchart.png]]\n\nText after [[Home]]'}],[],[{path:'Examples/flowchart.png',content:png}]);
+    await service.importNotes([],[],[{path:'PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image9.png',content:png}]);
     const stale={...policy};await service.update(policy.id,{...policy,content:'**important** [[Home]]'});
     await assert.rejects(()=>service.update(stale.id,stale),{status:409});
     await assert.rejects(()=>service.removeFolder('Security'),{status:409});
@@ -156,6 +157,13 @@ async function run(){
     await client.wait('document.querySelector(".is-readonly .tiptap img")?.naturalWidth>0');
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView main .view-tabs button")).find(b=>b.textContent==="Editor").click()');
     await client.wait('document.querySelector(".tiptap [data-note-id]")');
+    const longImagePath='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image9.png';
+    await client.evaluate(`(()=>{const el=document.querySelector('.tiptap');el.focus();const range=document.createRange();range.selectNodeContents(el);range.collapse(false);const sel=getSelection();sel.removeAllRanges();sel.addRange(range);})()`);
+    await client.send('Input.insertText',{text:' ![['+longImagePath+']]'});
+    await client.wait('document.querySelectorAll(".tiptap img").length===2 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
+    await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
+    await client.wait('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").disabled && !Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Muat ulang daftar").disabled');
+    console.log('Browser: exact long image9 path renders immediately when typed');
     const wikiRect=await client.evaluate('(()=>{const link=document.querySelector(".tiptap [data-note-id]");link.scrollIntoView({block:"center"});return link.getBoundingClientRect().toJSON();})()');
     await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:wikiRect.x+wikiRect.width/2,y:wikiRect.y+wikiRect.height/2,button:'left',clickCount:1,modifiers:2});
     await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:wikiRect.x+wikiRect.width/2,y:wikiRect.y+wikiRect.height/2,button:'left',clickCount:1,modifiers:2});
@@ -186,7 +194,7 @@ async function run(){
     console.log('Browser: image file is visible in its subfolder and opens a loaded preview');
     await search('Imported nested','title');await client.wait('document.querySelectorAll("[data-search-note]").length===1');await client.evaluate('document.querySelector("[data-search-note]").click()');await client.wait('document.querySelector(".tiptap img")?.naturalWidth>0');
     await client.evaluate(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(png.toString('base64'))}),c=>c.charCodeAt(0));const data=new DataTransfer();data.items.add(new File([bytes],'inserted.png',{type:'image/png'}));const input=document.querySelector('.knowledge-text-editor input[type=file]');input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
-    await client.wait('document.querySelector(".knowledge-text-editor [role=status]")?.textContent.includes("Gambar dimasukkan")');
+    await client.wait('document.querySelector(".knowledge-text-editor .toolbar [role=status]")?.textContent.includes("Gambar dimasukkan")');
     await client.wait('document.querySelectorAll(".tiptap img").length===2');
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
     await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Catatan disimpan")');

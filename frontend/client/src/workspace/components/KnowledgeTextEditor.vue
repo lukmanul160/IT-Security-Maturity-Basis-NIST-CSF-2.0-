@@ -13,11 +13,12 @@ import { Extension } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { wikiLinkRanges } from '../features/shared/noteNavigation.mjs';
-import { displayImageMarkdown, restoreImageMarkdown, imageUrl, imageEmbedRanges } from '../features/shared/noteImages.mjs';
+import { displayImageMarkdown, restoreImageMarkdown, imageUrl, imageEmbedRanges, missingImageReferences } from '../features/shared/noteImages.mjs';
 
 const props=defineProps({modelValue:{type:String,default:''},editable:Boolean,allowImageUpload:{type:Boolean,default:true},readonly:Boolean,folder:{type:String,default:''},notes:{type:Array,default:()=>[]},images:{type:Array,default:()=>[]}});
 const emit=defineEmits(['update:modelValue','save','open-note','image-added']);
 const imageInput=ref(null),imageBusy=ref(false),imageStatus=ref('');
+const missingImages=computed(()=>missingImageReferences(props.modelValue,props.images,props.folder));
 const selectedImage=ref(false),selectedImageWidth=ref(320);
 function syncImageSelection(instance){selectedImage.value=instance.isActive('image');selectedImageWidth.value=imageWidth(instance.getAttributes('image').width)||320;}
 function resizeImage(value){if(!props.editable||props.readonly||!editor.value?.isActive('image'))return;editor.value.chain().focus().updateAttributes('image',{width:imageWidth(value),height:null}).run();}
@@ -109,7 +110,7 @@ const editor=useEditor({
 watch(()=>props.modelValue,value=>{if(editor.value&&markdownContent(editor.value)!==value)editor.value.commands.setContent(displayImageMarkdown(value,props.images,props.folder),{contentType:'markdown',emitUpdate:false});});
 watch(()=>[props.editable,props.readonly],()=>editor.value?.setEditable(props.editable&&!props.readonly,false));
 watch(()=>[props.notes,props.folder],()=>{if(editor.value)editor.value.view.dispatch(editor.value.state.tr);});
-watch(()=>props.images,()=>{if(editor.value)editor.value.commands.setContent(displayImageMarkdown(props.modelValue,props.images,props.folder),{contentType:'markdown',emitUpdate:false});});
+watch(()=>[props.images,props.folder],()=>{if(editor.value)editor.value.commands.setContent(displayImageMarkdown(props.modelValue,props.images,props.folder),{contentType:'markdown',emitUpdate:false});});
 const buttons=[['bold','Bold'],['italic','Italic'],['strike','Coret'],['heading1','H1'],['heading2','H2'],['bulletList','Bullet'],['orderedList','Numbering'],['taskList','Checklist'],['indent','Indent'],['outdent','Outdent'],['blockquote','Kutipan'],['code','Code'],['codeBlock','Blok kode'],['link','Tautan'],['wiki','Tautan catatan'],['undo','Undo'],['redo','Redo']];
 function active(kind){return editor.value?.isActive(kind.startsWith('heading')?'heading':kind,kind.startsWith('heading')?{level:Number(kind.at(-1))}:undefined)||false;}
 function format(kind){
@@ -125,6 +126,7 @@ function format(kind){
 </script>
 <template>
  <div class="knowledge-text-editor" :class="{'is-readonly':readonly}">
+  <div v-if="missingImages.length" class="missing-images" role="status">Gambar rujukan belum ditemukan di Knowledge Vault. Impor file/folder gambar sesuai jalur ini agar otomatis tampil:<ul><li v-for="path in missingImages" :key="path" data-no-translate>{{ path }}</li></ul></div>
   <div v-if="!readonly" class="toolbar formatting" role="toolbar" aria-label="Format teks"><button v-for="[kind,label] in buttons" :key="kind" :data-format="kind" :disabled="!editable" :aria-pressed="active(kind)" @mousedown.prevent @click="format(kind)">{{ label }}</button></div>
   <div v-if="!readonly" class="toolbar"><button :disabled="!editable||!allowImageUpload||imageBusy" @mousedown.prevent @click="imageInput.click()">Masukkan gambar</button><input ref="imageInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" hidden @change="selectImage"><span role="status">{{ imageStatus }}</span></div><div v-if="selectedImage&&!readonly" class="toolbar image-sizing" aria-label="Ukuran gambar"><label>Lebar gambar <input type="number" min="48" max="1600" step="10" :value="selectedImageWidth" :disabled="!editable" @change="resizeImage($event.target.value)"> px</label><button v-for="[width,label] in [[160,'Kecil'],[320,'Sedang'],[640,'Besar']]" :key="width" :disabled="!editable" @mousedown.prevent @click="resizeImage(width)">{{label}}</button><button :disabled="!editable" @mousedown.prevent @click="resizeImage(null)">Otomatis</button></div><EditorContent :editor="editor" />
   <div v-if="completion" class="wiki-suggestions" :style="{left:completion.left+'px',top:completion.top+'px'}" role="listbox" aria-label="Cari tautan catatan">
@@ -136,6 +138,7 @@ function format(kind){
  </div>
 </template>
 <style scoped>
+.missing-images{padding:10px 12px;margin-bottom:10px;border:1px solid #e6cd91;border-radius:6px;background:#fff8e7;font-size:12px;overflow-wrap:anywhere}.missing-images ul{margin:5px 0;padding-left:18px}
 .knowledge-text-editor :deep(.tiptap){min-height:460px;padding:18px;border:1px solid #d8dce8;border-radius:8px;outline:none;line-height:1.7;overflow-wrap:anywhere;color:#243248;background:white}
 .knowledge-text-editor :deep(.tiptap:focus){border-color:#8b5cf6;box-shadow:0 0 0 2px #8b5cf620}
 .knowledge-text-editor :deep(p){margin:0 0 .7em;color:inherit}

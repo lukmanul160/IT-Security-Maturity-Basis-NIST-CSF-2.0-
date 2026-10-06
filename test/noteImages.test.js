@@ -1,6 +1,16 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+test('exact long image9 reference resolves only when its file exists and reports missing files outside code',async()=>{
+ const {missingImageReferences,imageEmbedRanges}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
+ const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/media/image9.png';
+ const reference='![['+path+']]';
+ assert.deepEqual(missingImageReferences(reference,[]),[path]);
+ assert.deepEqual(missingImageReferences('`'+reference+'`\n```\n'+reference+'\n```',[]),[]);
+ const images=[{id:'image9',path}];
+ assert.deepEqual(missingImageReferences(reference,images),[]);
+ assert.equal(imageEmbedRanges(reference,images)[0].attrs.src,'/api/knowledge-notes/images/image9');
+});
 test('moving images updates resolved references and preserves code, widths and other images',async()=>{
  const {moveImageReferences}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
  const images=[{id:'a',path:'A/pic.png'},{id:'b',path:'B/pic.png'}];
