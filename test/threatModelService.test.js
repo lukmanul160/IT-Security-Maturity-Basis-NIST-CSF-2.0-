@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 function load(query = async () => { throw new Error('Unexpected write'); }) {
-  const context = vm.createContext({ module: { exports: {} }, require: () => ({ pool: { query } }) });
+  const context = vm.createContext({ module: { exports: {} }, require: name => name.endsWith('threatStencils.json') ? require('../src/shared/threatStencils.json') : ({ pool: { query } }) });
   vm.runInContext(fs.readFileSync('src/services/threatModelService.js', 'utf8'), context);
   return context.module.exports;
 }
@@ -36,4 +36,28 @@ test('optimistic version check prevents overwriting another editor', async () =>
 test('empty diagrams are valid and missing versions cannot update stored records', async () => {
   const api = load(); api.validate({ name: 'Empty', diagram: { nodes: [], edges: [] } });
   await assert.rejects(api.update('1', sample()), /Versi/);
+});
+
+test('custom canvas bounds allow larger diagrams and reject clipped content', () => {
+  const model = sample(); model.diagram.canvas = { width: 4000, height: 3000 };
+  model.diagram.nodes[0].x = 3000; model.diagram.nodes[0].y = 2000;
+  assert.equal(load().validate(model), model);
+  model.diagram.canvas.width = 2400; assert.throws(() => load().validate(model), /Posisi/);
+  model.diagram.canvas.width = 12001; assert.throws(() => load().validate(model), /canvas/);
+});
+
+test('stencil properties persist and invalid types or values are rejected', async () => {
+  const stencils = require('../src/shared/threatStencils.json');
+  for (const stencil of stencils) {
+    const model = sample();
+    const item = stencil.type === 'flow' ? model.diagram.edges[0] : model.diagram.nodes[0];
+    if (stencil.type !== 'flow') item.type = stencil.type;
+    Object.assign(item, { stencilId: stencil.id, properties: Object.fromEntries(stencil.properties.map(property => [property.key, property.default])), outOfScope: false, reasonOutOfScope: '' });
+    const api = load(async (sql, values) => { assert.deepEqual(JSON.parse(values[1]), model.diagram); return { rows: [{ id: 1 }] }; });
+    await api.create(model);
+  }
+  const model = sample(); model.diagram.nodes[0].stencilId = 'GE.DF';
+  assert.throws(() => load().validate(model), /Stencil/);
+  model.diagram.nodes[0].stencilId = 'GE.P'; model.diagram.nodes[0].properties = { codeType: 'bad' };
+  assert.throws(() => load().validate(model), /property/);
 });

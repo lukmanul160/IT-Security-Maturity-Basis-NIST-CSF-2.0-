@@ -63,6 +63,22 @@ async function run(){
     await client.wait('document.querySelector(".layout main>input")?.value==="Home"');
     await search('');await client.wait('document.querySelector(".search-results")===null');
     console.log('Browser: file/path, body snippets, field operators, title filter and result navigation');
+    await client.wait('document.querySelector(".tiptap")');
+    const noteBeforeResize=await client.evaluate('document.querySelector(".tiptap").textContent');
+    await client.evaluate(`(()=>{for(const [name,value] of [['note-area-width',480],['note-area-height',620]]){const input=document.querySelector('[name="'+name+'"]');input.value=value;input.dispatchEvent(new Event('change',{bubbles:true}));}})()`);
+    await client.wait('Math.round(document.querySelector(".tiptap").getBoundingClientRect().height)===620');
+    assert.ok(await client.evaluate('document.querySelector(".knowledge-text-editor").getBoundingClientRect().width<=480'));
+    assert.equal(await client.evaluate('document.querySelector(".tiptap").textContent'),noteBeforeResize);
+    await client.evaluate('document.querySelector("[name=notes-fullscreen]").scrollIntoView({block:"center"})');
+    const fullPoint=await client.evaluate(`(()=>{const r=document.querySelector('[name="notes-fullscreen"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
+    await client.send('Input.dispatchMouseEvent',{type:'mousePressed',...fullPoint,button:'left',clickCount:1});
+    await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',...fullPoint,button:'left',clickCount:1});
+    await client.wait('document.querySelector("#knowledgeNotesView").classList.contains("kn-fullscreen")');
+    await client.evaluate('document.querySelector("[name=notes-fullscreen]").click()');
+    await client.wait('!document.querySelector("#knowledgeNotesView").classList.contains("kn-fullscreen")');
+    assert.ok(await client.evaluate('document.querySelector("#knowledgeNotesView").classList.contains("active-view")'));
+    await client.evaluate('document.querySelector("[name=note-area-auto]").click()');
+    console.log('Browser: note area dimensions and fullscreen preserve content and navigation');
     const panelBefore=await client.evaluate('document.querySelector(".explorer").getBoundingClientRect().width');
     const separator=await client.evaluate('document.querySelector(".files-resizer").getBoundingClientRect().toJSON()');
     await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:separator.x+4,y:separator.y+100,button:'left',clickCount:1});
@@ -99,6 +115,7 @@ async function run(){
     console.log('Browser: folder create, note drag, subtree drag and rename persist');
     // Reload confirms expanded state and saved folder paths survive.
     await client.send('Page.reload');await client.wait('document.documentElement.dataset.frontend === "vue"');await client.wait(`document.querySelector('[data-folder="Archive/Renamed"]')`);
+    assert.equal(await client.evaluate('document.querySelector("[name=note-area-height]").value'),'620');
     await client.evaluate(`document.querySelector('[data-note="${policy.id}"]').click()`);
     await client.wait('document.querySelector(".tiptap strong")?.textContent==="important"');
     await client.evaluate(`(()=>{const el=document.querySelector('.tiptap');el.focus();const range=document.createRange();range.selectNodeContents(el);range.collapse(false);const sel=getSelection();sel.removeAllRanges();sel.addRange(range);})()`);

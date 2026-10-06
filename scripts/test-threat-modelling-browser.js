@@ -45,19 +45,63 @@ async function run() {
     for (let i = 0; i < 100; i++) { try { const response = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, { method: 'PUT' }); target = await response.json(); break; } catch { await delay(100); } }
     assert.ok(target, 'Chrome started'); client = new Cdp(target.webSocketDebuggerUrl); await client.connect();
     await client.send('Runtime.enable'); await client.send('Page.enable');
+    // HTTP deployments do not expose randomUUID; exercise the ID fallback.
+    await client.send('Page.addScriptToEvaluateOnNewDocument', { source: 'Object.defineProperty(Crypto.prototype, "randomUUID", { value: undefined, configurable: true });' });
     await client.send('Network.setCookie', { name: 'nist_session', value: token, url: base, httpOnly: true });
     await client.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 1050, deviceScaleFactor: 1, mobile: false });
     await client.send('Page.navigate', { url: `${base}/app` });
     await client.wait('document.documentElement.dataset.frontend === "vue"');
     console.log('Browser check: workspace mounted');
-    await client.evaluate('document.querySelector("[data-view=threat-modelling]").click()');
     await client.wait('document.querySelector(".tm-load-error")');
     await client.evaluate('document.querySelector(".tm-load-error button").click()');
     await client.wait('!document.querySelector(".tm-load-error") && !document.querySelector(".tm-palette>button").disabled');
-    await client.wait('!Array.from(document.querySelectorAll("#threatModellingView button")).find(b=>b.textContent==="Example diagram").disabled');
-    await client.evaluate('Array.from(document.querySelectorAll("#threatModellingView button")).find(b=>b.textContent==="Example diagram").click()');
+    await client.evaluate('document.querySelector("[data-view=threat-modelling]").click()');
+    await client.wait('!document.querySelector(".tm-palette-help button").disabled');
+    await client.evaluate('document.querySelector(".tm-palette>button").click()');
+    await client.wait('document.querySelectorAll("[data-tm-node]").length===1');
+    assert.equal(await client.evaluate('document.querySelector("[data-tm-node]").getAttribute("transform").includes("NaN")'), false);
+    await client.evaluate(`(()=>{
+      const viewport = document.querySelector('.tm-viewport');
+      const rect = viewport.getBoundingClientRect();
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData('text/plain', 'process');
+      viewport.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer, clientX: rect.x + 100, clientY: rect.y + 100 }));
+    })()`);
+    await client.wait('document.querySelectorAll("[data-tm-node]").length===2');
+    assert.equal(await client.evaluate(`(()=>{
+      const node = document.querySelectorAll('[data-tm-node]')[1].getBoundingClientRect();
+      const viewport = document.querySelector('.tm-viewport').getBoundingClientRect();
+      return node.width > 0 && node.height > 0 && node.right > viewport.left && node.left < viewport.right && node.bottom > viewport.top && node.top < viewport.bottom;
+    })()`), true, 'Dropped shape is visible in the canvas');
+    await client.evaluate('Array.from(document.querySelectorAll(".tm-tools button")).find(b=>b.textContent.includes("Undo")).click()');
+    await client.evaluate('Array.from(document.querySelectorAll(".tm-tools button")).find(b=>b.textContent.includes("Undo")).click()');
+    console.log('Browser check: palette click and drop render without randomUUID');
+    assert.equal(await client.evaluate('document.querySelectorAll("[data-tm-stencil]").length'), 59);
+    await client.evaluate(`document.querySelector('[data-tm-stencil="SE.DS.TMCore.SQL"]').click()`);
+    await client.wait('document.querySelectorAll("[data-tm-node]").length===1');
+    assert.equal(await client.evaluate('document.querySelector("[name=element-stencil]").value'), 'SQL Database');
+    assert.ok(await client.evaluate('document.querySelectorAll(".tm-element-properties select").length > 1'));
+    await client.evaluate('Array.from(document.querySelectorAll(".tm-tools button")).find(b=>b.textContent.includes("Undo")).click()');
+    await client.evaluate('window.confirm = () => true');
+    await client.evaluate('document.querySelector(".tm-palette-help button").click()');
     await client.wait('document.querySelectorAll("[data-tm-node]").length===4');
     console.log('Browser check: example diagram rendered');
+    await client.evaluate(`(()=>{
+      for (const [name, value] of [['canvas-width', 4000], ['canvas-height', 3000]]) {
+        const input = document.querySelector('[name="' + name + '"]'); input.value = value; input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await client.wait('document.querySelector(".tm-canvas").getAttribute("viewBox") === "0 0 4000 3000"');
+    await client.evaluate(`(()=>{const input=document.querySelector('[name="canvas-width"]');input.value=400;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+    assert.equal(await client.evaluate('document.querySelector("[name=canvas-width]").value'), '4000');
+    // Use real input events so browser fullscreen receives a user gesture.
+    const fullPoint = await client.evaluate(`(()=>{const r=document.querySelector('[name="toggle-fullscreen"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
+    await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...fullPoint, button: 'left', clickCount: 1 });
+    await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...fullPoint, button: 'left', clickCount: 1 });
+    await client.wait('document.querySelector("#threatModellingView").classList.contains("tm-fullscreen")');
+    await client.evaluate('document.querySelector("[name=toggle-fullscreen]").click()');
+    await client.wait('!document.querySelector("#threatModellingView").classList.contains("tm-fullscreen")');
+    await client.evaluate(`document.querySelector('[data-tm-stencil="SE.DF.TMCore.HTTPS"]').click()`);
     assert.equal(await client.evaluate('document.querySelectorAll("[data-tm-edge]").length'), 2);
     const clickNode = async index => {
       const point = await client.evaluate(`(()=>{const r=document.querySelectorAll('[data-tm-node]')[${index}].getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
@@ -72,7 +116,9 @@ async function run() {
     await client.wait('document.querySelector(".tm-status").textContent.includes("Pilih komponen tujuan")');
     await clickNode(3); await client.wait('document.querySelectorAll("[data-tm-edge]").length===3');
     console.log('Browser check: flow connected');
-    await client.evaluate('Array.from(document.querySelectorAll(".tm-tools button")).find(b=>b.textContent==="Delete selection").click()');
+    assert.equal(await client.evaluate('document.querySelector("[name=element-stencil]").value'), 'HTTPS');
+    assert.ok(await client.evaluate('document.querySelectorAll(".tm-element-properties select").length > 1'));
+    await client.evaluate('Array.from(document.querySelectorAll(".tm-tools button")).find(b=>["Delete selection", "Hapus pilihan"].includes(b.textContent)).click()');
     await client.wait('document.querySelectorAll("[data-tm-edge]").length===2');
     await client.evaluate('Array.from(document.querySelectorAll(".tm-tools button")).find(b=>b.textContent.includes("Undo")).click()');
     await client.wait('document.querySelectorAll("[data-tm-edge]").length===3');
@@ -104,17 +150,26 @@ async function run() {
     await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...bounds, button: 'left', clickCount: 1 });
     await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...bounds, button: 'left', clickCount: 1 });
     await client.wait('document.querySelector(".tm-threat-card input")?.value==="Unauthorized API access"');
+    await client.evaluate(`(()=>{
+      const input = document.querySelector('[name="element-property-implementsAuthenticationScheme"]');
+      input.value = 'Yes'; input.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
     await client.evaluate('document.querySelector(".tm-save").click()');
     await client.wait('document.querySelector(".tm-status").textContent.includes("tersimpan di database")');
     const saved = await client.evaluate('fetch("/api/threat-modelling").then(r=>r.json())');
     assert.equal(saved.length, 1); assert.equal(saved[0].diagram.nodes.length, 4);
+    assert.deepEqual(saved[0].diagram.canvas, { width: 4000, height: 3000 });
     assert.equal(saved[0].diagram.nodes.flatMap(node => node.threats)[0].title, 'Unauthorized API access');
+    const configured = saved[0].diagram.nodes.find(node => node.properties?.implementsAuthenticationScheme === 'Yes');
+    assert.ok(configured, 'Edited element properties are saved');
+    assert.equal(configured.stencilId, 'SE.P.TMCore.WebSvc');
     // Stale versions are rejected by the real route.
     const stale = await fetch(`${base}/api/threat-modelling/${saved[0].id}`, { method: 'PUT', headers: { Cookie: `nist_session=${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ...saved[0], version: 99 }) });
     assert.equal(stale.status, 409);
     // Reload restores both navigation and the saved graph.
     await client.send('Page.reload'); await client.wait('document.documentElement.dataset.frontend === "vue" && document.querySelector("#threatModellingView").classList.contains("active-view")');
     await client.wait('document.querySelectorAll("[data-tm-node]").length===4');
+    assert.equal(await client.evaluate('document.querySelector(".tm-canvas").getAttribute("viewBox")'), '0 0 4000 3000');
     await fs.mkdir('output/threat-modelling', { recursive: true });
     const screenshot = await client.send('Page.captureScreenshot', { format: 'png' });
     await fs.writeFile('output/threat-modelling/preview.png', Buffer.from(screenshot.data, 'base64'));

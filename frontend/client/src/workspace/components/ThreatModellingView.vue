@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import stencils from '../../../../../src/shared/threatStencils.json';
 
 const palette = [
   { type: 'actor', title: 'External entity', icon: '◯', color: '#dbeafe' },
@@ -10,15 +11,66 @@ const palette = [
   { type: 'note', title: 'Note', icon: '▧', color: '#fef9c3' }
 ];
 const stride = ['Spoofing', 'Tampering', 'Repudiation', 'Information disclosure', 'Denial of service', 'Elevation of privilege'];
+const stencilSearch = ref(''), flowStencil = ref('GE.DF');
+const stencilGroups = computed(() => stencils.filter(item => item.id === item.group).map(group => ({ ...group, items: stencils.filter(item => item.group === group.id && item.title.toLowerCase().includes(stencilSearch.value.toLowerCase())) })).filter(group => group.items.length));
+const genericStencil = type => stencils.find(stencil => stencil.id === (type === 'boundary' ? 'GE.TB.B' : type === 'service' ? 'SE.P.TMCore.WebSvc' : '') || stencil.id === stencil.group && stencil.type === type && type !== 'boundary');
+const stencilFor = item => stencils.find(stencil => stencil.id === item?.stencilId) || genericStencil(item && 'source' in item ? 'flow' : item?.type);
+const elementProperties = computed(() => stencilFor(selected.value)?.properties || []);
+const defaults = stencil => Object.fromEntries(stencil.properties.map(property => [property.key, property.default]));
+function selectStencil(id, point) {
+  const stencil = stencils.find(item => item.id === id); if (!stencil || !editable.value) return;
+  if (stencil.type === 'flow') { flowStencil.value = id; mode.value = 'connect'; source.value = null; status.value = `${stencil.title}: pilih komponen sumber, lalu tujuan.`; return; }
+  addNode(stencil.type, point, stencil);
+}
+function setElementProperty(key, value) {
+  if (!editable.value || !selected.value) return;
+  const stencil = stencilFor(selected.value); if (!stencil) return;
+  checkpoint(); selected.value.stencilId = stencil.id; if (!isEdge.value) selected.value.type = stencil.type;
+  selected.value.properties = { ...defaults(stencil), ...selected.value.properties, [key]: value };
+}
 const model = ref({ name: 'Untitled threat model', diagram: { nodes: [], edges: [] } });
 const models = ref([]), selection = ref(null), mode = ref('select'), source = ref(null), zoom = ref(1);
 const status = ref('Pilih komponen dari panel Shapes untuk mulai.'), dirty = ref(false), busy = ref(false), loaded = ref(false);
 const access = ref({ read: false, create: false, update: false, delete: false });
 const loadError = ref(''), loading = ref(false);
 const canvas = ref(null), viewport = ref(null), importInput = ref(null);
+const editorPage = ref(null), fullscreen = ref(false), editorHeight = ref(620);
+// Navigation manages active-view directly; keep its class when fullscreen changes.
+watch(fullscreen, value => editorPage.value?.classList.toggle('tm-fullscreen', value));
+const canvasWidth = computed(() => model.value.diagram.canvas?.width ?? 2400);
+const canvasHeight = computed(() => model.value.diagram.canvas?.height ?? 1600);
+function resizeCanvas(axis, event) {
+  const current = axis === 'width' ? canvasWidth.value : canvasHeight.value;
+  const value = Number(event.target.value);
+  const minimum = Math.max(400, ...model.value.diagram.nodes.map(node => axis === 'width' ? node.x + node.width : node.y + node.height));
+  if (!editable.value || !Number.isInteger(value) || value < minimum || value > 12000) {
+    event.target.value = current; status.value = `Ukuran canvas harus ${minimum}–12000 px dan memuat semua shape.`; return;
+  }
+  if (value === current) return;
+  checkpoint(); model.value.diagram.canvas = { width: canvasWidth.value, height: canvasHeight.value, [axis]: value };
+  status.value = 'Ukuran canvas diperbarui. Pilih Save untuk menyimpan.';
+}
+async function toggleFullscreen() {
+  if (fullscreen.value) {
+    if (document.fullscreenElement === editorPage.value) await document.exitFullscreen();
+    fullscreen.value = false;
+  } else {
+    fullscreen.value = true;
+    try { await editorPage.value.requestFullscreen?.(); } catch { /* Keep the expanded editor when browser fullscreen is unavailable. */ }
+  }
+}
+function fullscreenChanged() { fullscreen.value = document.fullscreenElement === editorPage.value; }
+function fullscreenEscape(event) { if (event.key === 'Escape' && fullscreen.value && !document.fullscreenElement) fullscreen.value = false; }
 const history = ref([]), future = ref([]);
 const clone = value => JSON.parse(JSON.stringify(value));
-const uid = () => crypto.randomUUID();
+const uid = () => {
+  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
 const selected = computed(() => [...model.value.diagram.nodes, ...model.value.diagram.edges].find(item => item.id === selection.value));
 const isEdge = computed(() => selected.value && 'source' in selected.value);
 const editable = computed(() => !busy.value && loaded.value && (model.value.id ? access.value.update : access.value.create));
@@ -74,14 +126,16 @@ function position(event) {
   return { x: point.x, y: point.y };
 }
 const snap = value => Math.round(value / 20) * 20;
-function addNode(type, point = { x: 260 + model.value.diagram.nodes.length % 5 * 40, y: 140 + model.value.diagram.nodes.length % 5 * 40 }) {
+function addNode(type, point = { x: 260 + model.value.diagram.nodes.length % 5 * 40, y: 140 + model.value.diagram.nodes.length % 5 * 40 }, stencil = genericStencil(type)) {
   if (!editable.value) return;
   const item = palette.find(item => item.type === type); if (!item) return;
+  const width = type === 'boundary' ? 400 : 160, height = type === 'boundary' ? 300 : 80;
+  const node = { id: uid(), type, label: item.title, color: item.color, x: Math.min(canvasWidth.value - width, Math.max(0, snap(point.x))), y: Math.min(canvasHeight.value - height, Math.max(0, snap(point.y))), width, height, description: '', threats: [] };
+  if (stencil) { node.type = stencil.type; node.stencilId = stencil.id; node.label = stencil.title; node.properties = defaults(stencil); node.outOfScope = false; node.reasonOutOfScope = ''; }
   checkpoint();
-  const node = { id: uid(), type, label: item.title, color: item.color, x: Math.min(2000, Math.max(0, snap(point.x))), y: Math.min(1300, Math.max(0, snap(point.y))), width: type === 'boundary' ? 400 : 160, height: type === 'boundary' ? 300 : 80, description: '', threats: [] };
   model.value.diagram.nodes.push(node); selection.value = node.id;
 }
-function drop(event) { event.preventDefault(); addNode(event.dataTransfer.getData('text/plain'), position(event)); }
+function drop(event) { event.preventDefault(); const id = event.dataTransfer.getData('text/plain'); if (stencils.some(item => item.id === id)) selectStencil(id, position(event)); else addNode(id, position(event)); }
 let drag = null;
 function pointerDown(event, node, resize = false) {
   event.stopPropagation(); selection.value = node.id;
@@ -89,7 +143,8 @@ function pointerDown(event, node, resize = false) {
   if (mode.value === 'connect') {
     if (!source.value) { source.value = node.id; status.value = 'Pilih komponen tujuan untuk membuat aliran data.'; }
     else if (source.value !== node.id) {
-      checkpoint(); const edge = { id: uid(), source: source.value, target: node.id, label: 'Data flow', description: '', threats: [] };
+      const stencil = stencils.find(item => item.id === flowStencil.value);
+      checkpoint(); const edge = { id: uid(), source: source.value, target: node.id, label: stencil.title, stencilId: stencil.id, properties: defaults(stencil), outOfScope: false, reasonOutOfScope: '', description: '', threats: [] };
       model.value.diagram.edges.push(edge); source.value = null; selection.value = edge.id; status.value = 'Aliran data dibuat. Edit label pada panel Properties.';
     }
     return;
@@ -102,8 +157,8 @@ function pointerMove(event) {
   const p = position(event); const dx = p.x - drag.point.x, dy = p.y - drag.point.y;
   if (!drag.changed && Math.abs(dx) + Math.abs(dy) > 3) { checkpoint(); drag.changed = true; }
   if (!drag.changed) return;
-  if (drag.resize) { drag.node.width = Math.max(60, Math.min(2400 - drag.node.x, snap(drag.width + dx))); drag.node.height = Math.max(40, Math.min(1600 - drag.node.y, snap(drag.height + dy))); }
-  else { drag.node.x = Math.max(0, Math.min(2400 - drag.node.width, snap(drag.x + dx))); drag.node.y = Math.max(0, Math.min(1600 - drag.node.height, snap(drag.y + dy))); }
+  if (drag.resize) { drag.node.width = Math.max(60, Math.min(canvasWidth.value - drag.node.x, snap(drag.width + dx))); drag.node.height = Math.max(40, Math.min(canvasHeight.value - drag.node.y, snap(drag.height + dy))); }
+  else { drag.node.x = Math.max(0, Math.min(canvasWidth.value - drag.node.width, snap(drag.x + dx))); drag.node.y = Math.max(0, Math.min(canvasHeight.value - drag.node.height, snap(drag.y + dy))); }
 }
 function pointerUp() { drag = null; }
 function deleteSelected() {
@@ -117,10 +172,10 @@ function setProperty(field, value) {
   if (['width', 'height', 'x', 'y'].includes(field)) {
     value = Number(value); if (!Number.isFinite(value)) return;
     const item = selected.value;
-    if (field === 'width') value = Math.max(60, Math.min(2400 - item.x, value));
-    if (field === 'height') value = Math.max(40, Math.min(1600 - item.y, value));
-    if (field === 'x') value = Math.max(0, Math.min(2400 - item.width, value));
-    if (field === 'y') value = Math.max(0, Math.min(1600 - item.height, value));
+    if (field === 'width') value = Math.max(60, Math.min(canvasWidth.value - item.x, value));
+    if (field === 'height') value = Math.max(40, Math.min(canvasHeight.value - item.y, value));
+    if (field === 'x') value = Math.max(0, Math.min(canvasWidth.value - item.width, value));
+    if (field === 'y') value = Math.max(0, Math.min(canvasHeight.value - item.height, value));
   }
   checkpoint(); selected.value[field] = value;
 }
@@ -191,12 +246,12 @@ function keyboard(event) {
 }
 function beforeUnload(event) { if (dirty.value) { event.preventDefault(); event.returnValue = ''; } }
 function open() { if (!loaded.value) load(); nextTick(() => { if (viewport.value) fit(); }); }
-onMounted(() => { window.addEventListener('threat-modelling-open', open); document.addEventListener('keydown', keyboard); window.addEventListener('beforeunload', beforeUnload); load(); });
-onBeforeUnmount(() => { window.removeEventListener('threat-modelling-open', open); document.removeEventListener('keydown', keyboard); window.removeEventListener('beforeunload', beforeUnload); });
+onMounted(() => { document.addEventListener('fullscreenchange', fullscreenChanged); document.addEventListener('keydown', fullscreenEscape); window.addEventListener('threat-modelling-open', open); document.addEventListener('keydown', keyboard); window.addEventListener('beforeunload', beforeUnload); load(); });
+onBeforeUnmount(() => { document.removeEventListener('fullscreenchange', fullscreenChanged); document.removeEventListener('keydown', fullscreenEscape); window.removeEventListener('threat-modelling-open', open); document.removeEventListener('keydown', keyboard); window.removeEventListener('beforeunload', beforeUnload); });
 </script>
 
 <template>
-  <section id="threatModellingView" class="view tm-page">
+  <section ref="editorPage" id="threatModellingView" class="view tm-page">
     <div class="tm-heading"><div><p class="eyebrow">SECURITY DESIGN WORKSPACE</p><h2>Threat Modelling</h2><p>Map your system. Trace data flows. Identify threats.</p></div><span class="tm-state" :class="{ unsaved: dirty }">{{ dirty ? '● Unsaved changes' : '● Saved / ready' }}</span></div>
     <div v-if="loadError" role="alert" class="tm-load-error"><span>{{ loadError }}</span><button :disabled="loading" @click="load">Coba lagi</button></div>
     <p v-else-if="loading" role="status">Memuat diagram dan izin akses…</p>
@@ -212,14 +267,16 @@ onBeforeUnmount(() => { window.removeEventListener('threat-modelling-open', open
       <span class="tm-divider"></span><button :disabled="!editable || !history.length" @click="undo">↶ Undo</button><button :disabled="!editable || !future.length" @click="redo">↷ Redo</button><button :disabled="!editable || !selected" @click="deleteSelected">Delete selection</button>
       <span class="tm-divider"></span><button aria-label="Zoom out" @click="setZoom(zoom - .1)">−</button><span>{{ Math.round(zoom * 100) }}%</span><button aria-label="Zoom in" @click="setZoom(zoom + .1)">＋</button><button @click="fit">Fit</button><span class="tm-grid-label">Grid · 20 px</span>
     </div>
-    <div class="tm-editor">
-      <aside class="tm-palette"><h3>Shapes</h3><p>Click or drag onto canvas</p><button v-for="item in palette" :key="item.type" :disabled="!editable" :draggable="editable" @dragstart="$event.dataTransfer.setData('text/plain', item.type)" @click="addNode(item.type)"><span :style="{ background: item.color }">{{ item.icon }}</span>{{ item.title }}</button><div class="tm-palette-help"><h4>Data flow diagram</h4><p>Use Connect, then click a source and destination.</p><p>Dashed boundaries show where trust changes.</p><button :disabled="!access.create || busy" @click="example">Example diagram</button></div></aside>
+    <div class="tm-canvas-settings"><label>Canvas width (px)<input name="canvas-width" type="number" min="400" max="12000" :value="canvasWidth" :disabled="!editable" @change="resizeCanvas('width', $event)"></label><label>Canvas height (px)<input name="canvas-height" type="number" min="400" max="12000" :value="canvasHeight" :disabled="!editable" @change="resizeCanvas('height', $event)"></label><label v-if="!fullscreen">Editor height<input name="editor-height" type="range" min="300" max="1600" step="20" v-model.number="editorHeight"><span>{{ editorHeight }} px</span></label><button name="toggle-fullscreen" :aria-pressed="fullscreen" @click="toggleFullscreen">{{ fullscreen ? 'Exit full screen' : 'Full screen' }}</button></div>
+    <div class="tm-editor" :style="fullscreen ? undefined : { height: editorHeight + 'px' }">
+      <aside class="tm-palette"><h3>Shapes</h3><p>Click or drag onto canvas</p><button v-for="item in palette" :key="item.type" :disabled="!editable" :draggable="editable" @dragstart="$event.dataTransfer.setData('text/plain', item.type)" @click="addNode(item.type)"><span :style="{ background: item.color }">{{ item.icon }}</span>{{ item.title }}</button><label class="tm-stencil-search">Stencils<input name="stencil-search" v-model="stencilSearch" placeholder="Search stencils"></label><details v-for="group in stencilGroups" :key="group.id" class="tm-stencil-group" open><summary>{{ group.title }}</summary><button v-for="item in group.items" :key="item.id" :data-tm-stencil="item.id" :disabled="!editable" :draggable="editable" :class="{ active: item.type === 'flow' && mode === 'connect' && flowStencil === item.id }" @dragstart="$event.dataTransfer.setData('text/plain', item.id)" @click="selectStencil(item.id)"><span :style="{ background: item.color }">{{ item.type === 'flow' ? '→' : item.type === 'boundary' ? '▧' : item.type === 'datastore' ? '▤' : item.type === 'actor' ? '◯' : '▣' }}</span>{{ item.title }}</button></details><p class="tm-help">Data flow: pilih stencil, klik sumber lalu tujuan.</p><div class="tm-palette-help"><h4>Data flow diagram</h4><p>Use Connect, then click a source and destination.</p><p>Dashed boundaries show where trust changes.</p><button :disabled="!access.create || busy" @click="example">Example diagram</button></div></aside>
       <div ref="viewport" class="tm-viewport" @dragover.prevent @drop="drop" @wheel="event => { if (event.ctrlKey) { event.preventDefault(); setZoom(zoom + (event.deltaY < 0 ? .1 : -.1)); } }">
-        <svg ref="canvas" class="tm-canvas" :width="2400 * zoom" :height="1600 * zoom" viewBox="0 0 2400 1600" tabindex="0" aria-label="Threat modelling diagram canvas" @pointermove="pointerMove" @pointerup="pointerUp" @pointercancel="pointerUp" @pointerdown.self="selection = null">
+        <svg ref="canvas" class="tm-canvas" :width="canvasWidth * zoom" :height="canvasHeight * zoom" :viewBox="`0 0 ${canvasWidth} ${canvasHeight}`" tabindex="0" aria-label="Threat modelling diagram canvas" @pointermove="pointerMove" @pointerup="pointerUp" @pointercancel="pointerUp" @pointerdown.self="selection = null">
           <defs><pattern id="tm-grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#cbd5e1"/></pattern><marker id="tm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#475569"/></marker></defs>
-          <rect data-editor-only width="2400" height="1600" fill="url(#tm-grid)" @pointerdown="selection = null"/>
+          <rect data-editor-only :width="canvasWidth" :height="canvasHeight" fill="url(#tm-grid)" @pointerdown="selection = null"/>
           <g v-for="node in sortedNodes" :key="node.id" :transform="`translate(${node.x},${node.y})`" :data-tm-node="node.id" class="tm-node" :style="{ cursor: mode === 'connect' ? 'crosshair' : editable ? 'move' : 'pointer' }" @pointerdown="pointerDown($event, node)">
-            <rect v-if="node.type === 'boundary'" :width="node.width" :height="node.height" rx="12" :fill="node.color" fill-opacity=".35" :stroke="selection === node.id || source === node.id ? '#2563eb' : '#c77c39'" stroke-width="2" stroke-dasharray="8 5"/>
+            <path v-if="node.type === 'boundary' && stencilFor(node)?.group === 'GE.TB.L'" :d="`M0 0 L${node.width} ${node.height}`" fill="none" :stroke="selection === node.id ? '#2563eb' : '#c77c39'" stroke-width="3" stroke-dasharray="8 5"/>
+            <rect v-else-if="node.type === 'boundary'" :width="node.width" :height="node.height" rx="12" :fill="node.color" fill-opacity=".35" :stroke="selection === node.id || source === node.id ? '#2563eb' : '#c77c39'" stroke-width="2" stroke-dasharray="8 5"/>
             <ellipse v-else-if="node.type === 'actor'" :cx="node.width/2" :cy="node.height/2" :rx="node.width/2" :ry="node.height/2" :fill="node.color" :stroke="selection === node.id || source === node.id ? '#2563eb' : '#64748b'" stroke-width="2"/>
             <g v-else-if="node.type === 'datastore'"><path :d="`M0 14 C0 -4 ${node.width} -4 ${node.width} 14 V${node.height-14} C${node.width} ${node.height+4} 0 ${node.height+4} 0 ${node.height-14} Z`" :fill="node.color" :stroke="selection === node.id || source === node.id ? '#2563eb' : '#64748b'" stroke-width="2"/><path :d="`M0 14 C0 32 ${node.width} 32 ${node.width} 14`" fill="none" stroke="#64748b"/></g>
             <rect v-else :width="node.width" :height="node.height" :rx="node.type === 'process' ? 24 : 4" :fill="node.color" :stroke="selection === node.id || source === node.id ? '#2563eb' : '#64748b'" stroke-width="2"/>
@@ -238,6 +295,7 @@ onBeforeUnmount(() => { window.removeEventListener('threat-modelling-open', open
         <template v-if="!selected"><label>Diagram name<input name="diagram-name" :value="model.name" maxlength="200" :disabled="!editable" @change="checkpoint(); model.name = $event.target.value"></label><div class="tm-counts"><span>{{ model.diagram.nodes.length }} components</span><span>{{ model.diagram.edges.length }} data flows</span><span>{{ threats.length }} threats</span></div><h4>STRIDE checklist</h4><ul><li v-for="category in stride" :key="category">{{ category }}</li></ul><p class="tm-help">Select a component or data flow to document threats and mitigations.</p><p class="tm-help">Shortcuts: Ctrl+S save · Ctrl+Z undo · Delete remove · Esc select.</p></template>
         <template v-else><span class="tm-type">{{ isEdge ? 'Data flow' : selected.type }}</span><label>Label<input name="diagram-component-label" :value="selected.label" maxlength="500" :disabled="!editable" @change="setProperty('label', $event.target.value)"></label><label>Description<textarea name="diagram-component-description" :value="selected.description" maxlength="10000" :disabled="!editable" @change="setProperty('description', $event.target.value)"></textarea></label>
           <template v-if="!isEdge"><label>Fill color<input name="diagram-component-color" type="color" :value="selected.color" :disabled="!editable" @change="setProperty('color', $event.target.value)"></label><div class="tm-dimensions"><label v-for="field in ['x','y','width','height']" :key="field">{{ field }}<input :name="'diagram-component-' + field" type="number" :value="selected[field]" :disabled="!editable" @change="setProperty(field, $event.target.value)"></label></div></template>
+          <div class="tm-element-properties"><h4>Element properties</h4><label>Stencil<input name="element-stencil" :value="stencilFor(selected)?.title || selected.type" readonly></label><label>Out of scope<select name="element-out-of-scope" :value="selected.outOfScope ? 'Yes' : 'No'" :disabled="!editable" @change="setProperty('outOfScope', $event.target.value === 'Yes')"><option>No</option><option>Yes</option></select></label><label>Reason for out of scope<textarea name="element-scope-reason" :value="selected.reasonOutOfScope || ''" :disabled="!editable" maxlength="10000" @change="setProperty('reasonOutOfScope', $event.target.value)"></textarea></label><label v-for="property in elementProperties" :key="property.key">{{ property.label }}<select v-if="property.options.length" :name="'element-property-' + property.key" :value="selected.properties?.[property.key] ?? property.default" :disabled="!editable || property.readonly" @change="setElementProperty(property.key, $event.target.value)"><option v-for="value in property.options" :key="value" :value="value">{{ value }}</option></select><input v-else :name="'element-property-' + property.key" :value="selected.properties?.[property.key] ?? property.default" :disabled="!editable || property.readonly" maxlength="1000" @change="setElementProperty(property.key, $event.target.value)"></label></div>
           <div class="tm-threat-heading"><h4>Threats · {{ selected.threats.length }}</h4><button :disabled="!editable" @click="addThreat">＋ Add</button></div>
           <div v-for="threat in selected.threats" :key="threat.id" class="tm-threat-card"><label>Threat<input :name="'threat-' + threat.id + '-title'" :value="threat.title" :disabled="!editable" maxlength="500" @change="threatChange(threat, 'title', $event.target.value)"></label><label>STRIDE<select :name="'threat-' + threat.id + '-category'" :value="threat.category" :disabled="!editable" @change="threatChange(threat, 'category', $event.target.value)"><option v-for="category in stride" :key="category">{{ category }}</option></select></label><div class="tm-dimensions"><label>Severity<select :name="'threat-' + threat.id + '-severity'" :value="threat.severity" :disabled="!editable" @change="threatChange(threat, 'severity', $event.target.value)"><option v-for="value in ['Low','Medium','High','Critical']" :key="value">{{ value }}</option></select></label><label>Status<select :name="'threat-' + threat.id + '-status'" :value="threat.status" :disabled="!editable" @change="threatChange(threat, 'status', $event.target.value)"><option v-for="value in ['Open','Mitigated','Accepted']" :key="value">{{ value }}</option></select></label></div><label>Mitigation<textarea :name="'threat-' + threat.id + '-mitigation'" :value="threat.mitigation" :disabled="!editable" maxlength="10000" @change="threatChange(threat, 'mitigation', $event.target.value)"></textarea></label><button :disabled="!editable" class="tm-danger" @click="deleteThreat(threat.id)">Remove threat</button></div>
         </template>
@@ -250,4 +308,12 @@ onBeforeUnmount(() => { window.removeEventListener('threat-modelling-open', open
 
 <style scoped>
 .tm-page{padding:0!important;color:#253449}.tm-heading{display:flex;justify-content:space-between;align-items:center;margin:0 0 20px;gap:16px}.tm-heading h2{margin:4px 0;font-size:28px}.tm-heading p{margin:5px 0;color:#64748b}.tm-state{font-size:12px;background:#eaf5ef;padding:8px 12px;border-radius:20px;color:#23704b}.tm-state.unsaved{background:#fff4dc;color:#9a6215}.tm-menubar,.tm-tools{display:flex;align-items:center;flex-wrap:wrap;gap:6px;border:1px solid #d9e0e8;padding:10px;background:white}.tm-menubar{border-radius:10px 10px 0 0}.tm-tools{background:#f8fafc;border-top:0}.tm-page button{font:inherit;font-size:12px;cursor:pointer;border:1px solid #d9e0e8;background:white;color:#334155;border-radius:5px;padding:7px 10px}.tm-page button:hover{background:#eff6ff;border-color:#93b5e6}.tm-page button:disabled{opacity:.45;cursor:default}.tm-page button.active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}.tm-page .tm-save{background:#2563eb;color:white;border-color:#2563eb}.tm-page .tm-danger{color:#b91c1c}.tm-menubar select{max-width:230px;margin-right:6px}.tm-divider{height:22px;border-left:1px solid #d9e0e8;margin:0 5px}.tm-tools span{font-size:12px}.tm-grid-label{margin-left:auto;color:#64748b}.tm-editor{display:grid;grid-template-columns:185px minmax(0,1fr) 260px;height:620px;border:1px solid #d9e0e8;border-top:0;background:white}.tm-palette,.tm-inspector{padding:16px 12px;overflow:auto;background:#fafbfd}.tm-palette{border-right:1px solid #d9e0e8}.tm-inspector{border-left:1px solid #d9e0e8}.tm-editor h3{margin:0 0 7px;font-size:14px}.tm-editor h4{font-size:12px;margin:20px 0 8px}.tm-palette p,.tm-help{font-size:11px;color:#64748b;line-height:1.6}.tm-palette>button{display:flex;width:100%;align-items:center;gap:10px;margin:8px 0;text-align:left;padding:10px 8px}.tm-palette>button span{height:32px;width:32px;display:grid;place-items:center;border-radius:5px;font-size:22px;color:#475569;flex-shrink:0}.tm-palette-help{border-top:1px solid #e2e8f0;margin-top:25px}.tm-viewport{overflow:auto;background:#fff;overscroll-behavior:contain}.tm-canvas{display:block;touch-action:none;user-select:none}.tm-inspector label{display:block;font-size:11px;color:#64748b;margin:12px 0 0}.tm-page input,.tm-page textarea,.tm-page select{font:inherit;font-size:12px;padding:7px 8px;border:1px solid #d9e0e8;border-radius:5px;background:white;color:#253449;box-sizing:border-box}.tm-inspector input,.tm-inspector textarea,.tm-inspector select{width:100%;margin-top:5px;min-width:0}.tm-inspector textarea{height:65px;resize:vertical}.tm-inspector input[type=color]{height:32px;padding:3px}.tm-dimensions{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.tm-counts{display:flex;flex-direction:column;gap:9px;font-size:12px;margin:20px 0;padding:12px;background:#eff3f8;border-radius:6px}.tm-inspector ul{padding-left:18px;font-size:12px;line-height:2;color:#475569}.tm-type{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#2563eb}.tm-threat-heading{display:flex;align-items:center;justify-content:space-between;margin-top:20px}.tm-threat-heading h4{margin:0}.tm-threat-card{border:1px solid #d9e0e8;background:white;padding:10px;margin-top:12px;border-radius:6px}.tm-threat-card>button{margin-top:10px}.tm-status{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:10px 14px;background:#f8fafc;border:1px solid #d9e0e8;border-top:0;border-radius:0 0 10px 10px;color:#64748b}.tm-register{margin-top:20px;border:1px solid #d9e0e8;border-radius:8px;background:white}.tm-register summary{padding:14px;cursor:pointer;font-size:13px;font-weight:600}.tm-register tbody tr{cursor:pointer}@media(max-width:1100px){.tm-editor{grid-template-columns:145px minmax(0,1fr) 220px}.tm-palette{padding:12px 8px}}@media(max-width:760px){.tm-editor{grid-template-columns:120px minmax(0,1fr);height:auto}.tm-viewport{height:460px}.tm-inspector{grid-column:1/-1;max-height:350px;border-top:1px solid #d9e0e8}.tm-heading,.tm-status{align-items:flex-start;flex-direction:column}.tm-palette>button{font-size:10px;gap:4px}.tm-palette>button span{width:24px;font-size:17px}.tm-menubar select{max-width:160px}}
+</style>
+
+<style scoped>
+.tm-stencil-search{display:block;font-size:12px;font-weight:600;margin-top:18px}.tm-stencil-search input{width:100%;margin-top:8px}.tm-stencil-group{margin-top:12px;border-top:1px solid #d9e0e8;padding-top:10px}.tm-stencil-group summary{font-size:12px;font-weight:600;cursor:pointer}.tm-stencil-group button{display:flex;align-items:center;gap:6px;width:100%;text-align:left;margin:5px 0;font-size:11px;overflow-wrap:anywhere}.tm-stencil-group button span{padding:4px;border-radius:4px;flex-shrink:0}.tm-element-properties{border-top:1px solid #d9e0e8;margin-top:16px}
+</style>
+
+<style scoped>
+.tm-canvas-settings{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:10px;border:1px solid #d9e0e8;border-top:0;background:#f8fafc}.tm-canvas-settings label{display:flex;align-items:center;gap:8px;font-size:12px}.tm-canvas-settings input[type=number]{width:95px}.tm-canvas-settings button{margin-left:auto}.tm-fullscreen{position:fixed!important;inset:0;z-index:10000;background:#f1f5f9;box-sizing:border-box;padding:16px!important;display:flex!important;flex-direction:column;overflow:auto}.tm-fullscreen .tm-heading{margin-bottom:10px}.tm-fullscreen .tm-editor{flex:1;min-height:0;height:auto}.tm-fullscreen .tm-viewport{min-height:0;height:auto}.tm-fullscreen .tm-register{display:none}.tm-fullscreen .tm-menubar,.tm-fullscreen .tm-tools,.tm-fullscreen .tm-canvas-settings,.tm-fullscreen .tm-status{flex-shrink:0}
 </style>

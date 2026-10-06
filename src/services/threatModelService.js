@@ -1,4 +1,5 @@
 const { pool } = require('../config/database');
+const stencils = require('../shared/threatStencils.json');
 const invalid = message => Object.assign(new Error(message), { status: 400 });
 const types = ['actor', 'process', 'service', 'datastore', 'boundary', 'note'];
 const categories = ['Spoofing', 'Tampering', 'Repudiation', 'Information disclosure', 'Denial of service', 'Elevation of privilege'];
@@ -6,10 +7,22 @@ function validate(model) {
   if (!model || typeof model.name !== 'string' || !model.name.trim() || model.name.length > 200) throw invalid('Nama diagram wajib diisi (maksimal 200 karakter).');
   const diagram = model.diagram;
   if (!diagram || !Array.isArray(diagram.nodes) || !Array.isArray(diagram.edges) || diagram.nodes.length > 500 || diagram.edges.length > 1000) throw invalid('Diagram tidak valid (maksimal 500 komponen / 1000 aliran data).');
+  const canvas = diagram.canvas ?? { width: 2400, height: 1600 };
+  if (!canvas || ![canvas.width, canvas.height].every(value => Number.isInteger(value) && value >= 400 && value <= 12000)) throw invalid('Ukuran canvas harus 400–12000 px.');
   const ids = new Set();
   for (const item of [...diagram.nodes, ...diagram.edges]) {
     if (!item || typeof item.id !== 'string' || !item.id || item.id.length > 100 || ids.has(item.id) || typeof item.label !== 'string' || item.label.length > 500) throw invalid('ID atau label komponen / aliran data tidak valid.');
     ids.add(item.id);
+    if (item.outOfScope !== undefined && typeof item.outOfScope !== 'boolean' || item.reasonOutOfScope !== undefined && (typeof item.reasonOutOfScope !== 'string' || item.reasonOutOfScope.length > 10000)) throw invalid('Properti scope tidak valid.');
+    const stencil = item.stencilId === undefined ? null : stencils.find(stencil => stencil.id === item.stencilId);
+    if (item.stencilId !== undefined && (!stencil || stencil.type !== ('source' in item ? 'flow' : item.type))) throw invalid('Stencil tidak valid untuk jenis elemen.');
+    if (item.properties !== undefined) {
+      if (!stencil || !item.properties || typeof item.properties !== 'object' || Array.isArray(item.properties)) throw invalid('Element properties tidak valid.');
+      for (const [key, value] of Object.entries(item.properties)) {
+        const property = stencil.properties.find(property => property.key === key);
+        if (!property || typeof value !== 'string' || value.length > 1000 || property.options.length && !property.options.includes(value)) throw invalid('Nilai element property tidak valid.');
+      }
+    }
     if (typeof item.description !== 'string' || item.description.length > 10000 || !Array.isArray(item.threats) || item.threats.length > 100) throw invalid('Deskripsi atau daftar ancaman tidak valid.');
     for (const threat of item.threats) {
       if (!threat || typeof threat.id !== 'string' || typeof threat.title !== 'string' || !threat.title.trim() || threat.title.length > 500 || !categories.includes(threat.category) || !['Low', 'Medium', 'High', 'Critical'].includes(threat.severity) || !['Open', 'Mitigated', 'Accepted'].includes(threat.status) || typeof threat.mitigation !== 'string' || threat.mitigation.length > 10000) throw invalid('Ancaman STRIDE tidak valid.');
@@ -17,7 +30,7 @@ function validate(model) {
   }
   const nodeIds = new Set(diagram.nodes.map(node => node.id));
   for (const node of diagram.nodes) {
-    if (!types.includes(node.type) || !/^#[0-9a-f]{6}$/i.test(node.color) || ![node.x, node.y, node.width, node.height].every(Number.isFinite) || node.x < 0 || node.y < 0 || node.width < 60 || node.height < 40 || node.x + node.width > 2400 || node.y + node.height > 1600) throw invalid('Posisi, ukuran, atau jenis komponen tidak valid.');
+    if (!types.includes(node.type) || !/^#[0-9a-f]{6}$/i.test(node.color) || ![node.x, node.y, node.width, node.height].every(Number.isFinite) || node.x < 0 || node.y < 0 || node.width < 60 || node.height < 40 || node.x + node.width > canvas.width || node.y + node.height > canvas.height) throw invalid('Posisi, ukuran, atau jenis komponen tidak valid.');
   }
   if (diagram.edges.some(edge => !nodeIds.has(edge.source) || !nodeIds.has(edge.target) || edge.source === edge.target)) throw invalid('Aliran data harus menghubungkan dua komponen yang tersedia.');
   if (model.version !== undefined && (!Number.isInteger(model.version) || model.version < 1)) throw invalid('Versi diagram tidak valid.');

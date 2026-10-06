@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, defineAsyncComponent } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, defineAsyncComponent, watch } from 'vue';
 import { isImageFile, imageUrl } from '../features/shared/noteImages.mjs';
 import { noteUrl, noteIdFromHash } from '../features/shared/noteNavigation.mjs';
 import { links, resolveNote } from '../features/shared/noteLinks.mjs';
@@ -15,6 +15,14 @@ const expanded=ref(new Set()), context=ref(null), dragging=ref(null), dropTarget
 const folders=ref([]), activeFolder=ref('*'), folderName=ref(''), editor=ref(null), folderInput=ref(null);
 const noteImages=ref([]), imagePreview=ref(null), imagePreviewError=ref(false);
 const layoutElement=ref(null), explorerWidth=ref(250), linksWidth=ref(210), resizingPanel=ref(null);
+const notesPage=ref(null), fullscreen=ref(false), areaWidth=ref(0), areaHeight=ref(560);
+try{const size=JSON.parse(localStorage.getItem('nist-note-area-size')||'{}');if(Number.isInteger(size.width)&&(size.width===0||size.width>=400&&size.width<=2400))areaWidth.value=size.width;if(Number.isInteger(size.height)&&size.height>=300&&size.height<=1600)areaHeight.value=size.height;}catch{}
+watch([areaWidth,areaHeight],()=>{try{localStorage.setItem('nist-note-area-size',JSON.stringify({width:areaWidth.value,height:areaHeight.value}));}catch{}});
+watch(fullscreen,value=>notesPage.value?.classList.toggle('kn-fullscreen',value));
+function resizeNoteArea(axis,event){const value=Number(event.target.value),minimum=axis==='width'?400:300,maximum=axis==='width'?2400:1600;const target=axis==='width'?areaWidth:areaHeight;if(Number.isInteger(value)&&value>=minimum&&value<=maximum)target.value=value;event.target.value=target.value||'';}
+async function toggleNotesFullscreen(){if(fullscreen.value){if(document.fullscreenElement===notesPage.value)await document.exitFullscreen();fullscreen.value=false;}else{fullscreen.value=true;try{await notesPage.value.requestFullscreen?.();}catch{ /* Expanded page remains available without the browser API. */ }}}
+function notesFullscreenChanged(){fullscreen.value=document.fullscreenElement===notesPage.value;}
+function notesFullscreenEscape(event){if(event.key==='Escape'&&fullscreen.value&&!document.fullscreenElement)fullscreen.value=false;}
 try { const saved=JSON.parse(localStorage.getItem('nist-note-panel-widths')||'{}');if(Number.isFinite(saved.files))explorerWidth.value=Math.max(180,Math.min(600,saved.files));if(Number.isFinite(saved.links))linksWidth.value=Math.max(160,Math.min(400,saved.links)); } catch {}
 function setPanelWidth(panel,width){
  const total=layoutElement.value?.getBoundingClientRect().width||1000;
@@ -189,14 +197,15 @@ function uploadImport(body){
 }
 function open(){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active-view'));document.getElementById('knowledgeNotesView').classList.add('active-view');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view==='knowledge-notes'));try{const state=JSON.parse(localStorage.getItem('nist-maturity-ui')||'{}');localStorage.setItem('nist-maturity-ui',JSON.stringify({...state,view:'knowledge-notes'}));}catch{}if(!ready.value)load();}
 function unload(event){if(dirty.value){event.preventDefault();event.returnValue='';}}
-onMounted(()=>{try{expanded.value=new Set(JSON.parse(localStorage.getItem('nist-note-folders-expanded')||'[]'));}catch{}document.querySelector('[data-view="knowledge-notes"]')?.addEventListener('click',open);window.addEventListener('beforeunload',unload);window.addEventListener('hashchange',navigateFromUrl);if(noteIdFromHash(window.location.hash))open();try{if(JSON.parse(localStorage.getItem('nist-maturity-ui')||'{}').view==='knowledge-notes')open();}catch{}});
-onBeforeUnmount(()=>{document.querySelector('[data-view="knowledge-notes"]')?.removeEventListener('click',open);window.removeEventListener('beforeunload',unload);window.removeEventListener('hashchange',navigateFromUrl);});
+onMounted(()=>{document.addEventListener('fullscreenchange',notesFullscreenChanged);document.addEventListener('keydown',notesFullscreenEscape);try{expanded.value=new Set(JSON.parse(localStorage.getItem('nist-note-folders-expanded')||'[]'));}catch{}document.querySelector('[data-view="knowledge-notes"]')?.addEventListener('click',open);window.addEventListener('beforeunload',unload);window.addEventListener('hashchange',navigateFromUrl);if(noteIdFromHash(window.location.hash))open();try{if(JSON.parse(localStorage.getItem('nist-maturity-ui')||'{}').view==='knowledge-notes')open();}catch{}});
+onBeforeUnmount(()=>{document.removeEventListener('fullscreenchange',notesFullscreenChanged);document.removeEventListener('keydown',notesFullscreenEscape);document.querySelector('[data-view="knowledge-notes"]')?.removeEventListener('click',open);window.removeEventListener('beforeunload',unload);window.removeEventListener('hashchange',navigateFromUrl);});
 </script>
 <template>
-<section id="knowledgeNotesView" class="view kn">
+<section ref="notesPage" id="knowledgeNotesView" class="view kn" :style="{'--note-area-width':areaWidth ? areaWidth+'px' : '100%','--note-area-height':areaHeight+'px'}">
  <h2>Knowledge Notes <small>Knowledge Vault</small></h2><p>Hubungkan pengetahuan dengan <code>[[Judul catatan]]</code>, alias <code>[[Judul|Label]]</code>, dan #tag.</p>
  <div class="toolbar"><button @click="fresh" :disabled="!access.create||busy">+ Catatan</button><button @click="save" :disabled="!editable||!dirty">Simpan</button><button @click="remove" :disabled="!access.delete||!draft.id||busy">Hapus</button><button @click="input.click()" :disabled="!access.create||busy">Impor file</button><button @click="chooseImportFolder" :disabled="!access.create||busy">Impor folder</button><button @click="folderInput.click()" :disabled="!access.create||busy">Pilih folder alternatif</button><input ref="folderInput" type="file" webkitdirectory multiple hidden @change="importFiles"><input ref="input" type="file" accept=".md,.txt,.json,.png,.jpg,.jpeg,.gif,.webp" multiple hidden @change="importFiles"><button @click="copyNoteUrl" :disabled="!draft.id||busy">Salin URL catatan</button><button @click="exportMd">Ekspor catatan .md</button><button :disabled="!ready" @click="download('knowledge-notes.json',JSON.stringify({format:'knowledge-notes-v1',notes,folders:folderOptions},null,2),'application/json')">Ekspor semua JSON</button><a v-if="ready" href="/api/knowledge-notes/export">Unduh ZIP</a><button @click="load" :disabled="busy">Muat ulang daftar</button></div>
  <p class="import-help">Impor file: pilih catatan .md/.txt beserta gambar terkait sekaligus. Impor folder: seluruh subfolder dan gambar ikut dibaca. Gambar: PNG, JPG, GIF, WEBP.</p><p role="status" aria-live="polite">{{ status }} <strong v-if="dirty"> · Perubahan belum disimpan</strong></p>
+ <div class="toolbar note-area-settings"><label>Lebar area (px)<input name="note-area-width" type="number" min="400" max="2400" :value="areaWidth || ''" placeholder="Otomatis" @change="resizeNoteArea('width',$event)"></label><button name="note-area-auto" @click="areaWidth=0">Lebar otomatis</button><label>Tinggi area (px)<input name="note-area-height" type="number" min="300" max="1600" :value="areaHeight" @change="resizeNoteArea('height',$event)"></label><button name="notes-fullscreen" :aria-pressed="fullscreen" @click="toggleNotesFullscreen">{{ fullscreen ? 'Keluar layar penuh' : 'Layar penuh' }}</button></div>
  <div ref="layoutElement" class="layout" :class="{'is-resizing':resizingPanel}" :style="{'--files-width':explorerWidth+'px','--links-width':linksWidth+'px'}"><aside class="explorer" @keydown.esc="context=null">
  <div class="explorer-heading"><strong>FILES</strong><button @click="expanded=new Set();rememberExpanded()" title="Tutup semua folder">↟</button></div>
  <input v-model="search" type="search" aria-label="Cari file, judul, isi, folder, tag, atau tautan" placeholder="Cari file, judul, isi...">
@@ -237,4 +246,8 @@ onBeforeUnmount(()=>{document.querySelector('[data-view="knowledge-notes"]')?.re
 .layout>aside:last-child{min-width:0;overflow-wrap:anywhere}
 @media(max-width:1150px){.layout{grid-template-columns:var(--files-width,250px) 8px minmax(0,1fr)}.links-resizer{display:none}.layout>aside:last-child{grid-column:1/-1}}
 @media(max-width:650px){.layout{grid-template-columns:minmax(0,1fr)}.panel-resizer{display:none}.layout>aside:last-child{grid-column:auto}}
+</style>
+
+<style scoped>
+.note-area-settings{padding:10px;background:#f8f7fc;border:1px solid #d8dce8;border-radius:8px}.note-area-settings label{display:flex;align-items:center;gap:8px;font-size:12px}.kn .note-area-settings input{width:100px;padding:8px}.note-area-settings button:last-child{margin-left:auto}.layout main :deep(.knowledge-text-editor),.layout main>textarea,.layout main :deep(.knowledge-graph){width:100%;max-width:var(--note-area-width,100%);margin-inline:auto}.layout main :deep(.knowledge-text-editor .tiptap){height:var(--note-area-height,560px);min-height:300px;overflow:auto;box-sizing:border-box}.layout main>textarea{display:block;height:var(--note-area-height,560px)}.layout main :deep(.knowledge-graph canvas){height:var(--note-area-height,560px)}.kn-fullscreen{position:fixed!important;inset:0;z-index:10000;display:flex!important;flex-direction:column;background:#f1f5f9;padding:16px!important;box-sizing:border-box;overflow:auto}.kn-fullscreen>h2{margin-top:0}.kn-fullscreen>.layout{flex:1;min-height:300px;overflow:auto}.kn-fullscreen .layout>main,.kn-fullscreen .layout>aside{overflow:auto}.kn-fullscreen>.import-help{display:none}.kn-fullscreen>.toolbar{flex-shrink:0}
 </style>
