@@ -56,3 +56,9 @@ Pengujian: `node --test test/threatModelService.test.js`,
 `node scripts/test-threat-modelling-browser.js`, dan `npm run build:client`.
 Tes browser memakai schema PostgreSQL sementara untuk diagram uji dan session
 lokal pada server pengujian terpisah; schema dihapus setelah pengujian.
+
+Canvas menggunakan viewport tanpa batas ukuran halaman. Drag area kosong atau
+scroll untuk menggeser, Shift+scroll untuk geser horizontal, Ctrl+scroll untuk
+zoom, dan Fit untuk menampilkan seluruh diagram. Koordinat negatif didukung;
+ukuran canvas dari diagram lama tetap dapat diimport tetapi tidak membatasi
+shape. Export SVG/PDF mengikuti batas konten diagram.

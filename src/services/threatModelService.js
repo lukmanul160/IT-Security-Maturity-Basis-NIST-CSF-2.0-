@@ -8,7 +8,7 @@ function validate(model) {
   const diagram = model.diagram;
   if (!diagram || !Array.isArray(diagram.nodes) || !Array.isArray(diagram.edges) || diagram.nodes.length > 500 || diagram.edges.length > 1000) throw invalid('Diagram tidak valid (maksimal 500 komponen / 1000 aliran data).');
   const canvas = diagram.canvas ?? { width: 2400, height: 1600 };
-  if (!canvas || ![canvas.width, canvas.height].every(value => Number.isInteger(value) && value >= 400 && value <= 12000)) throw invalid('Ukuran canvas harus 400–12000 px.');
+  if (!canvas || ![canvas.width, canvas.height].every(value => Number.isSafeInteger(value) && value >= 400)) throw invalid('Ukuran canvas harus 400–12000 px.');
   const ids = new Set();
   for (const item of [...diagram.nodes, ...diagram.edges]) {
     if (!item || typeof item.id !== 'string' || !item.id || item.id.length > 100 || ids.has(item.id) || typeof item.label !== 'string' || item.label.length > 500) throw invalid('ID atau label komponen / aliran data tidak valid.');
@@ -30,7 +30,7 @@ function validate(model) {
   }
   const nodeIds = new Set(diagram.nodes.map(node => node.id));
   for (const node of diagram.nodes) {
-    if (!types.includes(node.type) || !/^#[0-9a-f]{6}$/i.test(node.color) || ![node.x, node.y, node.width, node.height].every(Number.isFinite) || node.x < 0 || node.y < 0 || node.width < 60 || node.height < 40 || node.x + node.width > canvas.width || node.y + node.height > canvas.height) throw invalid('Posisi, ukuran, atau jenis komponen tidak valid.');
+    if (!types.includes(node.type) || !/^#[0-9a-f]{6}$/i.test(node.color) || ![node.x, node.y, node.width, node.height].every(Number.isFinite) || node.width < 60 || node.height < 40) throw invalid('Posisi, ukuran, atau jenis komponen tidak valid.');
   }
   if (diagram.edges.some(edge => !nodeIds.has(edge.source) || !nodeIds.has(edge.target) || edge.source === edge.target)) throw invalid('Aliran data harus menghubungkan dua komponen yang tersedia.');
   if (model.version !== undefined && (!Number.isInteger(model.version) || model.version < 1)) throw invalid('Versi diagram tidak valid.');

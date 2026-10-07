@@ -86,14 +86,10 @@ async function run() {
     await client.evaluate('document.querySelector(".tm-palette-help button").click()');
     await client.wait('document.querySelectorAll("[data-tm-node]").length===4');
     console.log('Browser check: example diagram rendered');
-    await client.evaluate(`(()=>{
-      for (const [name, value] of [['canvas-width', 4000], ['canvas-height', 3000]]) {
-        const input = document.querySelector('[name="' + name + '"]'); input.value = value; input.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    })()`);
-    await client.wait('document.querySelector(".tm-canvas").getAttribute("viewBox") === "0 0 4000 3000"');
-    await client.evaluate(`(()=>{const input=document.querySelector('[name="canvas-width"]');input.value=400;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
-    assert.equal(await client.evaluate('document.querySelector("[name=canvas-width]").value'), '4000');
+    const initialView = await client.evaluate('document.querySelector(".tm-canvas").getAttribute("viewBox")');
+    await client.evaluate('document.querySelector(".tm-viewport").dispatchEvent(new WheelEvent("wheel", {deltaX:-20000,deltaY:30000,bubbles:true,cancelable:true}))');
+    assert.notEqual(await client.evaluate('document.querySelector(".tm-canvas").getAttribute("viewBox")'), initialView, 'Canvas pans beyond its former bounds');
+    await client.evaluate('document.querySelector("[name=canvas-fit]").click()');
     // Use real input events so browser fullscreen receives a user gesture.
     const fullPoint = await client.evaluate(`(()=>{const r=document.querySelector('[name="toggle-fullscreen"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
     await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...fullPoint, button: 'left', clickCount: 1 });
@@ -158,7 +154,7 @@ async function run() {
     await client.wait('document.querySelector(".tm-status").textContent.includes("tersimpan di database")');
     const saved = await client.evaluate('fetch("/api/threat-modelling").then(r=>r.json())');
     assert.equal(saved.length, 1); assert.equal(saved[0].diagram.nodes.length, 4);
-    assert.deepEqual(saved[0].diagram.canvas, { width: 4000, height: 3000 });
+
     assert.equal(saved[0].diagram.nodes.flatMap(node => node.threats)[0].title, 'Unauthorized API access');
     const configured = saved[0].diagram.nodes.find(node => node.properties?.implementsAuthenticationScheme === 'Yes');
     assert.ok(configured, 'Edited element properties are saved');
@@ -169,7 +165,7 @@ async function run() {
     // Reload restores both navigation and the saved graph.
     await client.send('Page.reload'); await client.wait('document.documentElement.dataset.frontend === "vue" && document.querySelector("#threatModellingView").classList.contains("active-view")');
     await client.wait('document.querySelectorAll("[data-tm-node]").length===4');
-    assert.equal(await client.evaluate('document.querySelector(".tm-canvas").getAttribute("viewBox")'), '0 0 4000 3000');
+    assert.equal(await client.evaluate('document.querySelector(".tm-canvas").getAttribute("width")'), '100%');
     await fs.mkdir('output/threat-modelling', { recursive: true });
     const screenshot = await client.send('Page.captureScreenshot', { format: 'png' });
     await fs.writeFile('output/threat-modelling/preview.png', Buffer.from(screenshot.data, 'base64'));

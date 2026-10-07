@@ -16,8 +16,8 @@ test('validates diagrams and STRIDE threats before database writes', () => {
   assert.equal(load().validate(model), model);
   model.diagram.nodes[0].threats[0].category = 'Unknown'; assert.throws(() => load().validate(model), /STRIDE/);
 });
-test('rejects duplicate IDs, dangling edges, out-of-canvas nodes and invalid shapes', async () => {
-  for (const mutate of [m => m.diagram.nodes[1].id = 'a', m => m.diagram.edges[0].target = 'missing', m => m.diagram.nodes[0].x = -1, m => m.diagram.nodes[0].width = 2500, m => m.diagram.nodes[0].type = 'script']) {
+test('rejects duplicate IDs, dangling edges, non-finite coordinates and invalid shapes', async () => {
+  for (const mutate of [m => m.diagram.nodes[1].id = 'a', m => m.diagram.edges[0].target = 'missing', m => m.diagram.nodes[0].x = Infinity, m => m.diagram.nodes[0].width = 0, m => m.diagram.nodes[0].type = 'script']) {
     const model = sample(); mutate(model); await assert.rejects(load().create(model));
   }
 });
@@ -38,12 +38,12 @@ test('empty diagrams are valid and missing versions cannot update stored records
   await assert.rejects(api.update('1', sample()), /Versi/);
 });
 
-test('custom canvas bounds allow larger diagrams and reject clipped content', () => {
+test('unbounded diagrams support negative coordinates and content beyond legacy canvas dimensions', () => {
   const model = sample(); model.diagram.canvas = { width: 4000, height: 3000 };
-  model.diagram.nodes[0].x = 3000; model.diagram.nodes[0].y = 2000;
+  model.diagram.nodes[0].x = -20000; model.diagram.nodes[0].y = 50000;
   assert.equal(load().validate(model), model);
-  model.diagram.canvas.width = 2400; assert.throws(() => load().validate(model), /Posisi/);
-  model.diagram.canvas.width = 12001; assert.throws(() => load().validate(model), /canvas/);
+  model.diagram.canvas.width = 12001; assert.equal(load().validate(model), model);
+  model.diagram.canvas.width = Infinity; assert.throws(() => load().validate(model), /canvas/);
 });
 
 test('stencil properties persist and invalid types or values are rejected', async () => {
