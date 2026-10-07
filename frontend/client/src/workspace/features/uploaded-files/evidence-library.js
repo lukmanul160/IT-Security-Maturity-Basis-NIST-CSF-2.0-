@@ -4,33 +4,48 @@ let evidenceLibraryPending = null;
 let evidenceLibraryError = "";
 function selectableEvidenceRecords() { return evidenceLibrary; }
 function evidenceReference(file) {
-  const { policyDetails, ...reference } = file;
+  const { policyDetails, knowledgeDetails, ...reference } = file;
   return reference;
 }
 function evidenceMatches(file, query = '') {
-  const text = [file.name,file.path,file.source,...(file.policyDetails || []).flatMap(item=>[item.title,item.subtitle,item.content])].join(' ').toLowerCase().replace(/\s+/g,' ');
+  const text = [file.name,file.path,file.source,...(file.policyDetails || []).flatMap(item=>[item.title,item.notes,item.subtitle,item.content]),...(file.knowledgeDetails || []).flatMap(item=>[item.title,item.folder,item.content])].join(' ').toLowerCase().replace(/\s+/g,' ');
   return text.includes(String(query).trim().toLowerCase().replace(/\s+/g,' '));
 }
 function evidenceMatchPreview(file, query = '') {
   const needle = String(query).trim().toLowerCase().replace(/\s+/g,' ');
   if (!needle) return '';
-  for (const item of file.policyDetails || []) {
-    for (const [label,value] of [['Judul policy',item.title],['Subtitle',item.subtitle],['Konten policy',item.content]]) {
-      const text = String(value || '').replace(/\s+/g,' ');
-      const index = text.toLowerCase().indexOf(needle);
-      if (index < 0) continue;
-      const start = Math.max(0,index-55), end = Math.min(text.length,index+needle.length+100);
-      return `<small class="evidence-policy-match">${escapeHtml(label)}: ${start ? '…' : ''}${escapeHtml(text.slice(start,end))}${end < text.length ? '…' : ''}</small>`;
+  const fields = [
+    ...(file.policyDetails || []).flatMap(item => [['Konten policy',item.content,item.title],['Catatan policy',item.notes,item.title],['Subtitle',item.subtitle,item.title],['Judul policy',item.title,'']]),
+    ...(file.knowledgeDetails || []).flatMap(item => [['Konten Knowledge Vault',item.content,[item.folder,item.title].filter(Boolean).join('/')],['Judul Knowledge Vault',item.title,item.folder],['Folder Knowledge Vault',item.folder,item.title]])
+  ];
+  const previews = [], seen = new Set();
+  for (const [label,value,source] of fields) {
+    const text = String(value || '').replace(/\s+/g,' ').trim();
+    const index = text.toLowerCase().indexOf(needle);
+    if (index < 0) continue;
+    const start = Math.max(0,index-65), end = Math.min(text.length,index+needle.length+120);
+    const snippet = text.slice(start,end);
+    const key = source + ':' + snippet;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    let highlighted = '', offset = 0;
+    while (offset < snippet.length) {
+      const match = snippet.toLowerCase().indexOf(needle,offset);
+      if (match < 0) { highlighted += escapeHtml(snippet.slice(offset)); break; }
+      highlighted += escapeHtml(snippet.slice(offset,match)) + '<mark>' + escapeHtml(snippet.slice(match,match+needle.length)) + '</mark>';
+      offset = match + needle.length;
     }
+    previews.push('<small class="evidence-policy-match"><span class="evidence-match-source">' + escapeHtml(label) + (source ? ' ? ' + escapeHtml(source) : '') + '</span><span class="evidence-match-text">' + (start ? '... ' : '') + highlighted + (end < text.length ? ' ...' : '') + '</span></small>');
+    if (previews.length === 3) break;
   }
-  return '';
+  return previews.join('');
 }
 function addEvidenceSelectSearch(select) {
   if (select.dataset.searchable === 'true') return;
   select.dataset.searchable = 'true';
   const input = document.createElement('input');
   input.name = `${select.id}-evidence-search`;
-  input.type = 'search'; input.placeholder = 'Search file, policy subtitle or content...';
+  input.type = 'search'; input.placeholder = 'Search filename, policy or related vault content...';
   input.setAttribute('aria-label','Search uploaded evidence');
   const preview = document.createElement('div');
   select.before(input); select.after(preview);
@@ -47,6 +62,7 @@ function addEvidenceSelectSearch(select) {
     preview.innerHTML = input.value.trim() ? matches.slice(0,10).join('') || '<small>No matching evidence.</small>' : '';
   };
   input.addEventListener('input', apply);
+  select.addEventListener('evidence-library-updated', apply);
   new MutationObserver(apply).observe(select,{childList:true});
 }
 function updateEvidencePicker(picker, html) {
@@ -75,6 +91,7 @@ async function refreshEvidenceLibrary({force=false}={}) {
     document.querySelectorAll('[data-existing-picker]').forEach(picker => updateEvidencePicker(picker, existingFilePicker(picker.dataset.existingPicker, picker.querySelector('input')?.value || '')));
     document.querySelectorAll('[data-privacy-existing-picker]').forEach(picker => updateEvidencePicker(picker, privacyFilePicker(picker.dataset.privacyExistingPicker, picker.querySelector('input')?.value || '')));
     document.querySelectorAll('[data-iso-existing-picker]').forEach(picker => updateEvidencePicker(picker, isoEvidencePicker(picker.dataset.isoExistingPicker, picker.querySelector('input')?.value || '')));
+    document.querySelectorAll('select[data-searchable="true"]').forEach(select => select.dispatchEvent(new Event('evidence-library-updated')));
     if (typeof renderUploadedFiles === 'function') renderUploadedFiles();
     return evidenceLibrary;
   })();

@@ -96,3 +96,9 @@ body.workspace-ui .smtp-card{border-radius:10px;box-shadow:0 1px 2px #0f172a08}
 body.workspace-ui #policyRegisterPanel .policy-register-actions{position:sticky;right:0;z-index:2;background:#fff;min-width:130px;white-space:nowrap;box-shadow:-3px 0 6px #0f172a0a}
 body.workspace-ui #policyRegisterPanel th.policy-register-actions{z-index:3;background:#f8fafc}
 body.workspace-ui #policyRegisterListStatus:empty{display:none}
+
+/* Search excerpts must wrap so the matching words stay visible. */
+.existing-file-option .evidence-policy-match, .evidence-policy-match { display: block; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; margin-top: 7px; }
+.evidence-match-source { display: block; font-weight: 600; margin-bottom: 3px; }
+.evidence-match-text { display: block; line-height: 1.5; }
+.evidence-policy-match mark { background: #fef08a; color: #713f12; padding: 0 2px; border-radius: 2px; font-weight: 700; }

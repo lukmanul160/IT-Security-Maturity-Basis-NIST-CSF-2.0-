@@ -28,16 +28,30 @@ async function searchableList(user) {
   if (!files.length) return files;
   const paths = files.map(file=>normalize(file.path));
   const result = await pool.query(`SELECT regexp_replace(p.attachment_path, '^(uploads?)/', '') AS path,
-    p.title, i.subtitle, i.content
+    p.title, p.notes, i.subtitle, i.content
     FROM policy_register p LEFT JOIN policy_register_items i ON i.policy_id=p.id
     WHERE regexp_replace(p.attachment_path, '^(uploads?)/', '') = ANY($1::text[])
     ORDER BY p.id, i.sort_order, i.id`, [paths]);
   const details = new Map();
   for (const row of result.rows) {
     if (!details.has(row.path)) details.set(row.path, []);
-    details.get(row.path).push({title:row.title,subtitle:row.subtitle || '',content:row.content || ''});
+    details.get(row.path).push({title:row.title,notes:row.notes || '',subtitle:row.subtitle || '',content:row.content || ''});
   }
-  return files.map(file=>({...file,source:details.has(normalize(file.path)) ? 'Policy Register' : file.source,policyDetails:details.get(normalize(file.path)) || []}));
+  const knowledge = new Map();
+  if (await require('./permissionService').has(user?.role, 'knowledge-notes', 'read')) {
+    const linked = await pool.query(`SELECT DISTINCT regexp_replace(p.attachment_path, '^(uploads?)/', '') AS path,
+      n.id, n.title, n.folder, n.content
+      FROM policy_register p
+      JOIN knowledge_notes n ON p.related_note_ids @> jsonb_build_array(n.id::text)
+        OR p.related_note_ids @> jsonb_build_array(n.id)
+      WHERE regexp_replace(p.attachment_path, '^(uploads?)/', '') = ANY($1::text[])
+      ORDER BY path, n.id`, [paths]);
+    for (const row of linked.rows) {
+      if (!knowledge.has(row.path)) knowledge.set(row.path, []);
+      knowledge.get(row.path).push({id:row.id,title:row.title,folder:row.folder,content:row.content});
+    }
+  }
+  return files.map(file=>({...file,source:details.has(normalize(file.path)) ? 'Policy Register' : file.source,policyDetails:details.get(normalize(file.path)) || [],knowledgeDetails:knowledge.get(normalize(file.path)) || []}));
 }
 async function assertReadAccess(value, user) {
   if(!await require('./permissionService').hasFileAction(user?.role,'read')) throw invalid('Read access to files is required.');

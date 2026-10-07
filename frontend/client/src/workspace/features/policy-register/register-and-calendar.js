@@ -135,8 +135,8 @@ function renderPolicyRegisterRows() {
   const body = $('policyRegisterBody');
   if (!body) return;
   body.innerHTML = rows.map(row => `
-    <tr>
-      <td>${escapeHtml(row.title || '-')}</td>
+    <tr data-policy-id="${escapeHtml(String(row.id))}">
+      <td>${escapeHtml(row.title || '-')}${policyRelatedMarkup(row)}</td>
       <td>${escapeHtml(row.category || '-')}</td>
       <td>${escapeHtml(row.owner || '-')}</td>
       <td>${escapeHtml(row.reviewCycle || '-')}</td>
@@ -146,6 +146,7 @@ function renderPolicyRegisterRows() {
       <td class="policy-register-actions">${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>
     </tr>
   `).join('') || '<tr><td colspan="8">No policy records found.</td></tr>';
+  filterPolicyRegisterTable();
 }
 
 function renderPolicySummaries(rows) {
@@ -210,6 +211,7 @@ async function loadPolicyRegisterRows() {
   const response = await fetch('/api/policy-register', { cache: 'no-store' });
   if (!response.ok) throw new Error('Policy register data unavailable');
   policyRegisterRows = await response.json();
+  await loadPolicyKnowledgeNotes();
   renderPolicyRegisterRows();
   if (csfRows.length) renderCsfTable();
   if (privacyRows.length) renderPrivacy();
@@ -225,6 +227,7 @@ function policyRegisterFormPayload() {
     approvalStatus: $('policyRegisterApprovalStatus').value.trim(),
     lastReview: $('policyRegisterLastReview').value || null,
     notes: $('policyRegisterNotes').value.trim(),
+    relatedNoteIds: [...policyRelatedSelection],
   };
 }
 
@@ -349,16 +352,7 @@ document.querySelectorAll('[data-policy-tab]').forEach(btn => {
   });
 });
 
-$('policyRegisterSearch')?.addEventListener('input', (e) => {
-  const query = e.target.value.toLowerCase();
-  const rows = $('policyRegisterBody');
-  if (!rows) return;
-  const trs = rows.querySelectorAll('tr');
-  trs.forEach(tr => {
-    const text = tr.textContent.toLowerCase();
-    tr.style.display = text.includes(query) ? '' : 'none';
-  });
-});
+$('policyRegisterSearch')?.addEventListener('input', filterPolicyRegisterTable);
 
 $('policyRegisterCategoryFilter')?.addEventListener('change', filterPolicyRegisterTable);
 $('policyRegisterStatusFilter')?.addEventListener('change', filterPolicyRegisterTable);
@@ -423,7 +417,8 @@ function filterPolicyRegisterTable() {
     const owner = cells[2].textContent;
     const status = cells[4].textContent;
     
-    const matchesSearch = !searchQuery || title.includes(searchQuery);
+    const policy = policyRegisterRows.find(row => String(row.id) === tr.dataset.policyId);
+    const matchesSearch = !searchQuery || (policy ? policySearchText(policy) : title).includes(searchQuery);
     const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
     const matchesStatus = statusFilter === 'all' || status === statusFilter;
     const matchesOwner = ownerFilter === 'all' || owner === ownerFilter;

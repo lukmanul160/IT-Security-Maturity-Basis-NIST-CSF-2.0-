@@ -50,6 +50,7 @@ function validate(data, isUpdate = false) {
   if (data.owner !== undefined && data.owner !== null && !normalizeText(data.owner) && !isUpdate) throw invalid('owner is required');
   if (data.reviewCycle !== undefined && data.reviewCycle !== null && !normalizeText(data.reviewCycle) && !isUpdate) throw invalid('reviewCycle is required');
   if (data.approvalStatus !== undefined && data.approvalStatus !== null && !normalizeText(data.approvalStatus) && !isUpdate) throw invalid('approvalStatus is required');
+  if (data.relatedNoteIds !== undefined && (!Array.isArray(data.relatedNoteIds) || data.relatedNoteIds.length > 10000 || data.relatedNoteIds.some(id => !/^[1-9]\d*$/.test(String(id))))) throw invalid('relatedNoteIds must contain up to 10000 positive note IDs');
   if (data.lastReview && !/^\d{4}-\d{2}-\d{2}$/.test(String(data.lastReview))) throw invalid('lastReview must be a valid date');
   if (data.attachmentPath && typeof data.attachmentPath !== 'string') throw invalid('attachmentPath must be a string');
 }
@@ -82,6 +83,7 @@ function mapRow(row) {
     attachmentPath: row.attachment_path,
     attachmentType: row.attachment_type,
     notes: row.notes,
+    relatedNoteIds: Array.isArray(row.related_note_ids) ? row.related_note_ids : [],
     items: Array.isArray(row.items) ? row.items : [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -104,6 +106,8 @@ async function ensureStore() {
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`);
+
+  await pool.query("ALTER TABLE policy_register ADD COLUMN IF NOT EXISTS related_note_ids JSONB NOT NULL DEFAULT '[]'::jsonb");
 
   await pool.query(`CREATE TABLE IF NOT EXISTS ${itemTableName} (
     id BIGSERIAL PRIMARY KEY,
@@ -268,7 +272,7 @@ async function removeItem(policyId, itemId) {
 }
 
 async function list() {
-  const result = await pool.query(`SELECT id, title, category, owner, review_cycle, approval_status, last_review, attachment_name, attachment_path, attachment_type, notes, created_at, updated_at FROM ${tableName} ORDER BY updated_at DESC`);
+  const result = await pool.query(`SELECT id, title, category, owner, review_cycle, approval_status, last_review, attachment_name, attachment_path, attachment_type, notes, related_note_ids, created_at, updated_at FROM ${tableName} ORDER BY updated_at DESC`);
   const itemsByPolicy = await getItems(result.rows.map(row => row.id));
   return result.rows.map(row => mapRow({ ...row, items: itemsByPolicy.get(row.id) || [] }));
 }
@@ -278,10 +282,10 @@ async function create(data) {
   const [title, category, owner, reviewCycle, approvalStatus, lastReview, attachmentName, attachmentPath, attachmentType, notes] = values(data);
   
   const result = await pool.query(
-    `INSERT INTO ${tableName} (title, category, owner, review_cycle, approval_status, last_review, attachment_name, attachment_path, attachment_type, notes) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+    `INSERT INTO ${tableName} (title, category, owner, review_cycle, approval_status, last_review, attachment_name, attachment_path, attachment_type, notes, related_note_ids)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
      RETURNING *`,
-    [title, category, owner, reviewCycle, approvalStatus, lastReview, attachmentName, attachmentPath, attachmentType, notes]
+    [title, category, owner, reviewCycle, approvalStatus, lastReview, attachmentName, attachmentPath, attachmentType, notes, JSON.stringify([...new Set((data.relatedNoteIds || []).map(String))])]
   );
   
   if (!result.rows.length) {
@@ -333,10 +337,10 @@ async function update(id, data) {
     `UPDATE ${tableName} 
      SET title = $1, category = $2, owner = $3, review_cycle = $4, approval_status = $5, 
          last_review = $6, attachment_name = $7, attachment_path = $8, attachment_type = $9, 
-         notes = $10, updated_at = NOW() 
+         notes = $10, related_note_ids = $12::jsonb, updated_at = NOW()
      WHERE id = $11 
      RETURNING *`,
-    [title, category, owner, reviewCycle, approvalStatus, lastReview, attachmentName, attachmentPath, attachmentType, notes, id]
+    [title, category, owner, reviewCycle, approvalStatus, lastReview, attachmentName, attachmentPath, attachmentType, notes, id, JSON.stringify(data.relatedNoteIds === undefined ? current.relatedNoteIds : [...new Set(data.relatedNoteIds.map(String))])]
   );
   
   if (!result.rows.length) {

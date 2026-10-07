@@ -23,7 +23,8 @@ test('uploader isolation across upload, file routes, assessment and framework re
     await client.query('CREATE TEMP TABLE file_storage_locations(path TEXT PRIMARY KEY,root TEXT,object_key TEXT,updated_at TIMESTAMPTZ DEFAULT NOW())');
     await client.query('CREATE TEMP TABLE assessment_state(id TEXT PRIMARY KEY,data JSONB,updated_at TIMESTAMPTZ DEFAULT NOW())');
     await client.query('CREATE TEMP TABLE controls(framework_id TEXT,code TEXT,evidence JSONB,updated_at TIMESTAMPTZ)');
-    await client.query('CREATE TEMP TABLE policy_register(id BIGINT,title TEXT,attachment_path TEXT,attachment_name TEXT,attachment_type TEXT,updated_at TIMESTAMPTZ)');
+    await client.query('CREATE TEMP TABLE policy_register(id BIGINT,title TEXT,attachment_path TEXT,attachment_name TEXT,attachment_type TEXT,notes TEXT DEFAULT \'\',related_note_ids JSONB DEFAULT \'[]\',updated_at TIMESTAMPTZ)');
+    await client.query('CREATE TEMP TABLE knowledge_notes(id BIGINT,title TEXT,folder TEXT,content TEXT)');
     await client.query('CREATE TEMP TABLE policy_register_items(id BIGINT,policy_id BIGINT,subtitle TEXT,content TEXT,sort_order INTEGER)');
     await client.query('CREATE TEMP TABLE tprm_due_diligence_questionnaires(responses JSONB,updated_at TIMESTAMPTZ)');
     await client.query('CREATE TEMP TABLE audit_finding_records(id TEXT,data JSONB,filename TEXT,content BYTEA,updated_at TIMESTAMPTZ)');

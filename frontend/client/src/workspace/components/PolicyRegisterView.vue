@@ -16,6 +16,7 @@
               <label>Attachment file<input id="policyRegisterFile" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,.png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"></label>
             </div>
             <div id="policyRegisterFilePreview" hidden><span class="eyebrow">Current attachment</span><div class="attachment-item"><span class="attachment-name" id="policyRegisterFileName">-</span><div class="attachment-actions"><button class="attachment-action-button" type="button" id="policyRegisterFileOpen">Open</button><button class="attachment-action-button" type="button" id="policyRegisterFileRemove">Remove</button></div></div></div>
+            <fieldset><legend>Related Knowledge Vault</legend><p>Centang folder untuk memilih semua catatan di dalamnya, termasuk subfolder. Isi catatan ikut digunakan dalam pencarian policy.</p><input id="policyRelatedSearch" type="search" placeholder="Cari judul, folder, atau isi catatan" aria-label="Cari catatan terkait"><div id="policyRelatedNotes" class="policy-related-tree"></div><p id="policyRelatedStatus" role="status"></p></fieldset>
             <label>Notes<textarea id="policyRegisterNotes" rows="4"></textarea></label>
             <div class="policy-items-editor">
               <div class="section-heading compact"><div><p class="eyebrow">POLICY DETAILS</p><h3>Subtitles and content</h3></div><button class="button button-quiet" type="button" id="policyRegisterAddItem">Add detail</button></div>
@@ -89,3 +90,16 @@ IT Manager = it@example.com</pre>
           </div>
         </section>
 </template>
+
+<style>
+.policy-related-tree { max-height: 320px; overflow: auto; margin-top: 10px; border: 1px solid var(--border, #dbe3ee); border-radius: 8px; padding: 8px; }
+.policy-related-folder > summary { display: flex; align-items: center; gap: 8px; padding: 7px 4px; cursor: pointer; border-radius: 4px; }
+.policy-related-folder > summary::before { content: '+'; width: 12px; flex-shrink: 0; }
+.policy-related-folder[open] > summary::before { content: '-'; }
+.policy-related-folder > summary > span { flex: 1; overflow-wrap: anywhere; font-weight: 600; }
+.policy-related-folder > summary > small { white-space: nowrap; color: var(--muted, #64748b); }
+.policy-related-children { margin-left: 20px; border-left: 1px solid var(--border, #dbe3ee); padding-left: 8px; }
+.policy-related-tree .policy-related-note { display: flex; align-items: flex-start; gap: 8px; padding: 7px 4px; }
+.policy-related-note a { overflow-wrap: anywhere; }
+.policy-related-tree input[type="checkbox"] { width: 16px; height: 16px; min-width: 16px; margin: 2px 0 0; flex-shrink: 0; }
+</style>

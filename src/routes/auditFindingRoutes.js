@@ -14,7 +14,7 @@ router.get('/', requirePermission('audit-finding-tracker', 'read'), wrap(async (
 router.get('/available-files', async (req,res,next) => { const permissions=require('../services/permissionService'); if(await permissions.has(req.user?.role,'audit-finding-tracker','create') || await permissions.has(req.user?.role,'audit-finding-tracker','update')) return next(); res.status(403).json({error:'Access denied for audit attachments'}); }, wrap(async (req, res) => {
   const access = require('../services/evidenceAccessService');
   const files = await access.searchableList(req.user);
-  res.set('Cache-Control','no-store').json(files.map(file => ({path:access.normalize(file.path),name:file.name,source:file.source,policyDetails:file.policyDetails})));
+  res.set('Cache-Control','no-store').json(files.map(file => ({path:access.normalize(file.path),name:file.name,source:file.source,policyDetails:file.policyDetails,knowledgeDetails:file.knowledgeDetails})));
 }));
 router.get('/:id/download', requirePermission('audit-finding-tracker', 'read'), wrap(async (req, res) => {
   const file = await service.download(req.params.id, req.user, req.query.path);
