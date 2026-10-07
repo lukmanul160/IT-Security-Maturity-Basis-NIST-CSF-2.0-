@@ -104,7 +104,11 @@ async function load() {
     const nav = document.querySelector('[data-view="threat-modelling"]'); if (nav) nav.hidden = !access.value.read;
     if (!access.value.read) { status.value = 'Anda tidak memiliki akses Threat Modelling.'; return; }
     models.value = await request('/api/threat-modelling');
-    if (!loaded.value && models.value.length) model.value = clone(models.value[0]);
+    if (!dirty.value) {
+      const current = models.value.find(item => String(item.id) === String(model.value.id));
+      if (current) model.value = clone(current);
+      else if (!model.value.id && !model.value.diagram.nodes.length && models.value.length) model.value = clone(models.value[0]);
+    }
     loaded.value = true; status.value = models.value.length ? 'Diagram dimuat. Pilih komponen untuk melihat properti dan ancaman.' : 'Kanvas siap. Tambahkan komponen atau gunakan Example diagram.';
     nextTick(() => { if (document.getElementById('threatModellingView')?.classList.contains('active-view')) fit(); });
   } catch (error) { loadError.value = `Diagram belum berhasil dimuat: ${error.message}. Pastikan backend menggunakan versi terbaru, lalu pilih Coba lagi.`; status.value = loadError.value; }
@@ -245,6 +249,9 @@ function example() {
 function setZoom(value) { zoom.value = Math.max(0.01, Math.min(4, value)); }
 function fit() {
   if (!viewport.value) return;
+  const bounds = viewport.value.getBoundingClientRect();
+  if (bounds.width <= 0 || bounds.height <= 0) return;
+  viewSize.value = { width: bounds.width, height: bounds.height };
   const nodes = model.value.diagram.nodes;
   const x = nodes.length ? Math.min(...nodes.map(node => node.x)) - 60 : 0;
   const y = nodes.length ? Math.min(...nodes.map(node => node.y)) - 60 : 0;
@@ -262,8 +269,8 @@ function keyboard(event) {
   if (event.key === 'Escape') { mode.value = 'select'; source.value = null; selection.value = null; }
 }
 function beforeUnload(event) { if (dirty.value) { event.preventDefault(); event.returnValue = ''; } }
-function open() { if (!loaded.value) load(); nextTick(() => { if (viewport.value) fit(); }); }
-onMounted(() => { viewportObserver = new ResizeObserver(([entry]) => { viewSize.value = { width: Math.max(1, entry.contentRect.width), height: Math.max(1, entry.contentRect.height) }; }); viewportObserver.observe(viewport.value); document.addEventListener('fullscreenchange', fullscreenChanged); document.addEventListener('keydown', fullscreenEscape); window.addEventListener('threat-modelling-open', open); document.addEventListener('keydown', keyboard); window.addEventListener('beforeunload', beforeUnload); load(); });
+function open() { load(); nextTick(() => { if (viewport.value) fit(); }); }
+onMounted(() => { viewportObserver = new ResizeObserver(([entry]) => { if (entry.contentRect.width <= 0 || entry.contentRect.height <= 0) return; const wasHidden = viewSize.value.width <= 1 || viewSize.value.height <= 1; viewSize.value = { width: entry.contentRect.width, height: entry.contentRect.height }; if (wasHidden) fit(); }); viewportObserver.observe(viewport.value); document.addEventListener('fullscreenchange', fullscreenChanged); document.addEventListener('keydown', fullscreenEscape); window.addEventListener('threat-modelling-open', open); document.addEventListener('keydown', keyboard); window.addEventListener('beforeunload', beforeUnload); load(); });
 onBeforeUnmount(() => { viewportObserver?.disconnect(); document.removeEventListener('fullscreenchange', fullscreenChanged); document.removeEventListener('keydown', fullscreenEscape); window.removeEventListener('threat-modelling-open', open); document.removeEventListener('keydown', keyboard); window.removeEventListener('beforeunload', beforeUnload); });
 </script>
 

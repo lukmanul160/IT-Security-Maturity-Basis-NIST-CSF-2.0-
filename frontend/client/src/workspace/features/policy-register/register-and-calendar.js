@@ -136,16 +136,17 @@ function renderPolicyRegisterRows() {
   if (!body) return;
   body.innerHTML = rows.map(row => `
     <tr data-policy-id="${escapeHtml(String(row.id))}">
-      <td>${escapeHtml(row.title || '-')}${policyRelatedMarkup(row)}</td>
+      <td>${escapeHtml(row.title || '-')}</td>
       <td>${escapeHtml(row.category || '-')}</td>
       <td>${escapeHtml(row.owner || '-')}</td>
       <td>${escapeHtml(row.reviewCycle || '-')}</td>
       <td>${escapeHtml(row.approvalStatus || '-')}</td>
       <td>${row.lastReview ? new Date(row.lastReview).toLocaleDateString('id-ID') : '-'}</td>
       <td>${row.attachmentName ? `<a href="/api/files/${encodeURIComponent(String(row.attachmentPath || '').replace(/^upload\//, ''))}" target="_blank" rel="noreferrer">${escapeHtml(row.attachmentName)}</a>` : '-'}</td>
+      <td class="policy-related-cell">${policyRelatedMarkup(row)}</td>
       <td class="policy-register-actions">${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>
     </tr>
-  `).join('') || '<tr><td colspan="8">No policy records found.</td></tr>';
+  `).join('') || '<tr><td colspan="9">No policy records found.</td></tr>';
   filterPolicyRegisterTable();
 }
 

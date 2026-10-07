@@ -102,3 +102,8 @@ body.workspace-ui #policyRegisterListStatus:empty{display:none}
 .evidence-match-source { display: block; font-weight: 600; margin-bottom: 3px; }
 .evidence-match-text { display: block; line-height: 1.5; }
 .evidence-policy-match mark { background: #fef08a; color: #713f12; padding: 0 2px; border-radius: 2px; font-weight: 700; }
+
+.policy-related-cell { min-width: 180px; vertical-align: top; }
+.policy-related-links summary { cursor: pointer; white-space: nowrap; }
+.policy-related-link-list { max-height: 220px; max-width: 320px; overflow: auto; margin-top: 8px; }
+.policy-related-link-list > div { margin-bottom: 7px; overflow-wrap: anywhere; }

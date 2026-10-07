@@ -98,7 +98,11 @@ async function loadPolicyKnowledgeNotes() {
 $('policyRelatedSearch')?.addEventListener('input', renderPolicyRelatedNotes);
 function policyRelatedMarkup(row) {
   const ids = new Set((row.relatedNoteIds || []).map(String));
-  return policyKnowledgeNotes.filter(note => ids.has(String(note.id))).map(note => '<div><a target="_blank" rel="noopener" href="/app#knowledge-note=' + encodeURIComponent(note.id) + '">' + escapeHtml((note.folder ? note.folder + '/' : '') + note.title + '.md') + '</a></div>').join('');
+  if (!ids.size) return '-';
+  const notes = policyKnowledgeNotes.filter(note => ids.has(String(note.id)));
+  if (!notes.length) return '<span>' + ids.size + ' catatan terkait</span>';
+  const links = notes.map(note => '<div><a target="_blank" rel="noopener" title="' + escapeHtml((note.folder ? note.folder + '/' : '') + note.title + '.md') + '" href="/app#knowledge-note=' + encodeURIComponent(note.id) + '">' + escapeHtml(note.title + '.md') + '</a></div>').join('');
+  return '<details class="policy-related-links"><summary>' + notes.length + ' catatan terkait</summary><div class="policy-related-link-list">' + links + '</div></details>';
 }
 function policySearchText(row) {
   const ids = new Set((row.relatedNoteIds || []).map(String));
