@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="960" viewBox="0 0 1500 960" role="img"><title>Relasi data inti</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Relasi data inti</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Garis menunjukkan relasi inti; seluruh tabel dan migrasi dijelaskan di kamus data.</text>
+<rect x="40" y="140" width="355" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,144 H385" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="176" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">TPRM vendor</text>
+<text x="56" y="204" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">tprm_risk_register</text>
+<text x="56" y="230" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">questionnaire_id -&gt; vendor assessment</text>
+<text x="56" y="256" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset FK: delete RESTRICT</text>
+<rect x="565" y="140" width="365" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M575,144 H920" stroke="#1c6da1" stroke-width="7"/>
+<text x="581" y="176" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Asset register</text>
+<text x="581" y="204" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">managed_assets: UUID + data JSONB</text>
+<text x="581" y="230" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">managed_vendor_id: generated FK</text>
+<text x="581" y="256" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">tag UNIQUE; CIA dalam data</text>
+<rect x="1100" y="140" width="350" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1110,144 H1440" stroke="#1c6da1" stroke-width="7"/>
+<text x="1116" y="176" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Risk register</text>
+<text x="1116" y="204" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">risk_register: risk_id TEXT</text>
+<text x="1116" y="230" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_related_risks</text>
+<text x="1116" y="256" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">tprm_related_risks</text>
+<polyline points="565,210 395,210" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="395,210 406.05273192803463,205.3269798922962 406.05273192803463,214.6730201077038" fill="#5d7d9b"/>
+<text x="425" y="189" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">vendor</text>
+<polyline points="930,210 1100,210" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1100,210 1088.9472680719655,214.6730201077038 1088.9472680719655,205.3269798922962" fill="#5d7d9b"/>
+<text x="947" y="189" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">many-to-many</text>
+<rect x="40" y="410" width="355" height="150" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,414 H385" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="446" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Rak dan posisi</text>
+<text x="56" y="474" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_racks: 1-60 U</text>
+<text x="56" y="500" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_rack_devices: asset_id PK</text>
+<text x="56" y="526" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">FK asset/rack: RESTRICT</text>
+<rect x="565" y="410" width="365" height="150" rx="10" fill="white" stroke="#c8d6e5"/><path d="M575,414 H920" stroke="#1c6da1" stroke-width="7"/>
+<text x="581" y="446" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Relasi / layout / foto</text>
+<text x="581" y="474" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_relations: FK source / target</text>
+<text x="581" y="500" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_diagram_layout: nodes + version</text>
+<text x="581" y="526" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">managed_asset_photos / rack photos</text>
+<polyline points="640,285 640,410" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="640,410 635.3269798922962,398.94726807196537 644.6730201077038,398.94726807196537" fill="#5d7d9b"/>
+<text x="655" y="343" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">asset</text>
+<polyline points="565,235 480,235 480,480 395,480" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="395,480 406.05273192803463,475.3269798922962 406.05273192803463,484.6730201077038" fill="#5d7d9b"/>
+<rect x="1100" y="410" width="350" height="150" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1110,414 H1440" stroke="#1c6da1" stroke-width="7"/>
+<text x="1116" y="446" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Library evidence</text>
+<text x="1116" y="474" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">evidence_files: path PK</text>
+<text x="1116" y="500" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">uploaded_by -&gt; app_users</text>
+<text x="1116" y="526" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">file_storage_locations: path</text>
+<polyline points="930,480 1100,480" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1100,480 1088.9472680719655,484.6730201077038 1088.9472680719655,475.3269798922962" fill="#5d7d9b"/>
+<text x="944" y="458" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">evidence_path</text>
+<rect x="40" y="690" width="355" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,694 H385" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="726" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Policy register</text>
+<text x="56" y="754" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">policy_register + items</text>
+<text x="56" y="780" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">related_note_ids JSONB</text>
+<text x="56" y="806" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Referensi note diperiksa aplikasi</text>
+<rect x="565" y="690" width="365" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M575,694 H920" stroke="#1c6da1" stroke-width="7"/>
+<text x="581" y="726" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Knowledge Vault</text>
+<text x="581" y="754" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">knowledge_notes: folder/title UNIQUE</text>
+<text x="581" y="780" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">knowledge_note_folders</text>
+<text x="581" y="806" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">knowledge_note_images + evidence_path</text>
+<rect x="1100" y="690" width="350" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1110,694 H1440" stroke="#1c6da1" stroke-width="7"/>
+<text x="1116" y="726" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Identitas dan audit</text>
+<text x="1116" y="754" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">app_users + role_permissions</text>
+<text x="1116" y="780" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">audit_events; scheduler deliveries</text>
+<text x="1116" y="806" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Personel -&gt; certifications</text>
+<polyline points="395,760 565,760" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="565,760 553.9472680719654,764.6730201077038 553.9472680719654,755.3269798922962" fill="#5d7d9b"/>
+<text x="433" y="739" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">link logis</text>
+<polyline points="930,760 1040,760 1040,520 1100,520" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1100,520 1088.9472680719655,524.6730201077038 1088.9472680719655,515.3269798922962" fill="#5d7d9b"/>
+<text x="40" y="938" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg>

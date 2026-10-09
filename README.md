@@ -219,3 +219,6 @@ Jalankan `npm run test:notes` untuk pemeriksaan logika, dan `npm run test:notes-
 untuk pengujian browser/API dengan schema PostgreSQL sementara (memerlukan Chrome
 dan database aplikasi yang aktif). Data catatan pengguna tidak dipakai sebagai fixture.
 
+## Dokumentasi teknis lengkap
+
+Dokumentasi terbaru mencakup infrastruktur, struktur aplikasi, seluruh API, relasi database, keamanan, dan enam diagram SVG/PNG: [Dokumentasi teknis 9 Oktober 2026](docs/technical-documentation/00-README.md).

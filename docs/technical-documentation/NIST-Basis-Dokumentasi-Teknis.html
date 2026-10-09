@@ -1,0 +1,1529 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dokumentasi Teknis NIST Basis / BLACKOWL</title><style>*{box-sizing:border-box}body{margin:0;font:15px/1.65 Arial,sans-serif;color:#23354b;background:#eef3f8}header{background:#102d4c;color:white;padding:40px max(24px,calc((100vw - 1180px)/2))}header h1{margin:0;font-size:32px}header p{color:#d5e5f1}nav{display:flex;flex-wrap:wrap;gap:10px}nav a{color:#fff;border:1px solid #56748c;border-radius:7px;padding:5px 10px;font-size:12px}main{max-width:1240px;margin:28px auto;padding:0 20px}article{background:white;border:1px solid #dbe4ed;border-radius:12px;padding:30px;margin-bottom:25px}h2{font-size:27px;color:#102d4c;border-bottom:2px solid #dce6ef;padding-bottom:12px}h3{font-size:21px;color:#17628c;margin-top:30px}h4{font-size:17px}a{color:#0969ad}code{font:12px/1.5 Consolas,monospace;background:#eff4f8;padding:2px 4px;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6fa;border:1px solid #dfe7ef;border-radius:8px;padding:15px;font-size:11px}pre code{padding:0;background:transparent}table{border-collapse:collapse;width:100%;font-size:12px}th,td{text-align:left;vertical-align:top;padding:9px;border:1px solid #dce6ef;overflow-wrap:anywhere}th{background:#eaf2f8;color:#173d5e}tr:nth-child(even){background:#f8fafc}.table-wrap{overflow:auto}figure{margin:22px 0}figure svg{width:100%;height:auto}figcaption{font-size:12px;color:#647a8d}li{margin:5px 0}@media print{@page{size:A4 landscape;margin:14mm}body{background:white;font-size:10px}header{padding:20px}nav{display:none}main{margin:0;padding:0;max-width:none}article{border:0;padding:0;page-break-before:always}article:first-child{page-break-before:auto}h2{font-size:23px}h3{font-size:16px;page-break-after:avoid}table{font-size:9px;table-layout:fixed}th,td{padding:5px}thead{display:table-header-group}tr{break-inside:avoid}figure{break-inside:avoid}pre{font-size:9px}a{color:#23354b;text-decoration:none}.table-wrap{overflow:visible}}</style></head><body><header><h1>NIST Basis / BLACKOWL</h1><p>Dokumentasi infrastruktur, aplikasi, API, database dan keamanan | 9 Oktober 2026</p><nav><a href="#00-README">00 README</a><a href="#01-INFRASTRUCTURE">01 INFRASTRUCTURE</a><a href="#02-APPLICATION">02 APPLICATION</a><a href="#03-API">03 API</a><a href="#04-DATABASE">04 DATABASE</a><a href="#05-SECURITY">05 SECURITY</a><a href="#06-OPERATIONS">06 OPERATIONS</a><a href="#VALIDATION">VALIDATION</a></nav></header><main><article id="00-README"><h2>Dokumentasi teknis NIST Basis / BLACKOWL</h2>
+<p>Tanggal pemeriksaan: <strong>9 Oktober 2026</strong>, zona waktu Asia/Bangkok. Basis: source workspace saat ini, termasuk perubahan lokal. Dokumentasi berbahasa Indonesia; nama field, enum, dan endpoint dipertahankan sesuai kode.</p>
+<h3>Isi paket</h3>
+<ul>
+<li><a href="#01-INFRASTRUCTURE">Infrastruktur</a>: runtime, Docker, jaringan, volume, environment, integrasi, dan operasional.</li>
+<li><a href="#02-APPLICATION">Aplikasi</a>: modul, struktur kode, alur bisnis, lifecycle, hak akses, dan frontend.</li>
+<li><a href="#03-API">API</a>: seluruh <strong>191 endpoint HTTP API</strong> dari 24 kelompok, autentikasi, input, response, dan contoh.</li>
+<li><a href="#04-DATABASE">Database dan relasi</a>: tabel, kolom, foreign key, constraint, JSONB, serta migrasi.</li>
+<li><a href="#05-SECURITY">Keamanan dan praktik rekayasa</a>: temuan, perbaikan, kontrol yang ada, dan batas verifikasi.</li>
+<li><a href="#06-OPERATIONS">Operasi dan pengujian</a>: instalasi, rilis, backup, restore, troubleshooting, dan quality gate.</li>
+<li><a href="#07-API-IMPLEMENTATION">Lampiran implementasi API</a>: deklarasi route dan kontrak handler dari source untuk setiap endpoint.</li>
+<li><a href="api-catalog.json">Katalog API JSON</a>: inventaris yang dapat diproses alat lain; bukan spesifikasi OpenAPI hasil validasi schema.</li>
+<li><a href="NIST-Basis-Documentation-2026-10-09.zip">Paket dokumentasi ZIP</a>: seluruh dokumen dan diagram.</li>
+<li><a href="NIST-Basis-Dokumentasi-Teknis.pdf">Dokumen PDF</a>: siap dibaca dan dicetak.</li>
+<li><a href="NIST-Basis-Dokumentasi-Teknis.html">Dokumen HTML lengkap</a>: dapat dibuka offline dan dicetak.</li>
+</ul>
+<p>Folder <code>images/</code> menyediakan enam diagram dalam <strong>SVG</strong> untuk kualitas vektor dan <strong>PNG resolusi 2x</strong> untuk presentasi. Diagram menampilkan arsitektur aktual, bukan data perangkat atau topologi produksi pengguna.</p>
+<h3>Cakupan dan cara memperbarui</h3>
+<p>Inventaris API dibaca dari router Express yang terdaftar, termasuk route aset yang dibentuk dengan loop. Kamus database berasal dari DDL dan migrasi source; bukan dump database produksi. Kredensial, isi <code>.env</code>, record bisnis, dan upload pengguna tidak disertakan.</p>
+<p>Jalankan dari root proyek:</p>
+<pre><code>node scripts/document-api-catalog.js
+python scripts/build-technical-documentation.py</code></pre>
+<p>Generator gambar membutuhkan Pillow dan font Arial pada Windows. PDF dibuat dari HTML melalui browser. Perubahan setelah tanggal pemeriksaan perlu regenerasi dan review. Rancangan produksi/peningkatan diberi label <strong>rekomendasi</strong>, sehingga tidak dianggap sudah terpasang.</p></article><article id="01-INFRASTRUCTURE"><h2>Detail infrastruktur</h2>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Arsitektur aplikasi dan integrasi</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Arsitektur aplikasi dan integrasi</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Implementasi saat ini: modular monolith; frontend dan API pada origin yang sama.</text>
+<rect x="40" y="145" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,149 H315" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="181" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Browser / pengguna</text>
+<text x="56" y="209" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Vue 3 + workspace runtime</text>
+<text x="56" y="235" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Assessment, risiko, aset, vault</text>
+<text x="56" y="261" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Bahasa Indonesia / English</text>
+<rect x="420" y="145" width="480" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M430,149 H890" stroke="#1c6da1" stroke-width="7"/>
+<text x="436" y="181" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Node.js / Express 5</text>
+<text x="436" y="209" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Autentikasi cookie + izin per aksi</text>
+<text x="436" y="235" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Routes -&gt; controllers -&gt; services</text>
+<text x="436" y="261" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Validasi, transaksi, audit, upload</text>
+<rect x="1010" y="145" width="345" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1020,149 H1345" stroke="#1c6da1" stroke-width="7"/>
+<text x="1026" y="181" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">PostgreSQL</text>
+<text x="1026" y="209" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Register dan relasi + JSONB</text>
+<text x="1026" y="235" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Evidence metadata + byte foto</text>
+<text x="1026" y="261" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Permission, audit, konfigurasi</text>
+<polyline points="325,217 420,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="420,217 408.94726807196537,221.6730201077038 408.94726807196537,212.3269798922962" fill="#5d7d9b"/>
+<text x="330" y="199" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">HTTP / API</text>
+<polyline points="900,217 1010,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1010,217 998.9472680719654,221.6730201077038 998.9472680719654,212.3269798922962" fill="#5d7d9b"/>
+<text x="922" y="199" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">SQL</text>
+<rect x="420" y="425" width="290" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M430,429 H700" stroke="#1c6da1" stroke-width="7"/>
+<text x="436" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Penyimpanan file</text>
+<text x="436" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lokal / folder NAS</text>
+<text x="436" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">AWS S3 / Google Cloud</text>
+<text x="436" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lokasi asal per file dipertahankan</text>
+<rect x="765" y="425" width="260" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M775,429 H1015" stroke="#1c6da1" stroke-width="7"/>
+<text x="781" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Scheduler internal</text>
+<text x="781" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Renewal aset</text>
+<text x="781" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Review kebijakan</text>
+<text x="781" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Audit finding reminder</text>
+<rect x="1090" y="425" width="260" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1100,429 H1340" stroke="#1c6da1" stroke-width="7"/>
+<text x="1106" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">SMTP terpusat</text>
+<text x="1106" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">TLS / STARTTLS</text>
+<text x="1106" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Akun email terpilih</text>
+<text x="1106" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Template pesan per modul</text>
+<polyline points="535,305 535,425" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="535,425 530.3269798922962,413.94726807196537 539.6730201077038,413.94726807196537" fill="#5d7d9b"/>
+<text x="549" y="361" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">file</text>
+<polyline points="820,305 820,425" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="820,425 815.3269798922962,413.94726807196537 824.6730201077038,413.94726807196537" fill="#5d7d9b"/>
+<text x="834" y="361" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">pengingat</text>
+<polyline points="1025,505 1090,505" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1090,505 1078.9472680719655,509.6730201077038 1078.9472680719655,500.3269798922962" fill="#5d7d9b"/>
+<text x="1030" y="485" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">email</text>
+<rect x="40" y="425" width="290" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,429 H320" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">File operasional</text>
+<text x="56" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">upload/ + backup/</text>
+<text x="56" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">data/smtp-secret.key</text>
+<text x="56" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">data/audit-pending/</text>
+<polyline points="420,512 330,512" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="330,512 341.05273192803463,507.3269798922962 341.05273192803463,516.6730201077038" fill="#5d7d9b"/>
+<rect x="420" y="660" width="605" height="100" rx="10" fill="white" stroke="#c8d6e5"/><path d="M430,664 H1015" stroke="#1c6da1" stroke-width="7"/>
+<text x="436" y="696" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Backup / restore</text>
+<text x="436" y="724" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Database dump + ZIP file + salinan konfigurasi dan kunci</text>
+<polyline points="540,595 540,660" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="540,660 535.3269798922962,648.9472680719654 544.6730201077038,648.9472680719654" fill="#5d7d9b"/>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg><figcaption>Arsitektur</figcaption></figure>
+<h3>Topologi aktual</h3>
+<p>Aplikasi adalah modular monolith. Satu proses Express menyajikan halaman publik, workspace Vue hasil build, REST API, dan scheduler. PostgreSQL menyimpan data operasional. Penyimpanan file dapat lokal, folder shared/NAS, S3, atau GCS; SMTP bersifat opsional. Tidak terdapat Redis, message broker, service mesh, Kubernetes, atau load balancer bawaan dalam konfigurasi repository.</p>
+<div class="table-wrap"><table><thead><tr><th>Komponen</th><th>Implementasi</th><th>Lokasi konfigurasi</th></tr></thead><tbody>
+<tr><td>Backend</td><td>Node.js; Express 5; pool <code>pg</code></td><td><code>src/server.js</code>, <code>src/app.js</code></td></tr>
+<tr><td>Frontend</td><td>Vue 3, Vite, Tailwind, Tiptap, DOMPurify</td><td><code>frontend/client/</code>, <code>package.json</code></td></tr>
+<tr><td>Database</td><td>PostgreSQL; Docker major 17</td><td><code>compose.yaml</code>, <code>src/config/database.js</code></td></tr>
+<tr><td>Build Docker</td><td>Node 24 trixie slim, multi-stage</td><td><code>Dockerfile</code></td></tr>
+<tr><td>Runtime Docker</td><td>Non-root <code>node</code>, client PostgreSQL 17</td><td><code>Dockerfile</code></td></tr>
+<tr><td>SMTP</td><td>Nodemailer, TLS/STARTTLS, akun terpusat</td><td><code>src/services/smtpService.js</code></td></tr>
+<tr><td>Backup database</td><td><code>pg_dump</code>, <code>pg_restore</code>; custom dump</td><td><code>src/services/backupService.js</code></td></tr>
+<tr><td>Backup file</td><td>ZIP + manifest; baca storage sesuai asal file</td><td><code>src/services/fileBackupService.js</code></td></tr>
+</tbody></table></div>
+<h3>Docker, port, dan volume</h3>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Deployment Docker dan jaringan</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Deployment Docker dan jaringan</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Konfigurasi Compose aktual; reverse proxy HTTPS adalah rancangan produksi opsional.</text>
+<rect x="40" y="155" width="300" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,159 H330" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Client browser</text>
+<text x="56" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Jaringan pengguna</text>
+<text x="56" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">HTTP lokal / HTTPS produksi</text>
+<rect x="440" y="155" width="340" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M450,159 H770" stroke="#1c6da1" stroke-width="7"/>
+<text x="456" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Host / reverse proxy</text>
+<text x="456" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Default: 127.0.0.1:5000</text>
+<text x="456" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Opsional proxy TLS :443</text>
+<text x="456" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Proxy harus menjaga Host</text>
+<rect x="890" y="155" width="420" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M900,159 H1300" stroke="#1c6da1" stroke-width="7"/>
+<text x="906" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Container app</text>
+<text x="906" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">IT_Governance_BLACKOWL</text>
+<text x="906" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Node 24 / port internal 8000</text>
+<text x="906" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Runtime non-root: node</text>
+<polyline points="340,227 440,227" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="440,227 428.94726807196537,231.6730201077038 428.94726807196537,222.3269798922962" fill="#5d7d9b"/>
+<text x="347" y="205" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">HTTP(S)</text>
+<polyline points="780,227 890,227" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="890,227 878.9472680719654,231.6730201077038 878.9472680719654,222.3269798922962" fill="#5d7d9b"/>
+<text x="783" y="205" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">5000 -&gt; 8000</text>
+<rect x="890" y="415" width="420" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M900,419 H1300" stroke="#1c6da1" stroke-width="7"/>
+<text x="906" y="451" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Container database</text>
+<text x="906" y="479" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">BlackOwl_DB_Gov</text>
+<text x="906" y="505" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">postgres:17-bookworm / 5432</text>
+<text x="906" y="531" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Internal network; port tidak dipublikasi</text>
+<polyline points="1100,300 1100,415" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1100,415 1095.326979892296,403.94726807196537 1104.673020107704,403.94726807196537" fill="#5d7d9b"/>
+<text x="1115" y="354" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">SQL internal</text>
+<rect x="40" y="415" width="690" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,419 H720" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="451" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Named volumes persisten</text>
+<text x="56" y="479" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">postgres_data -&gt; /var/lib/postgresql/data</text>
+<text x="56" y="505" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">app_data -&gt; /app/data; uploads -&gt; /app/upload</text>
+<text x="56" y="531" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">backups -&gt; /app/backup; down -v menghapus volume</text>
+<polyline points="890,488 730,488" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="730,488 741.0527319280346,483.3269798922962 741.0527319280346,492.6730201077038" fill="#5d7d9b"/>
+<text x="742" y="468" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">persistensi</text>
+<rect x="40" y="660" width="570" height="90" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,664 H600" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="696" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Eksternal opsional</text>
+<text x="56" y="724" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">SMTP / NAS / S3 / GCS sesuai konfigurasi</text>
+<rect x="745" y="660" width="565" height="90" rx="10" fill="white" stroke="#c8d6e5"/><path d="M755,664 H1300" stroke="#1c6da1" stroke-width="7"/>
+<text x="761" y="696" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Healthcheck</text>
+<text x="761" y="724" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">App: GET /login; DB: pg_isready</text>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg><figcaption>Deployment</figcaption></figure>
+<p>Project Compose bernama <code>it_governance_blackowl</code>. Container app <code>IT_Governance_BLACKOWL</code>, container DB <code>BlackOwl_DB_Gov</code>. Aplikasi menunggu healthcheck database sebelum dijalankan; restart policy <code>unless-stopped</code>, app <code>init: true</code>, grace period 30 detik.</p>
+<div class="table-wrap"><table><thead><tr><th>Koneksi</th><th>Default</th><th>Keterangan</th></tr></thead><tbody>
+<tr><td>Browser -&gt; host</td><td><code>127.0.0.1:5000</code></td><td><code>BLACKOWL_BIND_IP</code>, <code>BLACKOWL_PORT</code> dapat diubah</td></tr>
+<tr><td>Host -&gt; app</td><td>Host 5000 -&gt; container 8000</td><td>Server Express <code>PORT=8000</code></td></tr>
+<tr><td>App -&gt; DB</td><td><code>db:5432</code></td><td>Port DB tidak dipublikasikan ke host</td></tr>
+<tr><td>Dev frontend</td><td>5173 -&gt; backend 8000</td><td>Proxy Vite untuk API dan aset terkait</td></tr>
+<tr><td>SMTP</td><td>587 default</td><td>Port akun dapat dikonfigurasi; STARTTLS default</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Named volume</th><th>Mount</th><th>Isi yang harus persisten</th></tr></thead><tbody>
+<tr><td><code>postgres_data</code></td><td><code>/var/lib/postgresql/data</code></td><td>Cluster PostgreSQL</td></tr>
+<tr><td><code>app_data</code></td><td><code>/app/data</code></td><td>Seed, kunci SMTP, antrean audit</td></tr>
+<tr><td><code>uploads</code></td><td><code>/app/upload</code></td><td>File lokal dan staging <code>.incoming</code></td></tr>
+<tr><td><code>backups</code></td><td><code>/app/backup</code></td><td>Dump database; ZIP pada <code>backup/files</code></td></tr>
+</tbody></table></div>
+<p><code>docker compose down</code> mempertahankan named volume. <code>down -v</code> menghapusnya. Folder NAS dan credential cloud harus dipasang/disediakan pada runtime jika digunakan; Compose saat ini belum memasangnya otomatis.</p>
+<h3>Environment dan konfigurasi</h3>
+<p>Nilai berikut berasal dari konfigurasi kode atau contoh Docker; nilai rahasia deployment tidak dibaca atau dicantumkan.</p>
+<div class="table-wrap"><table><thead><tr><th>Variable</th><th>Default / fungsi</th></tr></thead><tbody>
+<tr><td><code>NODE_ENV</code></td><td><code>development</code>; Docker <code>production</code></td></tr>
+<tr><td><code>PORT</code></td><td>8000</td></tr>
+<tr><td><code>DATABASE_URL</code></td><td>Alternatif connection string pada pool utama</td></tr>
+<tr><td><code>DB_HOST</code>, <code>DB_PORT</code></td><td>localhost, 5432; Compose host <code>db</code></td></tr>
+<tr><td><code>DB_NAME</code>, <code>DB_USER</code></td><td>Native <code>nist_basis</code>, <code>postgres</code>; Compose <code>BlackOwl_DB_Gov</code>, <code>blackowl</code></td></tr>
+<tr><td><code>DB_PASSWORD</code></td><td>Tidak ada password bawaan pada env config; wajib isi sesuai DB</td></tr>
+<tr><td><code>DB_SSL</code></td><td><code>true</code> untuk TLS; default false</td></tr>
+<tr><td><code>DB_SSL_REJECT_UNAUTHORIZED</code></td><td>Verifikasi sertifikat aktif kecuali diset false</td></tr>
+<tr><td><code>DB_SSL_CA</code></td><td>CA tambahan bila diperlukan</td></tr>
+<tr><td><code>SESSION_COOKIE_SECURE</code></td><td>Production true kecuali eksplisit false; dev false kecuali true</td></tr>
+<tr><td><code>LOG_HTTP_REQUESTS</code></td><td>true mengaktifkan log request; gunakan saat troubleshooting</td></tr>
+<tr><td><code>PG_DUMP_PATH</code>, <code>PG_RESTORE_PATH</code></td><td>Override executable client PostgreSQL</td></tr>
+<tr><td><code>BLACKOWL_DB_PASSWORD</code></td><td>Wajib untuk Compose</td></tr>
+<tr><td><code>BLACKOWL_PORT</code>, <code>BLACKOWL_BIND_IP</code></td><td>5000, 127.0.0.1</td></tr>
+<tr><td><code>BLACKOWL_COOKIE_SECURE</code></td><td>false untuk HTTP lokal; true untuk HTTPS</td></tr>
+<tr><td><code>TZ</code></td><td>Compose Asia/Bangkok; reminder aset juga eksplisit menggunakan zona ini</td></tr>
+<tr><td>AWS credential chain</td><td>Diberikan ke runtime server, tidak melalui UI</td></tr>
+<tr><td>GCS Application Default Credentials</td><td>Diberikan ke runtime server, tidak melalui UI</td></tr>
+</tbody></table></div>
+<p>Pool database: maksimum 10 koneksi, idle timeout 30 detik, connection timeout 5 detik. Provisioning script masih membaca <code>DB_*</code>; ketika memilih <code>DATABASE_URL</code>, pastikan <code>DB_*</code> provisioning menunjuk database yang sama. Jangan mengasumsikan kedua mekanisme otomatis identik.</p>
+<h3>Penyimpanan dan integrasi</h3>
+<p>Setelan aktif di <code>file_storage_settings</code>; setiap file menyimpan lokasi asal melalui <code>file_storage_locations</code>. Pergantian mode hanya menentukan lokasi upload baru, tidak memigrasikan file lama. Penggantian/download file lama tetap memakai lokasi asal. Kegagalan cloud tidak dialihkan diam-diam ke lokal.</p>
+<p>SMTP menyimpan ciphertext AES-256-GCM di database; kunci berada di <code>data/smtp-secret.key</code>. Salinan database saja tidak cukup untuk mendekripsi password setelah pindah host. Pertahankan kunci yang sesuai dan ACL hanya untuk akun server.</p>
+<h3>Kapasitas dan observabilitas</h3>
+<p>Healthcheck container app: <code>GET /login</code>, interval 30 detik, timeout 5 detik, start period 120 detik. Ini mengecek respons HTTP, bukan seluruh kesiapan DB. Database: <code>pg_isready</code> interval 5 detik. <code>/api/health</code> dan <code>/api/health/db</code> membutuhkan login.</p>
+<p>Log tersedia pada stdout/stderr; audit di <code>audit_events</code>, fallback pada <code>data/audit-pending</code>. Scheduler aset memeriksa startup dan tiap jam; recovery audit mencoba ulang tiap 30 detik. Antrean audit maksimum 1000 file, 128 KiB per event; 100 event per putaran recovery.</p>
+<p><strong>Rekomendasi produksi:</strong> HTTPS melalui reverse proxy, database dan storage di jaringan terbatas, satu instance app sampai sesi/limiter menjadi shared, backup off-host, monitoring error dan kapasitas disk, serta proses restore rehearsal. Ukuran CPU/RAM/disk harus ditentukan lewat uji beban jumlah aset, catatan, upload, dan concurrency; repository tidak menetapkan sizing teruji atau target RTO/RPO.</p>
+<p>Sumber: <code>compose.yaml</code>, <code>Dockerfile</code>, <code>docker.env.example</code>, <code>src/config/</code>, <code>src/services/storageService.js</code>, <code>cloudStorageService.js</code>, <code>smtpService.js</code>, <code>auditRecoveryService.js</code>.</p></article><article id="02-APPLICATION"><h2>Detail aplikasi dan struktur kode</h2>
+<h3>Lapisan dan tanggung jawab</h3>
+<div class="table-wrap"><table><thead><tr><th>Lapisan</th><th>Path</th><th>Tanggung jawab</th></tr></thead><tbody>
+<tr><td>Bootstrap</td><td><code>src/server.js</code></td><td>Provision DB, DDL/seed, folder, listen, scheduler</td></tr>
+<tr><td>HTTP</td><td><code>src/app.js</code></td><td>Header, audit, parser, origin, session, routing, static, errors</td></tr>
+<tr><td>Routes</td><td><code>src/routes/</code></td><td>Method/path, izin, parameter, multipart</td></tr>
+<tr><td>Controllers</td><td><code>src/controllers/</code></td><td>Konversi request/response; sebagian modul memakai handler inline</td></tr>
+<tr><td>Domain services</td><td><code>src/services/</code></td><td>Validasi bisnis, SQL, transaksi, storage, SMTP, backup</td></tr>
+<tr><td>Shared contracts</td><td><code>src/shared/</code></td><td>Skor CIA, stencil diagram, aturan bersama</td></tr>
+<tr><td>SQL</td><td><code>database/</code></td><td>Schema dasar, akun, ownership, migrasi relasi</td></tr>
+<tr><td>Vue UI</td><td><code>frontend/client/src/workspace/components/</code></td><td>Tampilan fitur dan modal</td></tr>
+<tr><td>Runtime fitur</td><td><code>frontend/client/src/workspace/features/</code></td><td>Logika DOM untuk fitur kompatibilitas</td></tr>
+<tr><td>Runtime loader</td><td><code>frontend/client/src/workspace/runtime.js</code></td><td>Import raw JS berurutan dan shared scope</td></tr>
+<tr><td>Generated assets</td><td><code>frontend/public/vue/</code></td><td>Hasil build; jangan diedit langsung</td></tr>
+<tr><td>Quality tools</td><td><code>test/</code>, <code>scripts/</code></td><td>Unit, integrasi, browser, provisioning dan generator</td></tr>
+</tbody></table></div>
+<p>Frontend memakai dua pola: komponen Vue reaktif (antara lain Asset Management, Knowledge Notes, Threat Modelling) dan komponen DOM statis yang dikelola runtime lama. Urutan loader dan ID DOM merupakan kontrak kompatibilitas. Shared scope belum memberikan isolasi state per modul seperti modul Vue murni; refaktor bertahap memerlukan pengujian regresi.</p>
+<h3>Inventaris fitur</h3>
+<div class="table-wrap"><table><thead><tr><th>Modul</th><th>Kapabilitas dan hubungan</th></tr></thead><tbody>
+<tr><td>NIST CSF 2.0</td><td>Kontrol, policy/practice score, catatan, attachment, ringkasan fungsi</td></tr>
+<tr><td>NIST Privacy</td><td>Kontrol privasi dan assessment state tersendiri</td></tr>
+<tr><td>Framework / ISO 27001</td><td>Framework, kontrol, target kategori, security objectives</td></tr>
+<tr><td>SOA</td><td>Applicability dan evidence kontrol ISO</td></tr>
+<tr><td>Risk Management</td><td>Risk register, CIA 5x5, inherent/residual risk, treatment, dropdown, indikator</td></tr>
+<tr><td>Risk Acceptance</td><td>Form keputusan, mitigasi, tanggal, bidang tanda tangan, export PDF</td></tr>
+<tr><td>Asset Register</td><td>Identitas, lifecycle, owner, CIA, vendor pengelola opsional, related risk, renewal, foto</td></tr>
+<tr><td>Rak Server</td><td>Rak 1-60 U, front/rear, full/single depth, install/move, drag/drop, daftar perangkat</td></tr>
+<tr><td>Modelling Asset Register</td><td>Kanvas relasi berarah, palette register, multi-edge, zoom, versi layout</td></tr>
+<tr><td>Knowledge Vault</td><td>Folder/subfolder, Markdown/editor, wiki-link/search, gambar, import/export ZIP/JSON</td></tr>
+<tr><td>Policy Register</td><td>Kebijakan, item isi, lampiran, related notes, review, kalender, reminder</td></tr>
+<tr><td>TPRM</td><td>Vendor assessment, risk register vendor, tiering, linked risks, status hubungan</td></tr>
+<tr><td>Due Diligence / Templates</td><td>Respons kuesioner dan template sections/questions</td></tr>
+<tr><td>Audit Finding Tracker</td><td>Hierarki audit -&gt; finding -&gt; followup/evidence, lampiran dan reminder</td></tr>
+<tr><td>Personel / Sertifikasi</td><td>Pegawai terdaftar, supervisor, sertifikasi, roadmap dan layout</td></tr>
+<tr><td>Uploaded Files</td><td>Daftar pusat semua modul, owner, pencarian, download, replacement, delete referensi</td></tr>
+<tr><td>Administrasi</td><td>Akun, izin per aksi, SMTP, storage, audit, DB/file backup</td></tr>
+</tbody></table></div>
+<h3>Startup dan data sharing</h3>
+<p>Startup memprovision DB, menyiapkan schema/seed, memigrasikan store modul, membuat folder dan memulai scheduler. Startup melakukan penulisan database, sehingga tidak dipakai sebagai healthcheck dokumentasi. Assessment CSF ber-ID <code>default</code>; Privacy <code>privacy</code>. Keduanya merupakan dokumen bersama, bukan partition per pengguna. Aplikasi belum menyediakan tenancy/organisasi terisolasi secara menyeluruh.</p>
+<h3>Autentikasi dan hak akses</h3>
+<p>Login memvalidasi bcrypt, membuat token acak 32 byte, dan menyimpan session di Map. Cookie <code>nist_session</code>: HttpOnly, SameSite=Lax, Secure sesuai konfigurasi; usia 8 jam. Login baru mengganti sesi sebelumnya untuk username sama. Restart, pengubahan password/role, penghapusan akun, dan restore DB mencabut sesi terkait sesuai service aplikasi.</p>
+<p>Role: admin, approver, editor, viewer, user. Izin efektif memerlukan page allowed + Read + aksi Read/Create/Update/Delete. Admin bypass izin per halaman. Akun administratif, SMTP, storage, dan backup dibatasi admin. Evidence menambahkan ownership. Jangan menentukan hak akses hanya dari label role atau tombol yang terlihat.</p>
+<h3>Asset Management / ITSM</h3>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Siklus hidup aset, penempatan, dan risiko</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Siklus hidup aset, penempatan, dan risiko</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Proses mengikuti prinsip ITSM; referensi change/tiket opsional, tanpa approval engine eksternal.</text>
+<rect x="40" y="155" width="370" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,159 H400" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Registrasi</text>
+<text x="56" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Tag unik / owner / vendor</text>
+<text x="56" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">CIA + tanggal renewal</text>
+<text x="56" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Foto depan / belakang</text>
+<rect x="480" y="155" width="370" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M490,159 H840" stroke="#1c6da1" stroke-width="7"/>
+<text x="496" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Operasional</text>
+<text x="496" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">planned -&gt; in-stock -&gt; in-use</text>
+<text x="496" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">maintenance bila perlu</text>
+<text x="496" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Pasang / pindah melalui modal</text>
+<rect x="950" y="155" width="370" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M960,159 H1310" stroke="#1c6da1" stroke-width="7"/>
+<text x="966" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Retirement</text>
+<text x="966" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lepaskan posisi dan relasi</text>
+<text x="966" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">retired / disposed</text>
+<text x="966" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Hapus sesuai izin</text>
+<polyline points="410,235 480,235" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="480,235 468.94726807196537,239.6730201077038 468.94726807196537,230.3269798922962" fill="#5d7d9b"/>
+<polyline points="850,235 950,235" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="950,235 938.9472680719654,239.6730201077038 938.9472680719654,230.3269798922962" fill="#5d7d9b"/>
+<rect x="40" y="450" width="370" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,454 H400" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="486" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Penempatan rak</text>
+<text x="56" y="514" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">1 perangkat = 1 posisi</text>
+<text x="56" y="540" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Start U + tinggi + orientasi</text>
+<text x="56" y="566" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Overlap dicegah; full / single side</text>
+<rect x="480" y="450" width="370" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M490,454 H840" stroke="#1c6da1" stroke-width="7"/>
+<text x="496" y="486" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Penilaian CIA otomatis</text>
+<text x="496" y="514" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Dampak = max(C, I, A)</text>
+<text x="496" y="540" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Skor = dampak x kemungkinan</text>
+<text x="496" y="566" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">1-4 Low; 5-12 Medium; 15-25 High</text>
+<rect x="950" y="450" width="370" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M960,454 H1310" stroke="#1c6da1" stroke-width="7"/>
+<text x="966" y="486" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Renewal dan dependensi</text>
+<text x="966" y="514" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Scheduler tiap jam</text>
+<text x="966" y="540" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Email sesuai SMTP/template</text>
+<text x="966" y="566" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Relasi diagram dari asset register</text>
+<polyline points="220,320 220,450" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="220,450 215.3269798922962,438.94726807196537 224.6730201077038,438.94726807196537" fill="#5d7d9b"/>
+<polyline points="665,320 665,450" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="665,450 660.3269798922962,438.94726807196537 669.6730201077038,438.94726807196537" fill="#5d7d9b"/>
+<polyline points="1135,320 1135,450" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1135,450 1130.326979892296,438.94726807196537 1139.673020107704,438.94726807196537" fill="#5d7d9b"/>
+<text x="40" y="719" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#102d4c">Semua perubahan register melalui modal; backend tetap memvalidasi ulang data dan hak akses.</text>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg><figcaption>Lifecycle aset</figcaption></figure>
+<p>Tag aset unik; status <code>planned</code>, <code>in-stock</code>, <code>in-use</code>, <code>maintenance</code>, <code>retired</code>, <code>disposed</code>. Referensi change/tiket opsional. Lepaskan posisi dan relasi sebelum retirement. Aset operasional harus dipensiunkan sebelum dihapus; status planned dapat dihapus untuk koreksi pencatatan.</p>
+<p>Satu perangkat punya satu posisi fisik. <code>startUnit</code> dihitung dari bawah; rentang berakhir <code>startUnit + height - 1</code>. Kedalaman penuh memakai kedua sisi; perangkat satu sisi pada orientasi berbeda boleh memakai U sama. Backend menolak overlap, over-capacity, nonfisik (Software/License/Cloud), aset retired/disposed, serta pemasangan ulang tanpa konteks pemindahan. Drag/drop mengisi modal; DB baru berubah setelah Simpan.</p>
+<p>Foto PNG/JPEG/WebP max 5 MiB per sisi. Byte asli tersimpan tanpa kompresi ulang; <code>object-fit: scale-down</code> menghindari pembesaran melampaui resolusi sumber. Foto panel ditampilkan sesuai orientasi dan tinggi U; foto rak keseluruhan adalah referensi terpisah. File tercatat di Uploaded Files; foto history tetap tersedia ketika foto aktif diganti lewat modul.</p>
+<p>Relasi: <code>connects-to</code>, <code>depends-on</code>, <code>protects</code>, <code>balances</code>, <code>hosts</code>, <code>backs-up</code>. Tidak boleh self-link atau duplikat source/target/type. Multi-edge dan arah sebaliknya diperbolehkan; kurva diagram dibedakan. <code>depends-on</code> berarti sumber bergantung pada tujuan; <code>hosts</code> berarti sumber berjalan pada host tujuan. Analisis hanya menelusuri dependensi yang dicatat, bukan discovery jaringan atau simulasi gangguan.</p>
+<p>Layout disimpan dengan version untuk mencegah overwrite edit bersamaan. Foto, aset, dan import disimpan atomik pada jalur terkait. Export JSON format <code>nist-basis-asset-management</code> versi 1: aset, rak, posisi, relasi, node, foto base64, dan template email. Import merge berdasarkan tag/nama; ID dipetakan ulang; konflik membatalkan transaksi. Vendor/risk eksternal harus sudah tersedia. Kredensial SMTP tidak dipindahkan oleh export ini.</p>
+<p>Daftar aset newest-to-oldest menurut created_at; data lama menggunakan updated_at sebagai fallback migrasi. Daftar rak diurutkan nama; posisi berdasarkan U; relasi berdasarkan tipe. Filter hanya mengubah tampilan, bukan okupansi atau relasi tersimpan.</p>
+<h3>Penilaian CIA 5x5</h3>
+<p>C, I, A dan likelihood berada pada skala 1-5. Impact = max(C,I,A); score = impact x likelihood. Score 1-4 Low, 5-12 Medium, 15-25 High. Tidak ada score 13/14 dari perkalian integer 1-5. Backend menghitung ulang; nilai impact/rating kiriman client tidak dipercaya untuk CIA lengkap. Risk Management menghitung residual rating dari residual likelihood x residual impact dengan batas yang sama. Data legacy tanpa CIA lengkap dapat memerlukan pengisian ulang; bukan dianggap sudah dinilai.</p>
+<p>Related risk adalah tautan ke Risk Register, berbeda dari hasil CIA aset. Vendor pengelola mengacu TPRM dan opsional; vendor perangkat/manufacturer merupakan field informasi terpisah.</p>
+<h3>Knowledge, policy, evidence, dan backup</h3>
+<p>Knowledge mempunyai title/folder unik tanpa mengubah isi Markdown. Update membutuhkan version. Import baru menyimpan file MD/TXT/JSON asli dan gambar ke evidence library bersama hasil parsing. Import historis yang tidak menyimpan original bytes tidak dapat direkonstruksi persis.</p>
+<p>Policy dapat memilih note individual atau semua note di folder/subfolder. Subfolder tertutup default; pencarian membuka folder hasil. Pemilihan folder mencakup seluruh descendants, termasuk hasil yang tersembunyi oleh filter. Isi note terkait ikut pencarian policy. Link policy-note disimpan sebagai array JSONB, bukan FK individual.</p>
+<p>Semua modul menggunakan library evidence terpusat. Admin dapat mengelola seluruh file; pengguna mengikuti ownership dan izin aksi. Hapus file di library dapat melepaskan referensi lintas modul; melepas satu attachment dilakukan melalui modul asal. File Backup tidak memulihkan record bisnis; Database Backup dan File Backup diperlukan bersama.</p>
+<h3>Bahasa, UI, dan proses development</h3>
+<p><code>frontend/public/i18n.js</code> menyimpan kamus ID/EN, dynamic patterns, pilihan <code>nist-basis-language</code>, dan event pergantian bahasa. Enum/value form harus eksplisit agar label terjemahan tidak mengubah data API. Konten pengguna menggunakan batas no-translate bila sesuai. Tambah/ubah fitur aset memakai modal, konfirmasi mutasi, busy lock dan pesan error.</p>
+<p>Edit source, jalankan build, verifikasi unit dan browser, lalu restart backend bila ada perubahan server/migrasi. Lihat runbook untuk perintah. Prinsip industri yang dipakai: separation of concerns, validasi server, parameterized SQL, transaksi satu koneksi, least privilege, optimistic concurrency, audit, dan backup terpisah. Status approval pada register bukan workflow bertingkat atau tanda tangan digital kriptografis.</p></article><article id="03-API"><h2>Detail dan katalog API</h2>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Alur API, autentikasi, dan otorisasi</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Alur API, autentikasi, dan otorisasi</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Pipeline aktual: API diaudit; sesi dan pembatas permintaan berada dalam proses aplikasi.</text>
+<rect x="40" y="150" width="285" height="135" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,154 H315" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">1. Request</text>
+<text x="56" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">JSON / multipart</text>
+<text x="56" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Cookie nist_session</text>
+<rect x="385" y="150" width="285" height="135" rx="10" fill="white" stroke="#c8d6e5"/><path d="M395,154 H660" stroke="#1c6da1" stroke-width="7"/>
+<text x="401" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">2. Middleware global</text>
+<text x="401" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Header keamanan + audit</text>
+<text x="401" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">JSON 10 MB + origin</text>
+<rect x="730" y="150" width="285" height="135" rx="10" fill="white" stroke="#c8d6e5"/><path d="M740,154 H1005" stroke="#1c6da1" stroke-width="7"/>
+<text x="746" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">3. Autentikasi</text>
+<text x="746" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Session aktif / 8 jam</text>
+<text x="746" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Login via bcrypt</text>
+<polyline points="325,217 385,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="385,217 373.94726807196537,221.6730201077038 373.94726807196537,212.3269798922962" fill="#5d7d9b"/>
+<polyline points="670,217 730,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="730,217 718.9472680719654,221.6730201077038 718.9472680719654,212.3269798922962" fill="#5d7d9b"/>
+<rect x="730" y="390" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M740,394 H1005" stroke="#1c6da1" stroke-width="7"/>
+<text x="746" y="426" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">4. Izin dan upload</text>
+<text x="746" y="454" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Read / Create / Update / Delete</text>
+<text x="746" y="480" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Kepemilikan evidence</text>
+<text x="746" y="506" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">4 upload aktif / 2 per akun</text>
+<polyline points="873,285 873,390" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="873,390 868.3269798922962,378.94726807196537 877.6730201077038,378.94726807196537" fill="#5d7d9b"/>
+<rect x="385" y="390" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M395,394 H660" stroke="#1c6da1" stroke-width="7"/>
+<text x="401" y="426" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">5. Domain service</text>
+<text x="401" y="454" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Validasi payload / referensi</text>
+<text x="401" y="480" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">SQL parameterized</text>
+<text x="401" y="506" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">BEGIN / COMMIT / ROLLBACK</text>
+<polyline points="730,465 670,465" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="670,465 681.0527319280346,460.3269798922962 681.0527319280346,469.6730201077038" fill="#5d7d9b"/>
+<rect x="40" y="390" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,394 H315" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="426" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">6. Penyimpanan</text>
+<text x="56" y="454" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">PostgreSQL / file storage</text>
+<text x="56" y="480" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Konflik versi -&gt; 409</text>
+<text x="56" y="506" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Batas ukuran -&gt; 413</text>
+<polyline points="385,465 325,465" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="325,465 336.05273192803463,460.3269798922962 336.05273192803463,469.6730201077038" fill="#5d7d9b"/>
+<rect x="40" y="650" width="975" height="100" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,654 H1005" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="686" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">7. Response dan audit</text>
+<text x="56" y="714" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">JSON / stream file / 204; requestId pada error global; recovery audit ketika database gagal</text>
+<polyline points="180,535 180,650" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="180,650 175.3269798922962,638.9472680719654 184.6730201077038,638.9472680719654" fill="#5d7d9b"/>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg><figcaption>Alur API</figcaption></figure>
+<h3>Kontrak umum</h3>
+<p>Base URL native <code>http://localhost:8000/api</code>, Compose <code>http://localhost:5000/api</code>. Gunakan origin deployment aktual dan HTTPS pada produksi. API belum memakai prefix versi <code>/v1</code>, bearer token/OAuth, atau kontrak OpenAPI tervalidasi bawaan.</p>
+<p>Seluruh endpoint selain login/logout auth melewati sesi. Browser same-origin otomatis menyertakan cookie. Integrasi CLI menyimpan cookie jar dari login; jangan menaruh password atau cookie produksi di dokumentasi/log. Request JSON memakai <code>Content-Type: application/json</code>; upload memakai multipart dan boundary otomatis. Parser JSON dibatasi 10 MiB. Origin mutasi diperiksa ketika header Origin tersedia; cookie SameSite=Lax adalah kontrol tambahan, bukan token CSRF khusus.</p>
+<p>Format response bervariasi per endpoint: array list, object record, <code>{ok:true}</code>, stream file/ZIP/PDF, atau 204 tanpa body. API menggunakan camelCase pada banyak register, tetapi rack placements/relations dan beberapa indikator masih mengembalikan snake_case. ID BIGSERIAL dapat berupa string dari <code>pg</code>; jangan mengasumsikan seluruh ID aman dikonversi ke Number. Asset/rack/relasi memakai UUID; Risk Register memakai string seperti <code>CSR - 001</code>.</p>
+<div class="table-wrap"><table><thead><tr><th>Status</th><th>Pemakaian</th></tr></thead><tbody>
+<tr><td>200</td><td>Baca, update, action sukses</td></tr>
+<tr><td>201</td><td>Pembuatan resource pada handler yang menetapkannya</td></tr>
+<tr><td>204</td><td>Hapus/logout/reset tertentu; jangan parse JSON</td></tr>
+<tr><td>400</td><td>Payload, path, enum, referensi/form/upload tidak valid</td></tr>
+<tr><td>401</td><td>Kredensial salah atau session tidak aktif</td></tr>
+<tr><td>403</td><td>Izin, ownership, origin atau admin-only ditolak</td></tr>
+<tr><td>404</td><td>Record/file/route tidak ditemukan</td></tr>
+<tr><td>409</td><td>Constraint, record digunakan, collision atau konflik versi</td></tr>
+<tr><td>413</td><td>Batas upload/body terlampaui</td></tr>
+<tr><td>429</td><td>Rate limit atau kapasitas upload; dapat memuat Retry-After</td></tr>
+<tr><td>500</td><td>Error global yang tidak diekspos rinci kepada client</td></tr>
+<tr><td>502/503</td><td>Beberapa handler khusus dapat melaporkan kegagalan integrasi/restore; error global hanya meneruskan status 4xx</td></tr>
+</tbody></table></div>
+<p>Error global berbentuk <code>{&quot;error&quot;:&quot;...&quot;,&quot;requestId&quot;:&quot;...&quot;}</code>; handler lokal dapat hanya mengembalikan <code>error</code>. Jangan mengandalkan adanya requestId pada seluruh respons. Jangan melakukan retry mutasi secara buta setelah timeout; pastikan hasil sudah/belum tersimpan, terutama upload/import/email.</p>
+<h3>Upload dan tipe konten</h3>
+<div class="table-wrap"><table><thead><tr><th>Jalur</th><th>Multipart / batas aktual</th></tr></thead><tbody>
+<tr><td><code>/files</code></td><td><code>file</code>; functionName, kind policy/practice, rejectDuplicate opsional; 100 MiB/file</td></tr>
+<tr><td><code>/files/batch</code></td><td><code>files</code>; efektif maksimum 20 file dari Multer walaupun route array cap 50; total 200 MiB selama streaming</td></tr>
+<tr><td><code>/files/*path</code> PUT</td><td><code>file</code>, 100 MiB; ownership diperiksa sebelum parsing dan penulisan</td></tr>
+<tr><td>Aset/foto rak</td><td><code>front</code>, <code>rear</code>; 5 MiB/sisi, max 2 file; <code>data</code> JSON pada registrasi multipart, removeFront/removeRear boolean string</td></tr>
+<tr><td><code>/asset-management/import</code></td><td><code>file</code> JSON; maksimum 100 MiB</td></tr>
+<tr><td><code>/knowledge-notes/images</code></td><td><code>images</code> satu gambar; paths JSON array; 10 MiB/file</td></tr>
+<tr><td><code>/knowledge-notes/import-with-images</code></td><td>images max100, documents max200; payload, paths, documentPaths; 10 MiB/file dan total stream 100 MiB</td></tr>
+<tr><td>Audit finding</td><td><code>file</code> max10, 10 MiB/file; data dan parent sesuai kind</td></tr>
+<tr><td>DB/file restore</td><td><code>backup</code>; 500 MiB/file; dump/JSON untuk DB, ZIP untuk file</td></tr>
+</tbody></table></div>
+<p>Semua multipart API dibatasi 4 request aktif per proses dan 2 per akun. Evidence umum menerima PDF/DOC/DOCX/PPT/PPTX/PNG/JPG/GIF/WebP sesuai MIME+extension. Foto aset memeriksa bytes gambar; validasi seluruh dokumen belum merupakan antivirus/malware scanning.</p>
+<h3>Payload domain dan validasi</h3>
+<p>Field di bawah mencakup kontrak bisnis utama. Detail endpoint dan observed fields terdapat pada katalog/lampiran source; field bertanda derived dihitung backend. PUT pada beberapa register membutuhkan formulir lengkap, bukan PATCH universal.</p>
+<div class="table-wrap"><table><thead><tr><th>Resource</th><th>Field dan batas</th></tr></thead><tbody>
+<tr><td>Login</td><td>username 3-50 karakter <code>[A-Za-z0-9._-]</code>, password max72 byte UTF-8</td></tr>
+<tr><td>Profil</td><td>fullName; admin dapat mengubah security fields sesuai service; password memakai currentPassword/newPassword/confirmPassword</td></tr>
+<tr><td>Izin</td><td>permissions array key dikenal; actions map boolean read/create/update/delete; write memerlukan read</td></tr>
+<tr><td>Assessment</td><td>scores, policyScores, practiceScores, notes, attachments; state bersama default/privacy; attachments harus mereferensikan file yang boleh digunakan</td></tr>
+<tr><td>Asset</td><td>tag/name/owner wajib max150; type/status/criticality enum; serial/vendor/model/location/service/changeReference max250; description max2000; ownerEmail max254; dates YYYY-MM-DD; reminderEnabled boolean, reminderDays integer0-365; managedVendorId string ID TPRM atau null; assetAssessment C/I/A/likelihood integer1-5</td></tr>
+<tr><td>Rack</td><td>name wajib max150, location wajib max250, units integer1-60</td></tr>
+<tr><td>Placement</td><td>assetId/rackId UUID, startUnit/height integer&gt;=1, facing front/rear, fullDepth boolean; previousRackId harus cocok untuk pindah existing; changeReference opsional</td></tr>
+<tr><td>Asset relation</td><td>sourceId/targetId UUID berbeda, type enum enam relasi, notes max1000, changeReference max250</td></tr>
+<tr><td>Asset diagram</td><td>nodes max500, setiap id UUID unik, x/y finite0-20000, version integer&gt;=0; response version dinaikkan</td></tr>
+<tr><td>Related risk</td><td>riskRegisterIds array unik max500; setiap riskId string nonkosong max150 dan benar-benar terdaftar</td></tr>
+<tr><td>Risk Register</td><td>riskCategory/effectedAsset/deviceName/identificationRisk/likelihood/impact wajib sesuai validator; C/I/A1-5; impact/value/rating derived bila CIA lengkap; riskId dibuat backend; riskOwner/treatment/deadline/residual fields/comment/ref opsional sesuai service</td></tr>
+<tr><td>Risk dropdown</td><td>fieldName dari kategori/asset/device/owner/treatment, optionValue, sortOrder; nama/type yang sudah dipakai tidak dapat diubah/hapus</td></tr>
+<tr><td>Risk indicator</td><td>indicatorType, label wajib; score, description, sortOrder</td></tr>
+<tr><td>Risk acceptance</td><td>requestorName, assetName, department, riskDescription, benefitJustification, mitigationPlan; businessOwnerDecision temporary/one_year/denied; cisDecision approved/denied/conditional; dates dan signature fields</td></tr>
+<tr><td>TPRM questionnaire</td><td>vendorName wajib; status Draft/In progress/Complete/Expired/Final; result Pending/Approved/Approved with Conditions/Rejected; reviewDate, reviewer, notes, responses JSON</td></tr>
+<tr><td>TPRM register</td><td>thirdParty/serviceDependency wajib; questionnaireId harus terdaftar dan nama vendor cocok; riskLevel tiga tier; assessmentStatus Not started/In progress/Complete/Accepted; relationshipStatus Active/Offboarded/Expired/Terminated; riskRegisterIds, dueDiligenceAssessment, nextReview, notes</td></tr>
+<tr><td>Questionnaire template</td><td>name dan sections; sections berupa pasangan <code>[judul, [pertanyaan...]]</code>; judul dan minimal satu pertanyaan tiap section</td></tr>
+<tr><td>Policy</td><td>title/category/owner/reviewCycle/approvalStatus wajib saat create; lastReview, attachmentName/Path/Type, notes, items subtitle/content; relatedNoteIds max10000 positive IDs</td></tr>
+<tr><td>Knowledge note</td><td>title wajib max200 tanpa karakter filename/wiki-link khusus; content max1.000.000 byte; folder max500 path valid; update version integer&gt;=1</td></tr>
+<tr><td>Knowledge folder</td><td>path, atau source/destination untuk move; delete mode empty/all; root tidak boleh dihapus, self-descendant move ditolak</td></tr>
+<tr><td>Threat model</td><td>name max200; diagram nodes max500/edges max1000; node finite coordinates, width&gt;=60,height&gt;=40; IDs unik; edges referensi node berbeda; threats STRIDE dengan severity/status/mitigation; update version</td></tr>
+<tr><td>Audit finding</td><td>kind audit/finding/followup/evidence; parentId mengikuti hierarki; title max200 wajib, reference max100, owner max160, description max10000; status Open/In progress/Closed; severity Low/Medium/High/Critical; dueDate valid</td></tr>
+<tr><td>Certification</td><td>personnelId pegawai terdaftar wajib, certificationName wajib; issuer/referenceUrl HTTP(S), certificationLevel, status, dates, notes, layout fields</td></tr>
+<tr><td>SMTP</td><td>host/username/from max254 tanpa CRLF; port1-65535; security tls/starttls; password opsional max4096; clearPassword; akun UUID/default; test to/smtpAccountId</td></tr>
+<tr><td>Storage</td><td>mode local/shared/s3/gcs; shared directory absolut khusus di luar project/root; cloud bucket/prefix, region S3 wajib, projectId GCS opsional; credentials dari runtime</td></tr>
+</tbody></table></div>
+<h3>Contoh integrasi</h3>
+<p>Gunakan akun pengujian berizin. Contoh berikut bersifat dokumentasi dan tidak dijalankan terhadap data produksi.</p>
+<pre><code>curl -c cookies.txt -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;username&quot;:&quot;test.user&quot;,&quot;password&quot;:&quot;REPLACE_WITH_TEST_PASSWORD&quot;}&#x27; \
+  http://localhost:8000/api/auth/login
+curl -b cookies.txt http://localhost:8000/api/auth/me
+curl -b cookies.txt http://localhost:8000/api/asset-management/assets
+curl -b cookies.txt &#x27;http://localhost:8000/api/files?details=true&#x27;</code></pre>
+<p>Contoh create aset (JSON; bila foto disertakan kirim payload ini sebagai multipart field <code>data</code>):</p>
+<pre><code>{&quot;tag&quot;:&quot;SRV-DEMO-001&quot;,&quot;name&quot;:&quot;Server Demo&quot;,&quot;type&quot;:&quot;Server&quot;,&quot;status&quot;:&quot;planned&quot;,&quot;owner&quot;:&quot;IT Operations&quot;,&quot;ownerEmail&quot;:&quot;owner@example.com&quot;,&quot;criticality&quot;:&quot;medium&quot;,&quot;reminderEnabled&quot;:false,&quot;reminderDays&quot;:30,&quot;managedVendorId&quot;:null,&quot;assetAssessment&quot;:{&quot;confidentiality&quot;:3,&quot;integrity&quot;:4,&quot;availability&quot;:4,&quot;likelihood&quot;:3}}</code></pre>
+<p>Response assetAssessment dihitung ulang: impact4, score12, level medium. Jangan mengirim terjemahan enum seperti Direncanakan sebagai status API; gunakan <code>planned</code>.</p>
+<p>Contoh posisi baru; ganti ID dengan record yang sudah dibuat:</p>
+<pre><code>{&quot;assetId&quot;:&quot;00000000-0000-4000-8000-000000000001&quot;,&quot;rackId&quot;:&quot;00000000-0000-4000-8000-000000000002&quot;,&quot;startUnit&quot;:20,&quot;height&quot;:2,&quot;facing&quot;:&quot;front&quot;,&quot;fullDepth&quot;:true,&quot;changeReference&quot;:&quot;&quot;}</code></pre>
+<p>Saat pindah aset existing, tambahkan previousRackId dari posisi terbaru. Konflik memberi 409, lalu muat ulang posisi. Diagram dan catatan membutuhkan version terbaru sebelum update. File path wildcard bisa memiliki beberapa segmen; encode tiap segmen URL dan jangan menerima path absolut atau <code>..</code>.</p>
+<h3>Seluruh endpoint terdaftar</h3>
+<p>Kolom izin mencantumkan guard route yang terbaca. Guard dinamis, ownership, dan validasi service tetap berlaku. Observed fields hanyalah pembacaan request eksplisit, bukan daftar field wajib/schema lengkap; gunakan tabel domain dan lampiran implementasi.</p>
+<h4>authRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>POST</td><td><code>/api/auth/login</code></td><td>public</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:14</td></tr>
+<tr><td>POST</td><td><code>/api/auth/logout</code></td><td>public</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:15</td></tr>
+<tr><td>GET</td><td><code>/api/auth/me</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:16</td></tr>
+<tr><td>PUT</td><td><code>/api/auth/me</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:17</td></tr>
+<tr><td>PUT</td><td><code>/api/auth/me/password</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:18</td></tr>
+<tr><td>GET</td><td><code>/api/auth/users</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:19</td></tr>
+<tr><td>POST</td><td><code>/api/auth/users</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:20</td></tr>
+<tr><td>PUT</td><td><code>/api/auth/users/:id</code></td><td>admin</td><td>path: id</td><td>src/routes/authRoutes.js:21</td></tr>
+<tr><td>DELETE</td><td><code>/api/auth/users/:id</code></td><td>admin</td><td>path: id</td><td>src/routes/authRoutes.js:22</td></tr>
+<tr><td>GET</td><td><code>/api/auth/permissions</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/authRoutes.js:23</td></tr>
+<tr><td>PUT</td><td><code>/api/auth/permissions/:role</code></td><td>admin</td><td>path: role</td><td>src/routes/authRoutes.js:24</td></tr>
+</tbody></table></div>
+<h4>assetManagementRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/asset-management/export</code></td><td>asset-register + server-racks + asset-modelling: read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:17</td></tr>
+<tr><td>POST</td><td><code>/api/asset-management/import</code></td><td>asset-register + server-racks + asset-modelling: read/create/update; TPRM/risk read jika ada referensi</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:18</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/reminder-settings</code></td><td>asset-register:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:26</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/reminder-settings</code></td><td>asset-register:update</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:27</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/vendor-catalog</code></td><td>asset-register:read + tprm-register:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:28</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/risk-catalog</code></td><td>asset-register:read + risk-management:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:29</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/diagram</code></td><td>asset-modelling:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:30</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/diagram</code></td><td>asset-modelling:update</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:31</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/assets</code></td><td>asset-register:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:35</td></tr>
+<tr><td>DELETE</td><td><code>/api/asset-management/assets/:id</code></td><td>asset-register:delete</td><td>path: id</td><td>src/routes/assetManagementRoutes.js:36</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/racks</code></td><td>server-racks:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:35</td></tr>
+<tr><td>DELETE</td><td><code>/api/asset-management/racks/:id</code></td><td>server-racks:delete</td><td>path: id</td><td>src/routes/assetManagementRoutes.js:36</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/placements</code></td><td>server-racks:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:35</td></tr>
+<tr><td>DELETE</td><td><code>/api/asset-management/placements/:id</code></td><td>server-racks:delete</td><td>path: id</td><td>src/routes/assetManagementRoutes.js:36</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/relations</code></td><td>asset-modelling:read</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:35</td></tr>
+<tr><td>DELETE</td><td><code>/api/asset-management/relations/:id</code></td><td>asset-modelling:delete</td><td>path: id</td><td>src/routes/assetManagementRoutes.js:36</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/assets/:id/related-risks</code></td><td>asset-register:update + risk-management:read</td><td>body: riskRegisterIds; path: id</td><td>src/routes/assetManagementRoutes.js:44</td></tr>
+<tr><td>POST</td><td><code>/api/asset-management/assets</code></td><td>asset-register:create</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:45</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/assets/:id</code></td><td>asset-register:update</td><td>path: id</td><td>src/routes/assetManagementRoutes.js:46</td></tr>
+<tr><td>POST</td><td><code>/api/asset-management/racks</code></td><td>server-racks:create</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:48</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/racks/:id</code></td><td>server-racks:update</td><td>path: id</td><td>src/routes/assetManagementRoutes.js:49</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/catalog</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:51</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/placements</code></td><td>server-racks:update</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:52</td></tr>
+<tr><td>POST</td><td><code>/api/asset-management/relations</code></td><td>asset-modelling:create</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:53</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/relations/:id</code></td><td>asset-modelling:update</td><td>path: id</td><td>src/routes/assetManagementRoutes.js:54</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/photos</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>Kontrak domain / handler</td><td>src/routes/assetManagementRoutes.js:55</td></tr>
+<tr><td>GET</td><td><code>/api/asset-management/photos/:kind/:id/:side</code></td><td>assets: asset-register; racks: server-racks; read foto aset juga via server-racks</td><td>path: kind, id, side</td><td>src/routes/assetManagementRoutes.js:57</td></tr>
+<tr><td>PUT</td><td><code>/api/asset-management/photos/:kind/:id</code></td><td>assets: asset-register; racks: server-racks; read foto aset juga via server-racks</td><td>path: kind, id</td><td>src/routes/assetManagementRoutes.js:58</td></tr>
+</tbody></table></div>
+<h4>knowledgeNoteRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/knowledge-notes</code></td><td>knowledge-notes:read</td><td>Kontrak domain / handler</td><td>src/routes/knowledgeNoteRoutes.js:29</td></tr>
+<tr><td>GET</td><td><code>/api/knowledge-notes/folders</code></td><td>knowledge-notes:read</td><td>Kontrak domain / handler</td><td>src/routes/knowledgeNoteRoutes.js:30</td></tr>
+<tr><td>GET</td><td><code>/api/knowledge-notes/images</code></td><td>knowledge-notes:read</td><td>Kontrak domain / handler</td><td>src/routes/knowledgeNoteRoutes.js:31</td></tr>
+<tr><td>GET</td><td><code>/api/knowledge-notes/images/:id</code></td><td>knowledge-notes:read</td><td>path: id</td><td>src/routes/knowledgeNoteRoutes.js:32</td></tr>
+<tr><td>POST</td><td><code>/api/knowledge-notes/images</code></td><td>knowledge-notes:create</td><td>Kontrak domain / handler</td><td>src/routes/knowledgeNoteRoutes.js:36</td></tr>
+<tr><td>PUT</td><td><code>/api/knowledge-notes/images/:id</code></td><td>knowledge-notes:update</td><td>body: folder; path: id</td><td>src/routes/knowledgeNoteRoutes.js:40</td></tr>
+<tr><td>DELETE</td><td><code>/api/knowledge-notes/images/:id</code></td><td>knowledge-notes:delete</td><td>path: id</td><td>src/routes/knowledgeNoteRoutes.js:41</td></tr>
+<tr><td>POST</td><td><code>/api/knowledge-notes/import-with-images</code></td><td>knowledge-notes:create</td><td>body: payload, documentPaths</td><td>src/routes/knowledgeNoteRoutes.js:42</td></tr>
+<tr><td>POST</td><td><code>/api/knowledge-notes/folders</code></td><td>knowledge-notes:create</td><td>body: path</td><td>src/routes/knowledgeNoteRoutes.js:52</td></tr>
+<tr><td>PUT</td><td><code>/api/knowledge-notes/folders</code></td><td>knowledge-notes:update</td><td>body: source, destination</td><td>src/routes/knowledgeNoteRoutes.js:53</td></tr>
+<tr><td>DELETE</td><td><code>/api/knowledge-notes/folders</code></td><td>knowledge-notes:delete</td><td>body: path, mode</td><td>src/routes/knowledgeNoteRoutes.js:54</td></tr>
+<tr><td>GET</td><td><code>/api/knowledge-notes/export</code></td><td>knowledge-notes:read</td><td>Kontrak domain / handler</td><td>src/routes/knowledgeNoteRoutes.js:55</td></tr>
+<tr><td>POST</td><td><code>/api/knowledge-notes/import</code></td><td>knowledge-notes:create</td><td>body: notes, folders</td><td>src/routes/knowledgeNoteRoutes.js:68</td></tr>
+<tr><td>POST</td><td><code>/api/knowledge-notes</code></td><td>knowledge-notes:create</td><td>Kontrak domain / handler</td><td>src/routes/knowledgeNoteRoutes.js:69</td></tr>
+<tr><td>PUT</td><td><code>/api/knowledge-notes/:id</code></td><td>knowledge-notes:update</td><td>path: id</td><td>src/routes/knowledgeNoteRoutes.js:70</td></tr>
+<tr><td>DELETE</td><td><code>/api/knowledge-notes/:id</code></td><td>knowledge-notes:delete</td><td>path: id</td><td>src/routes/knowledgeNoteRoutes.js:71</td></tr>
+</tbody></table></div>
+<h4>threatModelRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>POST</td><td><code>/api/threat-modelling/validate</code></td><td>threat-modelling:read</td><td>Kontrak domain / handler</td><td>src/routes/threatModelRoutes.js:4</td></tr>
+<tr><td>GET</td><td><code>/api/threat-modelling</code></td><td>threat-modelling:read</td><td>Kontrak domain / handler</td><td>src/routes/threatModelRoutes.js:5</td></tr>
+<tr><td>POST</td><td><code>/api/threat-modelling</code></td><td>threat-modelling:create</td><td>Kontrak domain / handler</td><td>src/routes/threatModelRoutes.js:6</td></tr>
+<tr><td>PUT</td><td><code>/api/threat-modelling/:id</code></td><td>threat-modelling:update</td><td>path: id</td><td>src/routes/threatModelRoutes.js:7</td></tr>
+<tr><td>DELETE</td><td><code>/api/threat-modelling/:id</code></td><td>threat-modelling:delete</td><td>path: id</td><td>src/routes/threatModelRoutes.js:8</td></tr>
+</tbody></table></div>
+<h4>auditFindingRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/audit-finding-tracker/reminder-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/auditFindingRoutes.js:9</td></tr>
+<tr><td>PUT</td><td><code>/api/audit-finding-tracker/reminder-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/auditFindingRoutes.js:10</td></tr>
+<tr><td>POST</td><td><code>/api/audit-finding-tracker/reminder-settings/test</code></td><td>admin</td><td>body: to</td><td>src/routes/auditFindingRoutes.js:11</td></tr>
+<tr><td>GET</td><td><code>/api/audit-finding-tracker</code></td><td>audit-finding-tracker:read</td><td>Kontrak domain / handler</td><td>src/routes/auditFindingRoutes.js:13</td></tr>
+<tr><td>GET</td><td><code>/api/audit-finding-tracker/available-files</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>Kontrak domain / handler</td><td>src/routes/auditFindingRoutes.js:14</td></tr>
+<tr><td>GET</td><td><code>/api/audit-finding-tracker/:id/download</code></td><td>audit-finding-tracker:read</td><td>query: path; path: id</td><td>src/routes/auditFindingRoutes.js:19</td></tr>
+<tr><td>POST</td><td><code>/api/audit-finding-tracker</code></td><td>audit-finding-tracker:create</td><td>body: kind, parentId</td><td>src/routes/auditFindingRoutes.js:23</td></tr>
+<tr><td>PUT</td><td><code>/api/audit-finding-tracker/:id</code></td><td>audit-finding-tracker:update</td><td>body: kind; path: id</td><td>src/routes/auditFindingRoutes.js:24</td></tr>
+<tr><td>DELETE</td><td><code>/api/audit-finding-tracker/:id</code></td><td>audit-finding-tracker:delete</td><td>path: id</td><td>src/routes/auditFindingRoutes.js:25</td></tr>
+</tbody></table></div>
+<h4>smtpRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/smtp-settings/accounts</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/smtpRoutes.js:9</td></tr>
+<tr><td>POST</td><td><code>/api/smtp-settings/accounts</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/smtpRoutes.js:10</td></tr>
+<tr><td>PUT</td><td><code>/api/smtp-settings/accounts/:id</code></td><td>admin</td><td>path: id</td><td>src/routes/smtpRoutes.js:11</td></tr>
+<tr><td>GET</td><td><code>/api/smtp-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/smtpRoutes.js:12</td></tr>
+<tr><td>PUT</td><td><code>/api/smtp-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/smtpRoutes.js:13</td></tr>
+<tr><td>POST</td><td><code>/api/smtp-settings/test</code></td><td>admin</td><td>body: to, smtpAccountId</td><td>src/routes/smtpRoutes.js:14</td></tr>
+</tbody></table></div>
+<h4>assessmentRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/assessment</code></td><td>assessment:read</td><td>Kontrak domain / handler</td><td>src/routes/assessmentRoutes.js:6</td></tr>
+<tr><td>PUT</td><td><code>/api/assessment</code></td><td>assessment:update</td><td>body: attachments</td><td>src/routes/assessmentRoutes.js:7</td></tr>
+<tr><td>POST</td><td><code>/api/assessment/reset</code></td><td>assessment:delete</td><td>Kontrak domain / handler</td><td>src/routes/assessmentRoutes.js:8</td></tr>
+</tbody></table></div>
+<h4>fileRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/files</code></td><td>files:read</td><td>query: details</td><td>src/routes/fileRoutes.js:12</td></tr>
+<tr><td>POST</td><td><code>/api/files</code></td><td>files:create</td><td>body: functionName, kind, rejectDuplicate</td><td>src/routes/fileRoutes.js:13</td></tr>
+<tr><td>POST</td><td><code>/api/files/batch</code></td><td>files:create</td><td>body: functionName, kind, rejectDuplicate</td><td>src/routes/fileRoutes.js:14</td></tr>
+<tr><td>GET</td><td><code>/api/files/access/*path</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>path: path</td><td>src/routes/fileRoutes.js:16</td></tr>
+<tr><td>GET</td><td><code>/api/files/open/*path</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>path: path</td><td>src/routes/fileRoutes.js:17</td></tr>
+<tr><td>GET</td><td><code>/api/files/open-page/*path</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>path: path</td><td>src/routes/fileRoutes.js:18</td></tr>
+<tr><td>PUT</td><td><code>/api/files/open-page/*path</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>body: openPage; path: path</td><td>src/routes/fileRoutes.js:19</td></tr>
+<tr><td>PUT</td><td><code>/api/files/*path</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>path: path</td><td>src/routes/fileRoutes.js:20</td></tr>
+<tr><td>GET</td><td><code>/api/files/*path</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>path: path</td><td>src/routes/fileRoutes.js:25</td></tr>
+<tr><td>DELETE</td><td><code>/api/files/*path</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>query: library; path: path</td><td>src/routes/fileRoutes.js:26</td></tr>
+</tbody></table></div>
+<h4>storageRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/storage-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/storageRoutes.js:6</td></tr>
+<tr><td>PUT</td><td><code>/api/storage-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/storageRoutes.js:7</td></tr>
+<tr><td>POST</td><td><code>/api/storage-settings/test</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/storageRoutes.js:8</td></tr>
+</tbody></table></div>
+<h4>csfRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/csf</code></td><td>csf:read</td><td>Kontrak domain / handler</td><td>src/routes/csfRoutes.js:7</td></tr>
+<tr><td>POST</td><td><code>/api/csf</code></td><td>csf:create</td><td>Kontrak domain / handler</td><td>src/routes/csfRoutes.js:8</td></tr>
+<tr><td>PUT</td><td><code>/api/csf/:id</code></td><td>csf:update</td><td>path: id</td><td>src/routes/csfRoutes.js:9</td></tr>
+<tr><td>DELETE</td><td><code>/api/csf/:id</code></td><td>csf:delete</td><td>path: id</td><td>src/routes/csfRoutes.js:10</td></tr>
+</tbody></table></div>
+<h4>privacyRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/privacy</code></td><td>privacy:read</td><td>Kontrak domain / handler</td><td>src/routes/privacyRoutes.js:7</td></tr>
+<tr><td>POST</td><td><code>/api/privacy</code></td><td>privacy:create</td><td>Kontrak domain / handler</td><td>src/routes/privacyRoutes.js:8</td></tr>
+<tr><td>GET</td><td><code>/api/privacy/assessment</code></td><td>privacy-assessment:read</td><td>Kontrak domain / handler</td><td>src/routes/privacyRoutes.js:9</td></tr>
+<tr><td>PUT</td><td><code>/api/privacy/assessment</code></td><td>privacy-assessment:update</td><td>body: attachments</td><td>src/routes/privacyRoutes.js:10</td></tr>
+<tr><td>POST</td><td><code>/api/privacy/assessment/reset</code></td><td>privacy-assessment:delete</td><td>Kontrak domain / handler</td><td>src/routes/privacyRoutes.js:11</td></tr>
+<tr><td>PUT</td><td><code>/api/privacy/:id</code></td><td>privacy:update</td><td>path: id</td><td>src/routes/privacyRoutes.js:12</td></tr>
+<tr><td>DELETE</td><td><code>/api/privacy/:id</code></td><td>privacy:delete</td><td>path: id</td><td>src/routes/privacyRoutes.js:13</td></tr>
+</tbody></table></div>
+<h4>frameworkRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/frameworks</code></td><td>framework:read</td><td>Kontrak domain / handler</td><td>src/routes/frameworkRoutes.js:8</td></tr>
+<tr><td>POST</td><td><code>/api/frameworks</code></td><td>framework:create</td><td>Kontrak domain / handler</td><td>src/routes/frameworkRoutes.js:9</td></tr>
+<tr><td>GET</td><td><code>/api/frameworks/:frameworkId/controls</code></td><td>key framework/assessment dinamis:read</td><td>path: frameworkId</td><td>src/routes/frameworkRoutes.js:10</td></tr>
+<tr><td>GET</td><td><code>/api/frameworks/:frameworkId/targets</code></td><td>key framework/assessment dinamis:read</td><td>path: frameworkId</td><td>src/routes/frameworkRoutes.js:11</td></tr>
+<tr><td>PUT</td><td><code>/api/frameworks/:frameworkId/targets/:category</code></td><td>key framework/assessment dinamis:update</td><td>body: targetScore; path: frameworkId, category</td><td>src/routes/frameworkRoutes.js:12</td></tr>
+<tr><td>GET</td><td><code>/api/frameworks/iso27001/objectives</code></td><td>iso27001:read</td><td>query: year</td><td>src/routes/frameworkRoutes.js:13</td></tr>
+<tr><td>POST</td><td><code>/api/frameworks/iso27001/assessment/reset</code></td><td>iso27001:delete</td><td>Kontrak domain / handler</td><td>src/routes/frameworkRoutes.js:14</td></tr>
+<tr><td>POST</td><td><code>/api/frameworks/iso27001/objectives</code></td><td>iso27001:create</td><td>Kontrak domain / handler</td><td>src/routes/frameworkRoutes.js:15</td></tr>
+<tr><td>PUT</td><td><code>/api/frameworks/iso27001/objectives/:id</code></td><td>iso27001:update</td><td>path: id</td><td>src/routes/frameworkRoutes.js:16</td></tr>
+<tr><td>DELETE</td><td><code>/api/frameworks/iso27001/objectives/:id</code></td><td>iso27001:delete</td><td>path: id</td><td>src/routes/frameworkRoutes.js:17</td></tr>
+<tr><td>PUT</td><td><code>/api/frameworks/:frameworkId/controls/:code/evidence</code></td><td>framework / iso27001 / iso27001-soa:update</td><td>body: evidence; path: frameworkId, code</td><td>src/routes/frameworkRoutes.js:18</td></tr>
+<tr><td>POST</td><td><code>/api/frameworks/:frameworkId/controls</code></td><td>key framework/assessment dinamis:create</td><td>path: frameworkId</td><td>src/routes/frameworkRoutes.js:19</td></tr>
+<tr><td>PUT</td><td><code>/api/frameworks/:frameworkId/controls/:code</code></td><td>key framework/assessment dinamis:update</td><td>path: frameworkId, code</td><td>src/routes/frameworkRoutes.js:20</td></tr>
+<tr><td>DELETE</td><td><code>/api/frameworks/:frameworkId/controls/:code</code></td><td>key framework/assessment dinamis:delete</td><td>path: frameworkId, code</td><td>src/routes/frameworkRoutes.js:21</td></tr>
+</tbody></table></div>
+<h4>riskAcceptanceRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/risk-acceptance</code></td><td>risk-acceptance:read</td><td>Kontrak domain / handler</td><td>src/routes/riskAcceptanceRoutes.js:6</td></tr>
+<tr><td>POST</td><td><code>/api/risk-acceptance</code></td><td>risk-acceptance:create</td><td>Kontrak domain / handler</td><td>src/routes/riskAcceptanceRoutes.js:7</td></tr>
+<tr><td>GET</td><td><code>/api/risk-acceptance/:id/export/pdf</code></td><td>risk-acceptance:read</td><td>path: id</td><td>src/routes/riskAcceptanceRoutes.js:8</td></tr>
+<tr><td>PUT</td><td><code>/api/risk-acceptance/:id</code></td><td>risk-acceptance:update</td><td>path: id</td><td>src/routes/riskAcceptanceRoutes.js:9</td></tr>
+<tr><td>DELETE</td><td><code>/api/risk-acceptance/:id</code></td><td>risk-acceptance:delete</td><td>path: id</td><td>src/routes/riskAcceptanceRoutes.js:10</td></tr>
+</tbody></table></div>
+<h4>riskManagementRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/risk-management/dashboard</code></td><td>risk-management:read</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:5</td></tr>
+<tr><td>GET</td><td><code>/api/risk-management/indicators</code></td><td>risk-management:read</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:6</td></tr>
+<tr><td>GET</td><td><code>/api/risk-management/dropdowns</code></td><td>risk-management:read</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:7</td></tr>
+<tr><td>POST</td><td><code>/api/risk-management/dropdowns</code></td><td>risk-management:create</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:8</td></tr>
+<tr><td>PUT</td><td><code>/api/risk-management/dropdowns/:id</code></td><td>risk-management:update</td><td>path: id</td><td>src/routes/riskManagementRoutes.js:9</td></tr>
+<tr><td>DELETE</td><td><code>/api/risk-management/dropdowns/:id</code></td><td>risk-management:delete</td><td>path: id</td><td>src/routes/riskManagementRoutes.js:10</td></tr>
+<tr><td>POST</td><td><code>/api/risk-management/indicators</code></td><td>risk-management:create</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:11</td></tr>
+<tr><td>PUT</td><td><code>/api/risk-management/indicators/:id</code></td><td>risk-management:update</td><td>path: id</td><td>src/routes/riskManagementRoutes.js:12</td></tr>
+<tr><td>DELETE</td><td><code>/api/risk-management/indicators/:id</code></td><td>risk-management:delete</td><td>path: id</td><td>src/routes/riskManagementRoutes.js:13</td></tr>
+<tr><td>GET</td><td><code>/api/risk-management</code></td><td>risk-management:read</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:14</td></tr>
+<tr><td>POST</td><td><code>/api/risk-management</code></td><td>risk-management:create</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:15</td></tr>
+<tr><td>PUT</td><td><code>/api/risk-management/:id</code></td><td>risk-management:update</td><td>path: id</td><td>src/routes/riskManagementRoutes.js:16</td></tr>
+<tr><td>DELETE</td><td><code>/api/risk-management/:id</code></td><td>risk-management:delete</td><td>path: id</td><td>src/routes/riskManagementRoutes.js:17</td></tr>
+<tr><td>DELETE</td><td><code>/api/risk-management</code></td><td>risk-management:delete</td><td>Kontrak domain / handler</td><td>src/routes/riskManagementRoutes.js:18</td></tr>
+</tbody></table></div>
+<h4>personnelCertificationRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/personnel-certifications</code></td><td>personnel-certification:read</td><td>Kontrak domain / handler</td><td>src/routes/personnelCertificationRoutes.js:5</td></tr>
+<tr><td>GET</td><td><code>/api/personnel-certifications/organization-personnel</code></td><td>personnel-certification:read</td><td>Kontrak domain / handler</td><td>src/routes/personnelCertificationRoutes.js:6</td></tr>
+<tr><td>POST</td><td><code>/api/personnel-certifications/organization-personnel</code></td><td>personnel-certification:create</td><td>Kontrak domain / handler</td><td>src/routes/personnelCertificationRoutes.js:7</td></tr>
+<tr><td>PUT</td><td><code>/api/personnel-certifications/organization-personnel/:personnelId</code></td><td>personnel-certification:update</td><td>path: personnelId</td><td>src/routes/personnelCertificationRoutes.js:8</td></tr>
+<tr><td>DELETE</td><td><code>/api/personnel-certifications/organization-personnel/:personnelId</code></td><td>personnel-certification:delete</td><td>path: personnelId</td><td>src/routes/personnelCertificationRoutes.js:9</td></tr>
+<tr><td>POST</td><td><code>/api/personnel-certifications</code></td><td>personnel-certification:create</td><td>Kontrak domain / handler</td><td>src/routes/personnelCertificationRoutes.js:11</td></tr>
+<tr><td>PUT</td><td><code>/api/personnel-certifications/:id/layout</code></td><td>personnel-certification:update</td><td>path: id</td><td>src/routes/personnelCertificationRoutes.js:12</td></tr>
+<tr><td>PUT</td><td><code>/api/personnel-certifications/:id</code></td><td>personnel-certification:update</td><td>path: id</td><td>src/routes/personnelCertificationRoutes.js:13</td></tr>
+<tr><td>DELETE</td><td><code>/api/personnel-certifications/:id</code></td><td>personnel-certification:delete</td><td>path: id</td><td>src/routes/personnelCertificationRoutes.js:14</td></tr>
+</tbody></table></div>
+<h4>certificationRoadmapCatalogRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/certification-roadmap-catalog</code></td><td>personnel-certification:read</td><td>Kontrak domain / handler</td><td>src/routes/certificationRoadmapCatalogRoutes.js:5</td></tr>
+<tr><td>POST</td><td><code>/api/certification-roadmap-catalog</code></td><td>personnel-certification:create</td><td>Kontrak domain / handler</td><td>src/routes/certificationRoadmapCatalogRoutes.js:6</td></tr>
+<tr><td>PUT</td><td><code>/api/certification-roadmap-catalog/:id</code></td><td>personnel-certification:update</td><td>path: id</td><td>src/routes/certificationRoadmapCatalogRoutes.js:7</td></tr>
+<tr><td>DELETE</td><td><code>/api/certification-roadmap-catalog/:id</code></td><td>personnel-certification:delete</td><td>path: id</td><td>src/routes/certificationRoadmapCatalogRoutes.js:8</td></tr>
+</tbody></table></div>
+<h4>tprmRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/tprm</code></td><td>tprm-register:read</td><td>Kontrak domain / handler</td><td>src/routes/tprmRoutes.js:5</td></tr>
+<tr><td>POST</td><td><code>/api/tprm</code></td><td>tprm-register:create</td><td>Kontrak domain / handler</td><td>src/routes/tprmRoutes.js:6</td></tr>
+<tr><td>PUT</td><td><code>/api/tprm/:id</code></td><td>tprm-register:update</td><td>path: id</td><td>src/routes/tprmRoutes.js:7</td></tr>
+<tr><td>DELETE</td><td><code>/api/tprm/:id</code></td><td>tprm-register:delete</td><td>path: id</td><td>src/routes/tprmRoutes.js:8</td></tr>
+</tbody></table></div>
+<h4>tprmQuestionnaireRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/tprm-questionnaires</code></td><td>tprm-questionnaire:read</td><td>Kontrak domain / handler</td><td>src/routes/tprmQuestionnaireRoutes.js:5</td></tr>
+<tr><td>POST</td><td><code>/api/tprm-questionnaires</code></td><td>tprm-questionnaire:create</td><td>Kontrak domain / handler</td><td>src/routes/tprmQuestionnaireRoutes.js:6</td></tr>
+<tr><td>PUT</td><td><code>/api/tprm-questionnaires/:id</code></td><td>tprm-questionnaire:update</td><td>path: id</td><td>src/routes/tprmQuestionnaireRoutes.js:7</td></tr>
+<tr><td>PUT</td><td><code>/api/tprm-questionnaires/:id/documents</code></td><td>tprm-questionnaire:update</td><td>path: id</td><td>src/routes/tprmQuestionnaireRoutes.js:8</td></tr>
+<tr><td>DELETE</td><td><code>/api/tprm-questionnaires/:id</code></td><td>tprm-questionnaire:delete</td><td>path: id</td><td>src/routes/tprmQuestionnaireRoutes.js:9</td></tr>
+</tbody></table></div>
+<h4>questionnaireTemplateRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/questionnaire-templates</code></td><td>questionnaire-templates:read</td><td>Kontrak domain / handler</td><td>src/routes/questionnaireTemplateRoutes.js:6</td></tr>
+<tr><td>POST</td><td><code>/api/questionnaire-templates</code></td><td>questionnaire-templates:create</td><td>Kontrak domain / handler</td><td>src/routes/questionnaireTemplateRoutes.js:15</td></tr>
+<tr><td>PUT</td><td><code>/api/questionnaire-templates/:id</code></td><td>questionnaire-templates:update</td><td>path: id</td><td>src/routes/questionnaireTemplateRoutes.js:24</td></tr>
+<tr><td>DELETE</td><td><code>/api/questionnaire-templates/:id</code></td><td>questionnaire-templates:delete</td><td>path: id</td><td>src/routes/questionnaireTemplateRoutes.js:33</td></tr>
+</tbody></table></div>
+<h4>policyRegisterRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/policy-register/reminder-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/policyRegisterRoutes.js:15</td></tr>
+<tr><td>PUT</td><td><code>/api/policy-register/reminder-settings</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/policyRegisterRoutes.js:16</td></tr>
+<tr><td>POST</td><td><code>/api/policy-register/reminder-settings/test</code></td><td>admin</td><td>body: to</td><td>src/routes/policyRegisterRoutes.js:17</td></tr>
+<tr><td>GET</td><td><code>/api/policy-register/dropdowns</code></td><td>policy-register:read</td><td>Kontrak domain / handler</td><td>src/routes/policyRegisterRoutes.js:25</td></tr>
+<tr><td>POST</td><td><code>/api/policy-register/dropdowns</code></td><td>policy-register:create</td><td>Kontrak domain / handler</td><td>src/routes/policyRegisterRoutes.js:26</td></tr>
+<tr><td>PUT</td><td><code>/api/policy-register/dropdowns/:id</code></td><td>policy-register:update</td><td>path: id</td><td>src/routes/policyRegisterRoutes.js:27</td></tr>
+<tr><td>DELETE</td><td><code>/api/policy-register/dropdowns/:id</code></td><td>policy-register:delete</td><td>path: id</td><td>src/routes/policyRegisterRoutes.js:28</td></tr>
+<tr><td>GET</td><td><code>/api/policy-register/:id/items</code></td><td>policy-register:read</td><td>path: id</td><td>src/routes/policyRegisterRoutes.js:30</td></tr>
+<tr><td>POST</td><td><code>/api/policy-register/:id/items</code></td><td>policy-register:create</td><td>path: id</td><td>src/routes/policyRegisterRoutes.js:31</td></tr>
+<tr><td>PUT</td><td><code>/api/policy-register/:id/items/:itemId</code></td><td>policy-register:update</td><td>path: id, itemId</td><td>src/routes/policyRegisterRoutes.js:32</td></tr>
+<tr><td>DELETE</td><td><code>/api/policy-register/:id/items/:itemId</code></td><td>policy-register:delete</td><td>path: id, itemId</td><td>src/routes/policyRegisterRoutes.js:33</td></tr>
+<tr><td>GET</td><td><code>/api/policy-register</code></td><td>policy-register:read</td><td>Kontrak domain / handler</td><td>src/routes/policyRegisterRoutes.js:36</td></tr>
+<tr><td>POST</td><td><code>/api/policy-register</code></td><td>policy-register:create</td><td>Kontrak domain / handler</td><td>src/routes/policyRegisterRoutes.js:51</td></tr>
+<tr><td>PUT</td><td><code>/api/policy-register/:id</code></td><td>policy-register:update</td><td>path: id</td><td>src/routes/policyRegisterRoutes.js:59</td></tr>
+<tr><td>DELETE</td><td><code>/api/policy-register/:id</code></td><td>policy-register:delete</td><td>path: id</td><td>src/routes/policyRegisterRoutes.js:67</td></tr>
+</tbody></table></div>
+<h4>auditRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/audit</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/auditRoutes.js:6</td></tr>
+<tr><td>POST</td><td><code>/api/audit/activity</code></td><td>session; pemeriksaan tambahan di handler/service (lihat source)</td><td>Kontrak domain / handler</td><td>src/routes/auditRoutes.js:11</td></tr>
+</tbody></table></div>
+<h4>backupRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/backups</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/backupRoutes.js:7</td></tr>
+<tr><td>POST</td><td><code>/api/backups</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/backupRoutes.js:8</td></tr>
+<tr><td>POST</td><td><code>/api/backups/restore</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/backupRoutes.js:9</td></tr>
+<tr><td>DELETE</td><td><code>/api/backups/:fileName</code></td><td>admin</td><td>path: fileName</td><td>src/routes/backupRoutes.js:10</td></tr>
+<tr><td>GET</td><td><code>/api/backups/:fileName</code></td><td>admin</td><td>path: fileName</td><td>src/routes/backupRoutes.js:11</td></tr>
+</tbody></table></div>
+<h4>fileBackupRoutes</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/file-backups</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/fileBackupRoutes.js:10</td></tr>
+<tr><td>GET</td><td><code>/api/file-backups/folders</code></td><td>admin</td><td>Kontrak domain / handler</td><td>src/routes/fileBackupRoutes.js:11</td></tr>
+<tr><td>POST</td><td><code>/api/file-backups</code></td><td>admin</td><td>body: folder</td><td>src/routes/fileBackupRoutes.js:12</td></tr>
+<tr><td>POST</td><td><code>/api/file-backups/restore</code></td><td>admin</td><td>body: folder</td><td>src/routes/fileBackupRoutes.js:13</td></tr>
+<tr><td>GET</td><td><code>/api/file-backups/:fileName</code></td><td>admin</td><td>path: fileName</td><td>src/routes/fileBackupRoutes.js:14</td></tr>
+<tr><td>DELETE</td><td><code>/api/file-backups/:fileName</code></td><td>admin</td><td>path: fileName</td><td>src/routes/fileBackupRoutes.js:15</td></tr>
+</tbody></table></div>
+<h4>health</h4>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Izin</th><th>Input terbaca</th><th>Source</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/api/health</code></td><td>session</td><td>Kontrak domain / handler</td><td>src/routes/index.js:25</td></tr>
+<tr><td>GET</td><td><code>/api/health/db</code></td><td>session</td><td>Kontrak domain / handler</td><td>src/routes/index.js:25</td></tr>
+</tbody></table></div></article><article id="04-DATABASE"><h2>Database, relasi, dan struktur data</h2>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1500" height="960" viewBox="0 0 1500 960" role="img"><title>Relasi data inti</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Relasi data inti</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Garis menunjukkan relasi inti; seluruh tabel dan migrasi dijelaskan di kamus data.</text>
+<rect x="40" y="140" width="355" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,144 H385" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="176" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">TPRM vendor</text>
+<text x="56" y="204" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">tprm_risk_register</text>
+<text x="56" y="230" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">questionnaire_id -&gt; vendor assessment</text>
+<text x="56" y="256" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset FK: delete RESTRICT</text>
+<rect x="565" y="140" width="365" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M575,144 H920" stroke="#1c6da1" stroke-width="7"/>
+<text x="581" y="176" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Asset register</text>
+<text x="581" y="204" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">managed_assets: UUID + data JSONB</text>
+<text x="581" y="230" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">managed_vendor_id: generated FK</text>
+<text x="581" y="256" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">tag UNIQUE; CIA dalam data</text>
+<rect x="1100" y="140" width="350" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1110,144 H1440" stroke="#1c6da1" stroke-width="7"/>
+<text x="1116" y="176" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Risk register</text>
+<text x="1116" y="204" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">risk_register: risk_id TEXT</text>
+<text x="1116" y="230" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_related_risks</text>
+<text x="1116" y="256" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">tprm_related_risks</text>
+<polyline points="565,210 395,210" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="395,210 406.05273192803463,205.3269798922962 406.05273192803463,214.6730201077038" fill="#5d7d9b"/>
+<text x="425" y="189" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">vendor</text>
+<polyline points="930,210 1100,210" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1100,210 1088.9472680719655,214.6730201077038 1088.9472680719655,205.3269798922962" fill="#5d7d9b"/>
+<text x="947" y="189" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">many-to-many</text>
+<rect x="40" y="410" width="355" height="150" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,414 H385" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="446" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Rak dan posisi</text>
+<text x="56" y="474" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_racks: 1-60 U</text>
+<text x="56" y="500" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_rack_devices: asset_id PK</text>
+<text x="56" y="526" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">FK asset/rack: RESTRICT</text>
+<rect x="565" y="410" width="365" height="150" rx="10" fill="white" stroke="#c8d6e5"/><path d="M575,414 H920" stroke="#1c6da1" stroke-width="7"/>
+<text x="581" y="446" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Relasi / layout / foto</text>
+<text x="581" y="474" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_relations: FK source / target</text>
+<text x="581" y="500" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">asset_diagram_layout: nodes + version</text>
+<text x="581" y="526" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">managed_asset_photos / rack photos</text>
+<polyline points="640,285 640,410" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="640,410 635.3269798922962,398.94726807196537 644.6730201077038,398.94726807196537" fill="#5d7d9b"/>
+<text x="655" y="343" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">asset</text>
+<polyline points="565,235 480,235 480,480 395,480" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="395,480 406.05273192803463,475.3269798922962 406.05273192803463,484.6730201077038" fill="#5d7d9b"/>
+<rect x="1100" y="410" width="350" height="150" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1110,414 H1440" stroke="#1c6da1" stroke-width="7"/>
+<text x="1116" y="446" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Library evidence</text>
+<text x="1116" y="474" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">evidence_files: path PK</text>
+<text x="1116" y="500" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">uploaded_by -&gt; app_users</text>
+<text x="1116" y="526" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">file_storage_locations: path</text>
+<polyline points="930,480 1100,480" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1100,480 1088.9472680719655,484.6730201077038 1088.9472680719655,475.3269798922962" fill="#5d7d9b"/>
+<text x="944" y="458" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">evidence_path</text>
+<rect x="40" y="690" width="355" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,694 H385" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="726" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Policy register</text>
+<text x="56" y="754" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">policy_register + items</text>
+<text x="56" y="780" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">related_note_ids JSONB</text>
+<text x="56" y="806" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Referensi note diperiksa aplikasi</text>
+<rect x="565" y="690" width="365" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M575,694 H920" stroke="#1c6da1" stroke-width="7"/>
+<text x="581" y="726" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Knowledge Vault</text>
+<text x="581" y="754" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">knowledge_notes: folder/title UNIQUE</text>
+<text x="581" y="780" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">knowledge_note_folders</text>
+<text x="581" y="806" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">knowledge_note_images + evidence_path</text>
+<rect x="1100" y="690" width="350" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1110,694 H1440" stroke="#1c6da1" stroke-width="7"/>
+<text x="1116" y="726" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Identitas dan audit</text>
+<text x="1116" y="754" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">app_users + role_permissions</text>
+<text x="1116" y="780" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">audit_events; scheduler deliveries</text>
+<text x="1116" y="806" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Personel -&gt; certifications</text>
+<polyline points="395,760 565,760" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="565,760 553.9472680719654,764.6730201077038 553.9472680719654,755.3269798922962" fill="#5d7d9b"/>
+<text x="433" y="739" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">link logis</text>
+<polyline points="930,760 1040,760 1040,520 1100,520" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1100,520 1088.9472680719655,524.6730201077038 1088.9472680719655,515.3269798922962" fill="#5d7d9b"/>
+<text x="40" y="938" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg><figcaption>Relasi inti</figcaption></figure>
+<h3>Model dan aturan integritas</h3>
+<p>PostgreSQL menjadi sumber data utama. Schema dasar berada di database/schema.sql; banyak modul menjalankan additive migrations dalam ensureStore. Inventaris di bawah berasal dari source, bukan koneksi schema produksi. DDL CREATE menunjukkan bentuk awal; ALTER dan trigger dalam source dapat menambahkan atau mengubah kolom/constraint.</p>
+<div class="table-wrap"><table><thead><tr><th>Hubungan</th><th>Enforcement / penghapusan</th></tr></thead><tbody>
+<tr><td>framework -&gt; controls/targets</td><td>Foreign key; lihat DDL untuk aksi cascade</td></tr>
+<tr><td>organization_personnel -&gt; personnel_certifications</td><td>FK dari migrasi; identitas sertifikasi berasal pegawai terdaftar</td></tr>
+<tr><td>policy -&gt; items / deliveries</td><td>FK pada store terkait</td></tr>
+<tr><td>vendor questionnaire -&gt; TPRM register</td><td>questionnaire_id FK ON DELETE SET NULL; create/update memvalidasi vendor cocok</td></tr>
+<tr><td>TPRM -&gt; risks</td><td>Join table tprm_related_risks, FK cascade kedua sisi; JSON legacy tetap ada</td></tr>
+<tr><td>asset -&gt; vendor TPRM</td><td>managed_vendor_id GENERATED STORED dari JSONB, FK DELETE RESTRICT; opsional null</td></tr>
+<tr><td>asset -&gt; racks</td><td>asset_id PK memastikan satu posisi; FK asset/rack DELETE RESTRICT</td></tr>
+<tr><td>asset -&gt; related risks</td><td>Join table FK CASCADE kedua sisi</td></tr>
+<tr><td>asset relations</td><td>source/target FK RESTRICT, CHECK source!=target, UNIQUE source/target/type</td></tr>
+<tr><td>asset/rack -&gt; photos</td><td>FK CASCADE; original bytes dan evidence_path</td></tr>
+<tr><td>evidence -&gt; uploader</td><td>uploaded_by mengacu akun sesuai ownership migration; file legacy tanpa owner admin-only</td></tr>
+<tr><td>audit hierarchy</td><td>self-FK parent_id RESTRICT; audit root tanpa parent, record anak punya parent</td></tr>
+<tr><td>policy -&gt; knowledge notes</td><td>related_note_ids JSONB; link logis, bukan FK individual</td></tr>
+<tr><td>diagram -&gt; assets</td><td>node IDs dalam JSONB; validasi service, bukan FK per node</td></tr>
+<tr><td>evidence -&gt; module attachments</td><td>Path di JSONB/record; diperiksa service dan cleanup/trigger, bukan seluruhnya FK</td></tr>
+</tbody></table></div>
+<h3>Normalisasi, JSONB, dan concurrency</h3>
+<p>Identitas core memakai PK UUID/BIGSERIAL/TEXT yang sesuai domain. Relasi penting memakai join table/FK; data formulir fleksibel memakai JSONB. <code>managed_vendor_id</code> mengubah referensi vendor dalam JSON aset menjadi kolom generated dengan FK, sehingga update/import JSON yang tidak valid ditolak database dan vendor yang masih dipakai tidak bisa dihapus. Index membantu lookup.</p>
+<p>Rack occupancy divalidasi server di bawah advisory transaction lock. CHECK dasar/PK tidak sendirian membuktikan semua rentang U bebas overlap; operasi tulis aplikasi wajib melewati service. Asset diagram dan knowledge/threat model memakai optimistic versioning; mismatch mendapat 409.</p>
+<p>Reset Risk Register sekarang memakai satu client pool dari BEGIN sampai COMMIT/ROLLBACK. Koneksi harus selalu release dalam finally. Mengirim BEGIN melalui pool.query lalu operasi melalui pool.query berbeda tidak menjamin transaksi satu koneksi.</p>
+<p>Reference path foto/knowledge disinkronkan terhadap evidence_files lewat trigger penggantian/penghapusan. Content asli foto dan gambar knowledge tetap tersedia sebagai BYTEA; evidence umum di storage eksternal tidak selalu mempunyai salinan BYTEA. Kebijakan retensi library terpisah dari foto aktif.</p>
+<h3>Inventaris semua tabel dari source</h3>
+<div class="table-wrap"><table><thead><tr><th>Tabel</th><th>Definisi source</th></tr></thead><tbody>
+<tr><td>app_smtp_accounts</td><td>src/services/smtpService.js:52</td></tr>
+<tr><td>app_smtp_settings</td><td>src/services/smtpService.js:44</td></tr>
+<tr><td>app_users</td><td>database/users.sql:4</td></tr>
+<tr><td>assessment_state</td><td>database/schema.sql:14</td></tr>
+<tr><td>asset_diagram_layout</td><td>src/services/assetDiagramService.js:4</td></tr>
+<tr><td>asset_rack_devices</td><td>src/services/assetManagementService.js:17</td></tr>
+<tr><td>asset_racks</td><td>src/services/assetManagementService.js:16</td></tr>
+<tr><td>asset_related_risks</td><td>src/services/assetManagementService.js:21</td></tr>
+<tr><td>asset_relations</td><td>src/services/assetManagementService.js:20</td></tr>
+<tr><td>asset_reminder_settings</td><td>src/services/assetReminderSettingsService.js:5</td></tr>
+<tr><td>asset_renewal_deliveries</td><td>src/services/assetManagementService.js:22</td></tr>
+<tr><td>audit_events</td><td>database/schema.sql:364; src/services/auditService.js:4</td></tr>
+<tr><td>audit_finding_records</td><td>src/services/auditFindingService.js:27</td></tr>
+<tr><td>audit_finding_reminder_deliveries</td><td>src/services/auditFindingReminderService.js:12</td></tr>
+<tr><td>audit_finding_reminder_settings</td><td>src/services/auditFindingReminderService.js:11</td></tr>
+<tr><td>certification_roadmap_catalog</td><td>database/schema.sql:160; src/services/certificationRoadmapCatalogService.js:33</td></tr>
+<tr><td>controls</td><td>database/schema.sql:399</td></tr>
+<tr><td>evidence_files</td><td>database/schema.sql:329</td></tr>
+<tr><td>file_storage_locations</td><td>database/schema.sql:347; src/services/storageService.js:28</td></tr>
+<tr><td>file_storage_settings</td><td>database/schema.sql:338; src/services/storageService.js:25</td></tr>
+<tr><td>framework_category_targets</td><td>database/schema.sql:438</td></tr>
+<tr><td>frameworks</td><td>database/schema.sql:387</td></tr>
+<tr><td>information_security_objectives</td><td>database/schema.sql:450</td></tr>
+<tr><td>knowledge_note_folders</td><td>src/services/knowledgeNoteService.js:24</td></tr>
+<tr><td>knowledge_note_images</td><td>src/services/knowledgeImageService.js:4</td></tr>
+<tr><td>knowledge_notes</td><td>src/services/knowledgeNoteService.js:17</td></tr>
+<tr><td>managed_assets</td><td>src/services/assetManagementService.js:10</td></tr>
+<tr><td>organization_personnel</td><td>database/schema.sql:146; src/services/personnelCertificationService.js:38</td></tr>
+<tr><td>personnel_certifications</td><td>database/schema.sql:118; src/services/personnelCertificationService.js:37</td></tr>
+<tr><td>policy_register</td><td>database/schema.sql:205; src/services/policyRegisterService.js:94</td></tr>
+<tr><td>policy_register_dropdown_options</td><td>database/schema.sql:238; src/services/policyRegisterService.js:125</td></tr>
+<tr><td>policy_register_items</td><td>database/schema.sql:224; src/services/policyRegisterService.js:112</td></tr>
+<tr><td>policy_reminder_deliveries</td><td>src/services/policyReminderService.js:19</td></tr>
+<tr><td>policy_reminder_settings</td><td>src/services/policyReminderService.js:18</td></tr>
+<tr><td>questionnaire_templates</td><td>database/schema.sql:274</td></tr>
+<tr><td>risk_acceptance_forms</td><td>database/schema.sql:20; src/services/riskAcceptanceService.js:29</td></tr>
+<tr><td>risk_dropdown_options</td><td>database/schema.sql:105; src/services/riskManagementService.js:39</td></tr>
+<tr><td>risk_indicators</td><td>database/schema.sql:52; src/services/riskManagementService.js:35</td></tr>
+<tr><td>risk_register</td><td>database/schema.sql:66; src/services/riskManagementService.js:36</td></tr>
+<tr><td>role_permissions</td><td>database/schema.sql:516; src/services/permissionService.js:72</td></tr>
+<tr><td>threat_models</td><td>database/schema.sql:5; src/services/threatModelService.js:40</td></tr>
+<tr><td>tprm_due_diligence_questionnaires</td><td>database/schema.sql:287; src/services/tprmQuestionnaireService.js:10</td></tr>
+<tr><td>tprm_related_risks</td><td>database/schema.sql:196; src/services/tprmService.js:14</td></tr>
+<tr><td>tprm_risk_register</td><td>database/schema.sql:176; src/services/tprmService.js:14</td></tr>
+</tbody></table></div>
+<h3>Kolom, constraint, dan migrasi per tabel</h3>
+<p>Definisi berikut adalah kutipan DDL source untuk audit dan pemahaman, <strong>bukan script migrasi yang boleh langsung dieksekusi</strong>. Untuk instalasi gunakan provisioning/startup resmi.</p>
+<h4>app_smtp_accounts</h4>
+<p>Source: <code>src/services/smtpService.js:52</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS app_smtp_accounts (id UUID PRIMARY KEY, settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT &#x27;&#x27;);</code></pre>
+<h4>app_smtp_settings</h4>
+<p>Source: <code>src/services/smtpService.js:44</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS app_smtp_settings (id INTEGER PRIMARY KEY CHECK (id = 1), settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT &#x27;&#x27;);</code></pre>
+<h4>app_users</h4>
+<p>Source: <code>database/users.sql:4</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS app_users (
+  id BIGSERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  full_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT &#x27;user&#x27; CHECK (role IN (&#x27;admin&#x27;, &#x27;approver&#x27;, &#x27;editor&#x27;, &#x27;viewer&#x27;, &#x27;user&#x27;)),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/users.sql: ALTER TABLE app_users</code></li>
+</ul>
+<h4>assessment_state</h4>
+<p>Source: <code>database/schema.sql:14</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS assessment_state (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/schema.sql: ALTER TABLE assessment_state ADD CONSTRAINT assessment_state_id_not_blank CHECK (btrim(id) &lt;&gt; &#x27;</code></li>
+</ul>
+<h4>asset_diagram_layout</h4>
+<p>Source: <code>src/services/assetDiagramService.js:4</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS asset_diagram_layout (id INTEGER PRIMARY KEY CHECK(id=1), nodes JSONB NOT NULL, version INTEGER NOT NULL DEFAULT 1);</code></pre>
+<h4>asset_rack_devices</h4>
+<p>Source: <code>src/services/assetManagementService.js:17</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS asset_rack_devices(asset_id UUID PRIMARY KEY REFERENCES managed_assets(id) ON DELETE RESTRICT, rack_id UUID NOT NULL REFERENCES asset_racks(id) ON DELETE RESTRICT, start_unit INTEGER NOT NULL, height INTEGER NOT NULL);</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/assetManagementService.js: ALTER TABLE asset_rack_devices ADD COLUMN IF NOT EXISTS facing TEXT NOT NULL DEFAULT &#x27;front&#x27; CHECK(facing IN (&#x27;front&#x27;,&#x27;rear</code></li>
+<li><code>src/services/assetManagementService.js: ALTER TABLE asset_rack_devices ADD COLUMN IF NOT EXISTS full_depth BOOLEAN NOT NULL DEFAULT TRUE</code></li>
+</ul>
+<h4>asset_racks</h4>
+<p>Source: <code>src/services/assetManagementService.js:16</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS asset_racks(id UUID PRIMARY KEY, name TEXT UNIQUE NOT NULL, location TEXT NOT NULL, units INTEGER NOT NULL CHECK(units BETWEEN 1 AND 60));</code></pre>
+<h4>asset_related_risks</h4>
+<p>Source: <code>src/services/assetManagementService.js:21</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS asset_related_risks(asset_id UUID NOT NULL REFERENCES managed_assets(id) ON DELETE CASCADE, risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE, PRIMARY KEY(asset_id,risk_id));</code></pre>
+<h4>asset_relations</h4>
+<p>Source: <code>src/services/assetManagementService.js:20</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS asset_relations(id UUID PRIMARY KEY, source_id UUID NOT NULL REFERENCES managed_assets(id) ON DELETE RESTRICT, target_id UUID NOT NULL REFERENCES managed_assets(id) ON DELETE RESTRICT, type TEXT NOT NULL, notes TEXT NOT NULL DEFAULT &#x27;&#x27;, change_reference TEXT NOT NULL, CHECK(source_id &lt;&gt; target_id), UNIQUE(source_id,target_id,type));</code></pre>
+<h4>asset_reminder_settings</h4>
+<p>Source: <code>src/services/assetReminderSettingsService.js:5</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS asset_reminder_settings (id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL);</code></pre>
+<h4>asset_renewal_deliveries</h4>
+<p>Source: <code>src/services/assetManagementService.js:22</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS asset_renewal_deliveries(asset_id UUID REFERENCES managed_assets(id) ON DELETE CASCADE, renewal_date DATE NOT NULL, recipient TEXT NOT NULL, sent_on DATE NOT NULL, PRIMARY KEY(asset_id,renewal_date,recipient,sent_on));</code></pre>
+<h4>audit_events</h4>
+<p>Source: <code>database/schema.sql:364</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS audit_events (
+  id BIGSERIAL PRIMARY KEY,
+  request_id TEXT NOT NULL,
+  actor_username TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  actor_role TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  event_type TEXT NOT NULL,
+  method TEXT NOT NULL,
+  path TEXT NOT NULL,
+  status_code INTEGER NOT NULL DEFAULT 200,
+  ip_address TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  user_agent TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  details JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<h4>audit_finding_records</h4>
+<p>Source: <code>src/services/auditFindingService.js:27</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS audit_finding_records (
+    id UUID PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN (&#x27;audit&#x27;,&#x27;finding&#x27;,&#x27;followup&#x27;,&#x27;evidence&#x27;)),
+    parent_id UUID REFERENCES audit_finding_records(id) ON DELETE RESTRICT,
+    data JSONB NOT NULL, filename TEXT, content BYTEA, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), CHECK ((kind = &#x27;audit&#x27;) = (parent_id IS NULL))
+  );</code></pre>
+<h4>audit_finding_reminder_deliveries</h4>
+<p>Source: <code>src/services/auditFindingReminderService.js:12</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS audit_finding_reminder_deliveries (
+    finding_id UUID REFERENCES audit_finding_records(id) ON DELETE CASCADE,
+    due_date DATE NOT NULL, recipient TEXT NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY(finding_id,due_date,recipient));</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/auditFindingReminderService.js: ALTER TABLE audit_finding_reminder_deliveries ADD COLUMN IF NOT EXISTS reminder_date DATE</code></li>
+<li><code>src/services/auditFindingReminderService.js: ALTER TABLE audit_finding_reminder_deliveries ALTER COLUMN reminder_date SET NOT NULL</code></li>
+<li><code>src/services/auditFindingReminderService.js: ALTER TABLE audit_finding_reminder_deliveries DROP CONSTRAINT IF EXISTS audit_finding_reminder_deliveries_pkey</code></li>
+<li><code>src/services/auditFindingReminderService.js: ALTER TABLE audit_finding_reminder_deliveries ADD PRIMARY KEY(finding_id,due_date,recipient,reminder_date)</code></li>
+</ul>
+<h4>audit_finding_reminder_settings</h4>
+<p>Source: <code>src/services/auditFindingReminderService.js:11</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS audit_finding_reminder_settings (id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL);</code></pre>
+<h4>certification_roadmap_catalog</h4>
+<p>Source: <code>database/schema.sql:160</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS certification_roadmap_catalog (
+  id BIGSERIAL PRIMARY KEY,
+  domain TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  certification_name TEXT NOT NULL,
+  issuer TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  reference_url TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  certification_level TEXT NOT NULL DEFAULT &#x27;Intermediate&#x27;,
+  notes TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT certification_roadmap_catalog_unique UNIQUE (certification_name)
+);</code></pre>
+<p>Source: <code>src/services/certificationRoadmapCatalogService.js:33</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS certification_roadmap_catalog (id BIGSERIAL PRIMARY KEY, domain TEXT NOT NULL DEFAULT &#x27;&#x27;, certification_name TEXT NOT NULL, issuer TEXT NOT NULL DEFAULT &#x27;&#x27;, reference_url TEXT NOT NULL DEFAULT &#x27;&#x27;, certification_level TEXT NOT NULL DEFAULT &#x27;Intermediate&#x27;, notes TEXT NOT NULL DEFAULT &#x27;&#x27;, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), CONSTRAINT certification_roadmap_catalog_unique UNIQUE (certification_name));</code></pre>
+<h4>controls</h4>
+<p>Source: <code>database/schema.sql:399</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS controls (
+  id BIGSERIAL PRIMARY KEY,
+  framework_id TEXT NOT NULL REFERENCES frameworks (id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  function TEXT NOT NULL,
+  category TEXT NOT NULL,
+  subcategory TEXT NOT NULL,
+  implementation TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  &quot;references&quot; TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  minimum_evidence TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  notes TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  evidence JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb,
+  applicability TEXT NOT NULL DEFAULT &#x27;Applicable&#x27;,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT controls_framework_code_unique UNIQUE (framework_id, code),
+  CONSTRAINT controls_code_not_blank CHECK (btrim(code) &lt;&gt; &#x27;&#x27;)
+);</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/schema.sql: ALTER TABLE controls ADD COLUMN IF NOT EXISTS minimum_evidence TEXT NOT NULL DEFAULT &#x27;&#x27;</code></li>
+<li><code>database/schema.sql: ALTER TABLE controls ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT &#x27;&#x27;</code></li>
+<li><code>database/schema.sql: ALTER TABLE controls ADD COLUMN IF NOT EXISTS evidence JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb</code></li>
+<li><code>database/schema.sql: ALTER TABLE controls ADD COLUMN IF NOT EXISTS applicability TEXT NOT NULL DEFAULT &#x27;Applicable&#x27;</code></li>
+</ul>
+<h4>evidence_files</h4>
+<p>Source: <code>database/schema.sql:329</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS evidence_files (
+  path TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  content BYTEA,
+  mime_type TEXT NOT NULL,
+  open_page INTEGER NOT NULL DEFAULT 1 CHECK (open_page &gt;= 1),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/evidence-ownership.sql: ALTER TABLE evidence_files ADD COLUMN IF NOT EXISTS uploaded_by BIGINT REFERENCES app_users(id) ON DELETE SET NULL</code></li>
+<li><code>database/schema.sql: ALTER TABLE evidence_files</code></li>
+<li><code>database/schema.sql: ALTER TABLE evidence_files ADD COLUMN IF NOT EXISTS open_page INTEGER NOT NULL DEFAULT 1 CHECK (open_page &gt;= 1)</code></li>
+<li><code>database/schema.sql: ALTER TABLE evidence_files ADD CONSTRAINT evidence_files_path_not_blank CHECK (btrim(path) &lt;&gt; &#x27;</code></li>
+<li><code>database/schema.sql: ALTER TABLE evidence_files ADD CONSTRAINT evidence_files_name_not_blank CHECK (btrim(name) &lt;&gt; &#x27;</code></li>
+</ul>
+<h4>file_storage_locations</h4>
+<p>Source: <code>database/schema.sql:347</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS file_storage_locations (
+  path TEXT PRIMARY KEY,
+  root TEXT NOT NULL,
+  object_key TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/storageService.js:28</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS file_storage_locations (
+        path TEXT PRIMARY KEY, root TEXT NOT NULL, object_key TEXT NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<h4>file_storage_settings</h4>
+<p>Source: <code>database/schema.sql:338</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS file_storage_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  mode TEXT NOT NULL CHECK (mode IN (&#x27;local&#x27;, &#x27;shared&#x27;)),
+  directory TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/storageService.js:25</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS file_storage_settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1), mode TEXT NOT NULL CHECK (mode IN (&#x27;local&#x27;, &#x27;shared&#x27;)),
+        directory TEXT NOT NULL DEFAULT &#x27;&#x27;, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/storageService.js: ALTER TABLE file_storage_settings DROP CONSTRAINT IF EXISTS file_storage_settings_mode_check</code></li>
+<li><code>src/services/storageService.js: ALTER TABLE file_storage_settings ADD CONSTRAINT file_storage_settings_mode_check CHECK (mode IN (&#x27;local&#x27;, &#x27;shared&#x27;, &#x27;s3&#x27;, &#x27;gcs</code></li>
+<li><code>src/services/storageService.js: ALTER TABLE file_storage_settings ADD COLUMN IF NOT EXISTS cloud_config JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb</code></li>
+</ul>
+<h4>framework_category_targets</h4>
+<p>Source: <code>database/schema.sql:438</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS framework_category_targets (
+  framework_id TEXT NOT NULL REFERENCES frameworks (id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  target_score NUMERIC(3,1) NOT NULL DEFAULT 3.0 CHECK (target_score &gt;= 0 AND target_score &lt;= 5),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (framework_id, category),
+  CONSTRAINT framework_category_targets_category_not_blank CHECK (btrim(category) &lt;&gt; &#x27;&#x27;)
+);</code></pre>
+<h4>frameworks</h4>
+<p>Source: <code>database/schema.sql:387</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS frameworks (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  version TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT frameworks_id_not_blank CHECK (btrim(id) &lt;&gt; &#x27;&#x27;),
+  CONSTRAINT frameworks_name_not_blank CHECK (btrim(name) &lt;&gt; &#x27;&#x27;),
+  CONSTRAINT frameworks_version_not_blank CHECK (btrim(version) &lt;&gt; &#x27;&#x27;)
+);</code></pre>
+<h4>information_security_objectives</h4>
+<p>Source: <code>database/schema.sql:450</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS information_security_objectives (
+  id BIGSERIAL PRIMARY KEY,
+  objective_year INTEGER NOT NULL CHECK (objective_year BETWEEN 2000 AND 2100),
+  objective TEXT NOT NULL,
+  indicator TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  baseline TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  target_value TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  owner TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  evaluation_frequency TEXT NOT NULL DEFAULT &#x27;monthly&#x27; CHECK (evaluation_frequency IN (&#x27;monthly&#x27;, &#x27;quarterly&#x27;, &#x27;semester&#x27;, &#x27;annual&#x27;)),
+  period_targets JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb,
+  monthly_status TEXT NOT NULL DEFAULT &#x27;Not started&#x27;,
+  quarterly_status TEXT NOT NULL DEFAULT &#x27;Not started&#x27;,
+  semester_status TEXT NOT NULL DEFAULT &#x27;Not started&#x27;,
+  annual_status TEXT NOT NULL DEFAULT &#x27;Not started&#x27;,
+  notes TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT information_security_objective_text_not_blank CHECK (btrim(objective) &lt;&gt; &#x27;&#x27;)
+);</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/schema.sql: ALTER TABLE information_security_objectives</code></li>
+</ul>
+<h4>knowledge_note_folders</h4>
+<p>Source: <code>src/services/knowledgeNoteService.js:24</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS knowledge_note_folders (path TEXT PRIMARY KEY);</code></pre>
+<h4>knowledge_note_images</h4>
+<p>Source: <code>src/services/knowledgeImageService.js:4</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS knowledge_note_images (
+  id UUID PRIMARY KEY,path TEXT NOT NULL UNIQUE,folder TEXT NOT NULL DEFAULT &#x27;&#x27;,mime_type TEXT NOT NULL,
+  content BYTEA NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/knowledgeImageService.js: ALTER TABLE knowledge_note_images ADD COLUMN IF NOT EXISTS evidence_path TEXT</code></li>
+</ul>
+<h4>knowledge_notes</h4>
+<p>Source: <code>src/services/knowledgeNoteService.js:17</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS knowledge_notes (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL DEFAULT &#x27;&#x27;, version INTEGER NOT NULL DEFAULT 1, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/knowledgeNoteService.js: ALTER TABLE knowledge_notes ADD COLUMN IF NOT EXISTS folder TEXT NOT NULL DEFAULT &#x27;&#x27;</code></li>
+</ul>
+<h4>managed_assets</h4>
+<p>Source: <code>src/services/assetManagementService.js:10</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS managed_assets(id UUID PRIMARY KEY, tag TEXT UNIQUE NOT NULL, data JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/assetManagementService.js: ALTER TABLE managed_assets ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ</code></li>
+<li><code>src/services/assetManagementService.js: ALTER TABLE managed_assets ALTER COLUMN created_at SET DEFAULT NOW(), ALTER COLUMN created_at SET NOT NULL</code></li>
+<li><code>src/services/assetManagementService.js: ALTER TABLE managed_assets ADD COLUMN IF NOT EXISTS managed_vendor_id BIGINT GENERATED ALWAYS AS (NULLIF(data-&gt;&gt;&#x27;managedVendorId&#x27;,&#x27;</code></li>
+</ul>
+<h4>organization_personnel</h4>
+<p>Source: <code>database/schema.sql:146</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS organization_personnel (
+  id BIGSERIAL PRIMARY KEY,
+  personnel_name TEXT NOT NULL,
+  employee_id TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  personnel_role TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  supervisor_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT organization_personnel_name_not_blank CHECK (btrim(personnel_name) &lt;&gt; &#x27;&#x27;)
+);</code></pre>
+<p>Source: <code>src/services/personnelCertificationService.js:38</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS organization_personnel (id BIGSERIAL PRIMARY KEY, personnel_name TEXT NOT NULL, employee_id TEXT NOT NULL DEFAULT &#x27;&#x27;, personnel_role TEXT NOT NULL DEFAULT &#x27;&#x27;, supervisor_name TEXT NOT NULL DEFAULT &#x27;&#x27;, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<h4>personnel_certifications</h4>
+<p>Source: <code>database/schema.sql:118</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS personnel_certifications (
+  id BIGSERIAL PRIMARY KEY,
+  -- Backfilled, constrained and indexed by personnel-certification-links.sql during setup.
+  personnel_id BIGINT,
+  personnel_name TEXT NOT NULL,
+  employee_id TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  personnel_role TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  supervisor_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  certification_name TEXT NOT NULL,
+  issuer TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  reference_url TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  certification_level TEXT NOT NULL DEFAULT &#x27;Intermediate&#x27;,
+  status TEXT NOT NULL DEFAULT &#x27;Planned&#x27;,
+  issue_date DATE,
+  expiry_date DATE,
+  notes TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  on_canvas BOOLEAN NOT NULL DEFAULT FALSE,
+  position_x INTEGER NOT NULL DEFAULT 24,
+  position_y INTEGER NOT NULL DEFAULT 24,
+  card_width INTEGER NOT NULL DEFAULT 260,
+  card_height INTEGER NOT NULL DEFAULT 190,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/personnelCertificationService.js:37</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS personnel_certifications (id BIGSERIAL PRIMARY KEY, personnel_name TEXT NOT NULL, employee_id TEXT NOT NULL DEFAULT &#x27;&#x27;, personnel_role TEXT NOT NULL DEFAULT &#x27;&#x27;, supervisor_name TEXT NOT NULL DEFAULT &#x27;&#x27;, certification_name TEXT NOT NULL, issuer TEXT NOT NULL DEFAULT &#x27;&#x27;, reference_url TEXT NOT NULL DEFAULT &#x27;&#x27;, certification_level TEXT NOT NULL DEFAULT &#x27;Intermediate&#x27;, status TEXT NOT NULL DEFAULT &#x27;Planned&#x27;, issue_date DATE, expiry_date DATE, notes TEXT NOT NULL DEFAULT &#x27;&#x27;, on_canvas BOOLEAN NOT NULL DEFAULT FALSE, position_x INTEGER NOT NULL DEFAULT 24, position_y INTEGER NOT NULL DEFAULT 24, card_width INTEGER NOT NULL DEFAULT 260, card_height INTEGER NOT NULL DEFAULT 190, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/personnel-certification-links.sql: ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS personnel_id BIGINT</code></li>
+<li><code>database/personnel-certification-links.sql: ALTER TABLE personnel_certifications</code></li>
+<li><code>database/personnel-certification-links.sql: ALTER TABLE personnel_certifications ALTER COLUMN personnel_id SET NOT NULL</code></li>
+<li><code>src/services/personnelCertificationService.js: ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS reference_url TEXT NOT NULL DEFAULT \&#x27;\&#x27;</code></li>
+<li><code>src/services/personnelCertificationService.js: ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS certification_level TEXT NOT NULL DEFAULT \&#x27;Intermediate\&#x27;</code></li>
+<li><code>src/services/personnelCertificationService.js: ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS on_canvas BOOLEAN NOT NULL DEFAULT FALSE</code></li>
+<li><code>src/services/personnelCertificationService.js: ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS supervisor_name TEXT NOT NULL DEFAULT \&#x27;\&#x27;</code></li>
+</ul>
+<h4>policy_register</h4>
+<p>Source: <code>database/schema.sql:205</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS policy_register (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  review_cycle TEXT NOT NULL,
+  approval_status TEXT NOT NULL,
+  last_review DATE,
+  attachment_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  attachment_path TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  attachment_type TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  notes TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/policyRegisterService.js: ALTER TABLE policy_register ADD COLUMN IF NOT EXISTS related_note_ids JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb</code></li>
+</ul>
+<h4>policy_register_dropdown_options</h4>
+<p>Source: <code>database/schema.sql:238</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS policy_register_dropdown_options (
+  id BIGSERIAL PRIMARY KEY,
+  field_name TEXT NOT NULL,
+  option_value TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT policy_register_dropdown_option_unique UNIQUE (field_name, option_value)
+);</code></pre>
+<h4>policy_register_items</h4>
+<p>Source: <code>database/schema.sql:224</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS policy_register_items (
+  id BIGSERIAL PRIMARY KEY,
+  policy_id BIGINT NOT NULL REFERENCES policy_register(id) ON DELETE CASCADE,
+  subtitle TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  content TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT policy_register_item_content_check CHECK (subtitle &lt;&gt; &#x27;&#x27; OR content &lt;&gt; &#x27;&#x27;)
+);</code></pre>
+<h4>policy_reminder_deliveries</h4>
+<p>Source: <code>src/services/policyReminderService.js:19</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS policy_reminder_deliveries (policy_id BIGINT REFERENCES policy_register(id) ON DELETE CASCADE, due_date DATE NOT NULL, recipient TEXT NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(policy_id, due_date, recipient));</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/policyReminderService.js: ALTER TABLE policy_reminder_deliveries ADD COLUMN IF NOT EXISTS reminder_date DATE</code></li>
+<li><code>src/services/policyReminderService.js: ALTER TABLE policy_reminder_deliveries ALTER COLUMN reminder_date SET NOT NULL</code></li>
+<li><code>src/services/policyReminderService.js: ALTER TABLE policy_reminder_deliveries DROP CONSTRAINT IF EXISTS policy_reminder_deliveries_pkey</code></li>
+<li><code>src/services/policyReminderService.js: ALTER TABLE policy_reminder_deliveries ADD PRIMARY KEY(policy_id,due_date,recipient,reminder_date)</code></li>
+</ul>
+<h4>policy_reminder_settings</h4>
+<p>Source: <code>src/services/policyReminderService.js:18</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS policy_reminder_settings (id INTEGER PRIMARY KEY CHECK (id = 1), settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT &#x27;&#x27;);</code></pre>
+<h4>questionnaire_templates</h4>
+<p>Source: <code>database/schema.sql:274</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS questionnaire_templates (
+  id BIGSERIAL PRIMARY KEY,
+  template_name TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  sections JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb,
+  is_default BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<h4>risk_acceptance_forms</h4>
+<p>Source: <code>database/schema.sql:20</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_acceptance_forms (
+  id BIGSERIAL PRIMARY KEY,
+  requestor_name TEXT NOT NULL,
+  asset_name TEXT NOT NULL,
+  department TEXT NOT NULL,
+  previously_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+  risk_description TEXT NOT NULL,
+  benefit_justification TEXT NOT NULL,
+  mitigation_plan TEXT NOT NULL,
+  business_owner_decision TEXT NOT NULL CHECK (business_owner_decision IN (&#x27;temporary&#x27;, &#x27;one_year&#x27;, &#x27;denied&#x27;)),
+  remediation_date DATE,
+  requestor_print_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  requestor_email_phone TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  requestor_signature TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  requestor_date DATE,
+  cio_comments TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  cio_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  cio_signature TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  cio_date DATE,
+  cis_decision TEXT NOT NULL CHECK (cis_decision IN (&#x27;approved&#x27;, &#x27;denied&#x27;, &#x27;conditional&#x27;)),
+  cis_reason TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  cis_conditions TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  cis_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  cis_signature TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  cis_date DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/riskAcceptanceService.js:29</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_acceptance_forms (id BIGSERIAL PRIMARY KEY, requestor_name TEXT NOT NULL, asset_name TEXT NOT NULL, department TEXT NOT NULL, previously_accepted BOOLEAN NOT NULL DEFAULT FALSE, risk_description TEXT NOT NULL, benefit_justification TEXT NOT NULL, mitigation_plan TEXT NOT NULL, business_owner_decision TEXT NOT NULL CHECK (business_owner_decision IN (&#x27;temporary&#x27;, &#x27;one_year&#x27;, &#x27;denied&#x27;)), remediation_date DATE, requestor_print_name TEXT NOT NULL DEFAULT &#x27;&#x27;, requestor_email_phone TEXT NOT NULL DEFAULT &#x27;&#x27;, requestor_signature TEXT NOT NULL DEFAULT &#x27;&#x27;, requestor_date DATE, cio_comments TEXT NOT NULL DEFAULT &#x27;&#x27;, cio_name TEXT NOT NULL DEFAULT &#x27;&#x27;, cio_signature TEXT NOT NULL DEFAULT &#x27;&#x27;, cio_date DATE, cis_decision TEXT NOT NULL CHECK (cis_decision IN (&#x27;approved&#x27;, &#x27;denied&#x27;, &#x27;conditional&#x27;)), cis_reason TEXT NOT NULL DEFAULT &#x27;&#x27;, cis_conditions TEXT NOT NULL DEFAULT &#x27;&#x27;, cis_name TEXT NOT NULL DEFAULT &#x27;&#x27;, cis_signature TEXT NOT NULL DEFAULT &#x27;&#x27;, cis_date DATE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<h4>risk_dropdown_options</h4>
+<p>Source: <code>database/schema.sql:105</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_dropdown_options (
+  id BIGSERIAL PRIMARY KEY,
+  field_name TEXT NOT NULL,
+  option_value TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT risk_dropdown_option_unique UNIQUE (field_name, option_value)
+);</code></pre>
+<p>Source: <code>src/services/riskManagementService.js:39</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_dropdown_options (id BIGSERIAL PRIMARY KEY, field_name TEXT NOT NULL, option_value TEXT NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), CONSTRAINT risk_dropdown_option_unique UNIQUE (field_name, option_value));</code></pre>
+<h4>risk_indicators</h4>
+<p>Source: <code>database/schema.sql:52</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_indicators (
+  id BIGSERIAL PRIMARY KEY,
+  indicator_type TEXT NOT NULL,
+  score INTEGER,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  details JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/riskManagementService.js:35</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_indicators (id BIGSERIAL PRIMARY KEY, indicator_type TEXT NOT NULL, score INTEGER, label TEXT NOT NULL, description TEXT NOT NULL DEFAULT &#x27;&#x27;, details JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb, sort_order INTEGER NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<h4>risk_register</h4>
+<p>Source: <code>database/schema.sql:66</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_register (
+  risk_id TEXT PRIMARY KEY,
+  third_party TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  risk_category TEXT NOT NULL,
+  effected_asset TEXT NOT NULL,
+  device_name TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  identification_risk TEXT NOT NULL,
+  risk_control TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  risk_cause TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  risk_analysis TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  asset_confidentiality INTEGER,
+  asset_integrity INTEGER,
+  asset_availability INTEGER,
+  asset_value INTEGER,
+  risk_owner TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  note TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  ref TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  likelihood INTEGER NOT NULL,
+  impact INTEGER NOT NULL,
+  risk_rating TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  treatment_action TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  acceptance_form_no TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  risk_treatment_description TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  owner_of_action TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  deadline DATE,
+  residual_risk_description TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  residual_likelihood INTEGER,
+  residual_impact INTEGER,
+  residual_rating TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  comment TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/riskManagementService.js:36</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS risk_register (risk_id TEXT PRIMARY KEY, risk_category TEXT NOT NULL, effected_asset TEXT NOT NULL, device_name TEXT NOT NULL DEFAULT &#x27;&#x27;, identification_risk TEXT NOT NULL, risk_control TEXT NOT NULL DEFAULT &#x27;&#x27;, risk_cause TEXT NOT NULL DEFAULT &#x27;&#x27;, risk_analysis TEXT NOT NULL DEFAULT &#x27;&#x27;, asset_confidentiality INTEGER, asset_integrity INTEGER, asset_availability INTEGER, asset_value INTEGER, risk_owner TEXT NOT NULL DEFAULT &#x27;&#x27;, note TEXT NOT NULL DEFAULT &#x27;&#x27;, ref TEXT NOT NULL DEFAULT &#x27;&#x27;, likelihood INTEGER NOT NULL, impact INTEGER NOT NULL, risk_rating TEXT NOT NULL DEFAULT &#x27;&#x27;, treatment_action TEXT NOT NULL DEFAULT &#x27;&#x27;, acceptance_form_no TEXT NOT NULL DEFAULT &#x27;&#x27;, risk_treatment_description TEXT NOT NULL DEFAULT &#x27;&#x27;, owner_of_action TEXT NOT NULL DEFAULT &#x27;&#x27;, deadline DATE, residual_risk_description TEXT NOT NULL DEFAULT &#x27;&#x27;, residual_likelihood INTEGER, residual_impact INTEGER, residual_rating TEXT NOT NULL DEFAULT &#x27;&#x27;, comment TEXT NOT NULL DEFAULT &#x27;&#x27;, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/schema.sql: ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS third_party TEXT NOT NULL DEFAULT &#x27;&#x27;</code></li>
+<li><code>src/services/riskManagementService.js: ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS device_name TEXT NOT NULL DEFAULT &#x27;&#x27;</code></li>
+<li><code>src/services/riskManagementService.js: ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS third_party TEXT NOT NULL DEFAULT &#x27;&#x27;</code></li>
+</ul>
+<h4>role_permissions</h4>
+<p>Source: <code>database/schema.sql:516</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS role_permissions (
+  role TEXT NOT NULL CHECK (role IN (&#x27;admin&#x27;, &#x27;user&#x27;)),
+  permission_key TEXT NOT NULL,
+  allowed BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (role, permission_key)
+);</code></pre>
+<p>Source: <code>src/services/permissionService.js:72</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS role_permissions (role TEXT NOT NULL CHECK (role IN (&#x27;admin&#x27;, &#x27;approver&#x27;, &#x27;editor&#x27;, &#x27;viewer&#x27;, &#x27;user&#x27;)), permission_key TEXT NOT NULL, allowed BOOLEAN NOT NULL DEFAULT TRUE, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (role, permission_key));</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/permissionService.js: ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS actions JSONB</code></li>
+<li><code>src/services/permissionService.js: ALTER TABLE role_permissions DROP CONSTRAINT IF EXISTS role_permissions_role_check</code></li>
+<li><code>src/services/permissionService.js: ALTER TABLE role_permissions ADD CONSTRAINT role_permissions_role_check CHECK (role IN (&#x27;admin&#x27;, &#x27;approver&#x27;, &#x27;editor&#x27;, &#x27;viewer&#x27;, &#x27;user</code></li>
+</ul>
+<h4>threat_models</h4>
+<p>Source: <code>database/schema.sql:5</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS threat_models (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  diagram JSONB NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/threatModelService.js:40</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS threat_models (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, diagram JSONB NOT NULL, version INTEGER NOT NULL DEFAULT 1, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<h4>tprm_due_diligence_questionnaires</h4>
+<p>Source: <code>database/schema.sql:287</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS tprm_due_diligence_questionnaires (
+  id BIGSERIAL PRIMARY KEY,
+  vendor_name TEXT NOT NULL,
+  template_id BIGINT,
+  assessment_status TEXT NOT NULL DEFAULT &#x27;Draft&#x27;,
+  review_date DATE,
+  assessment_result TEXT NOT NULL DEFAULT &#x27;Pending&#x27;,
+  reviewer TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  notes TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  responses JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/tprmQuestionnaireService.js:10</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS tprm_due_diligence_questionnaires (id BIGSERIAL PRIMARY KEY, vendor_name TEXT NOT NULL, assessment_status TEXT NOT NULL DEFAULT &#x27;Draft&#x27;, review_date DATE, assessment_result TEXT NOT NULL DEFAULT &#x27;Pending&#x27;, reviewer TEXT NOT NULL DEFAULT &#x27;&#x27;, notes TEXT NOT NULL DEFAULT &#x27;&#x27;, responses JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>src/services/tprmQuestionnaireService.js: ALTER TABLE tprm_due_diligence_questionnaires ADD COLUMN IF NOT EXISTS responses JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb</code></li>
+</ul>
+<h4>tprm_related_risks</h4>
+<p>Source: <code>database/schema.sql:196</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS tprm_related_risks (
+  tprm_id BIGINT NOT NULL REFERENCES tprm_risk_register(id) ON DELETE CASCADE,
+  risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE,
+  PRIMARY KEY (tprm_id, risk_id)
+);</code></pre>
+<p>Source: <code>src/services/tprmService.js:14</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS tprm_related_risks (tprm_id BIGINT NOT NULL REFERENCES tprm_risk_register(id) ON DELETE CASCADE, risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE, PRIMARY KEY (tprm_id, risk_id));</code></pre>
+<h4>tprm_risk_register</h4>
+<p>Source: <code>database/schema.sql:176</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS tprm_risk_register (
+  id BIGSERIAL PRIMARY KEY,
+  third_party TEXT NOT NULL,
+  service_dependency TEXT NOT NULL,
+  risk_level TEXT NOT NULL,
+  assessment_status TEXT NOT NULL DEFAULT &#x27;Not started&#x27;,
+  relationship_status TEXT NOT NULL DEFAULT &#x27;Active&#x27;,
+  next_review DATE,
+  notes TEXT NOT NULL DEFAULT &#x27;&#x27;,
+  risk_register_ids JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre>
+<p>Source: <code>src/services/tprmService.js:14</code>.</p>
+<pre><code>CREATE TABLE IF NOT EXISTS tprm_risk_register (id BIGSERIAL PRIMARY KEY, third_party TEXT NOT NULL, service_dependency TEXT NOT NULL, risk_level TEXT NOT NULL DEFAULT &#x27;Medium Risk (Tier 2)&#x27;, assessment_status TEXT NOT NULL DEFAULT &#x27;Not started&#x27;, relationship_status TEXT NOT NULL DEFAULT &#x27;Active&#x27;, next_review DATE, notes TEXT NOT NULL DEFAULT &#x27;&#x27;, risk_register_ids JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb, questionnaire_id BIGINT REFERENCES tprm_due_diligence_questionnaires(id) ON DELETE SET NULL, due_diligence_assessment JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());</code></pre>
+<p>Migrasi source terkait:</p>
+<ul>
+<li><code>database/schema.sql: ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS risk_register_ids JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb</code></li>
+<li><code>database/schema.sql: ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS relationship_status TEXT NOT NULL DEFAULT &#x27;Active&#x27;</code></li>
+<li><code>database/schema.sql: ALTER TABLE tprm_risk_register</code></li>
+<li><code>src/services/tprmService.js: ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS questionnaire_id BIGINT REFERENCES tprm_due_diligence_questionnaires(id) ON DELETE SET NULL</code></li>
+<li><code>src/services/tprmService.js: ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS due_diligence_assessment JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb</code></li>
+<li><code>src/services/tprmService.js: ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS risk_register_ids JSONB NOT NULL DEFAULT &#x27;[]&#x27;::jsonb</code></li>
+<li><code>src/services/tprmService.js: ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS relationship_status TEXT NOT NULL DEFAULT &#x27;Active&#x27;</code></li>
+</ul>
+<h3>Batas dan pengembangan relasi</h3>
+<p>Policy-note, node diagram, dan beberapa attachment masih memakai link logis/JSONB. Rekomendasi berikutnya adalah normalisasi link yang membutuhkan jaminan database, disertai backfill dan tes orphan/cascade. Jangan menerapkan FK terhadap data legacy tanpa pemeriksaan referensi. Tenancy dan isolasi per organisasi belum tersedia; RLS tenant bukan kontrol yang sudah aktif.</p></article><article id="05-SECURITY"><h2>Review keamanan dan praktik industri</h2>
+<p>Tanggal: 9 Oktober 2026. Scope: source aplikasi, dependency audit npm, relasi vendor aset, transaksi reset risiko, konfigurasi build, dan pengujian regresi. Ini bukan sertifikat kepatuhan, pentest deployment, atau jaminan bebas semua kerentanan.</p>
+<h3>Temuan dan perubahan pada pemeriksaan ini</h3>
+<div class="table-wrap"><table><thead><tr><th>Temuan</th><th>Penanganan</th><th>Bukti</th></tr></thead><tbody>
+<tr><td>Advisory Vue/server-renderer, proxy-addr, source-map-js</td><td>npm audit fix kompatibel; minimum Vue dinaikkan ^3.5.42; lockfile diperbarui</td><td>output/security-audit-2026-10-09-before.json dan after.json</td></tr>
+<tr><td>Penyimpanan vendor dan linked risks belum atomik</td><td>Create/update TPRM memakai satu client dan transaksi; kegagalan relasi membatalkan perubahan vendor</td><td>test/databaseIntegrityHardening.test.js</td></tr>
+<tr><td>Reset register memakai pool.query BEGIN terpisah</td><td>Satu client checkout dipakai untuk seluruh transaksi; rollback/release</td><td>test/databaseIntegrityHardening.test.js</td></tr>
+<tr><td>Vendor pengelola aset hanya ID di JSONB</td><td>Kolom generated managed_vendor_id dengan FK RESTRICT dan index; vendor opsional tetap null</td><td>src/services/assetManagementService.js</td></tr>
+<tr><td>Delete vendor ber-FK dapat memberi error internal</td><td>Constraint conflict menjadi 409 dengan instruksi lepaskan relasi</td><td>src/services/tprmService.js</td></tr>
+<tr><td>Potensi injeksi atribut class dari status sertifikasi legacy</td><td>Token class dibatasi a-z/0-9/underscore/hyphen; berlaku juga pada rating risiko dan vendor</td><td>test/databaseIntegrityHardening.test.js</td></tr>
+<tr><td>Source map frontend tersedia pada build</td><td>sourcemap false; generated build tidak menerbitkan .map</td><td>frontend/client/vite.config.js</td></tr>
+</tbody></table></div>
+<p>Audit dependency setelah update melaporkan <strong>0 advisory npm</strong> pada lockfile saat pemeriksaan. Status ini hanya cakupan advisory yang dilaporkan npm, bukan bukti seluruh kode aman. Vue SSR tidak digunakan sebagai arsitektur runtime aplikasi ini; patch tetap diterapkan terhadap paket terpasang. Proxy trust pada app belum diaktifkan, tetapi paket rentan tetap diperbarui.</p>
+<p>Referensi advisory: <a href="https://github.com/advisories/GHSA-g2v6-rqmx-r4w6">Vue</a>, <a href="https://github.com/advisories/GHSA-jqcg-44mw-7w3h">proxy-addr</a>, <a href="https://github.com/advisories/GHSA-68fv-2mgg-jv7q">source-map-js</a>. Detail applicability perlu dibedakan dari severity paket; tidak diklaim terjadi eksploit pada deployment pengguna.</p>
+<h3>Kontrol keamanan yang sudah ada</h3>
+<div class="table-wrap"><table><thead><tr><th>Area</th><th>Implementasi</th><th>Batas</th></tr></thead><tbody>
+<tr><td>Authentication</td><td>Bcrypt, token random32 byte, cookie HttpOnly/SameSite, lifetime8 jam, invalidasi sesi</td><td>In-memory per proses; belum SSO/MFA</td></tr>
+<tr><td>Authorization</td><td>Guard backend Read/Create/Update/Delete, admin-only, ownership evidence</td><td>Belum tenant partition/RLS organisasi</td></tr>
+<tr><td>Login abuse</td><td>Limit per IP dan username; blokir setelah kegagalan; shared budget password endpoints</td><td>Per proses; shared limiter diperlukan untuk scale-out</td></tr>
+<tr><td>SQL</td><td>Values parameterized; dynamic identifier hanya map/whitelist domain</td><td>DDL dan custom schema perlu review setiap perubahan</td></tr>
+<tr><td>Data integrity</td><td>PK/FK/UNIQUE/CHECK, transaksi, advisory lock, optimistic version</td><td>Beberapa relasi JSONB tetap logical references</td></tr>
+<tr><td>HTTP</td><td>nosniff, DENY frame, no-referrer, permissions policy; HSTS production + Secure</td><td>HTTPS bergantung deployment; bukan TLS terminator bawaan</td></tr>
+<tr><td>Origin/CSRF</td><td>Mutasi dengan Origin beda host ditolak; SameSite cookie</td><td>Tidak ada token CSRF khusus; missing-Origin diterima saat ini</td></tr>
+<tr><td>File access</td><td>Auth/owner, path normalization, upload constraints, CSP sandbox file responses</td><td>Generic office/PDF belum malware scan</td></tr>
+<tr><td>Upload abuse</td><td>4 active/process, 2/account, stream aggregate cap, temporary cleanup</td><td>Kapasitas disk/timeout deployment tetap perlu diuji</td></tr>
+<tr><td>Content rendering</td><td>Vue interpolation, escapeHtml, DOMPurify pada rendering rich content terkait</td><td>Review seluruh innerHTML bukan pembuktian formal semua sink</td></tr>
+<tr><td>Secrets</td><td>SMTP AES-256-GCM dengan key di data; cloud credentials runtime</td><td>Key/env perlu ACL dan salinan recovery terpisah</td></tr>
+<tr><td>Audit</td><td>Request events, requestId, credential redaction, durable fallback queue</td><td>At-least-once; crash window dan duplikasi masih mungkin</td></tr>
+<tr><td>Recovery</td><td>Dump semua tabel, ZIP metadata+file, restore invalidasi sesi</td><td>Restore file dapat parsial jika storage gagal; perlu retry terukur</td></tr>
+</tbody></table></div>
+<h3>Acuan praktik industri</h3>
+<p>Review menggunakan <a href="https://owasp.org/projects/asvs">OWASP ASVS</a> sebagai acuan ruang lingkup kontrol aplikasi, <a href="https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html">OWASP Authorization Cheat Sheet</a> untuk least privilege dan pemeriksaan izin per request, serta <a href="https://node-postgres.com/features/transactions">node-postgres Transactions</a> untuk transaksi satu client. Pemetaan ini adalah acuan review, bukan penilaian lengkap atau klaim memenuhi seluruh requirement ASVS.</p>
+<h3>Praktik coding dan review</h3>
+<p>Boundary HTTP harus memvalidasi input, parameter ID, ukuran dan tipe; domain service menghitung ulang nilai turunan serta memeriksa referensi. SQL values selalu parameterized. Setiap transaksi memakai satu client dan finally release. Mutasi multientitas harus atomik atau jelas melaporkan partial result. Server permission wajib, UI permission hanya membantu UX. Jangan interpolate konten pengguna ke HTML/CSS/URL tanpa encoding sesuai konteks.</p>
+<p>Perubahan DB menggunakan additive migration dan backfill tervalidasi; perubahan destructive membutuhkan rencana recovery. File source frontend diedit, hasil build digenerasi. Lockfile di-review, minimum versi aman dipertahankan, audit diulang saat rilis. Jangan commit secret, cookie, dump bisnis, atau log sensitif.</p>
+<h3>Pekerjaan keamanan yang belum terverifikasi / rekomendasi</h3>
+<ul>
+<li>Pentest terhadap deployment HTTPS/proxy aktual, session/cookie, IDOR, CSRF, injection, XSS, dan file preview.</li>
+<li>Uji S3/GCS/NAS/SMTP nyata dengan least-privilege runtime credentials, timeout dan failure behavior.</li>
+<li>Content Security Policy workspace yang kompatibel dengan runtime lama dan rich editor; CSP ketat belum dipaksakan untuk seluruh workspace.</li>
+<li>Pemeriksaan magic bytes semua dokumen, antivirus/quarantine, quota disk, dan uji upload paralel/beberapa akun.</li>
+<li>Shared session/limiter dan revocation lintas instance sebelum menjalankan multi-worker/replica.</li>
+<li>Normalisasi relasi logical JSONB bila perlu; formal tenant isolation bila aplikasi dipakai banyak organisasi.</li>
+<li>Infrastruktur DB role provisioning vs runtime least privilege. Role runtime startup sekarang membutuhkan hak DDL; Compose belum memisahkannya.</li>
+<li>Validasi backup/restore rehearsal, enkripsi arsip dan retensi off-host, serta monitoring antrean audit.</li>
+</ul>
+<p>Daftar ini merupakan pekerjaan yang nyata belum dibuktikan dalam audit, sehingga laporan tidak menyatakan aplikasi &quot;tanpa celah&quot;. Lihat dokumen keamanan historis di parent docs untuk perubahan sebelumnya; status terkini di bab ini dan bukti test yang dihasilkan.</p></article><article id="06-OPERATIONS"><h2>Operasional, deployment, dan pengujian</h2>
+<h3>Instalasi native</h3>
+<p>Siapkan Node sesuai engines package.json (^20.19 atau &gt;=22.12), PostgreSQL kompatibel, client pg_dump/pg_restore, konfigurasi DB, folder persisten dan akun administrator. Perintah contoh dijalankan dari root proyek; environment contoh tidak berisi kredensial siap pakai.</p>
+<pre><code>npm.cmd ci
+npm.cmd run build
+npm.cmd run db:setup
+npm.cmd run admin:create
+npm.cmd start</code></pre>
+<p>Provisioning/startup menulis DDL/seed. Pastikan DB_HOST/PORT/NAME/USER provisioning dan pool mengacu instalasi yang sama. Detail akun administrator lihat scripts/create-admin.js dan dokumentasi instalasi; jangan menyisipkan password melalui source atau log.</p>
+<h3>Instalasi Docker</h3>
+<pre><code>Copy-Item docker.env.example .env.docker
+# Isi BLACKOWL_DB_PASSWORD dan sesuaikan bind/HTTPS pada .env.docker.
+docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker ps
+docker compose --env-file .env.docker logs --tail 100 app</code></pre>
+<p>Default akses http://localhost:5000. Untuk jaringan pengguna set bind sesuai target; untuk produksi siapkan HTTPS/proxy dan Secure cookie. Jangan publikasikan DB port. Perintah tersebut adalah panduan, bukan deployment yang dijalankan saat pembuatan dokumen.</p>
+<h3>Rilis dan perubahan database</h3>
+<ol>
+<li>Simpan backup DB, file, konfigurasi dan kunci yang sudah diuji recovery-nya.</li>
+<li>Review source diff, migrasi dan dependency lock; jalankan quality gate.</li>
+<li>Build client/CSS; deploy runtime dan migrasi pada maintenance window.</li>
+<li>Restart backend; session in-memory berakhir, pengguna login kembali.</li>
+<li>Verifikasi login/permission, API read, contoh record, foto/evidence, versi diagram dan scheduler.</li>
+<li>Monitor error startup, constraint, SMTP, audit recovery dan kapasitas storage.</li>
+</ol>
+<p>FK vendor baru mempertahankan API managedVendorId, tetapi kini penghapusan vendor yang masih dipakai memberikan 409. Lepaskan vendor pengelola dari aset terlebih dahulu. Tidak menghapus data bisnis secara otomatis. Source map production tidak lagi dihasilkan. Session/limiter masih single-process.</p>
+<h3>Backup dan restore</h3>
+<figure><svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Cakupan backup dan urutan pemulihan</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Cakupan backup dan urutan pemulihan</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Database, file, dan konfigurasi adalah artefak yang berbeda dan perlu dipulihkan bersama.</text>
+<rect x="40" y="150" width="390" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,154 H420" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">A. Database dump</text>
+<text x="56" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">pg_dump --format=custom</text>
+<text x="56" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Seluruh tabel / sequence / trigger</text>
+<text x="56" y="266" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Termasuk byte asli foto aset/vault</text>
+<rect x="505" y="150" width="390" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M515,154 H885" stroke="#1c6da1" stroke-width="7"/>
+<text x="521" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">B. File Backup ZIP</text>
+<text x="521" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">evidence_files + manifest</text>
+<text x="521" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lokal / NAS / S3 / GCS</text>
+<text x="521" y="266" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Seluruh folder atau subtree</text>
+<rect x="970" y="150" width="390" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M980,154 H1350" stroke="#1c6da1" stroke-width="7"/>
+<text x="986" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">C. Konfigurasi / kunci</text>
+<text x="986" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Environment server secara terpisah</text>
+<text x="986" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">data/smtp-secret.key</text>
+<text x="986" y="266" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Kredensial cloud / koneksi storage</text>
+<rect x="40" y="455" width="390" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,459 H420" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="491" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">1. Siapkan target</text>
+<text x="56" y="519" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Versi PostgreSQL kompatibel</text>
+<text x="56" y="545" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Storage dan akses tersedia</text>
+<text x="56" y="571" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Hentikan aktivitas mutasi</text>
+<rect x="505" y="455" width="390" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M515,459 H885" stroke="#1c6da1" stroke-width="7"/>
+<text x="521" y="491" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">2. Restore database</text>
+<text x="521" y="519" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Admin; seluruh sesi dicabut</text>
+<text x="521" y="545" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Data dan referensi kembali</text>
+<text x="521" y="571" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Login dengan akun hasil restore</text>
+<rect x="970" y="455" width="390" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M980,459 H1350" stroke="#1c6da1" stroke-width="7"/>
+<text x="986" y="491" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">3. Restore file + validasi</text>
+<text x="986" y="519" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">File ZIP ke storage aktif</text>
+<text x="986" y="545" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Pulihkan kunci / konfigurasi</text>
+<text x="986" y="571" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Cek foto, evidence, izin, SMTP</text>
+<polyline points="235,315 235,455" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="235,455 230.3269798922962,443.94726807196537 239.6730201077038,443.94726807196537" fill="#5d7d9b"/>
+<polyline points="430,527 505,527" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="505,527 493.94726807196537,531.6730201077038 493.94726807196537,522.3269798922962" fill="#5d7d9b"/>
+<polyline points="895,527 970,527" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="970,527 958.9472680719654,531.6730201077038 958.9472680719654,522.3269798922962" fill="#5d7d9b"/>
+<polyline points="700,315 700,365 1165,365 1165,455" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1165,455 1160.326979892296,443.94726807196537 1169.673020107704,443.94726807196537" fill="#5d7d9b"/>
+<text x="40" y="718" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#102d4c">ZIP file tidak memulihkan record bisnis. Dump database tidak mencakup seluruh file eksternal atau kunci SMTP.</text>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg><figcaption>Backup/recovery</figcaption></figure>
+<p>DB Backup memakai PostgreSQL custom dump dan mencakup struktur/data satu database aplikasi, seluruh modul dan byte foto dalam DB. Tidak mencakup seluruh role cluster atau semua file luar DB. File Backup ZIP berisi file terdaftar dan metadata manifest, dapat memilih folder/subtree, membaca lokasi asal termasuk cloud.</p>
+<p>Batas ZIP upload/hasil arsip500 MiB; hasil ekstraksi2 GiB; masing-masing file500 MiB; max49.999 file dan manifest10 MiB. File restore mempertahankan path; file matching diganti, file lain tetap. Storage failure dapat menyisakan partial restore dan jumlah hasil harus diperiksa. Arsip sumber tidak boleh dipercaya sebelum validasi path/manifest/size.</p>
+<p>Urutan recovery: hentikan mutasi, siapkan DB/storage kompatibel, restore database, pulihkan kunci/env/akses storage, restore file ZIP, login akun hasil restore, lalu cek referensi/foto/izin/email. Restore DB mencabut sesi pada awal/akhir termasuk gagal. Maintenance diperlukan karena request yang sudah lolos autentikasi tidak otomatis dibatalkan.</p>
+<h3>Pengujian dan quality gate</h3>
+<pre><code>npm.cmd audit
+npm.cmd test
+npm.cmd run test:security
+npm.cmd run test:i18n
+npm.cmd run test:notes
+npm.cmd run build
+npm.cmd run test:asset-rack-browser
+node scripts/test-asset-transfer.js
+node scripts/test-uploaded-images-backup.js</code></pre>
+<p>Suite utama dapat melewati tes integrasi DB sesuai flag konfigurasi; skipped test tidak dianggap lulus integrasi. Script transfer memakai schema terisolasi; script foto/backup melakukan rollback fixture. Jangan menjalankan test mutasi terhadap database produksi tanpa membaca isolation/cleanup script. Test browser mock tidak membuktikan koneksi SMTP/cloud nyata atau pentest.</p>
+<p>Bukti hasil pemeriksaan terbaru dirangkum dalam VALIDATION.md. Tidak menjalankan restore database produksi saat pemeriksaan dokumentasi. Build menghasilkan bundle cukup besar; peringatan bundle bukan kegagalan keamanan tetapi kandidat pemecahan modul untuk kinerja.</p>
+<h3>Troubleshooting</h3>
+<div class="table-wrap"><table><thead><tr><th>Gejala</th><th>Pemeriksaan</th></tr></thead><tbody>
+<tr><td>API401 setelah restart/password/restore</td><td>Login ulang; cookie/HTTPS configuration</td></tr>
+<tr><td>API403</td><td>Page read + action, role admin-only, ownership, Origin/Host</td></tr>
+<tr><td>API409 perangkat</td><td>Aset sudah dipasang, stale previousRackId, overlap atau kapasitas</td></tr>
+<tr><td>API409 diagram/note</td><td>Muat version terbaru; jangan overwrite otomatis</td></tr>
+<tr><td>API409 hapus vendor</td><td>Lepaskan managing vendor asset / relasi lebih dahulu</td></tr>
+<tr><td>API413/429 upload</td><td>Ukuran per file/total, jumlah file, concurrency; retry setelah request selesai</td></tr>
+<tr><td>DB connection/startup</td><td>Env, host/port, role DDL, DB health, migration referensi</td></tr>
+<tr><td>Foto/evidence hilang</td><td>evidence_path, owner, lokasi asal storage, original DB bytes; status migration</td></tr>
+<tr><td>SMTP gagal</td><td>Akun terpilih, host/port/TLS, from, relay permission dan key sesuai ciphertext</td></tr>
+<tr><td>Backup dump gagal</td><td>pg_dump compatible major/server dan executable path</td></tr>
+<tr><td>ZIP restore parsial</td><td>Storage connection/permission, count restored, retry setelah penyebab diperbaiki</td></tr>
+<tr><td>UI versi lama</td><td>Build client; Ctrl+F5; pastikan server menyajikan generated index terbaru</td></tr>
+<tr><td>audit-recovery berulang</td><td>DB outage, ACL data/audit-pending, queue/disk capacity</td></tr>
+</tbody></table></div></article><article id="VALIDATION"><h2>Hasil validasi 9 Oktober 2026</h2>
+<p>Pemeriksaan dilakukan terhadap source workspace lokal setelah perubahan. Tidak melakukan restore database produksi atau pengujian SMTP/cloud nyata.</p>
+<div class="table-wrap"><table><thead><tr><th>Pemeriksaan</th><th>Hasil</th></tr></thead><tbody>
+<tr><td>npm audit setelah update</td><td>0 advisory; sebelum update 4 paket terdampak (3 high, 1 critical)</td></tr>
+<tr><td>npm test</td><td>197 tes: 192 lulus, 5 skipped, 0 gagal</td></tr>
+<tr><td>test:i18n</td><td>8 lulus, termasuk browser pergantian bahasa; percobaan paralel timeout, pengulangan terpisah lulus</td></tr>
+<tr><td>test:notes</td><td>37 lulus</td></tr>
+<tr><td>Build CSS + Vue</td><td>Berhasil; peringatan ukuran bundle/runtime stylesheet masih ada</td></tr>
+<tr><td>Browser Asset Management</td><td>Lulus: foto/rack, tab, SMTP UI, drag/drop, diagram, zoom, modal, mobile; data mock</td></tr>
+<tr><td>Vendor FK PostgreSQL</td><td>Lulus pada temporary tables: orphan insert/update dan referenced delete ditolak; vendor null/unlink diperbolehkan</td></tr>
+<tr><td>Asset export/import PostgreSQL</td><td>Lulus pada schema terisolasi: ID remap, CIA/foto/layout, repeat import, rollback collision, Uploaded Files</td></tr>
+<tr><td>Startup backend setelah update</td><td>Berhasil pada port8000; generated vendor column ALWAYS + satu FK terpasang</td></tr>
+<tr><td>Source map frontend</td><td>Build tidak menghasilkan file .map</td></tr>
+</tbody></table></div>
+<p>Bukti dependency tersedia pada validation/npm-audit-before.json dan validation/npm-audit-after.json. Log regresi utama di output/security-regression-2026-10-09.log pada repository. Pengujian tidak merupakan sertifikasi atau jaminan bebas kerentanan. Rekomendasi/pengujian deployment tersisa tercantum pada bab keamanan.</p>
+<p>Transaksi reset risiko dan penyimpanan vendor/linked risks diuji untuk commit, rollback, dan pelepasan client.</p></article></main></body></html>

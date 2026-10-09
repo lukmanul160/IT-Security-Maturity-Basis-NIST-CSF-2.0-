@@ -1,5 +1,7 @@
 # High-Level Design — NIST Basis
 
+Pembaruan arsitektur dan dokumentasi lengkap 9 Oktober 2026: [Dokumentasi teknis terkini](technical-documentation/00-README.md).
+
 ![Diagram High-Level Design NIST Basis](images/nist-basis-hld.png)
 
 Tanggal: 10 September 2026. Status: dokumentasi arsitektur berdasarkan source workspace saat peninjauan, termasuk perubahan lokal yang belum di-commit. Pasangan dokumen: [Low-Level Design](LOW_LEVEL_DESIGN.md).

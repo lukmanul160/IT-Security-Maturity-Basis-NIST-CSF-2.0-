@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Arsitektur aplikasi dan integrasi</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Arsitektur aplikasi dan integrasi</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Implementasi saat ini: modular monolith; frontend dan API pada origin yang sama.</text>
+<rect x="40" y="145" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,149 H315" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="181" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Browser / pengguna</text>
+<text x="56" y="209" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Vue 3 + workspace runtime</text>
+<text x="56" y="235" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Assessment, risiko, aset, vault</text>
+<text x="56" y="261" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Bahasa Indonesia / English</text>
+<rect x="420" y="145" width="480" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M430,149 H890" stroke="#1c6da1" stroke-width="7"/>
+<text x="436" y="181" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Node.js / Express 5</text>
+<text x="436" y="209" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Autentikasi cookie + izin per aksi</text>
+<text x="436" y="235" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Routes -&gt; controllers -&gt; services</text>
+<text x="436" y="261" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Validasi, transaksi, audit, upload</text>
+<rect x="1010" y="145" width="345" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1020,149 H1345" stroke="#1c6da1" stroke-width="7"/>
+<text x="1026" y="181" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">PostgreSQL</text>
+<text x="1026" y="209" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Register dan relasi + JSONB</text>
+<text x="1026" y="235" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Evidence metadata + byte foto</text>
+<text x="1026" y="261" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Permission, audit, konfigurasi</text>
+<polyline points="325,217 420,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="420,217 408.94726807196537,221.6730201077038 408.94726807196537,212.3269798922962" fill="#5d7d9b"/>
+<text x="330" y="199" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">HTTP / API</text>
+<polyline points="900,217 1010,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1010,217 998.9472680719654,221.6730201077038 998.9472680719654,212.3269798922962" fill="#5d7d9b"/>
+<text x="922" y="199" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">SQL</text>
+<rect x="420" y="425" width="290" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M430,429 H700" stroke="#1c6da1" stroke-width="7"/>
+<text x="436" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Penyimpanan file</text>
+<text x="436" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lokal / folder NAS</text>
+<text x="436" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">AWS S3 / Google Cloud</text>
+<text x="436" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lokasi asal per file dipertahankan</text>
+<rect x="765" y="425" width="260" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M775,429 H1015" stroke="#1c6da1" stroke-width="7"/>
+<text x="781" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Scheduler internal</text>
+<text x="781" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Renewal aset</text>
+<text x="781" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Review kebijakan</text>
+<text x="781" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Audit finding reminder</text>
+<rect x="1090" y="425" width="260" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M1100,429 H1340" stroke="#1c6da1" stroke-width="7"/>
+<text x="1106" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">SMTP terpusat</text>
+<text x="1106" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">TLS / STARTTLS</text>
+<text x="1106" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Akun email terpilih</text>
+<text x="1106" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Template pesan per modul</text>
+<polyline points="535,305 535,425" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="535,425 530.3269798922962,413.94726807196537 539.6730201077038,413.94726807196537" fill="#5d7d9b"/>
+<text x="549" y="361" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">file</text>
+<polyline points="820,305 820,425" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="820,425 815.3269798922962,413.94726807196537 824.6730201077038,413.94726807196537" fill="#5d7d9b"/>
+<text x="834" y="361" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">pengingat</text>
+<polyline points="1025,505 1090,505" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1090,505 1078.9472680719655,509.6730201077038 1078.9472680719655,500.3269798922962" fill="#5d7d9b"/>
+<text x="1030" y="485" font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#536b83">email</text>
+<rect x="40" y="425" width="290" height="170" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,429 H320" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="461" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">File operasional</text>
+<text x="56" y="489" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">upload/ + backup/</text>
+<text x="56" y="515" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">data/smtp-secret.key</text>
+<text x="56" y="541" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">data/audit-pending/</text>
+<polyline points="420,512 330,512" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="330,512 341.05273192803463,507.3269798922962 341.05273192803463,516.6730201077038" fill="#5d7d9b"/>
+<rect x="420" y="660" width="605" height="100" rx="10" fill="white" stroke="#c8d6e5"/><path d="M430,664 H1015" stroke="#1c6da1" stroke-width="7"/>
+<text x="436" y="696" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Backup / restore</text>
+<text x="436" y="724" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Database dump + ZIP file + salinan konfigurasi dan kunci</text>
+<polyline points="540,595 540,660" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="540,660 535.3269798922962,648.9472680719654 544.6730201077038,648.9472680719654" fill="#5d7d9b"/>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg>

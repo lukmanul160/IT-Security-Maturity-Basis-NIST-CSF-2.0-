@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Cakupan backup dan urutan pemulihan</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Cakupan backup dan urutan pemulihan</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Database, file, dan konfigurasi adalah artefak yang berbeda dan perlu dipulihkan bersama.</text>
+<rect x="40" y="150" width="390" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,154 H420" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">A. Database dump</text>
+<text x="56" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">pg_dump --format=custom</text>
+<text x="56" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Seluruh tabel / sequence / trigger</text>
+<text x="56" y="266" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Termasuk byte asli foto aset/vault</text>
+<rect x="505" y="150" width="390" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M515,154 H885" stroke="#1c6da1" stroke-width="7"/>
+<text x="521" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">B. File Backup ZIP</text>
+<text x="521" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">evidence_files + manifest</text>
+<text x="521" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lokal / NAS / S3 / GCS</text>
+<text x="521" y="266" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Seluruh folder atau subtree</text>
+<rect x="970" y="150" width="390" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M980,154 H1350" stroke="#1c6da1" stroke-width="7"/>
+<text x="986" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">C. Konfigurasi / kunci</text>
+<text x="986" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Environment server secara terpisah</text>
+<text x="986" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">data/smtp-secret.key</text>
+<text x="986" y="266" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Kredensial cloud / koneksi storage</text>
+<rect x="40" y="455" width="390" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,459 H420" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="491" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">1. Siapkan target</text>
+<text x="56" y="519" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Versi PostgreSQL kompatibel</text>
+<text x="56" y="545" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Storage dan akses tersedia</text>
+<text x="56" y="571" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Hentikan aktivitas mutasi</text>
+<rect x="505" y="455" width="390" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M515,459 H885" stroke="#1c6da1" stroke-width="7"/>
+<text x="521" y="491" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">2. Restore database</text>
+<text x="521" y="519" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Admin; seluruh sesi dicabut</text>
+<text x="521" y="545" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Data dan referensi kembali</text>
+<text x="521" y="571" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Login dengan akun hasil restore</text>
+<rect x="970" y="455" width="390" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M980,459 H1350" stroke="#1c6da1" stroke-width="7"/>
+<text x="986" y="491" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">3. Restore file + validasi</text>
+<text x="986" y="519" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">File ZIP ke storage aktif</text>
+<text x="986" y="545" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Pulihkan kunci / konfigurasi</text>
+<text x="986" y="571" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Cek foto, evidence, izin, SMTP</text>
+<polyline points="235,315 235,455" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="235,455 230.3269798922962,443.94726807196537 239.6730201077038,443.94726807196537" fill="#5d7d9b"/>
+<polyline points="430,527 505,527" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="505,527 493.94726807196537,531.6730201077038 493.94726807196537,522.3269798922962" fill="#5d7d9b"/>
+<polyline points="895,527 970,527" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="970,527 958.9472680719654,531.6730201077038 958.9472680719654,522.3269798922962" fill="#5d7d9b"/>
+<polyline points="700,315 700,365 1165,365 1165,455" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1165,455 1160.326979892296,443.94726807196537 1169.673020107704,443.94726807196537" fill="#5d7d9b"/>
+<text x="40" y="718" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#102d4c">ZIP file tidak memulihkan record bisnis. Dump database tidak mencakup seluruh file eksternal atau kunci SMTP.</text>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Alur API, autentikasi, dan otorisasi</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Alur API, autentikasi, dan otorisasi</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Pipeline aktual: API diaudit; sesi dan pembatas permintaan berada dalam proses aplikasi.</text>
+<rect x="40" y="150" width="285" height="135" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,154 H315" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">1. Request</text>
+<text x="56" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">JSON / multipart</text>
+<text x="56" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Cookie nist_session</text>
+<rect x="385" y="150" width="285" height="135" rx="10" fill="white" stroke="#c8d6e5"/><path d="M395,154 H660" stroke="#1c6da1" stroke-width="7"/>
+<text x="401" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">2. Middleware global</text>
+<text x="401" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Header keamanan + audit</text>
+<text x="401" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">JSON 10 MB + origin</text>
+<rect x="730" y="150" width="285" height="135" rx="10" fill="white" stroke="#c8d6e5"/><path d="M740,154 H1005" stroke="#1c6da1" stroke-width="7"/>
+<text x="746" y="186" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">3. Autentikasi</text>
+<text x="746" y="214" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Session aktif / 8 jam</text>
+<text x="746" y="240" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Login via bcrypt</text>
+<polyline points="325,217 385,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="385,217 373.94726807196537,221.6730201077038 373.94726807196537,212.3269798922962" fill="#5d7d9b"/>
+<polyline points="670,217 730,217" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="730,217 718.9472680719654,221.6730201077038 718.9472680719654,212.3269798922962" fill="#5d7d9b"/>
+<rect x="730" y="390" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M740,394 H1005" stroke="#1c6da1" stroke-width="7"/>
+<text x="746" y="426" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">4. Izin dan upload</text>
+<text x="746" y="454" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Read / Create / Update / Delete</text>
+<text x="746" y="480" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Kepemilikan evidence</text>
+<text x="746" y="506" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">4 upload aktif / 2 per akun</text>
+<polyline points="873,285 873,390" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="873,390 868.3269798922962,378.94726807196537 877.6730201077038,378.94726807196537" fill="#5d7d9b"/>
+<rect x="385" y="390" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M395,394 H660" stroke="#1c6da1" stroke-width="7"/>
+<text x="401" y="426" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">5. Domain service</text>
+<text x="401" y="454" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Validasi payload / referensi</text>
+<text x="401" y="480" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">SQL parameterized</text>
+<text x="401" y="506" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">BEGIN / COMMIT / ROLLBACK</text>
+<polyline points="730,465 670,465" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="670,465 681.0527319280346,460.3269798922962 681.0527319280346,469.6730201077038" fill="#5d7d9b"/>
+<rect x="40" y="390" width="285" height="145" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,394 H315" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="426" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">6. Penyimpanan</text>
+<text x="56" y="454" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">PostgreSQL / file storage</text>
+<text x="56" y="480" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Konflik versi -&gt; 409</text>
+<text x="56" y="506" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Batas ukuran -&gt; 413</text>
+<polyline points="385,465 325,465" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="325,465 336.05273192803463,460.3269798922962 336.05273192803463,469.6730201077038" fill="#5d7d9b"/>
+<rect x="40" y="650" width="975" height="100" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,654 H1005" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="686" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">7. Response dan audit</text>
+<text x="56" y="714" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">JSON / stream file / 204; requestId pada error global; recovery audit ketika database gagal</text>
+<polyline points="180,535 180,650" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="180,650 175.3269798922962,638.9472680719654 184.6730201077038,638.9472680719654" fill="#5d7d9b"/>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg>

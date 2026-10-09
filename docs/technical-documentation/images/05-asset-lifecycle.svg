@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img"><title>Siklus hidup aset, penempatan, dan risiko</title><rect width="100%" height="100%" fill="#f4f7fb"/>
+<text x="40" y="58" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#102d4c">Siklus hidup aset, penempatan, dan risiko</text>
+<text x="40" y="88" font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#536b83">Proses mengikuti prinsip ITSM; referensi change/tiket opsional, tanpa approval engine eksternal.</text>
+<rect x="40" y="155" width="370" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,159 H400" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Registrasi</text>
+<text x="56" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Tag unik / owner / vendor</text>
+<text x="56" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">CIA + tanggal renewal</text>
+<text x="56" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Foto depan / belakang</text>
+<rect x="480" y="155" width="370" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M490,159 H840" stroke="#1c6da1" stroke-width="7"/>
+<text x="496" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Operasional</text>
+<text x="496" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">planned -&gt; in-stock -&gt; in-use</text>
+<text x="496" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">maintenance bila perlu</text>
+<text x="496" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Pasang / pindah melalui modal</text>
+<rect x="950" y="155" width="370" height="165" rx="10" fill="white" stroke="#c8d6e5"/><path d="M960,159 H1310" stroke="#1c6da1" stroke-width="7"/>
+<text x="966" y="191" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Retirement</text>
+<text x="966" y="219" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Lepaskan posisi dan relasi</text>
+<text x="966" y="245" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">retired / disposed</text>
+<text x="966" y="271" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Hapus sesuai izin</text>
+<polyline points="410,235 480,235" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="480,235 468.94726807196537,239.6730201077038 468.94726807196537,230.3269798922962" fill="#5d7d9b"/>
+<polyline points="850,235 950,235" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="950,235 938.9472680719654,239.6730201077038 938.9472680719654,230.3269798922962" fill="#5d7d9b"/>
+<rect x="40" y="450" width="370" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M50,454 H400" stroke="#1c6da1" stroke-width="7"/>
+<text x="56" y="486" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Penempatan rak</text>
+<text x="56" y="514" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">1 perangkat = 1 posisi</text>
+<text x="56" y="540" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Start U + tinggi + orientasi</text>
+<text x="56" y="566" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Overlap dicegah; full / single side</text>
+<rect x="480" y="450" width="370" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M490,454 H840" stroke="#1c6da1" stroke-width="7"/>
+<text x="496" y="486" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Penilaian CIA otomatis</text>
+<text x="496" y="514" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Dampak = max(C, I, A)</text>
+<text x="496" y="540" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Skor = dampak x kemungkinan</text>
+<text x="496" y="566" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">1-4 Low; 5-12 Medium; 15-25 High</text>
+<rect x="950" y="450" width="370" height="160" rx="10" fill="white" stroke="#c8d6e5"/><path d="M960,454 H1310" stroke="#1c6da1" stroke-width="7"/>
+<text x="966" y="486" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#1c6da1">Renewal dan dependensi</text>
+<text x="966" y="514" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Scheduler tiap jam</text>
+<text x="966" y="540" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Email sesuai SMTP/template</text>
+<text x="966" y="566" font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#243f61">Relasi diagram dari asset register</text>
+<polyline points="220,320 220,450" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="220,450 215.3269798922962,438.94726807196537 224.6730201077038,438.94726807196537" fill="#5d7d9b"/>
+<polyline points="665,320 665,450" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="665,450 660.3269798922962,438.94726807196537 669.6730201077038,438.94726807196537" fill="#5d7d9b"/>
+<polyline points="1135,320 1135,450" fill="none" stroke="#5d7d9b" stroke-width="2"/><polygon points="1135,450 1130.326979892296,438.94726807196537 1139.673020107704,438.94726807196537" fill="#5d7d9b"/>
+<text x="40" y="719" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#102d4c">Semua perubahan register melalui modal; backend tetap memvalidasi ulang data dan hak akses.</text>
+<text x="40" y="828" font-family="Arial,sans-serif" font-size="13" font-weight="400" fill="#617b93">NIST Basis / BLACKOWL | Source workspace | 09-10-2026 | Tidak memuat data atau kredensial produksi</text>
+</svg>

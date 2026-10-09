@@ -1,5 +1,7 @@
 # Low-Level Design — NIST Basis
 
+Pembaruan arsitektur dan dokumentasi lengkap 9 Oktober 2026: [Dokumentasi teknis terkini](technical-documentation/00-README.md).
+
 ![Diagram Low-Level Design NIST Basis](images/nist-basis-lld.png)
 
 Tanggal: 10 September 2026. Basis: source workspace lokal, termasuk perubahan yang belum di-commit. Konteks arsitektur: [High-Level Design](HIGH_LEVEL_DESIGN.md). Label **usulan** berarti belum diimplementasikan.
