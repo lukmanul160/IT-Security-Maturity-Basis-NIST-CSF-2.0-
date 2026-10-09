@@ -125,3 +125,35 @@ test('CSF and privacy canvas labels use the current language without changing sc
   assert.ok(labels.includes('Overall Average Score'));
   assert.ok(labels.includes('Inventory and Mapping'));
 });
+
+
+test('asset workspace labels, CIA matrix and dynamic notices follow the selected language', () => {
+  const { i18n } = load('en');
+  const samples = [
+    ['Rak Server', 'Server Racks'],
+    ['Modelling Asset Register', 'Modelling Asset Register'],
+    ['Assessment risiko aset (CIA)', 'Asset risk assessment (CIA)'],
+    ['Referensi change/tiket (opsional)', 'Change/ticket reference (optional)'],
+    ['Sangat rendah (1)', 'Very low (1)'],
+    ['High (25)', 'High (25)'],
+    ['3 / 10 aset', '3 / 10 assets'],
+    ['Dampak 4 x kemungkinan 3 = 12', 'Impact 4 x likelihood 3 = 12'],
+    ['Risiko otomatis: Medium - Dampak 4 x kemungkinan 3 = 12', 'Automatic risk: Medium - Impact 4 x likelihood 3 = 12'],
+    ['Skor 12 / 25', 'Score 12 / 25'],
+    ['Perangkat terpasang (4)', 'Installed devices (4)'],
+    ['Aset sudah dipakai: Terpasang di rakGTI (U24-U25). Gunakan Ubah posisi atau drag-and-drop untuk memindahkannya.', 'Device already in use: Installed in rakGTI (U24-U25). Use Edit position or drag and drop to move it.'],
+    ['Lewat 3 hari', 'Overdue by 3 days'],
+    ['Tambah aset', 'Add asset'],
+    ['planned', 'planned'],
+    ['connects-to', 'connects-to']
+  ];
+  for (const [id, en] of samples) assert.equal(i18n.t(id), en, id);
+  i18n.setLanguage('id');
+  assert.equal(i18n.t('Asset Register'), 'Register Aset');
+  assert.equal(i18n.t('Related risk'), 'Risiko terkait');
+  assert.equal(i18n.t('planned'), 'Direncanakan');
+  assert.equal(i18n.t('Medium (12)'), 'Sedang (12)');
+  assert.equal(i18n.t('Server Racks'), 'Rak Server');
+  assert.equal(i18n.t('Device already in use: Installed in rakGTI (U24-U25). Use Edit position or drag and drop to move it.'), samples[11][0]);
+  assert.equal(i18n.t('Firewall(GTI Ragunan)'), 'Firewall(GTI Ragunan)');
+});

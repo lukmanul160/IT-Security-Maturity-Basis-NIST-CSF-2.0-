@@ -108,8 +108,9 @@ async function replaceFile(relativePath, file) {
 	}
 
 	if (normalized.startsWith('Knowledge Notes/') && /\.(png|jpe?g|gif|webp)$/i.test(normalized)) require('./knowledgeImageService').validate({path:file.originalname,content:file.buffer});
-	if (normalized.startsWith('Asset Management/')) require('./assetRackPhotoService').validateFile(file);
-	if (normalized.startsWith('Knowledge Notes/imports/')) require('./knowledgeDocumentService').validate({path:file.originalname,content:file.buffer});
+	if (normalized.startsWith('Asset Management/') && !normalized.startsWith('Asset Management/imports/')) require('./assetRackPhotoService').validateFile(file);
+	if (normalized.startsWith('Asset Management/imports/')) { if(file.buffer.length>100*1024*1024)throw Object.assign(new Error('File import maksimal 100 MB.'),{status:400});let payload;try{payload=JSON.parse(file.buffer.toString('utf8'));}catch{throw Object.assign(new Error('File JSON tidak valid.'),{status:400});}require('./assetTransferService').validate(payload); }
+	else if (normalized.startsWith('Knowledge Notes/imports/')) require('./knowledgeDocumentService').validate({path:file.originalname,content:file.buffer});
 	else if (!normalized.startsWith('audit-finding/')) validateUploadFile(file.originalname, file.mimetype);
 	else if (!file.size || file.size > 10 * 1024 * 1024) throw Object.assign(new Error('Evidence maksimum 10 MB.'), { status: 400 });
 	const currentExtension = path.extname(normalized).toLowerCase();

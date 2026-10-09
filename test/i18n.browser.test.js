@@ -20,6 +20,10 @@ test('browser translates dynamic UI, preserves form values and user data, and re
       <select id="status"><option>Active</option><option value="closed">Closed</option></select>
       <input id="name" value="Save" placeholder="Masukkan username">
       <table><tbody><tr><td id="user-data">Save</td><td><button id="action">Delete</button></td></tr></tbody></table>
+      <select id="asset-status"><option value="planned">planned</option></select>
+      <h2 id="asset-heading">Rak Server</h2>
+      <table><tbody><tr><td data-translate-ui id="asset-cia">High (25)</td><td data-translate-ui id="asset-state">planned</td><td id="asset-name">Save</td></tr></tbody></table>
+      <p id="asset-error">Aset sudah dipakai: Terpasang di rakGTI (U24-U25). Gunakan Ubah posisi atau drag-and-drop untuk memindahkannya.</p>
       <p id="dynamic"></p><pre id="result"></pre>
       <span data-no-translate id="note-title">Save</span>
       <table><tbody><tr><td colspan="2" id="empty">No risks found.</td></tr></tbody></table>
@@ -31,6 +35,11 @@ test('browser translates dynamic UI, preserves form values and user data, and re
         try {
           NistI18n.setLanguage('id');
           check(save.textContent === 'Simpan', 'Indonesian label');
+          check(document.getElementById('asset-heading').textContent === 'Rak Server', 'rack title Indonesian');
+          check(document.getElementById('asset-cia').textContent === 'Tinggi (25)', 'CIA table Indonesian');
+          check(document.getElementById('asset-state').textContent === 'Direncanakan', 'asset lifecycle Indonesian');
+          check(document.getElementById('asset-status').value === 'planned', 'asset lifecycle stored value');
+          check(document.getElementById('asset-name').textContent === 'Save', 'asset name preserved');
           check(document.getElementById('status').value === 'Active', 'implicit option value');
           check(document.getElementById('name').value === 'Save', 'input data');
           check(document.getElementById('user-data').textContent === 'Save', 'table data');
@@ -47,6 +56,10 @@ test('browser translates dynamic UI, preserves form values and user data, and re
           check(dynamic.textContent === 'Simpan', 'dynamic translation');
           const select = document.querySelector('[data-language-select]'); select.value = 'en'; select.dispatchEvent(new Event('change'));
           check(document.documentElement.lang === 'en', 'document language');
+          check(document.getElementById('asset-heading').textContent === 'Server Racks', 'rack title English');
+          check(document.getElementById('asset-cia').textContent === 'High (25)', 'CIA table English');
+          check(document.getElementById('asset-status').value === 'planned', 'asset value after language switch');
+          check(document.getElementById('asset-error').textContent === 'Device already in use: Installed in rakGTI (U24-U25). Use Edit position or drag and drop to move it.', 'rack error translated');
           check(save.textContent === 'Save' && dynamic.textContent === 'Save', 'restore original');
           check(document.getElementById('empty').textContent === 'No risks found.', 'English empty table message');
           check(document.getElementById('module-counter').textContent === '24 policies', 'English module counter');

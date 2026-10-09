@@ -1,12 +1,29 @@
 <template>
 <section v-pre id="fileBackupsView" class="view backup-page">
   <div class="page-heading backup-page-heading"><div><p class="eyebrow">BACKUP SYSTEM</p><h2>File Backup</h2><p class="lede">Cadangkan seluruh file yang telah diunggah, termasuk foto depan/belakang aset, foto rak, dan gambar Knowledge Notes dalam arsip ZIP.</p></div><div class="csf-actions backup-primary-action"><button class="button button-accent" id="fileBackupCreateButton" type="button">Create file backup</button><span class="file-count" id="fileBackupCount">0 backups</span></div></div>
-  <p class="muted">Arsip mencakup file unggahan terdaftar beserta metadata. Pilih folder untuk backup bertahap; subfolder ikut dicadangkan. Batas ZIP 500 MB, hasil ekstraksi 2 GB, setiap file 500 MB. Buat juga Database Backup untuk data dan referensi lampiran.</p>
-  <label>Folder untuk backup <select id="fileBackupFolder"><option value="">Semua folder</option></select></label>
-  <label>Folder untuk restore <input id="fileBackupRestoreFolder" type="text" list="fileBackupFolderOptions" placeholder="Kosongkan untuk semua; contoh Policy/2026"><datalist id="fileBackupFolderOptions"></datalist></label>
-  <p class="muted">Folder restore mengacu pada path di dalam arsip, termasuk subfolder. Anda bisa mengetik folder yang belum ada di aplikasi. Path asli dipertahankan di storage aktif; file di luar folder pilihan tidak diubah.</p>
+  <div class="file-backup-options">
+    <div class="file-backup-field"><label for="fileBackupFolder">Folder untuk backup</label><select id="fileBackupFolder"><option value="">Semua folder</option></select><small>Pilih semua folder atau satu folder beserta subfoldernya.</small></div>
+    <div class="file-backup-field"><label for="fileBackupRestoreFolder">Folder untuk restore</label><input id="fileBackupRestoreFolder" type="text" list="fileBackupFolderOptions" placeholder="Semua folder, atau contoh: Policy/2026"><datalist id="fileBackupFolderOptions"></datalist><small>Kosongkan untuk semua. Folder mengacu pada path dalam arsip dan dapat diketik langsung.</small></div>
+    <p class="file-backup-help">Arsip mencakup file beserta metadata. Batas ZIP 500 MB, hasil ekstraksi 2 GB, setiap file 500 MB. Cadangkan database juga untuk data dan referensi lampiran. Restore mempertahankan path asli; file di luar folder pilihan tetap tersimpan.</p>
+  </div>
   <div class="backup-restore-panel"><div><p class="eyebrow">RECOVERY CONTROL</p><h3>Restore files</h3><p class="muted">Pilih ZIP File Backup NIST Basis (maksimal 500 MB). File dengan path yang sama akan diganti; file lain tetap tersimpan. Restore menggunakan lokasi storage aktif. Pulihkan Database Backup terlebih dahulu jika data dan referensi lampiran juga perlu dipulihkan.</p></div><div class="backup-restore-actions"><label class="button button-quiet" for="fileBackupRestoreInput">Select backup file<input id="fileBackupRestoreInput" type="file" accept=".zip" hidden></label><span class="muted" id="fileBackupRestoreFileName">No file selected</span><button class="button button-danger" id="fileBackupRestoreButton" type="button" disabled>Restore selected backup</button></div></div>
   <div class="section-heading backup-archive-heading"><div><p class="eyebrow">BACKUP ARCHIVE</p><h3>Available file backups</h3><p class="muted" id="fileBackupStatus" role="status">Backup hanya dapat diakses administrator.</p></div></div>
   <div class="excel-wrap backup-archive-table"><table class="excel-table"><thead><tr><th>File</th><th>Created</th><th>Size</th><th>Actions</th></tr></thead><tbody id="fileBackupBody"></tbody></table></div>
 </section>
 </template>
+
+<style>
+#fileBackupsView .file-backup-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 24px;padding:22px 24px;margin-bottom:24px;border:1px solid var(--line,#e5ebf3);border-radius:10px;background:#fff;box-shadow:0 1px 2px #0f172a08}
+#fileBackupsView .file-backup-field{display:flex;flex-direction:column;gap:8px;min-width:0}
+#fileBackupsView .file-backup-field label{color:var(--navy,#243f61);font-size:13px;font-weight:600;line-height:1.5}
+#fileBackupsView .file-backup-field :is(input,select){display:block;width:100%;min-width:0;box-sizing:border-box;min-height:42px;padding:10px 12px;border:1px solid #d8e3f1;border-radius:8px;background:#fff;color:var(--ink,#182338);font:inherit;font-size:13px;line-height:1.5}
+#fileBackupsView .file-backup-field :is(input,select):focus{outline:2px solid #93b8ff;outline-offset:2px;border-color:#608fea}
+#fileBackupsView .file-backup-field input::placeholder{color:#8191a8}
+#fileBackupsView .file-backup-field small,#fileBackupsView .file-backup-help{color:var(--muted,#64748b);font-size:12px;line-height:1.7}
+#fileBackupsView .file-backup-help{grid-column:1/-1;margin:0;padding-top:16px;border-top:1px solid var(--line,#e5ebf3)}
+#fileBackupsView .backup-restore-panel{background:#f8faff;border-color:#dce6f5;box-shadow:none;align-items:flex-start}
+#fileBackupsView .backup-restore-panel>div:first-child{flex:1;min-width:0}
+#fileBackupsView .backup-restore-actions{max-width:420px;align-self:center;gap:10px}
+#fileBackupsView .backup-restore-panel .muted{line-height:1.7}
+@media(max-width:700px){#fileBackupsView .file-backup-options{grid-template-columns:minmax(0,1fr);padding:18px;gap:18px}#fileBackupsView .backup-page-heading{flex-wrap:wrap}#fileBackupsView .backup-restore-panel{flex-direction:column;padding:18px;gap:16px}#fileBackupsView .backup-restore-actions{align-self:stretch;justify-content:flex-start;max-width:none}}
+</style>

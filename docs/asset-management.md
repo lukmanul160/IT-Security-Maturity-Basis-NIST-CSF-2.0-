@@ -75,3 +75,15 @@ Backup database penuh mencakup seluruh tabel aset, penempatan rak, relasi, layou
 Gambar Knowledge Notes juga masuk Uploaded Files pada folder `Knowledge Notes`, termasuk gambar yang diimpor bersama catatan. File dokumen/evidence dari modul lainnya tetap memakai daftar pusat yang sama. Jalankan `node scripts/test-uploaded-images-backup.js` untuk uji database nyata: unggahan aset/rak/catatan, pemilik, ZIP restore, serta hapus library; record pengujian di-rollback.
 
 Uploaded Files berlaku untuk seluruh modul, termasuk dokumen TPRM, Policy Register, NIST CSF/Privacy, ISO/SOA, Audit, Knowledge Notes, dan aset/rak. Kolom Modul / Assessment menampilkan asal unggahan. File asli MD/TXT/JSON pada impor Knowledge baru disimpan atomik bersama hasil catatan; impor folder tetap mengabaikan file konfigurasi. Byte asli impor catatan lama tidak tersedia untuk direkonstruksi secara persis. Jalankan `node scripts/test-all-module-uploads.js` untuk memeriksa unggahan API terautentikasi lintas modul, daftar pusat, dan byte asli Knowledge; data pengujian dibersihkan.
+
+## Export / Import Asset Management
+
+Tombol Export JSON dan Import JSON tersedia pada ketiga tampilan Asset Management. Format `nist-basis-asset-management` versi 1 memuat aset, CIA, referensi vendor/Related risk, rak, penempatan, relasi, layout diagram, foto asli depan/belakang/per-rak, dan template email reminder. Akun/kredensial SMTP tetap memakai konfigurasi instalasi tujuan. Batas file 100 MB; gunakan backup database/file untuk arsip yang lebih besar.
+
+Import menampilkan modal ringkasan dan menggabungkan data: tag aset serta nama rak yang sama diperbarui; ID baru dipetakan otomatis sehingga referensi foto, penempatan, relasi, dan diagram tetap benar. Vendor TPRM dan Risk Register harus sudah tersedia. Benturan U, kapasitas, record tidak valid, dan referensi salah membatalkan seluruh transaksi. File sumber import dan foto masuk Uploaded Files. Data di luar file tetap tersimpan. Export memerlukan Read ketiga modul, import memerlukan Read/Add/Edit ketiga modul, ditambah Read TPRM/Risk Management jika referensi tersebut diimpor.
+
+Uji database terpisah: `node scripts/test-asset-transfer.js`.
+
+## Filter daftar
+
+Daftar aset mendukung pencarian serta filter jenis, status, risiko CIA, renewal, pemilik, dan vendor pengelola. Daftar rak mendukung nama/lokasi/kapasitas dan filter lokasi; rak terpilih tetap tersedia. Tabel perangkat terpasang mendukung nama/tag/posisi U, orientasi, dan kedalaman. Daftar relasi mendukung sumber/tujuan/catatan/change, jenis relasi, dan aset terkait. Katalog kanvas serta pilihan perangkat memiliki filter jenis. Filter dapat digabung, jumlah hasil ditampilkan, dan tombol Reset filter mengembalikan seluruh daftar. Filtering tidak mengubah urutan newest-to-oldest, data tersimpan, okupansi rak, atau relasi pada kanvas.

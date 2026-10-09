@@ -11,6 +11,18 @@ const assetUpload=upload.fields([{name:'front',maxCount:1},{name:'rear',maxCount
 const wrap=fn=>(req,res,next)=>Promise.resolve(fn(req,res)).catch(next);
 const keys={assets:'asset-register',racks:'server-racks',placements:'server-racks',relations:'asset-modelling'};
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+const transfer=require('../services/assetTransferService');
+const transferUpload=multer({storage:multer.memoryStorage(),limits:{fileSize:100*1024*1024,files:1,fields:0}}).single('file');
+const transferPermissions=actions=>actions.flatMap(action=>['asset-register','server-racks','asset-modelling'].map(key=>requirePermission(key,action)));
+router.get('/export',...transferPermissions(['read']),wrap(async(req,res)=>{const data=JSON.stringify(await transfer.exportData());if(Buffer.byteLength(data)>100*1024*1024)throw Object.assign(new Error('Export melebihi 100 MB. Gunakan Database Backup dan File Backup.'),{status:400});res.set({'Content-Disposition':'attachment; filename="asset-management.json"','Cache-Control':'private, no-store'}).type('application/json').send(data);}));
+router.post('/import',...transferPermissions(['read','create','update']),transferUpload,wrap(async(req,res)=>{
+ if(!req.file||!req.file.originalname.toLowerCase().endsWith('.json'))throw Object.assign(new Error('Pilih file JSON Asset Management.'),{status:400});
+ let payload;try{payload=JSON.parse(req.file.buffer.toString('utf8').replace(/^\uFEFF/,''));}catch{throw Object.assign(new Error('File JSON tidak valid.'),{status:400});}
+ transfer.validate(payload);
+ if(payload.data.assets.some(a=>a.managedVendorId)&&!await permissions.has(req.user?.role,'tprm-register','read'))throw Object.assign(new Error('Akses baca TPRM diperlukan untuk import vendor pengelola.'),{status:403});
+ if(payload.data.assets.some(a=>a.riskRegisterIds?.length)&&!await permissions.has(req.user?.role,'risk-management','read'))throw Object.assign(new Error('Akses baca Risk Management diperlukan untuk import Related risk.'),{status:403});
+ res.json(await transfer.importData(payload,req.user,req.file.buffer));
+}));
 router.get('/reminder-settings',requirePermission('asset-register','read'),wrap(async(req,res)=>res.json(await reminderSettings.getSettings())));
 router.put('/reminder-settings',requirePermission('asset-register','update'),wrap(async(req,res)=>res.json(await reminderSettings.saveSettings(req.body))));
 router.get('/vendor-catalog',requirePermission('asset-register','read'),requirePermission('tprm-register','read'),wrap(async(req,res)=>res.json(await service.managedVendorCatalog())));

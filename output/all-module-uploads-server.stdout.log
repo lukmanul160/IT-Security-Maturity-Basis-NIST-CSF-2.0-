@@ -5,3 +5,24 @@ Database exists: nist_basis
 Tables ready: app_users, assessment_state, evidence_files
 Personnel Certification and roadmap catalog seed ready.
 NIST CSF Express server: http://localhost:8000
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 13 policies
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 13 policies
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 13 policies
+[policyRegisterRoutes] GET /dropdowns
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] GET / - after permission, calling list
+[policyRegisterController.list] Handler called
+[policyRegisterController.list] Returning 13 policies
