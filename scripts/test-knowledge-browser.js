@@ -18,11 +18,13 @@ async function run(){
   const schema=`notes_test_${process.pid}_${Date.now()}`;
   const savedQuery=pool.query,originalConnect=pool.connect.bind(pool);
   const originalQuery=async(sql,...args)=>{const connection=await originalConnect();try{return await connection.query(sql,...args);}finally{connection.release();}};
-  const rewrite=sql=>typeof sql==='string'?sql.replace(/\b(knowledge_notes|knowledge_note_folders|knowledge_note_images)\b/g,`"${schema}".$1`):sql;
+  const rewrite=sql=>typeof sql==='string'?sql.replace(/\b(knowledge_notes|knowledge_note_folders|knowledge_note_images|evidence_files|sync_note_uploaded_file)\b/g,`"${schema}".$1`):sql;
   const profile=path.join(os.tmpdir(),`nist-notes-browser-${process.pid}-${Date.now()}`);
   let server,chrome,client,vite;
   try {
     await originalQuery(`CREATE SCHEMA "${schema}"`);
+    await originalQuery(`CREATE TABLE "${schema}".evidence_files (LIKE public.evidence_files INCLUDING ALL)`);
+    const uploader=(await originalQuery("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(uploader);
     pool.query=(sql,...args)=>originalQuery(rewrite(sql),...args);
     pool.connect=async()=>{const connection=await originalConnect();return {query:(sql,...args)=>connection.query(rewrite(sql),...args),release:()=>connection.release()};};
     const service=require('../src/services/knowledgeNoteService');await service.ensureStore();
@@ -40,7 +42,7 @@ async function run(){
     vite=await createServer({configFile:false,root,plugins:[vue()],server:{middlewareMode:true,hmr:{port:20000+Math.floor(Math.random()*10000)}},appType:'custom',logLevel:'error'});
     const express=require('express'),app=express();app.use(express.json());
     app.get('/api/auth/me',(req,res)=>res.json({username:'test-admin',role:'admin'}));
-    app.use('/api/knowledge-notes',(req,res,next)=>{req.user={role:'admin'};console.log('Browser API:',req.method,req.url);res.on('finish',()=>console.log('Browser API response:',req.method,req.url,res.statusCode));next();},require('../src/routes/knowledgeNoteRoutes'));
+    app.use('/api/knowledge-notes',(req,res,next)=>{req.user={username:uploader.username,role:'admin'};console.log('Browser API:',req.method,req.url);res.on('finish',()=>console.log('Browser API response:',req.method,req.url,res.statusCode));next();},require('../src/routes/knowledgeNoteRoutes'));
     app.get('/app',async(req,res)=>res.type('html').send(await vite.transformIndexHtml('/notes-preview.html',await fs.readFile(path.join(root,'notes-preview.html'),'utf8'))));
     app.use(vite.middlewares);app.use((error,req,res,next)=>res.status(error.status||500).json({error:error.message}));
     server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
@@ -54,6 +56,19 @@ async function run(){
     await client.evaluate('document.querySelector("[data-view=knowledge-notes]").click()');
     await client.wait('document.querySelector("[data-folder=Security]")');
     const search=async(value,scope='all')=>{await client.evaluate(`(()=>{const input=document.querySelector('.explorer input[type=search]'),select=document.querySelector('.search-scope');select.value=${JSON.stringify(scope)};select.dispatchEvent(new Event('change',{bubbles:true}));input.value=${JSON.stringify(value)};input.dispatchEvent(new Event('input',{bubbles:true}));})()`);};
+    if(process.argv.includes('--uploads-only')){
+      for(const nested of [false,true]){
+        const title=nested?'Source nested':'Source mixed';
+        const selector=nested?'input[webkitdirectory]':'input[accept^=".md"]';
+        await client.evaluate(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(png.toString('base64'))}),c=>c.charCodeAt(0));const data=new DataTransfer();const note=new File(['# Original\\r\\nExact bytes.\\r\\n'],'${title}.md',{type:'text/markdown'});const image=new File([bytes],'original.png',{type:'image/png'});if(${nested}){Object.defineProperty(note,'webkitRelativePath',{value:'SourceFolder/Subfolder/'+note.name});Object.defineProperty(image,'webkitRelativePath',{value:'SourceFolder/Subfolder/original.png'});}data.items.add(note);data.items.add(image);const input=document.querySelector(${JSON.stringify(selector)});input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+        await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("gambar berhasil diimpor")');
+        const originals=(await pool.query('SELECT name,content,uploaded_by FROM evidence_files WHERE name=$1',[title+'.md'])).rows;
+        assert.equal(originals.length,1);assert.equal(originals[0].content.toString(),'# Original\r\nExact bytes.\r\n');assert.ok(originals[0].uploaded_by);
+        const imported=(await service.list()).find(note=>note.title===title);assert.ok(imported);assert.equal(imported.folder,nested?'SourceFolder/Subfolder':'');
+      }
+      console.log('PASS: browser file/folder imports register original Markdown and images in Uploaded Files with exact bytes and uploader.');
+      return;
+    }
     await search('Policy.md');await client.wait('document.querySelectorAll("[data-search-note]").length===1');
     assert.ok(await client.evaluate('document.querySelector(".search-result small").textContent.includes("Security/Policies/Policy.md")'));
     await search('important','content');await client.wait('document.querySelector(".search-result mark")?.textContent.toLowerCase()==="important"');

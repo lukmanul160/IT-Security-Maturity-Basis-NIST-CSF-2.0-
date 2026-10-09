@@ -80,7 +80,9 @@ async function update(id,data) {
     return result.rows[0];
   } catch(error) { if(error.code === '23505') throw fail(`Catatan ${note.folder ? note.folder+'/' : ''}${note.title} sudah ada di folder yang sama.`,409); throw error; }
 }
-async function importNotes(notes, folderPaths = [], images = []) {
+async function importNotes(notes, folderPaths = [], images = [], documents = []) {
+  if(!Array.isArray(documents)||documents.length>200)throw fail('Impor maksimal 200 file catatan.');
+  documents.forEach(require('./knowledgeDocumentService').validate);
   if(!Array.isArray(images)||images.length>100)throw fail('Impor maksimal 100 gambar sekaligus.');
   images.forEach(image=>require('./knowledgeImageService').validate(image));
   if (!Array.isArray(folderPaths) || folderPaths.length > 500) throw fail('Daftar folder tidak valid (maksimal 500).');
@@ -102,6 +104,7 @@ async function importNotes(notes, folderPaths = [], images = []) {
       for(let i=1;i<=parts.length;i++)allFolders.add(parts.slice(0,i).join('/'));
     }
     if(allFolders.size)await client.query('INSERT INTO knowledge_note_folders (path) SELECT unnest($1::text[]) ON CONFLICT DO NOTHING',[[...allFolders]]);
+    for(const document of documents)await require('./knowledgeDocumentService').store(client,document);
     for(const image of images)await require('./knowledgeImageService').store(client,image);
     if(values.length)await client.query('INSERT INTO knowledge_notes (title,content,folder) SELECT * FROM unnest($1::text[],$2::text[],$3::text[])',[values.map(note=>note.title),values.map(note=>note.content),values.map(note=>note.folder)]);
     await client.query('COMMIT');

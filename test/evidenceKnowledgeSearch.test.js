@@ -6,6 +6,10 @@ const { pool } = require('../src/config/database');
 const permission = require('../src/services/permissionService');
 const access = require('../src/services/evidenceAccessService');
 
+test('central library identifies uploads across TPRM, Knowledge, ISO, policy, audit and assets',()=>{
+ for(const [filePath,label] of [['TPRM Vendor Documents/Policy/id/report.pdf','TPRM'],['Knowledge Notes/imports/id/note.md','Knowledge Notes'],['ISO 27001/Policy/id/report.pdf','ISO 27001'],['Policy Register/Policy/id/policy.pdf','Policy Register'],['audit-finding/id/report.pdf','Audit Finding'],['Asset Management/assets/id/front/version/photo.png','Asset Register'],['Asset Management/racks/id/front/version/photo.png','Rak Server']])assert.equal(access.fileModule(filePath),label);
+});
+
 test('searchable evidence receives only linked Vault content with read permission', async t => {
   let allowed = true;
   let knowledgeQueries = 0;

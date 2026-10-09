@@ -1,0 +1,11 @@
+const {pool}=require('../config/database');
+const smtp=require('./smtpService');
+const defaults={smtpAccountId:'default',subjectTemplate:'Renewal aset: {{tag}}',bodyTemplate:'Kepada {{owner}},\n\nAset: {{name}} ({{tag}})\nLayanan: {{service}}\nRenewal: {{renewalDate}}\n\nSegera lakukan review dan proses renewal melalui change/tiket ITSM.'};
+let ready;
+function ensureStore(){return ready ||= pool.query('CREATE TABLE IF NOT EXISTS asset_reminder_settings (id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL)').catch(e=>{ready=null;throw e;});}
+async function read(){await ensureStore();const result=await pool.query('SELECT settings FROM asset_reminder_settings WHERE id=1');return {...defaults,...result.rows[0]?.settings};}
+async function getSettings(){const settings=await read();return {...settings,smtpAccounts:await smtp.listAccounts(),smtpConfigured:(await smtp.getSettings(settings.smtpAccountId)).configured};}
+function validate(data){if(!data||typeof data!=='object'||Array.isArray(data))throw Object.assign(new Error('Pengaturan reminder tidak valid.'),{status:400});const settings={smtpAccountId:smtp.accountId(data.smtpAccountId)};for(const [field,max] of [['subjectTemplate',250],['bodyTemplate',10000]]){const value=data[field];if(typeof value!=='string'||!value.trim()||value.length>max||(field==='subjectTemplate'&&/[\r\n]/.test(value)))throw Object.assign(new Error('Subjek atau pesan email tidak valid.'),{status:400});settings[field]=value;}return settings;}
+async function saveSettings(data){const settings=validate(data);await smtp.getSettings(settings.smtpAccountId);await ensureStore();await pool.query('INSERT INTO asset_reminder_settings(id,settings) VALUES(1,$1) ON CONFLICT(id) DO UPDATE SET settings=EXCLUDED.settings',[settings]);return getSettings();}
+function renderMessage(settings,asset){const values=Object.fromEntries(['tag','name','owner','ownerEmail','service','renewalDate','vendor','model','location'].map(key=>[key,asset[key]??'']));const render=value=>value.replace(/{{(\w+)}}/g,(match,key)=>Object.hasOwn(values,key)?String(values[key]):match);return {subject:render(settings.subjectTemplate).replace(/[\r\n]/g,' '),text:render(settings.bodyTemplate)};}
+module.exports={defaults,ensureStore,read,getSettings,validate,saveSettings,renderMessage};

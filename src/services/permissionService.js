@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 
 const permissions = [
+  ['asset-register','Asset Register'], ['server-racks','Rak Server'], ['asset-modelling','Modelling Asset Register'],
   ['knowledge-notes', 'Knowledge Notes'],
   ['threat-modelling', 'Threat Modelling'],
   ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'], ['iso27001', 'ISO 27001:2022'], ['iso27001-soa', 'SOA (Statement of Applicability)'],
@@ -43,6 +44,11 @@ const defaults = {
 for (const role of validRoles) if (!defaults[role].includes('threat-modelling')) defaults[role].push('threat-modelling');
 
 for (const role of validRoles) defaults[role].push('knowledge-notes');
+
+for (const key of ['asset-register','server-racks','asset-modelling']) {
+  pageActionMatrix[key] = pageActionMatrix['threat-modelling'];
+  for (const role of validRoles) if (!defaults[role].includes(key)) defaults[role].push(key);
+}
 
 function normalizeAction(action) {
   const value = String(action || 'read').toLowerCase();

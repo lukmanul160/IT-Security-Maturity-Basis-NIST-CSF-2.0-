@@ -5,15 +5,19 @@ const images=require('../services/knowledgeImageService');
 const fs=require('node:fs/promises');
 const upload=require('multer')({
  storage:require('../services/boundedUploadStorage').createBoundedUploadStorage(require('node:path').join(require('node:os').tmpdir(),'nist-note-images'),100*1024*1024),
- limits:{fileSize:10*1024*1024,files:100,fields:3,fieldSize:10*1024*1024},
- fileFilter:(req,file,done)=>done(/\.(png|jpe?g|gif|webp)$/i.test(file.originalname)?null:Object.assign(new Error('Format gambar tidak didukung.'),{status:400}),true)
+ limits:{fileSize:10*1024*1024,files:300,fields:4,fieldSize:10*1024*1024},
+ fileFilter:(req,file,done)=>done(/\.(png|jpe?g|gif|webp|md|txt|json)$/i.test(file.originalname)?null:Object.assign(new Error('Format gambar tidak didukung.'),{status:400}),true)
 });
+const imageFiles=req=>Array.isArray(req.files)?req.files:req.files?.images||[];
+const allFiles=req=>Array.isArray(req.files)?req.files:Object.values(req.files||{}).flat();
 const uploadedImages=async(req)=>{
+ const files=imageFiles(req);
  const paths=JSON.parse(req.body.paths || '[]');
- if(!Array.isArray(paths)||paths.length!==(req.files||[]).length)throw Object.assign(new Error('Daftar gambar tidak valid.'),{status:400});
- return Promise.all(req.files.map(async(file,index)=>({path:paths[index],content:await fs.readFile(file.path)})));
+ if(!Array.isArray(paths)||paths.length!==files.length)throw Object.assign(new Error('Daftar gambar tidak valid.'),{status:400});
+ const uploadedBy=await require('../services/evidenceAccessService').userId(req.user);
+ return Promise.all(files.map(async(file,index)=>({path:paths[index],content:await fs.readFile(file.path),uploadedBy})));
 };
-const cleanup=async(req)=>Promise.all((req.files||[]).map(file=>fs.rm(file.path,{force:true})));
+const cleanup=async(req)=>Promise.all(allFiles(req).map(file=>fs.rm(file.path,{force:true})));
 // Apply additive migrations on first use as well as normal server startup.
 // A failed connection is retried on the next request instead of disabling folders.
 let initialized;
@@ -35,8 +39,14 @@ router.post('/images',requirePermission('knowledge-notes','create'),upload.array
 });
 router.put('/images/:id',requirePermission('knowledge-notes','update'),async(req,res)=>res.json(await images.move(req.params.id,req.body?.folder)));
 router.delete('/images/:id',requirePermission('knowledge-notes','delete'),async(req,res)=>{await images.remove(req.params.id);res.sendStatus(204);});
-router.post('/import-with-images',requirePermission('knowledge-notes','create'),upload.array('images',100),async(req,res)=>{
- try{const payload=JSON.parse(req.body.payload||'{}');res.status(201).json(await service.importNotes(payload.notes,payload.folders,await uploadedImages(req)));}
+router.post('/import-with-images',requirePermission('knowledge-notes','create'),upload.fields([{name:'images',maxCount:100},{name:'documents',maxCount:200}]),async(req,res)=>{
+ try{const payload=JSON.parse(req.body.payload||'{}');
+ const files=req.files?.documents||[],paths=JSON.parse(req.body.documentPaths||'[]');
+ if(!Array.isArray(paths)||paths.length!==files.length)throw Object.assign(new Error('Daftar file catatan tidak valid.'),{status:400});
+ const uploadedBy=await require('../services/evidenceAccessService').userId(req.user);
+ const documents=await Promise.all(files.map(async(file,index)=>({path:paths[index],content:await fs.readFile(file.path),uploadedBy})));
+ res.status(201).json(await service.importNotes(payload.notes,payload.folders,await uploadedImages(req),documents));}
+
  finally{await cleanup(req);}
 });
 router.post('/folders',requirePermission('knowledge-notes','create'),async(req,res)=>res.status(201).json(await service.createFolder(req.body?.path)));

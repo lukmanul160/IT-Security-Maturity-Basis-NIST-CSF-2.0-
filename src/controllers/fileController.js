@@ -31,7 +31,7 @@ const replacementUpload = multer({
 	storage: multer.memoryStorage(),
 	fileFilter: (req, file, callback) => {
 		try {
-			if (!filePath(req).startsWith('audit-finding/')) fileService.validateUploadFile(file.originalname, file.mimetype);
+			if (!filePath(req).startsWith('audit-finding/') && !filePath(req).startsWith('Knowledge Notes/imports/')) fileService.validateUploadFile(file.originalname, file.mimetype);
 			callback(null, true);
 		} catch (error) {
 			callback(error);

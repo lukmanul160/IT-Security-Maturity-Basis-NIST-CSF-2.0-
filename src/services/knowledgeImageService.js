@@ -3,7 +3,17 @@ const { randomUUID } = require('node:crypto');
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
 async function ensureStore(){await pool.query(`CREATE TABLE IF NOT EXISTS knowledge_note_images (
   id UUID PRIMARY KEY,path TEXT NOT NULL UNIQUE,folder TEXT NOT NULL DEFAULT '',mime_type TEXT NOT NULL,
-  content BYTEA NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);}
+  content BYTEA NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+ await pool.query('ALTER TABLE knowledge_note_images ADD COLUMN IF NOT EXISTS evidence_path TEXT');
+ await pool.query('CREATE INDEX IF NOT EXISTS knowledge_note_images_evidence_path_idx ON knowledge_note_images(evidence_path)');
+ await pool.query(`UPDATE knowledge_note_images SET evidence_path='Knowledge Notes/'||id||'/image.'||CASE mime_type WHEN 'image/png' THEN 'png' WHEN 'image/webp' THEN 'webp' WHEN 'image/gif' THEN 'gif' ELSE 'jpg' END WHERE evidence_path IS NULL`);
+ await pool.query(`INSERT INTO evidence_files(path,name,content,mime_type) SELECT evidence_path,regexp_replace(path,'^.*/',''),content,mime_type FROM knowledge_note_images ON CONFLICT(path) DO NOTHING`);
+ await pool.query(`CREATE OR REPLACE FUNCTION sync_note_uploaded_file() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+ IF TG_OP='DELETE' THEN DELETE FROM knowledge_note_images WHERE evidence_path=OLD.path; RETURN OLD; END IF;
+ IF NEW.content IS NOT NULL THEN UPDATE knowledge_note_images SET content=NEW.content,mime_type=NEW.mime_type WHERE evidence_path=NEW.path AND (content IS DISTINCT FROM NEW.content OR mime_type IS DISTINCT FROM NEW.mime_type); END IF;
+ RETURN NEW; END $$`);
+ await pool.query(`DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname='note_uploaded_file_sync' AND tgrelid='evidence_files'::regclass) THEN CREATE TRIGGER note_uploaded_file_sync AFTER INSERT OR UPDATE OR DELETE ON evidence_files FOR EACH ROW EXECUTE FUNCTION sync_note_uploaded_file(); END IF; END $$`);
+}
 function validate(image){
   if(!image||typeof image.path!=='string'||!image.path)throw fail('Path gambar wajib diisi.');
   require('./knowledgeNoteService').validateFolder(image.path);
@@ -20,7 +30,11 @@ function validate(image){
 }
 async function store(client,image){
   const value=validate(image),id=randomUUID();
-  try{const result=await client.query('INSERT INTO knowledge_note_images(id,path,folder,mime_type,content) VALUES($1,$2,$3,$4,$5) RETURNING id,path',[id,value.path,value.folder,value.type,value.content]);return result.rows[0];}
+  try{
+ const name=value.path.split('/').pop().replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,200),filePath=`Knowledge Notes/${id}/${name}`;
+ await client.query('INSERT INTO evidence_files(path,name,content,mime_type,uploaded_by) VALUES($1,$2,$3,$4,$5)',[filePath,name,value.content,value.type,value.uploadedBy||null]);
+ const result=await client.query('INSERT INTO knowledge_note_images(id,path,folder,mime_type,content,evidence_path) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,path',[id,value.path,value.folder,value.type,value.content,filePath]);return result.rows[0];}
+
   catch(error){if(error.code==='23505')throw fail('Gambar sudah ada: '+image.path,409);throw error;}
 }
 async function list(){return (await pool.query('SELECT id,path,mime_type AS type FROM knowledge_note_images ORDER BY path')).rows;}

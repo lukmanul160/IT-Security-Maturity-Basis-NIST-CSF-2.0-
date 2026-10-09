@@ -107,7 +107,10 @@ async function replaceFile(relativePath, file) {
 		throw error;
 	}
 
-	if (!normalized.startsWith('audit-finding/')) validateUploadFile(file.originalname, file.mimetype);
+	if (normalized.startsWith('Knowledge Notes/') && /\.(png|jpe?g|gif|webp)$/i.test(normalized)) require('./knowledgeImageService').validate({path:file.originalname,content:file.buffer});
+	if (normalized.startsWith('Asset Management/')) require('./assetRackPhotoService').validateFile(file);
+	if (normalized.startsWith('Knowledge Notes/imports/')) require('./knowledgeDocumentService').validate({path:file.originalname,content:file.buffer});
+	else if (!normalized.startsWith('audit-finding/')) validateUploadFile(file.originalname, file.mimetype);
 	else if (!file.size || file.size > 10 * 1024 * 1024) throw Object.assign(new Error('Evidence maksimum 10 MB.'), { status: 400 });
 	const currentExtension = path.extname(normalized).toLowerCase();
 	const replacementExtension = path.extname(file.originalname).toLowerCase();
@@ -154,7 +157,10 @@ async function referenceCounts(relativePath) {
 	  (SELECT COUNT(*)::int FROM tprm_due_diligence_questionnaires,
 	    LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(responses->'vendorDocuments') = 'array' THEN responses->'vendorDocuments' ELSE '[]'::jsonb END) AS item
 	    WHERE item->>'path' = ANY($1::text[])) AS questionnaires,
-	  (SELECT COUNT(*)::int FROM audit_finding_records WHERE data->>'attachmentPath' = ANY($1::text[]) OR EXISTS (SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(data->'attachments')='array' THEN data->'attachments' ELSE '[]'::jsonb END) AS item WHERE item->>'path' = ANY($1::text[]))) AS audit`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
+	  (SELECT COUNT(*)::int FROM audit_finding_records WHERE data->>'attachmentPath' = ANY($1::text[]) OR EXISTS (SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(data->'attachments')='array' THEN data->'attachments' ELSE '[]'::jsonb END) AS item WHERE item->>'path' = ANY($1::text[]))) AS audit,
+      (SELECT COUNT(*)::int FROM managed_asset_photos WHERE evidence_path=ANY($1::text[])) +
+      (SELECT COUNT(*)::int FROM asset_rack_photos WHERE evidence_path=ANY($1::text[])) AS assets,
+      (SELECT COUNT(*)::int FROM knowledge_note_images WHERE evidence_path=ANY($1::text[])) AS images`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
 	return result.rows[0];
 }
 async function deleteFile(relativePath, { library = false } = {}) {
@@ -173,14 +179,14 @@ async function deleteFile(relativePath, { library = false } = {}) {
 	}
 	const counts = await referenceCounts(normalized);
 	// The assessment UI removes its own reference after this request succeeds.
-	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0) return;
+	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0 || counts.assets > 0 || counts.images > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }
 async function removeUnreferencedFile(relativePath) {
 	const normalized = storagePath(relativePath);
 	const counts = await referenceCounts(normalized);
-	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0) return;
+	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0 || counts.assets > 0 || counts.images > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }

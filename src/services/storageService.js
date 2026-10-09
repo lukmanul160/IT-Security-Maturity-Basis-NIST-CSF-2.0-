@@ -191,8 +191,8 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
       }
       await client.query(`INSERT INTO file_storage_locations (path, root, object_key) VALUES ($1,$2,$3)
         ON CONFLICT (path) DO UPDATE SET root=EXCLUDED.root, object_key=EXCLUDED.object_key, updated_at=NOW()`, [normalized, root === localRoot ? '' : root, nextLocation.key]);
-      await client.query(`INSERT INTO evidence_files (path, name, content, mime_type, updated_at, uploaded_by) VALUES ($1,$2,NULL,$3,NOW(),$4)
-        ON CONFLICT (path) DO UPDATE SET name=EXCLUDED.name, content=NULL, mime_type=EXCLUDED.mime_type, updated_at=NOW()`, [normalized, name, mimeType, uploadedBy]);
+      await client.query(`INSERT INTO evidence_files (path, name, content, mime_type, updated_at, uploaded_by) VALUES ($1,$2,$5,$3,NOW(),$4)
+        ON CONFLICT (path) DO UPDATE SET name=EXCLUDED.name, content=EXCLUDED.content, mime_type=EXCLUDED.mime_type, updated_at=NOW()`, [normalized, name, mimeType, uploadedBy, (normalized.startsWith('Asset Management/') || normalized.startsWith('Knowledge Notes/')) ? (sourcePath ? await fs.readFile(sourcePath) : buffer) : null]);
       await client.query('COMMIT');
       committed = true;
       // Legacy copies remain untouched until explicitly deleted. Managed old versions are safe to retire.

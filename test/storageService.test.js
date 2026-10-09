@@ -13,6 +13,7 @@ async function fixture() {
   let snapshot;
   const locations = new Map();
   const objects = new Map();
+  const evidence = new Map();
   let failWrite = false;
   let failCommit = false;
   const db = {
@@ -24,6 +25,7 @@ async function fixture() {
       if (sql.startsWith('INSERT INTO file_storage_settings')) settings = { mode: args[0], directory: args[1], cloud_config: JSON.parse(args[2]) };
       if (sql.startsWith('SELECT root')) return { rows: locations.has(args[0]) ? [locations.get(args[0])] : [] };
       if (sql.startsWith('INSERT INTO file_storage_locations')) locations.set(args[0], { root: args[1], object_key: args[2] });
+      if (sql.startsWith('INSERT INTO evidence_files')) evidence.set(args[0],{name:args[1],mimeType:args[2],owner:args[3],content:args[4]});
       if (sql.startsWith('DELETE FROM file_storage_locations')) locations.delete(args[0]);
       return { rows: [] };
     },
@@ -39,7 +41,7 @@ async function fixture() {
     };
   } };
   const service = createStorageService({ db, localRoot, cloud });
-  return { service, objects, locations, localRoot, failWrite: () => { failWrite = true; }, failCommit: () => { failCommit = true; }, cleanup: () => fs.rm(localRoot, { recursive: true, force: true }) };
+  return { service, objects, locations, evidence, localRoot, failWrite: () => { failWrite = true; }, failCommit: () => { failCommit = true; }, cleanup: () => fs.rm(localRoot, { recursive: true, force: true }) };
 }
 
 for (const mode of ['s3', 'gcs']) test(`${mode}: settings probe, upload, read, replacement and delete retain original bucket`, async () => {
@@ -123,4 +125,17 @@ test('explicit deletion removes the managed object and the original legacy uploa
     await assert.rejects(fs.access(require('node:path').join(f.localRoot,'policy-register','original.pdf')),{code:'ENOENT'});
     assert.equal((await fs.readFile(require('node:path').join(f.localRoot,'policy-register','keep.pdf'))).toString(),'keep');
   } finally {await f.cleanup();}
+});
+
+test('asset and note photos retain original database bytes after storage restore/replacement',async()=>{
+ const f=await fixture();try{
+ const content=Buffer.from([0,1,128,255]);
+ for(const prefix of ['Asset Management/assets/a/front/v','Knowledge Notes/a']){
+  const filePath=prefix+'/photo.png';await f.service.put(filePath,{buffer:content,name:'photo.png',mimeType:'image/png',uploadedBy:12});
+  assert.deepEqual(f.evidence.get(filePath).content,content);assert.equal(f.evidence.get(filePath).owner,12);
+  assert.deepEqual(await f.service.read(filePath),content);
+ }
+ await f.service.put('Policy/file.pdf',{buffer:content,name:'file.pdf',mimeType:'application/pdf'});
+ assert.equal(f.evidence.get('Policy/file.pdf').content,null);
+ }finally{await f.cleanup();}
 });

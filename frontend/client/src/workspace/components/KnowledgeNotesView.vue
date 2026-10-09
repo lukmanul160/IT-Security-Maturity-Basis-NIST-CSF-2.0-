@@ -164,11 +164,14 @@ async function importFiles(event, unreadable=[],directoryFolders=[]){
   const payload=!noteFiles.length&&imageFiles.length ? {notes:[],folders:[...new Set([...directoryFolders,...assetFolders])]} : await readNoteImport(noteFiles,activeFolder.value==='*'?'':activeFolder.value,{onReading:({completed,total,path})=>{status.value=`Membaca catatan ${completed}/${total}. Mengakses: ${path}`;},onProgress:({completed,total,path})=>{status.value=`Membaca catatan ${completed}/${total}: ${path}`;},onSkipped:path=>skipped.push(path),onUnreadable:(path,error)=>unreadable.push(path+': '+error.message),folderPaths:[...directoryFolders,...assetFolders.map(path=>destination&&path.startsWith(destination+'/')?path.slice(destination.length+1):path)]});
   if(unreadable.length)throw new Error('Impor dibatalkan; belum ada file atau folder yang disimpan.');
   readFinished=performance.now();
-  if(imageFiles.length){
+  const originalNotes=noteFiles.filter(file=>(files.some(item=>Boolean(item.webkitRelativePath))?/\.(md|txt)$/i:/\.(md|txt|json)$/i).test(file.name));
+  if(imageFiles.length||originalNotes.length){
    if(imageFiles.length>100||imageFiles.reduce((sum,file)=>sum+file.size,0)>100*1024*1024||imageFiles.some(file=>file.size>10*1024*1024))throw new Error('Maksimum 100 gambar / total 100 MB; setiap gambar maksimal 10 MB.');
    const body=new FormData();body.append('payload',JSON.stringify(payload));body.append('paths',JSON.stringify(assetPaths));
    imageFiles.forEach(file=>body.append('images',file.originalFile||file,file.name));
-   status.value=`Mengunggah ${imageFiles.length} gambar ke vault...`;
+   body.append('documentPaths',JSON.stringify(originalNotes.map(file=>[destination,file.webkitRelativePath||file.name].filter(Boolean).join('/'))));
+   originalNotes.forEach(file=>body.append('documents',file.originalFile||file,file.name));
+   status.value=`Mengunggah ${imageFiles.length} gambar dan ${originalNotes.length} file catatan ke vault...`;
    notes.value=await uploadImport(body);
   }else {status.value='Menyimpan catatan dan folder ke vault...';notes.value=await request('/import','POST',payload);}
   uploadFinished=performance.now();
@@ -188,8 +191,8 @@ function uploadImport(body){
   const xhr=new XMLHttpRequest();
   xhr.open('POST','/api/knowledge-notes/import-with-images');
   xhr.responseType='json';
-  xhr.upload.onprogress=event=>{if(event.lengthComputable)status.value=`Mengunggah gambar ke vault: ${Math.round(event.loaded/event.total*100)}%`;};
-  xhr.upload.onload=()=>{status.value='Upload selesai. Menyimpan catatan dan gambar ke vault...';};
+  xhr.upload.onprogress=event=>{if(event.lengthComputable)status.value=`Mengunggah file ke vault: ${Math.round(event.loaded/event.total*100)}%`;};
+  xhr.upload.onload=()=>{status.value='Upload selesai. Menyimpan catatan, gambar, dan file asli ke vault...';};
   xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300)resolve(xhr.response);else reject(new Error(xhr.response?.error||'Impor gambar gagal.'));};
   xhr.onerror=()=>reject(new Error('Koneksi terputus saat impor. Muat ulang daftar vault untuk memeriksa hasilnya.'));
   xhr.send(body);

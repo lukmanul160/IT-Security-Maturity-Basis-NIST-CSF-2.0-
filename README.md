@@ -119,6 +119,7 @@ engine aplikasi tidak cukup untuk membangun frontend saat ini.
 - Risk Acceptance dan Risk Management dengan tab Pengelolaan Pilihan.
 - Threat Modelling: diagram data flow, trust boundary, dan ancaman STRIDE.
 - Policy Register, reminder, serta SMTP terpusat.
+- Asset Management: Asset Register, Rak Server, dan Modelling Asset Register dengan reminder renewal email serta relasi CMDB. Lihat [panduan Asset Management](docs/asset-management.md).
 - Personnel Certification, organisasi, dan reference roadmap.
 - TPRM, kuesioner, template, serta register risiko vendor.
 - Audit Finding Tracker, Uploaded files, akun/permission, audit, dan backup.

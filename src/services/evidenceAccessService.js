@@ -11,10 +11,18 @@ async function userId(user) {
   if (!result.rows[0]) throw invalid('User tidak ditemukan.', 401);
   return result.rows[0].id;
 }
+function fileModule(filePath) {
+  const parts=String(filePath||'').split('/'),folder=parts[0];
+  if(folder==='Asset Management')return parts[1]==='racks'?'Rak Server':'Asset Register';
+  if(folder==='Knowledge Notes')return 'Knowledge Notes';
+  if(/^TPRM/i.test(folder))return 'TPRM';
+  if(folder==='audit-finding')return 'Audit Finding';
+  return folder||'Uploaded files';
+}
 async function list(user) {
   const id = await userId(user);
   const result = await pool.query(`SELECT path, name, mime_type AS type, open_page AS "openPage", uploaded_by AS "uploadedBy", updated_at AS "updatedAt" FROM evidence_files ${user.role === 'admin' ? '' : 'WHERE uploaded_by=$1'} ORDER BY name,path`, user.role === 'admin' ? [] : [id]);
-  return result.rows.map(row => ({ ...row, path: `upload/${row.path}`, source: 'Uploaded files' }));
+  return result.rows.map(row => ({ ...row, path: `upload/${row.path}`, source: fileModule(row.path), module: fileModule(row.path) }));
 }
 async function assertAccess(value, user) {
   const normalized = normalize(value);
@@ -74,4 +82,4 @@ async function assertReferences(next, previous, user) {
     if (!existing.has(normalize(file.path))) await assertAccess(file.path, user);
   }
 }
-module.exports = { normalize, userId, list, searchableList, assertAccess, assertReadAccess, canModify, assertReferences };
+module.exports = { fileModule, normalize, userId, list, searchableList, assertAccess, assertReadAccess, canModify, assertReferences };

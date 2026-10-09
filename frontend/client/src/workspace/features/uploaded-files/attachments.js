@@ -24,12 +24,12 @@ function uploadedLibraryRecords() {
   return selectableEvidenceRecords().map((file, index) => {
     const reference = references.get(file.path);
     const folder = file.path.replace(/^uploads?\//, '').split('/')[0];
-    return { ...(reference || { key: 'uploaded-library', index, sourceType: 'uploaded-library', kind: file.path.includes('/Practice/') ? 'practice' : 'policy', item: { frameworkLabel: 'Uploaded files', name: 'Belum terhubung ke assessment', category: '-', fn: { id: '-', name: folder } } }), ...file };
+    return { ...(reference || { key: 'uploaded-library', index, sourceType: 'uploaded-library', kind: file.path.includes('/Practice/') ? 'practice' : 'policy', item: { frameworkLabel: file.module || file.source || 'Uploaded files', name: file.module || file.source || 'Uploaded files', category: '-', fn: { id: '-', name: folder } } }), ...file };
   });
 }
 async function deleteUploadedLibraryFile(recordId) {
   const record = uploadedFileRecordMap.get(recordId);
-  if (!canEditUploadedFile(record) || !confirm(`File ini adalah file asli/induk: ${record.name}. Menghapusnya akan menghapus file secara permanen dan seluruh referensinya di assessment, policy, questionnaire, dan audit. Lanjutkan?`)) return;
+  if (!canEditUploadedFile(record) || !confirm(`File ini adalah file asli/induk: ${record.name}. Menghapusnya akan menghapus file secara permanen dan seluruh referensinya di assessment, policy, TPRM, audit, aset/rak, dan Knowledge. Lanjutkan?`)) return;
   const status = message => { $('uploadedFilesStatus').textContent = message; $('saveState').textContent = message; };
   status(`Menghapus file ${record.name}...`);
   try {

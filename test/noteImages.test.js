@@ -1,6 +1,47 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJz8AAAAASUVORK5CYII=','base64');
+
+test('original Knowledge documents retain bytes, folder, filename and uploader in central files',async()=>{
+ const documents=require('../src/services/knowledgeDocumentService');
+ const content=Buffer.from('# Original\r\n\r\nKonten catatan.\r\n');
+ let saved;
+ const client={query:async(sql,args)=>{saved={sql,args};return {rows:[]};}};
+ const filePath=await documents.store(client,{path:'Vault/Security/Assessment.md',content,uploadedBy:7});
+ assert.match(filePath,/^Knowledge Notes\/imports\/[^/]+\/Vault\/Security\/Assessment\.md$/);
+ assert.match(saved.sql,/INSERT INTO evidence_files/);
+ assert.equal(saved.args[1],'Assessment.md');assert.deepEqual(saved.args[2],content);assert.equal(saved.args[4],7);
+ assert.throws(()=>documents.validate({path:'../escape.md',content}));
+ assert.throws(()=>documents.validate({path:'unsafe.html',content}));
+});
+
+test('Knowledge document imports commit with notes and roll back if originals cannot be registered',async t=>{
+ const {pool}=require('../src/config/database'),service=require('../src/services/knowledgeNoteService');
+ const calls=[];let fail=false;
+ t.mock.method(pool,'query',async()=>({rows:[]}));
+ t.mock.method(pool,'connect',async()=>({release(){},query:async(sql,args)=>{calls.push({sql,args});if(fail&&sql.startsWith('INSERT INTO evidence_files'))throw Error('library unavailable');return {rows:[]};}}));
+ const documents=[{path:'Original.md',content:Buffer.from('# Original'),uploadedBy:9}];
+ await service.importNotes([{title:'Original',content:'# Original',folder:''}],[],[],documents);
+ assert.ok(calls.some(c=>c.sql.startsWith('INSERT INTO evidence_files')));assert.equal(calls.at(-1).sql,'COMMIT');
+ calls.length=0;fail=true;
+ await assert.rejects(service.importNotes([{title:'Original',content:'# Original',folder:''}],[],[],documents),/library unavailable/);
+ assert.equal(calls.at(-1).sql,'ROLLBACK');assert.equal(calls.some(c=>c.sql==='COMMIT'),false);
+});
+
+test('Knowledge multipart import sends original documents and images to the same transaction',async t=>{
+ const express=require('express'),service=require('../src/services/knowledgeNoteService'),permissions=require('../src/services/permissionService'),access=require('../src/services/evidenceAccessService');
+ let saved;
+ t.mock.method(service,'ensureStore',async()=>{});t.mock.method(permissions,'has',async()=>true);t.mock.method(access,'userId',async()=>11);
+ t.mock.method(service,'importNotes',async(...args)=>{saved=args;return [];});
+ const app=express();app.use((req,res,next)=>{req.user={username:'tester',role:'admin'};next();});app.use('/notes',require('../src/routes/knowledgeNoteRoutes'));
+ const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));
+ try{
+ const body=new FormData();body.append('payload',JSON.stringify({notes:[{title:'Original',folder:'Vault',content:'# Original'}],folders:['Vault']}));body.append('paths',JSON.stringify(['Vault/image.png']));body.append('documentPaths',JSON.stringify(['Vault/Original.md']));
+ body.append('images',new Blob([png],{type:'image/png'}),'image.png');body.append('documents',new Blob(['# Original\r\n'],{type:'text/plain'}),'Original.md');
+ const response=await fetch(`http://127.0.0.1:${server.address().port}/notes/import-with-images`,{method:'POST',body});assert.equal(response.status,201);
+ assert.deepEqual(saved[2][0].content,png);assert.equal(saved[3][0].content.toString(),'# Original\r\n');assert.equal(saved[3][0].uploadedBy,11);assert.equal(saved[3][0].path,'Vault/Original.md');
+ }finally{await new Promise(r=>server.close(r));}
+});
 test('wrapped hash image embeds render across line breaks in imported Markdown and editor text',async()=>{
  const {displayImageMarkdown,imageEmbedRanges}=await import('../frontend/client/src/workspace/features/shared/noteImages.mjs');
  const path='PT BRI Asuransi Indonesia/Draft/SOP IT Security and Network/Attachments/9da1a6e790249d9f492f104b84698ab9f0afcbc0.png';

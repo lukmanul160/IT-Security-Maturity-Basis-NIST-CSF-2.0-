@@ -32,6 +32,10 @@ async function start() {
   await ensurePersonnelCertificationStore();
   await ensureCertificationRoadmapCatalogStore();
   await ensurePermissionStore();
+  await require('./services/assetManagementService').ensureStore();
+  await require('./services/assetReminderSettingsService').ensureStore();
+  await require('./services/assetDiagramService').ensureStore();
+  await require('./services/assetRackPhotoService').ensureStore();
   await require('./services/threatModelService').ensureStore();
   await require('./services/knowledgeNoteService').ensureStore();
   await ensureTprmStore();
@@ -52,6 +56,7 @@ async function start() {
       resolve();
     });
   });
+  require('./services/assetManagementService').startScheduler();
   require('./services/policyReminderService').startScheduler();
   require('./services/auditFindingReminderService').startScheduler();
 }
