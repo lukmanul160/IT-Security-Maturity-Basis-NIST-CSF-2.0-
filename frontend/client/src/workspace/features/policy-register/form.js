@@ -1,7 +1,7 @@
 let policyKnowledgeNotes = [];
 let policyRelatedSelection = new Set();
 let policyKnowledgeRequest = 0;
-const policyRelatedCollapsedFolders = new Set();
+const policyRelatedExpandedFolders = new Set(['']);
 function policyRelatedFolderNotes(folder) {
   return policyKnowledgeNotes.filter(note => !folder || note.folder === folder || (note.folder || '').startsWith(folder + '/'));
 }
@@ -49,10 +49,10 @@ function renderPolicyRelatedNotes() {
     const notes = policyRelatedFolderNotes(node.path);
     if (!notes.some(matches)) return;
     const details = document.createElement('details'); details.className = 'policy-related-folder';
-    details.open = !!query || !policyRelatedCollapsedFolders.has(node.path);
+    details.open = !!query || policyRelatedExpandedFolders.has(node.path);
     details.addEventListener('toggle', () => {
       if (query) return;
-      if (details.open) policyRelatedCollapsedFolders.delete(node.path); else policyRelatedCollapsedFolders.add(node.path);
+      if (details.open) policyRelatedExpandedFolders.add(node.path); else policyRelatedExpandedFolders.delete(node.path);
     });
     const summary = document.createElement('summary');
     const checkbox = checkboxFor(notes, selected => setPolicyRelatedFolder(node.path, selected));
@@ -122,7 +122,8 @@ function resetPolicyRegisterForm() {
   $('policyRegisterFileName').textContent = '-';
   $('policyRegisterFormTitle').textContent = 'New policy';
   policyRelatedSelection = new Set();
-  policyRelatedCollapsedFolders.clear();
+  policyRelatedExpandedFolders.clear();
+  policyRelatedExpandedFolders.add('');
   if ($('policyRelatedSearch')) $('policyRelatedSearch').value = '';
   renderPolicyRelatedNotes();
   renderPolicyRegisterItems([]);
