@@ -54,6 +54,7 @@
     "@tiptap/vue-3": "3.31.4",
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.3",
+    "compression": "^1.8.2",
     "crc-32": "^1.2.2",
     "dompurify": "3.4.16",
     "dotenv": "^16.6.1",

@@ -72,6 +72,17 @@ test('browser translates dynamic UI, preserves form values and user data, and re
           check(localStorage.getItem('nist-basis-language') === 'en', 'persistent preference');
           dynamic.textContent = 'Batal'; await tick(); check(dynamic.textContent === 'Cancel', 'dynamic Indonesian source');
           NistI18n.setLanguage('id'); check(dynamic.textContent === 'Batal', 'restore dynamic');
+          const large = document.createElement('div');
+          large.innerHTML = '<span>Save</span>'.repeat(2000);
+          document.body.append(large); await tick();
+          const scanned = [];
+          const createWalker = document.createTreeWalker.bind(document);
+          document.createTreeWalker = (root, ...args) => { scanned.push(root); return createWalker(root, ...args); };
+          const added = document.createElement('button'); added.textContent = 'Delete';
+          large.append(added); large.firstChild.remove(); await tick();
+          check(added.textContent === 'Hapus', 'new item translated in large list');
+          check(!scanned.includes(large) && !scanned.includes(document.body), 'list updates do not rescan unchanged siblings');
+          document.createTreeWalker = createWalker;
           result.textContent = 'BROWSER_I18N_PASS';
         } catch (error) { result.textContent = 'BROWSER_I18N_FAIL: ' + error.message; }
       });</script></body></html>`);

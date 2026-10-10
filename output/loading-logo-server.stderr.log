@@ -1,1 +1,8 @@
 [app] Mounting /api routes with requireAuth
+[a46a1403-4ada-4a3a-8df5-542d3362a41e] Error: File tidak ditemukan pada lokasi penyimpanannya.
+    at Object.read (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\storageService.js:151:121)
+    at async Object.readFile (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\fileService.js:93:18)
+    at async download (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\fileController.js:88:15) {
+  status: 404,
+  code: 'ENOENT'
+}

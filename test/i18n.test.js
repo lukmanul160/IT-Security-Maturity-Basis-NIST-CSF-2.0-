@@ -107,7 +107,7 @@ test('CSF and privacy canvas labels use the current language without changing sc
   const canvas = { getBoundingClientRect: () => ({ width: 700 }), style: {}, getContext: () => context };
   const sandbox = {
     window: { devicePixelRatio: 1, NistI18n: i18n },
-    $: () => canvas, document: { querySelectorAll: () => [] },
+    $: () => canvas, document: { documentElement: { dataset: {} }, querySelectorAll: () => [] },
     categorySummary: () => [], privacyRows: [{ category: 'Inventory and Mapping (ID.IM-P)' }],
     privacyScoreFor: () => 2
   };

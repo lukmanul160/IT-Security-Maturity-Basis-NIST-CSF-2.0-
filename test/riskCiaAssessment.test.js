@@ -3,7 +3,7 @@ const service=require('../src/services/riskManagementService'),{pool}=require('.
 const {assess}=require('../src/services/assetRiskAssessmentService');
 test('Risk Management browser assessment matches Asset Management for all 25 matrix cells',()=>{
  const source=fs.readFileSync('frontend/client/src/workspace/features/risk-management/register.js','utf8');
- const fields=Object.fromEntries(['rmAssetConfidentiality','rmAssetIntegrity','rmAssetAvailability','rmAssetValue','rmImpact','rmLikelihood','rmRiskRating','rmResidualLikelihood','rmResidualImpact','rmResidualRating','rmCiaSummary'].map(id=>[id,{value:''}]));
+ const fields=Object.fromEntries(['rmAssetConfidentiality','rmAssetIntegrity','rmAssetAvailability','rmAssetValue','rmImpact','rmLikelihood','rmRiskRating','rmResidualLikelihood','rmResidualImpact','rmResidualRating','rmCiaSummary'].map(id=>[id,{value:'',dataset:{}}]));
  const context=vm.createContext({$:id=>fields[id],document:{querySelectorAll:()=>[]}});
  vm.runInContext(source.slice(source.indexOf('function riskRatingFromScore'),source.indexOf('function synchronizeRiskDropdowns')),context);
  for(let impact=1;impact<=5;impact++)for(let likelihood=1;likelihood<=5;likelihood++){

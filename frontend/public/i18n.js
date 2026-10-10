@@ -1907,10 +1907,20 @@
       observer.disconnect();
       const roots = new Set();
       records.forEach(record => {
-        const root = record.target.nodeType === 1 ? record.target : record.target.parentElement;
-        if (root) roots.add(root);
+        // Removed nodes need no translation. Process added subtrees, not their
+        // potentially huge table or workspace parent.
+        const nodes = record.type === 'childList' ? record.addedNodes : [record.target];
+        nodes.forEach(node => {
+          const root = node.nodeType === 1 ? node : node.parentElement;
+          if (root?.isConnected && !root.closest(excluded)) roots.add(root);
+        });
       });
-      roots.forEach(apply);
+      roots.forEach(root => {
+        // A parent in this batch already covers its descendants.
+        let parent = root.parentElement;
+        while (parent && !roots.has(parent)) parent = parent.parentElement;
+        if (!parent) apply(root);
+      });
       observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title', 'aria-label'] });
     });
     refresh();

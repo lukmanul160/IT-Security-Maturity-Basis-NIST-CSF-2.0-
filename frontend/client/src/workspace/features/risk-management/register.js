@@ -9,6 +9,8 @@ function updateRiskCalculations() {
  const likelihood=Number($('rmLikelihood').value),rating=riskRatingFromScore(likelihood,impact);
  $('rmRiskRating').value=rating;$('rmResidualRating').value=riskRatingFromScore($('rmResidualLikelihood').value,$('rmResidualImpact').value);
  const summary=$('rmCiaSummary');if(summary)summary.textContent=rating?'Risiko otomatis: '+rating+' - Dampak '+impact+' x kemungkinan '+likelihood+' = '+impact*likelihood:'Lengkapi CIA dan kemungkinan kejadian untuk menghitung risiko.';
+ const ratingLevel=value=>{const label=String(value||'').toLowerCase();return /high|tinggi|critical/.test(label)?'high':/medium|sedang/.test(label)?'medium':/low|rendah/.test(label)?'low':'';};
+ if(summary)summary.dataset.riskLevel=ratingLevel(rating);for(const id of ['rmRiskRating','rmResidualRating']){const field=$(id);if(field)field.dataset.riskLevel=ratingLevel(field.value);}
  document.querySelectorAll('[data-rm-cia-cell]').forEach(cell=>cell.classList.toggle('is-selected',cell.dataset.rmCiaCell===likelihood+'-'+impact));
 }
 

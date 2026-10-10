@@ -60,64 +60,64 @@
     "overflow": []
   },
   {
-    "page": "/app / asset-register",
+    "page": "/app / monitoring-dashboard",
     "width": 320,
     "scroll": 320
   },
   {
-    "page": "/app / asset-register",
+    "page": "/app / monitoring-dashboard",
     "width": 390,
     "scroll": 390
   },
   {
-    "page": "/app / asset-register",
+    "page": "/app / monitoring-dashboard",
     "width": 768,
     "scroll": 753
   },
   {
-    "page": "/app / server-racks",
+    "page": "/app / monitoring-dashboard",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / framework",
     "width": 320,
     "scroll": 320
   },
   {
-    "page": "/app / server-racks",
+    "page": "/app / framework",
     "width": 390,
     "scroll": 390
   },
   {
-    "page": "/app / server-racks",
+    "page": "/app / framework",
     "width": 768,
     "scroll": 753
   },
   {
-    "page": "/app / asset-modelling",
+    "page": "/app / framework",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / risk-acceptance",
     "width": 320,
     "scroll": 320
   },
   {
-    "page": "/app / asset-modelling",
+    "page": "/app / risk-acceptance",
     "width": 390,
     "scroll": 390
   },
   {
-    "page": "/app / asset-modelling",
+    "page": "/app / risk-acceptance",
     "width": 768,
     "scroll": 753
   },
   {
-    "page": "/app / knowledge-notes",
-    "width": 320,
-    "scroll": 320
-  },
-  {
-    "page": "/app / knowledge-notes",
-    "width": 390,
-    "scroll": 390
-  },
-  {
-    "page": "/app / knowledge-notes",
-    "width": 768,
-    "scroll": 753
+    "page": "/app / risk-acceptance",
+    "width": 1440,
+    "scroll": 1440
   },
   {
     "page": "/app / risk-management",
@@ -135,6 +135,231 @@
     "scroll": 753
   },
   {
+    "page": "/app / risk-management",
+    "width": 1440,
+    "scroll": 1440
+  },
+  {
+    "page": "/app / audit-finding-tracker",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / audit-finding-tracker",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / audit-finding-tracker",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / audit-finding-tracker",
+    "width": 1440,
+    "scroll": 1440
+  },
+  {
+    "page": "/app / policy-register",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / policy-register",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / policy-register",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / policy-register",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / personnel-certification",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / personnel-certification",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / personnel-certification",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / personnel-certification",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / threat-modelling",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / threat-modelling",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / threat-modelling",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / threat-modelling",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / asset-register",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / asset-register",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / asset-register",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / asset-register",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / server-racks",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / server-racks",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / server-racks",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / server-racks",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / asset-modelling",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / asset-modelling",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / asset-modelling",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / asset-modelling",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / tprm",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / tprm",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / tprm",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / tprm",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / tprm-tiering",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / tprm-tiering",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / tprm-tiering",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / tprm-tiering",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / tprm-questionnaire",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / tprm-questionnaire",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / tprm-questionnaire",
+    "width": 768,
+    "scroll": 768
+  },
+  {
+    "page": "/app / tprm-questionnaire",
+    "width": 1440,
+    "scroll": 1440
+  },
+  {
+    "page": "/app / questionnaire-templates",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / questionnaire-templates",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / questionnaire-templates",
+    "width": 768,
+    "scroll": 768
+  },
+  {
+    "page": "/app / questionnaire-templates",
+    "width": 1440,
+    "scroll": 1440
+  },
+  {
     "page": "/app / tprm-register",
     "width": 320,
     "scroll": 320
@@ -150,6 +375,171 @@
     "scroll": 753
   },
   {
+    "page": "/app / tprm-register",
+    "width": 1440,
+    "scroll": 1440
+  },
+  {
+    "page": "/app / csf",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / csf",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / csf",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / csf",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / privacy",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / privacy",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / privacy",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / privacy",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / iso27001",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / iso27001",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / iso27001",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / iso27001",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / privacy-manage",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / privacy-manage",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / privacy-manage",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / privacy-manage",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / csf-manage",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / csf-manage",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / csf-manage",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / csf-manage",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / backups",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / backups",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / backups",
+    "width": 768,
+    "scroll": 768
+  },
+  {
+    "page": "/app / backups",
+    "width": 1440,
+    "scroll": 1440
+  },
+  {
+    "page": "/app / file-backups",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / file-backups",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / file-backups",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / file-backups",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
+    "page": "/app / knowledge-notes",
+    "width": 320,
+    "scroll": 320
+  },
+  {
+    "page": "/app / knowledge-notes",
+    "width": 390,
+    "scroll": 390
+  },
+  {
+    "page": "/app / knowledge-notes",
+    "width": 768,
+    "scroll": 753
+  },
+  {
+    "page": "/app / knowledge-notes",
+    "width": 1440,
+    "scroll": 1425
+  },
+  {
     "page": "/app / files",
     "width": 320,
     "scroll": 320
@@ -163,6 +553,11 @@
     "page": "/app / files",
     "width": 768,
     "scroll": 753
+  },
+  {
+    "page": "/app / files",
+    "width": 1440,
+    "scroll": 1425
   },
   {
     "page": "/login",

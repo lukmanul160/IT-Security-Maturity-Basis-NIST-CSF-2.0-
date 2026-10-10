@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const path = require('path');
 const apiRoutes = require('./routes');
 const authRoutes = require('./routes/authRoutes');
@@ -11,6 +12,12 @@ const { sessionCookieSecure } = require('./config/env');
 
 const app = express();
 app.disable('x-powered-by');
+// Compress application code/styles only; API data, downloads and images retain
+// their original response behavior. Keep compression CPU cost moderate.
+app.use(compression({
+	level: 4,
+	filter: (req, res) => /\.(?:js|css)$/.test(req.path) && compression.filter(req, res),
+}));
 const vueWorkspaceIndex = path.join(publicRoot, 'vue', 'index.html');
 
 // Enable request tracing only when troubleshooting; avoid duplicate console I/O.
@@ -85,6 +92,12 @@ app.use('/api', requireAuth, require('./middleware/uploadCapacity').createUpload
 
 app.get(['/', '/index.html'], (req, res) => res.sendFile(path.join(publicRoot, 'landing.html')));
 app.get('/app', requireAuth, (req, res) => res.sendFile(vueWorkspaceIndex));
+// Content-hashed bundles are safe to reuse until the next build. Keep the
+// authentication check and private cache scope for workspace resources.
+app.use('/vue/assets', requireAuth, express.static(path.join(publicRoot, 'vue', 'assets'), {
+	index: false,
+	setHeaders: res => res.setHeader('Cache-Control', 'private, max-age=31536000, immutable'),
+}));
 app.use(requireAuth, express.static(publicRoot, { index: false }));
 app.use(requireAuth, (req, res, next) => {
 	if (req.path.startsWith('/api/')) return next();

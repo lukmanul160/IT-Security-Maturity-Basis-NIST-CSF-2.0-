@@ -4,6 +4,33 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const app = require('../src/app');
 
+test('workspace bundles are compressed and cached without bypassing authentication', async t => {
+  t.mock.method(require('../src/services/auditService'), 'record', async () => {});
+  const auth = require('../src/config/auth');
+  const token = auth.createSession({ username: 'performance-test', role: 'admin' });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise(resolve => server.once('listening', resolve));
+  t.after(async () => { auth.destroySession(token); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const html = await fs.readFile(path.join(__dirname, '../frontend/public/vue/index.html'), 'utf8');
+  const bundle = html.match(/src="(\/vue\/assets\/[^" ]+\.js)"/)[1];
+  const denied = await fetch(base + bundle, { redirect: 'manual' });
+  assert.equal(denied.status, 302);
+  const headers = { Cookie: `${auth.sessionCookie}=${token}`, 'Accept-Encoding': 'gzip' };
+  const response = await fetch(base + bundle, { headers });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-encoding'), 'gzip');
+  assert.match(response.headers.get('cache-control'), /private.*max-age=31536000.*immutable/);
+  assert.match(response.headers.get('vary'), /Accept-Encoding/i);
+  const body = Buffer.from(await response.arrayBuffer());
+  assert.deepEqual(body, await fs.readFile(path.join(__dirname, '../frontend/public', bundle)));
+  const plain = await fetch(base + bundle, { headers: { ...headers, 'Accept-Encoding': 'identity' } });
+  assert.equal(plain.headers.get('content-encoding'), null);
+  assert.deepEqual(Buffer.from(await plain.arrayBuffer()), body);
+  const cached = await fetch(base + bundle, { headers: { ...headers, 'If-None-Match': response.headers.get('etag'), 'Cache-Control': 'max-age=0' } });
+  assert.equal(cached.status, 304);
+});
+
 test('landing screenshots load publicly with caching while workspace remains protected', async t => {
   t.mock.method(require('../src/services/auditService'), 'record', async () => {});
   const server = app.listen(0, '127.0.0.1');
