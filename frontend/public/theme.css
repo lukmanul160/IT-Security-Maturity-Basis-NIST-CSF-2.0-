@@ -72,6 +72,7 @@ html[data-theme=dark] body.workspace-ui :is(.excel-table,.uploaded-files-table) 
 html[data-theme=dark] body.workspace-ui :is(.excel-table,.uploaded-files-table) tbody tr{background:#1a2638!important}
 html[data-theme=dark] body.workspace-ui :is(.excel-table,.uploaded-files-table) tbody tr:nth-child(even){background:#1d2c41!important}
 html[data-theme=dark] body.workspace-ui :is(.excel-table,.uploaded-files-table) tbody tr:hover{background:#263950!important}
+html[data-theme=dark] body.workspace-ui :is(.excel-table,.uploaded-files-table,.permission-matrix-table) tbody tr:hover>td:not(.asset-matrix-cell){background:#24344b!important}
 html[data-theme=dark] body.workspace-ui #policyRegisterPanel .policy-register-actions{background:#1a2638!important}
 html[data-theme=dark] body.workspace-ui :is(.monitor-module,.monitor-attention button,.monitor-metrics>div,.asset-relation-guide-grid article,.asset-cia-assessment,.asset-risk-matrix-wrap,.tm-editor,.knowledge-tree){border-color:#35455c!important}
 html[data-theme=dark] body.workspace-ui :is(.monitor-ring-total,.monitor-svg-value){fill:#e4ecf8!important}
