@@ -19,3 +19,18 @@ test('diagram API allows readers and denies edits without modelling update permi
  const app=require('express')();app.use(require('express').json());app.use((req,res,next)=>{req.user={role:req.get('X-Role')||'viewer'};next();});app.use(require('../src/routes/assetManagementRoutes'));const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const url='http://127.0.0.1:'+server.address().port+'/diagram';
  try{assert.equal((await fetch(url)).status,200);assert.equal((await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nodes:[node],version:0})})).status,403);assert.equal(saved,false);assert.equal((await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','X-Role':'editor'},body:JSON.stringify({nodes:[node],version:0})})).status,200);assert.equal(saved,true);}finally{await new Promise(r=>server.close(r));permissions.has=original.has;service.read=original.read;service.save=original.save;}
 });
+
+test('canvas names are required and reserved names cannot shadow the existing diagram',()=>{
+ assert.equal(service.validateName({name:' Production '}),'Production');
+ for(const name of ['', '  ', null, 'x'.repeat(151), 'Kanvas utama'])assert.throws(()=>service.validateName({name}));
+});
+test('multiple canvas API requires independent read/create/update permissions and valid UUIDs',async()=>{
+ const permissions=require('../src/services/permissionService'),original={has:permissions.has};
+ const saved={};for(const key of ['listCanvases','createCanvas','readCanvas','renameCanvas','saveCanvas']){saved[key]=service[key];service[key]=async()=>({id,nodes:[],version:0});}
+ permissions.has=async(role,key,action)=>key==='asset-modelling'&&(action==='read'||role==='editor');
+ const app=require('express')();app.use(require('express').json());app.use((req,res,next)=>{req.user={role:req.get('X-Role')||'viewer'};next();});app.use(require('../src/routes/assetManagementRoutes'));const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const url='http://127.0.0.1:'+server.address().port;
+ try{assert.equal((await fetch(url+'/canvases')).status,200);assert.equal((await fetch(url+'/canvases/'+id)).status,200);
+ for(const [path,method] of [['/canvases','POST'],['/canvases/'+id,'PUT'],['/canvases/'+id+'/layout','PUT']]){assert.equal((await fetch(url+path,{method})).status,403);assert.equal((await fetch(url+path,{method,headers:{'X-Role':'editor'}})).status,method==='POST'?201:200);}
+ assert.equal((await fetch(url+'/canvases/bad')).status,400);
+ }finally{await new Promise(r=>server.close(r));permissions.has=original.has;Object.assign(service,saved);}
+});

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="id">
 <head>
+<script src="/theme.js"></script>
   <script src="/i18n.js" defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -58,8 +59,11 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
 @media(prefers-reduced-motion:reduce){.login-page *, .login-page *:before,.login-page *:after{animation:none!important;transition:none!important}.security-core{transform:rotateY(-15deg) rotateZ(-5deg)}}
   </style>
   <link rel="stylesheet" href="/tailwind.css">
+<link rel="stylesheet" href="/theme.css">
 </head>
 <body class="workspace-ui login-page">
+  <div class="login-theme-control"><button type="button" class="button button-quiet theme-toggle" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false"><svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13a8.5 8.5 0 0 1-9.5-9.5A8.5 8.5 0 1 0 20.5 13Z"/></svg><svg data-theme-icon="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span data-theme-label>Dark mode</span></button></div>
+<div id="governanceLoading" class="governance-loading" role="status" aria-live="polite" aria-label="Memuat Governance Assessment" hidden><div class="governance-loading-mark"><img src="/loading-logo.png?v=1" alt="" width="88" height="88" decoding="async" fetchpriority="high"><span class="governance-loading-ring" aria-hidden="true"></span></div><p>Memuat Governance Assessment<span class="governance-loading-dots" aria-hidden="true">...</span></p></div>
   <main class="login-layout">
     <section class="login-story" aria-label="NIST Basis workspace">
       <div class="brand-block"><img class="brand-mark" src="/brand-logo.png" alt="Logo Black Owl Governance" width="40" height="40" style="object-fit:contain;background:transparent;border-radius:50%"><strong class="brand-title">Black Owl Governance</strong></div>
@@ -90,7 +94,13 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
     motionPreference.addEventListener('change', () => { animationEnabled = !motionPreference.matches; updateMotion(); });
     document.addEventListener('visibilitychange', updateMotion);
     updateMotion();
-    const redirectToFrameworkChooser = () => { localStorage.removeItem('nist-maturity-ui'); window.location.replace('/app'); };
+    let loginRedirecting = false;
+    const redirectToMonitoringDashboard = () => {
+      loginRedirecting = true;
+      document.getElementById('governanceLoading').hidden = false;
+      try { localStorage.setItem('nist-maturity-ui', JSON.stringify({ view: 'monitoring-dashboard', function: 'GV' })); } catch {}
+      window.location.replace('/app');
+    };
     const loginForm = document.getElementById('loginForm');
     const loginError = document.getElementById('loginError');
     const usernameInput = document.getElementById('username');
@@ -101,7 +111,7 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
     function checkSession() {
       if (sessionCheck || submitting) return sessionCheck;
       sessionCheck = fetch('/api/auth/me', { cache: 'no-store', signal: AbortSignal.timeout(10000) })
-        .then(response => { if (response.ok) redirectToFrameworkChooser(); })
+        .then(response => { if (response.ok) redirectToMonitoringDashboard(); })
         .catch(() => {})
         .finally(() => { sessionCheck = null; });
       return sessionCheck;
@@ -112,6 +122,7 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
       event.preventDefault();
       if (submitting) return;
       submitting = true;
+      document.getElementById('governanceLoading').hidden = false;
       loginError.textContent = '';
       submitButton.disabled = true;
       loginForm.setAttribute('aria-busy', 'true');
@@ -123,7 +134,7 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
           signal: AbortSignal.timeout(15000),
           body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
         });
-        if (response.ok) { redirectToFrameworkChooser(); return; }
+        if (response.ok) { redirectToMonitoringDashboard(); return; }
         const result = await response.json().catch(() => ({}));
         loginError.textContent = result.error || 'Login gagal. Periksa kembali username dan password Anda.';
       } catch (error) {
@@ -132,6 +143,7 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
           : 'Tidak dapat terhubung ke server. Silakan coba kembali.';
       } finally {
         submitting = false;
+        if (!loginRedirecting) document.getElementById('governanceLoading').hidden = true;
         submitButton.disabled = false;
         submitButton.innerHTML = originalLabel;
         loginForm.removeAttribute('aria-busy');

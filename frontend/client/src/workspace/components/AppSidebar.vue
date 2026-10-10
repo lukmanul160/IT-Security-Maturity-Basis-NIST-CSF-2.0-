@@ -3,6 +3,7 @@
 <aside v-pre class="sidebar" aria-label="Main navigation">
         <div class="sidebar-scroll">
         <div class="sidebar-heading"><img class="sidebar-heading-mark" src="/brand-logo.png" alt="Logo Black Owl Governance" width="44" height="44" style="object-fit:contain;background:transparent;border-radius:50%;padding:0"><span id="sidebarGreeting">Halo</span></div>
+        <section class="sidebar-group" id="monitoringNavGroup"><div class="sidebar-group-items"><button class="nav-item" data-view="monitoring-dashboard" type="button" title="Monitoring Dashboard" aria-label="Monitoring Dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 16v-4m5 4V7m5 9v-6"/></svg></span><span>Monitoring Dashboard</span></button></div></section>
         <section class="sidebar-group" id="assessmentNavGroup">
           <button class="sidebar-group-toggle" id="assessmentNavToggle" type="button" aria-controls="assessmentNav" aria-expanded="true"><span>Assessment map</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="assessmentNav">

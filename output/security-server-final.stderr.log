@@ -1,1 +1,8 @@
 [app] Mounting /api routes with requireAuth
+[80b17295-2a3e-4ce2-b870-178b76720991] Error: Data sudah terdaftar.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assetManagementService.js:4:52)
+    at transaction (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assetManagementService.js:28:287)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assetManagementRoutes.js:53:114 {
+  status: 409
+}

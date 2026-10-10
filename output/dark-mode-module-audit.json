@@ -1,0 +1,198 @@
+[
+  {
+    "label": "monitoring-dashboard",
+    "light": []
+  },
+  {
+    "label": "framework",
+    "light": []
+  },
+  {
+    "label": "risk-acceptance",
+    "light": []
+  },
+  {
+    "label": "risk-acceptance / riskAcceptanceDashboardPanel",
+    "light": []
+  },
+  {
+    "label": "risk-acceptance / riskAcceptanceListPanel",
+    "light": []
+  },
+  {
+    "label": "risk-management",
+    "light": []
+  },
+  {
+    "label": "risk-management / riskDashboardPanel",
+    "light": []
+  },
+  {
+    "label": "risk-management / riskRegisterPanel",
+    "light": []
+  },
+  {
+    "label": "risk-management / riskOptionsPanel",
+    "light": []
+  },
+  {
+    "label": "audit-finding-tracker",
+    "light": []
+  },
+  {
+    "label": "audit-finding-tracker / aftDashboardPanel",
+    "light": []
+  },
+  {
+    "label": "audit-finding-tracker / aftManagePanel",
+    "light": []
+  },
+  {
+    "label": "audit-finding-tracker / aftSmtpPanel",
+    "light": []
+  },
+  {
+    "label": "policy-register",
+    "light": []
+  },
+  {
+    "label": "policy-register / policyDashboardMetrics",
+    "light": []
+  },
+  {
+    "label": "policy-register / policyRegisterPanel",
+    "light": []
+  },
+  {
+    "label": "policy-register / policySmtpPanel",
+    "light": []
+  },
+  {
+    "label": "personnel-certification",
+    "light": []
+  },
+  {
+    "label": "personnel-certification / personnelOrganizationPanel",
+    "light": []
+  },
+  {
+    "label": "personnel-certification / personnelRegisterPanel",
+    "light": []
+  },
+  {
+    "label": "personnel-certification / personnelCertificationMapPanel",
+    "light": []
+  },
+  {
+    "label": "personnel-certification / personnelReferenceRoadmapPanel",
+    "light": []
+  },
+  {
+    "label": "threat-modelling",
+    "light": []
+  },
+  {
+    "label": "asset-register",
+    "light": []
+  },
+  {
+    "label": "server-racks",
+    "light": []
+  },
+  {
+    "label": "asset-modelling",
+    "light": []
+  },
+  {
+    "label": "tprm",
+    "light": []
+  },
+  {
+    "label": "tprm-tiering",
+    "light": []
+  },
+  {
+    "label": "tprm-questionnaire",
+    "light": []
+  },
+  {
+    "label": "questionnaire-templates",
+    "light": []
+  },
+  {
+    "label": "tprm-register",
+    "light": []
+  },
+  {
+    "label": "tprm-register / tprmDashboardPanel",
+    "light": []
+  },
+  {
+    "label": "tprm-register / tprmRegisterPanel",
+    "light": []
+  },
+  {
+    "label": "csf",
+    "light": []
+  },
+  {
+    "label": "privacy",
+    "light": []
+  },
+  {
+    "label": "iso27001",
+    "light": []
+  },
+  {
+    "label": "privacy-manage",
+    "light": []
+  },
+  {
+    "label": "csf-manage",
+    "light": []
+  },
+  {
+    "label": "backups",
+    "light": []
+  },
+  {
+    "label": "file-backups",
+    "light": []
+  },
+  {
+    "label": "knowledge-notes",
+    "light": []
+  },
+  {
+    "label": "files",
+    "light": []
+  },
+  {
+    "label": "account / profile",
+    "light": []
+  },
+  {
+    "label": "account / permissions",
+    "light": []
+  },
+  {
+    "label": "account / matrix",
+    "light": []
+  },
+  {
+    "label": "account / users",
+    "light": []
+  },
+  {
+    "label": "account / audit",
+    "light": []
+  },
+  {
+    "label": "account / smtp",
+    "light": []
+  },
+  {
+    "label": "account / storage",
+    "light": []
+  }
+]

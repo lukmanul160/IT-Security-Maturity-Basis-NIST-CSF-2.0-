@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="id">
   <head>
+<script src="/theme.js"></script>
     <script src="/i18n.js" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,11 +13,11 @@
     <link rel="stylesheet" href="/legacy-before-tailwind.css">
     <link rel="stylesheet" href="/tailwind.css">
     <link rel="stylesheet" href="/legacy-after-tailwind.css">
-  </head>
+  <link rel="stylesheet" href="/theme.css">
+</head>
   <body class="workspace-ui">
-    <div id="app">
-      <main class="vue-loading" aria-live="polite">Memuat governance workspace...</main>
-    </div>
+    <div id="governanceLoading" class="governance-loading" role="status" aria-live="polite" aria-label="Memuat Governance Assessment"><div class="governance-loading-mark"><img src="/loading-logo.png?v=1" alt="" width="88" height="88" decoding="async" fetchpriority="high"><span class="governance-loading-ring" aria-hidden="true"></span></div><p>Memuat Governance Assessment<span class="governance-loading-dots" aria-hidden="true">...</span></p></div>
+    <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

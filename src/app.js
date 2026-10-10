@@ -54,6 +54,7 @@ app.get('/brand-logo.jpeg', (req, res) => {
 		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);
 	});
 });
+app.get('/loading-logo.png', (req, res) => res.sendFile(path.join(publicRoot, 'loading-logo.png'), { maxAge: '7d' }));
 app.get(['/brand-logo.png', '/favicon.ico'], (req, res) => {
 	res.type('png');
 	res.sendFile(path.join(publicRoot, 'brand-logo.png'), error => {
@@ -68,6 +69,8 @@ app.use('/landing-media', express.static(path.join(publicRoot, 'landing-media'),
 }));
 // The login page shares the compiled theme with the authenticated workspace.
 app.get('/tailwind.css', (req, res) => res.sendFile(path.join(publicRoot, 'tailwind.css')));
+app.get('/theme.js', (req, res) => res.sendFile(path.join(publicRoot, 'theme.js')));
+app.get('/theme.css', (req, res) => res.sendFile(path.join(publicRoot, 'theme.css')));
 app.get('/i18n.js', (req, res) => res.sendFile(path.join(publicRoot, 'i18n.js')));
 app.get('/login', (req, res) => {
 	const token = parseCookies(req.headers.cookie)[sessionCookie];

@@ -29,6 +29,11 @@ router.get('/vendor-catalog',requirePermission('asset-register','read'),requireP
 router.get('/risk-catalog',requirePermission('asset-register','read'),requirePermission('risk-management','read'),wrap(async(req,res)=>res.json(await require('../services/riskManagementService').listRegister())));
 router.get('/diagram',requirePermission('asset-modelling','read'),wrap(async(req,res)=>res.json(await diagram.read())));
 router.put('/diagram',requirePermission('asset-modelling','update'),wrap(async(req,res)=>res.json(await diagram.save(req.body))));
+router.get('/canvases',requirePermission('asset-modelling','read'),wrap(async(req,res)=>res.json(await diagram.listCanvases())));
+router.post('/canvases',requirePermission('asset-modelling','create'),wrap(async(req,res)=>res.status(201).json(await diagram.createCanvas(req.body))));
+router.get('/canvases/:id',requirePermission('asset-modelling','read'),wrap(async(req,res)=>res.json(await diagram.readCanvas(req.params.id))));
+router.put('/canvases/:id',requirePermission('asset-modelling','update'),wrap(async(req,res)=>res.json(await diagram.renameCanvas(req.params.id,req.body))));
+router.put('/canvases/:id/layout',requirePermission('asset-modelling','update'),wrap(async(req,res)=>res.json(await diagram.saveCanvas(req.params.id,req.body))));
 router.param('id',(req,res,next,id)=>uuid(id)?next():res.status(400).json({error:'ID tidak valid.'}));
 router.use((req,res,next)=>{for(const key of ['assetId','rackId','sourceId','targetId'])if(req.body?.[key]!==undefined&&!uuid(req.body[key]))return res.status(400).json({error:'Referensi aset/rak tidak valid.'});next();});
 for(const [kind,key] of Object.entries(keys)){

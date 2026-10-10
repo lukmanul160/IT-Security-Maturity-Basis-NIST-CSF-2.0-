@@ -1,0 +1,230 @@
+[app] Mounting /api routes with requireAuth
+[asset-reminder] Connection terminated due to connection timeout
+[audit-finding-reminder] Scheduler failed
+[policy-reminder] Scheduler failed
+[2446def0-0780-439c-a6d0-d13defbc88c5] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getByUsername (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\accountService.js:17:18)
+    at async Object.getProfile (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\accountService.js:22:16)
+    at async currentUser (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\authController.js:37:56) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[policyRegisterController.list] Error: Connection terminated due to connection timeout
+[29842e65-59fd-4e06-8349-c23af1e2538a] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async listControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\frameworkController.js:12:50) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[536338d5-7df4-45a1-9579-ea02063c17a7] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async listControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\frameworkController.js:12:50) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[f5a79229-453e-49f6-a20c-75149843df7e] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.listInformationSecurityObjectives (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:105:18)
+    at async listInformationSecurityObjectives (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\frameworkController.js:19:71) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[2f52cf66-0b6e-43d5-9b7b-695d1bdb1370] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getAssessment (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentService.js:8:18)
+    at async get (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\assessmentController.js:5:41) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[audit-recovery] Database write failed; retaining event on disk: Connection terminated due to connection timeout
+[1579c87b-78c9-4c20-a95e-cabd134aacf8] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async list (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\csfController.js:3:42) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[audit-recovery] Database write failed; retaining event on disk: Connection terminated due to connection timeout
+[1f562851-a69b-4c33-85b5-73ddeeb166a7] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async list (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\csfController.js:3:42) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[b9b855ae-aae6-43f5-8a6f-a6f9adde8f4c] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getAssessment (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentService.js:8:18)
+    at async get (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\assessmentController.js:5:41) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[d6803e74-4bb2-48e0-8b94-100832a97d41] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async listControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\frameworkController.js:12:50) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[44ae5d0e-4518-4cb2-bcea-b3d074238dff] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async listControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\frameworkController.js:12:50) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[policyRegisterController.list] Error: Connection terminated due to connection timeout
+[audit-recovery] Database write failed; retaining event on disk: timeout exceeded when trying to connect
+[monitoring] Module unavailable: storage Error
+[0e311708-f0a9-4723-a5e3-78346a1de0f5] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async listControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\frameworkController.js:12:50) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[policyRegisterController.list] Error: Connection terminated due to connection timeout
+[1aa6f27f-c265-4578-91b5-b6278a543a91] Error: timeout exceeded when trying to connect
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processTimers (node:internal/timers:568:9)
+    at async Object.listIndicators (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskManagementService.js:49:50)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:5:49
+[0fc06a54-0d6b-40eb-935e-01f6b7ef061f] Error: timeout exceeded when trying to connect
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:597:9)
+    at process.processTimers (node:internal/timers:571:7)
+    at async Object.listDropdowns (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskManagementService.js:51:49)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:6:48
+[monitoring] Module unavailable: csf Error
+[monitoring] Module unavailable: privacy Error
+[monitoring] Module unavailable: framework Error
+[e4fb1abb-7b75-4baa-87a4-813e15f05e06] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getByUsername (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\accountService.js:17:18)
+    at async Object.getProfile (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\accountService.js:22:16)
+    at async currentUser (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\authController.js:37:56) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[policyRegisterController.list] Error: Connection terminated due to connection timeout
+[audit-recovery] Database write failed; retaining event on disk: timeout exceeded when trying to connect
+[audit-recovery] Database write failed; retaining event on disk: timeout exceeded when trying to connect
+[b0ca6134-07fb-48c9-bb24-6d3bc8c7f61c] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.listCategoryTargets (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:76:3)
+    at async listCategoryTargets (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\frameworkController.js:17:57) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[be056bab-cf69-4ec9-bdd0-a0837924d338] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async getAssessment (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentService.js:8:18)
+    at async get (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\assessmentController.js:5:41) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[b10e17d3-7b73-4f15-b41d-dfd569b42d72] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.getControls (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\frameworkService.js:32:18)
+    at async list (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\privacyController.js:3:42) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[audit-recovery] Database write failed; retaining event on disk: Connection terminated due to connection timeout
+[audit-recovery] Database write failed; retaining event on disk: Connection terminated due to connection timeout
+[audit-recovery] Database write failed; retaining event on disk: Connection terminated due to connection timeout
