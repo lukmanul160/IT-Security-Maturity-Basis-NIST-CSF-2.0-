@@ -1,0 +1,168 @@
+#riskDashboardPanel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; width: 100%; }
+#riskDashboardPanel > *, #riskDashboardPanel .excel-wrap { min-width: 0; max-width: 100%; }
+#riskDashboardPanel .section-heading { flex-wrap: wrap; gap: 12px; }
+#riskDashboardPanel .csf-actions { flex-wrap: wrap; }
+#riskDashboardPanel[hidden] { display: none; }
+.rd-filters { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
+.rd-filters label { display: grid; gap: 6px; flex: 1 1 160px; font-size: 13px; }
+.rd-filters [hidden] { display: none; }
+.rd-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.rd-kpi { text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.rd-kpi strong { font-size: clamp(24px, 3vw, 36px); }
+.rd-visuals { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; }
+.rd-visuals article { min-width: 0; }
+.rd-matrix { width: 100%; border-spacing: 5px; min-width: 300px; }
+.rd-matrix caption { font-size: 12px; padding: 8px; }
+.rd-matrix th { font-size: 12px; padding: 4px; }
+.rd-cell { width: 100%; min-height: 65px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; }
+.rd-cell strong, .rd-cell small { display: block; }
+.rd-cell strong { font-size: 22px; }
+.rd-cell small { font-size: 10px; margin-top: 3px; }
+.rd-low { background: #d8f3e2; color: #14532d; }
+.rd-medium { background: #fef0bd; color: #713f12; }
+.rd-high { background: #f9caca; color: #7f1d1d; }
+.rd-cell[aria-pressed="true"] { border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb; }
+.rd-kpi:focus-visible, .rd-bar:focus-visible { outline: 3px solid #8bb8ff; outline-offset: 3px; }
+.rd-bars { display: grid; gap: 10px; margin: 16px 0 24px; max-height: 330px; overflow: auto; }
+.rd-bar { display: grid; grid-template-columns: 1fr auto; gap: 8px; text-align: left; border: 0; border-radius: 6px; background: transparent; color: inherit; padding: 8px; cursor: pointer; }
+.rd-bar i { grid-column: 1 / -1; height: 7px; background: #94a3b833; border-radius: 8px; overflow: hidden; }
+.rd-bar b { display: block; height: 100%; background: #3985c9; border-radius: inherit; }
+.rd-bar small { font-weight: normal; }
+.rd-trend { width: 100%; max-height: 240px; color: #3985c9; }
+.rd-trend circle { fill: currentColor; }
+.rd-trend text { fill: currentColor; font-size: 12px; }
+.rd-line { fill: none; stroke: currentColor; stroke-width: 3; }
+.rd-axis { stroke: #94a3b8; fill: none; }
+.rd-months { display: flex; flex-wrap: wrap; gap: 6px; max-height: 150px; overflow: auto; }
+.rd-indicator { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 14px 0; border: 0; border-bottom: 1px solid #94a3b833; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.rd-indicator progress, .rd-indicator small { grid-column: 1 / -1; width: 100%; accent-color: #3985c9; }
+.rd-alert { display: block; width: 100%; padding: 12px; border: 0; border-bottom: 1px solid #94a3b833; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.rd-alert small, .rd-table small { display: block; margin-top: 6px; }
+.rd-table { min-width: 1050px; }
+.rd-table td:first-child { min-width: 240px; max-width: 340px; white-space: normal; }
+.rd-table p { margin: 8px 0 0; }
+.rd-overdue { color: #dc2626; font-weight: 600; }
+.rd-details { display: grid; grid-template-columns: 160px 1fr; gap: 12px; }
+.rd-details dt { font-weight: 600; }
+.rd-details dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rd-trend [data-rd-month] { cursor: pointer; }
+.rd-trend [data-rd-month]:hover, .rd-trend [data-rd-month]:focus-visible { stroke: #1d4ed8; stroke-width: 3; outline: none; }
+body.workspace-ui #riskRegisterPanel .rd-register-context { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin: 20px 0; padding: 22px; background: var(--white); }
+.rd-register-context > div:first-child { flex: 1 1 280px; min-width: 0; }
+.rd-register-context .csf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.rd-register-context .muted { margin: 8px 0 0; line-height: 1.6; overflow-wrap: anywhere; }
+@media (max-width: 850px) { .rd-visuals { grid-template-columns: 1fr; } .rd-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .rd-kpis { grid-template-columns: 1fr; } .rd-details { grid-template-columns: 1fr; } }
+
+/* Dashboard layout uses the same surfaces and form controls as other modules. */
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) {
+  --dashboard-surface: var(--white);
+  --dashboard-soft: var(--paper);
+  --dashboard-border: var(--line);
+  --dashboard-text: var(--ink);
+  --dashboard-muted: var(--muted);
+}
+body.workspace-ui :is(.rd-controls, .ra-controls, .gd-controls) > .section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 0 0 22px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--dashboard-border);
+}
+body.workspace-ui :is(.rd-controls, .ra-controls, .gd-controls) .section-heading > div { min-width: 0; }
+body.workspace-ui :is(.rd-controls, .ra-controls, .gd-controls) .section-heading .csf-actions {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 100%;
+  margin: 0;
+}
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  align-items: end;
+  gap: 16px;
+}
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-filters > label {
+  min-width: 0;
+  gap: 9px;
+  color: var(--dashboard-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) :is(select, input[type=date], input[type=month], input[type=search]) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) select { cursor: pointer; }
+
+body.workspace-ui #riskDashboardPanel :is(#rdExport, #rdMode) { width: auto; flex: 0 1 auto; min-width: 128px; }
+body.workspace-ui :is(#rdReset, #raReset) { min-height: 40px; align-self: end; }
+body.workspace-ui :is(#rdFilterStatus, #raFilterStatus) {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 9px;
+  background: var(--dashboard-soft);
+  color: var(--dashboard-muted);
+  line-height: 1.65;
+  font-size: 12px;
+}
+body.workspace-ui :is(.rd-controls, .ra-controls, .gd-controls) > .muted:last-child { margin: 10px 0 0; line-height: 1.65; font-size: 11px; }
+body.workspace-ui :is(#rdAlertCount, #raAlertCount) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0 6px;
+  margin-left: 5px;
+  border-radius: 7px;
+  background: #eaf1ff;
+  color: #2563eb;
+  font-weight: 700;
+}
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 164px;
+  border-radius: var(--ui-radius);
+  padding: 22px;
+  transition: border-color .18s, background .18s;
+}
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-kpi .stat-label { font-size: 12px; font-weight: 600; }
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-kpi .stat-detail { margin-top: auto; line-height: 1.65; }
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-kpi strong { margin: 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-kpi:hover {
+  border-color: #bdd2f2;
+  background: #f8fafc;
+}
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-bar:hover { outline: 0; background: var(--dashboard-soft); }
+body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .excel-wrap { border-radius: var(--ui-radius); scrollbar-width: thin; }
+body.workspace-ui #raSearch { width: 240px; max-width: 100%; }
+
+html[data-theme=dark] body.workspace-ui :is(#rdAlertCount, #raAlertCount) { background: #263e62; color: #bdd4ff; }
+@media (max-width: 768px) {
+  body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) .rd-kpi,
+  body.workspace-ui #riskRegisterPanel .rd-register-context { padding: 17px; }
+}
+@media (max-width: 650px) {
+  body.workspace-ui :is(.rd-controls, .ra-controls, .gd-controls) .section-heading .csf-actions { width: 100%; }
+  body.workspace-ui :is(.rd-controls, .ra-controls, .gd-controls) .section-heading .csf-actions > * { flex: 1 1 120px; }
+  body.workspace-ui #riskDashboardPanel :is(#rdExport, #rdMode) { min-width: 0; }
+  body.workspace-ui #raSearch { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.workspace-ui :is(#riskDashboardPanel, #riskAcceptanceDashboardPanel, #aftDashboardPanel, #policyDashboardMetrics, #policyDashboardSummary, #assetDashboardPanel, #tprmDashboardPanel) :is(.rd-kpi, select, input) { transition: none; }
+}

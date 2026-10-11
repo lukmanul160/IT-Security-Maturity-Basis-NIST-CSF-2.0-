@@ -1,11 +1,16 @@
 const express = require('express');
 const controller = require('../controllers/riskAcceptanceController');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
+const { requireAdmin } = require('../middleware/authorization');
 
 const router = express.Router();
 router.get('/', requirePermission('risk-acceptance', 'read'), controller.list);
 router.post('/', requirePageAccess('risk-acceptance', 'create'), controller.create);
 router.get('/:id/export/pdf', requirePermission('risk-acceptance', 'read'), controller.exportPdf);
+router.get('/:id/audit', requireAdmin, requirePermission('risk-acceptance', 'read'), async (req, res, next) => {
+  try { res.json(await require('../services/auditService').listRiskAcceptance(req.params.id, req.query.offset)); }
+  catch (error) { next(error); }
+});
 router.put('/:id', requirePageAccess('risk-acceptance', 'update'), controller.update);
 router.delete('/:id', requirePageAccess('risk-acceptance', 'delete'), controller.remove);
 

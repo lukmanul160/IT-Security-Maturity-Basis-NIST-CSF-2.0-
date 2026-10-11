@@ -47,4 +47,15 @@ async function list({ limit = 100, offset = 0, actor = '', eventType = '', from 
   return result.rows;
 }
 
-module.exports = { ensureStore, record, list };
+async function listRiskAcceptance(id, offset = 0) {
+  if (!/^\d+$/.test(String(id))) throw Object.assign(new Error('ID pengajuan tidak valid'), { status: 400 });
+  const result = await pool.query(`SELECT id, request_id AS "requestId", actor_username AS "actorUsername", actor_role AS "actorRole", event_type AS "eventType", method, path, status_code AS "statusCode", ip_address AS "ipAddress", details, created_at AS "createdAt"
+    FROM audit_events
+    WHERE path IN ($1, $2)
+      OR (path = '/api/risk-acceptance' AND method = 'POST' AND details->'response'->>'id' = $3)
+    ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET $4`,
+    [`/api/risk-acceptance/${id}`, `/api/risk-acceptance/${id}/export/pdf`, String(id), Math.max(0, Math.floor(Number(offset) || 0))]);
+  return result.rows;
+}
+
+module.exports = { ensureStore, record, list, listRiskAcceptance };

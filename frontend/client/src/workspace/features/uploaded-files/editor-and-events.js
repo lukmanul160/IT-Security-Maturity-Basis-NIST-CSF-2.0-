@@ -109,7 +109,7 @@ async function uploadLibraryFiles(files) {
       uploaded++;
       evidenceLibrary = [...evidenceLibrary.filter(item => item.path !== result.path), result];
     }
-    $('uploadedFileSearch').value = ''; $('uploadedFileKindFilter').value = 'all';
+    $('uploadedFileSearch').value = ''; ['uploadedFileKindFilter','uploadedFileSourceFilter','uploadedFileFormatFilter'].forEach(id=>$(id).value='all'); uploadedFilesPage=1;
     renderUploadedFiles();
     await refreshEvidenceLibrary({ force: true });
     status.textContent = `${uploaded} file berhasil diupload dan tersedia sebagai referensi.${evidenceLibraryError ? ' ' + evidenceLibraryError : ''}`;

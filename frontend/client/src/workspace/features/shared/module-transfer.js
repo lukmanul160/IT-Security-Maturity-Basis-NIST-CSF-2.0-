@@ -25,14 +25,15 @@ async function runAuditedTransfer(action, module, filename, operation, message) 
 // Shared transfer UI uses the existing authenticated APIs and their write permissions.
 const moduleTransfer = (() => {
   const section = (key, title, url, columns, options = {}) => ({ key, title, url, columns: columns.split(' '), ...options });
+  const gapSection=framework=>section(framework==='iso27001-soa'?'soaGaps':'gaps','Assessment gaps'+(framework==='iso27001-soa'?' / SOA':''),`/api/assessment-gaps/${framework}`,'id framework controlCode description status evidence createdBy updatedBy createdAt updatedAt',{gap:true,optional:true,framework});
   const controls = 'id function category subcategory implementation minimumEvidence applicability evidence';
   const modules = {
     'tprm-questionnaire': { title: 'Vendor Due Diligence Questionnaire', views: ['tprmQuestionnaireView'], sections: [section('questionnaires', 'Vendor assessments', '/api/tprm-questionnaires', 'id vendorName status reviewDate result reviewer notes responses')] },
     'questionnaire-templates': { title: 'Questionnaire Templates', views: ['questionnaireTemplateView'], sections: [section('templates', 'Questionnaire templates', '/api/questionnaire-templates', 'id template_name description sections is_default')] },
     'tprm-register': { title: 'Third-Party Risk Register', views: ['tprmRegisterView'], sections: [section('register', 'Third-party risk register', '/api/tprm', 'id thirdParty questionnaireId serviceDependency riskLevel assessmentStatus relationshipStatus nextReview notes riskRegisterIds dueDiligenceAssessment')] },
-    csf: { title: 'NIST CSF Assessment', views: ['assessmentView', 'csfView'], sections: [section('assessment', 'Maturity assessment', '/api/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true })] },
-    privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true })] },
-    iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'year objective indicator baseline targetValue owner evaluationFrequency periodTargets notes')] },
+    csf: { title: 'NIST CSF Assessment', views: ['assessmentView', 'csfView'], sections: [section('assessment', 'Maturity assessment', '/api/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('csf')] },
+    privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('privacy')] },
+    iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'year objective indicator baseline targetValue owner evaluationFrequency periodTargets notes'),gapSection('iso27001'),gapSection('iso27001-soa')] },
     'risk-acceptance': { title: 'Risk Acceptance', views: ['riskAcceptanceView'], sections: [section('register', 'Acceptance register', '/api/risk-acceptance', 'id requestorName assetName department riskDescription benefitJustification mitigationPlan businessOwnerDecision remediationDate cisDecision cisConditions')] },
     'risk-management': { title: 'Risk Management', views: ['riskManagementView'], sections: [section('register', 'Risk register', '/api/risk-management', 'riskId thirdParty riskCategory effectedAsset deviceName identificationRisk riskControl riskCause riskAnalysis assetConfidentiality assetIntegrity assetAvailability assetValue riskOwner note ref likelihood impact riskRating treatmentAction acceptanceFormNo riskTreatmentDescription ownerOfAction deadline residualRiskDescription residualLikelihood residualImpact residualRating comment', { id: 'riskId' })] },
     'policy-register': { title: 'Policy Register', views: ['policyRegisterView'], sections: [section('register', 'Policy register', '/api/policy-register', 'id title category owner reviewCycle approvalStatus lastReview notes items')] },
@@ -65,6 +66,7 @@ const moduleTransfer = (() => {
       format: 'nist-basis-module', version: 1, module: key,
       instructions: [
         `Template import ${config.title}. Isi data sesuai header; headers dan instructions hanya panduan dan tidak disimpan.`,
+        'Gap: controlCode harus tersedia; description wajib, status Open/Closed, evidence berupa daftar referensi file. Gunakan ID export agar import ulang memperbarui gap yang sama. File evidence dipulihkan melalui Backup file ZIP sebelum import. Gap yang tidak ada dalam file import tetap dipertahankan.',
         'Daftar kosong [] diisi dengan object untuk setiap record. Gunakan Export JSON sebagai contoh data lengkap dari halaman ini.',
         'Tanggal: YYYY-MM-DD. Gunakan ID dari export untuk memperbarui record; hilangkan id untuk record baru (kecuali ID kontrol ISO).',
         'Assessment memakai ID kontrol yang tersedia di halaman. Import mengganti state assessment; template kosong akan mengosongkan assessment.',
@@ -84,6 +86,8 @@ const moduleTransfer = (() => {
     if (!object(payload) || payload.format !== 'nist-basis-module' || payload.version !== 1 || payload.module !== key || !object(payload.data)) throw new Error('Format, versi, atau modul file tidak sesuai. Gunakan file Export JSON dari modul ini.');
     for (const item of modules[key].sections) {
       const value = payload.data[item.key];
+      if(item.optional && value===undefined)continue;
+      if(item.gap && (!Array.isArray(value)||value.some(row=>!object(row)||typeof row.controlCode!=='string'||!row.controlCode.trim()||typeof row.description!=='string'||!row.description.trim()||row.description.trim().length>4000||!['Open','Closed'].includes(row.status)||!Array.isArray(row.evidence)||row.evidence.length>20||row.evidence.some(file=>!object(file)||typeof file.path!=='string')||(row.framework!==undefined&&row.framework!==item.framework)||(row.id!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id)))))throw new Error('Data gap tidak valid: kontrol, deskripsi, Open/Closed, dan evidence wajib sesuai format.');
       if (item.assessment) {
         if (!object(value) || !object(value.scores) || !object(value.notes)) throw new Error('Data assessment tidak valid.');
         for (const field of ['scores', 'policyScores', 'practiceScores']) {
@@ -113,7 +117,7 @@ const moduleTransfer = (() => {
     return payload;
   }
   function rows(item, value) {
-    if (!item.assessment) return value;
+    if (!item.assessment) return value || [];
     const controlId = key => key.replace(/^(?:privacy-)?(?:policy|practice)-/, '');
     const ids = [...new Set(['scores', 'policyScores', 'practiceScores', 'notes', 'attachments'].flatMap(field => Object.keys(value[field] || {}).map(controlId)))];
     const related = (field, id) => Object.fromEntries(Object.entries(value[field] || {}).filter(([key]) => controlId(key) === id));
@@ -149,6 +153,8 @@ const moduleTransfer = (() => {
         }
       }
       for (const item of modules[key].sections) {
+        if(item.optional && payload.data[item.key]===undefined)continue;
+        if(item.gap){const permission=({csf:'assessment',privacy:'privacy-assessment'})[item.framework]||item.framework;if(!canPerform(permission,'update'))throw new Error('Izin Edit diperlukan untuk import gap.');const result=await request(item.url+'/import','POST',{gaps:payload.data[item.key]});completed+=result.imported;progress?.(completed);continue;}
         if (item.assessment) { if(!canPerform(key==='csf' ? 'assessment' : 'privacy-assessment','update')) throw new Error('Izin Edit diperlukan untuk impor assessment.'); await request(item.url, 'PUT', payload.data[item.key]); completed++; continue; }
         const existing = await request(item.url);
         for (const original of payload.data[item.key]) {

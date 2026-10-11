@@ -24,8 +24,29 @@ function uploadedLibraryRecords() {
   return selectableEvidenceRecords().map((file, index) => {
     const reference = references.get(file.path);
     const folder = file.path.replace(/^uploads?\//, '').split('/')[0];
-    return { ...(reference || { key: 'uploaded-library', index, sourceType: 'uploaded-library', kind: file.path.includes('/Practice/') ? 'practice' : 'policy', item: { frameworkLabel: file.module || file.source || 'Uploaded files', name: file.module || file.source || 'Uploaded files', category: '-', fn: { id: '-', name: folder } } }), ...file };
+    const record = { ...(reference || { key: 'uploaded-library', index, sourceType: 'uploaded-library', item: { frameworkLabel: file.module || file.source || 'Uploaded files', name: file.module || file.source || 'Uploaded files', category: '-', fn: { id: '-', name: folder } } }), ...file };
+    // Origin describes the original upload, even when another module reuses the file.
+    return {...record, uploadSource:uploadedFileOrigin(file), format:uploadedFileFormat(file), kind:file.path.includes('/Practice/')?'practice':file.path.includes('/Policy/')?'policy':'other'};
   });
+}
+function uploadedFileOrigin(file) {
+  const folder=String(file.path || '').replace(/^uploads?\//,'').split('/')[0];
+  const source=file.source || file.module || folder || 'Uploaded files';
+  if(['Govern','Identify','Protect','Detect','Respond','Recover'].includes(source))return `CSF 2.0 / ${source}`;
+  if(/^[A-Z]+-P$/.test(source))return `Privacy Framework / ${source}`;
+  return ({'ISO 27001':'ISO 27001:2022','ISO 27001 SOA':'ISO 27001 / SOA','policy-register':'Policy Register','audit-finding':'Audit Finding Tracker','Audit Finding':'Audit Finding Tracker'})[source] || source;
+}
+function uploadedFileFormat(file) {
+  const extension=String(file.name || file.path || '').match(/\.([a-z0-9]+)$/i)?.[1]?.toUpperCase();
+  return extension || ({'application/pdf':'PDF','image/png':'PNG','image/jpeg':'JPG','image/webp':'WEBP','image/gif':'GIF'})[file.type] || 'Tanpa ekstensi';
+}
+function syncUploadedFileFilter(id,records,field,label,display=value=>value) {
+  const select=$(id);if(!select)return;
+  const previous=select.value,counts=new Map();
+  records.forEach(record=>counts.set(record[field],(counts.get(record[field])||0)+1));
+  select.innerHTML=`<option value="all">${escapeHtml(label)}</option>`+[...counts].sort(([a],[b])=>a.localeCompare(b)).map(([value,count])=>`<option value="${escapeHtml(value)}">${escapeHtml(display(value))} (${count})</option>`).join('');
+  select.value=counts.has(previous)?previous:'all';
+  if(select.value!==previous)uploadedFilesPage=1;
 }
 async function deleteUploadedLibraryFile(recordId) {
   const record = uploadedFileRecordMap.get(recordId);
@@ -59,14 +80,17 @@ async function deleteUploadedLibraryFile(recordId) {
   } catch (error) { status(error.message); }
 }
 function renderUploadedFiles() {
-  const query = $('uploadedFileSearch').value.toLowerCase(); const kindFilter = $('uploadedFileKindFilter').value;
   const allRecords = uploadedLibraryRecords();
-  const records = allRecords.filter(record => { const item = record.item; const text = `${record.name} ${record.path} ${item.fn.name} ${item.category} ${item.subcategory}`.toLowerCase(); return (kindFilter === 'all' || record.kind === kindFilter) && text.includes(query); });
+  syncUploadedFileFilter('uploadedFileSourceFilter',allRecords,'uploadSource','Semua asal upload');
+  syncUploadedFileFilter('uploadedFileKindFilter',allRecords,'kind','Semua evidence',value=>({policy:'Policy',practice:'Practice',other:'Lainnya'})[value]);
+  syncUploadedFileFilter('uploadedFileFormatFilter',allRecords,'format','Semua format');
+  const query=$('uploadedFileSearch').value.trim().toLowerCase(),kindFilter=$('uploadedFileKindFilter').value,sourceFilter=$('uploadedFileSourceFilter').value,formatFilter=$('uploadedFileFormatFilter').value;
+  const records = allRecords.filter(record => { const item = record.item; const text = `${record.name} ${record.path} ${record.uploadSource} ${record.format} ${item.fn.name} ${item.category} ${item.subcategory}`.toLowerCase(); return (kindFilter === 'all' || record.kind === kindFilter) && (sourceFilter==='all'||record.uploadSource===sourceFilter) && (formatFilter==='all'||record.format===formatFilter) && text.includes(query); });
   uploadedFileRecordMap = new Map(allRecords.map((record, index) => [`uploaded-${index}`, record]));
   const recordIds = new Map([...uploadedFileRecordMap].map(([id, record]) => [record, id]));
-  const total = allRecords.length; $('uploadedFileCount').textContent = `${total} file${total === 1 ? '' : 's'}${evidenceLibraryError ? ' (daftar belum diperbarui)' : ''}`;
+  const total = allRecords.length; $('uploadedFileCount').textContent = `${records.length} dari ${total} file${evidenceLibraryError ? ' (daftar belum diperbarui)' : ''}`;
   uploadedFilesPage = renderListPagination('uploadedFilesPagination', uploadedFilesPage, records.length, 'files'); const visibleRecords = records.slice((uploadedFilesPage - 1) * 20, uploadedFilesPage * 20);
-  $('uploadedFilesBody').innerHTML = visibleRecords.map(record => `<tr><td><strong class="uploaded-file-name" title="${escapeHtml(record.path)}">${escapeHtml(record.name)}</strong><small>File asli/induk</small><small>${escapeHtml(record.path)}</small></td><td><span class="framework-badge">${escapeHtml(record.item.frameworkLabel || (record.key.startsWith('privacy-') ? 'Privacy Framework' : 'CSF 2.0'))}</span></td><td><span class="function-badge">${escapeHtml(record.item.fn.id)}</span>${escapeHtml(record.item.fn.name)}</td><td>${escapeHtml(categoryLabel(record.item.category || 'CSF Core'))}</td><td>${escapeHtml(record.item.name)}</td><td><span class="file-kind ${record.kind}">${record.kind === 'policy' ? 'Policy' : 'Practice'}</span></td><td>${record.updatedAt ? new Date(record.updatedAt).toLocaleDateString('id-ID') : '-'}</td><td><div class="file-actions"><button class="attachment-action-button" type="button" data-open-library-file="${recordIds.get(record)}">Open</button><button class="attachment-action-button" type="button" data-download-library-file="${recordIds.get(record)}">Download</button>${canEditUploadedFile(record) ? `<button class="attachment-action-button" type="button" data-uploaded-file-edit="${recordIds.get(record)}">Edit</button>` : ''}${canEditUploadedFile(record) ? `<button class="attachment-action-button danger" type="button" data-delete-library-file="${recordIds.get(record)}">Hapus file asli</button>` : ''}</div></td></tr>`).join('') || `<tr><td colspan="8" class="empty-files">${evidenceLibraryError ? escapeHtml(evidenceLibraryError) : 'Belum ada file yang diupload.'}</td></tr>`;
+  $('uploadedFilesBody').innerHTML = visibleRecords.map(record => `<tr><td><strong class="uploaded-file-name" title="${escapeHtml(record.path)}">${escapeHtml(record.name)}</strong><small>File asli/induk</small><small>${escapeHtml(record.path)}</small></td><td><span class="framework-badge">${escapeHtml(record.uploadSource)}</span></td><td><span class="function-badge">${escapeHtml(record.item.fn.id)}</span>${escapeHtml(record.item.fn.name)}</td><td>${escapeHtml(categoryLabel(record.item.category || 'CSF Core'))}</td><td>${escapeHtml(record.item.name)}</td><td><span class="file-kind ${record.kind}">${record.kind === 'policy' ? 'Policy' : record.kind === 'practice' ? 'Practice' : 'Lainnya'}</span></td><td>${record.updatedAt ? new Date(record.updatedAt).toLocaleDateString('id-ID') : '-'}</td><td><div class="file-actions"><button class="attachment-action-button" type="button" data-open-library-file="${recordIds.get(record)}">Open</button><button class="attachment-action-button" type="button" data-download-library-file="${recordIds.get(record)}">Download</button>${canEditUploadedFile(record) ? `<button class="attachment-action-button" type="button" data-uploaded-file-edit="${recordIds.get(record)}">Edit</button>` : ''}${canEditUploadedFile(record) ? `<button class="attachment-action-button danger" type="button" data-delete-library-file="${recordIds.get(record)}">Hapus file asli</button>` : ''}</div></td></tr>`).join('') || `<tr><td colspan="8" class="empty-files">${evidenceLibraryError ? escapeHtml(evidenceLibraryError) : allRecords.length ? 'Tidak ada file yang sesuai filter.' : 'Belum ada file yang diupload.'}</td></tr>`;
   $('uploadedFilesBody').querySelectorAll('[data-delete-library-file]').forEach(button => button.addEventListener('click', () => deleteUploadedLibraryFile(button.dataset.deleteLibraryFile)));
   $('uploadedFilesBody').querySelectorAll('[data-open-library-file]').forEach(button => button.addEventListener('click', () => { const record = uploadedFileRecordMap.get(button.dataset.openLibraryFile); if (record) window.open(apiFileOpenUrl(record.path), '_blank', 'noopener'); }));
   $('uploadedFilesBody').querySelectorAll('[data-download-library-file]').forEach(button => button.addEventListener('click', () => { const record = uploadedFileRecordMap.get(button.dataset.downloadLibraryFile); if (!record) return; const link = document.createElement('a'); link.href = apiFileUrl(record.path); link.download = record.name; link.click(); }));

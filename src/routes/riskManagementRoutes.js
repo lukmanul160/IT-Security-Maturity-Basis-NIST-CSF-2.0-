@@ -3,6 +3,7 @@ const controller = require('../controllers/riskManagementController');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
 const router = express.Router();
 router.get('/dashboard', requirePermission('risk-management', 'read'), controller.dashboard);
+router.post('/report', requirePermission('risk-management', 'read'), controller.report);
 router.get('/indicators', requirePermission('risk-management', 'read'), controller.indicators);
 router.get('/dropdowns', requirePermission('risk-management', 'read'), controller.dropdowns);
 router.post('/dropdowns', requirePageAccess('risk-management', 'create'), controller.createDropdown);

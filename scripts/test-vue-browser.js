@@ -598,19 +598,19 @@ async function run() {
         for (const id of ['riskRequestorName', 'riskAssetName', 'riskDepartment', 'riskDescription', 'riskBenefitJustification', 'riskMitigationPlan']) document.getElementById(id).value = 'Browser fixture';
         document.querySelector('#riskAcceptanceForm').requestSubmit();
       })()`);
-      await waitFor(client, `!document.querySelector('#riskAcceptanceModal').open && document.querySelector('[data-risk-view="test-risk"]')`, 'risk create');
-      assert.equal(await evaluate(client, `document.querySelector('#riskAcceptanceApproved').textContent`), '1');
-      await evaluate(client, `document.querySelector('[data-risk-view="test-risk"]').click()`);
+      await waitFor(client, `!document.querySelector('#riskAcceptanceModal').open && document.querySelector('[data-ra-view="test-risk"]')`, 'risk create');
+      assert.equal(await evaluate(client, `document.querySelector('[data-ra-kpi=pending] strong').textContent`), '1');
+      await evaluate(client, `document.querySelector('[data-ra-view="test-risk"]').click()`);
       assert.equal(await evaluate(client, `document.querySelector('#riskAcceptanceModal').open && document.querySelector('#riskAssetName').disabled && !document.querySelector('#riskAcceptanceCancel').hidden`), true);
-      await evaluate(client, `document.querySelector('#riskAcceptanceCancel').click(); document.querySelector('[data-risk-edit="test-risk"]').click(); document.querySelector('#riskAssetName').value = 'Updated fixture'; document.querySelector('#riskCisDecision').value = 'conditional'; document.querySelector('#riskAcceptanceForm').requestSubmit()`);
+      await evaluate(client, `document.querySelector('#riskAcceptanceCancel').click(); document.querySelector('[data-ra-edit="test-risk"]').click(); document.querySelector('#riskAssetName').value = 'Updated fixture'; document.querySelector('#riskCisDecision').value = 'conditional'; document.querySelector('#riskAcceptanceForm').requestSubmit()`);
       await waitFor(client, `!document.querySelector('#riskAcceptanceModal').open && document.querySelector('#riskAcceptanceBody').textContent.includes('Updated fixture')`, 'risk update');
-      assert.equal(await evaluate(client, `document.querySelector('#riskAcceptanceConditional').textContent`), '1');
+      assert.equal(await evaluate(client, `document.querySelector('[data-ra-kpi=pending] strong').textContent`), '1');
       await evaluate(client, `document.querySelector('[data-risk-delete="test-risk"]').click()`);
       assert.equal(await evaluate(client, `document.querySelector('#riskAcceptanceDeleteModal').open`), true);
       await evaluate(client, `document.querySelector('#riskAcceptanceDeleteCancel').click()`);
       assert.equal(await evaluate(client, `!!document.querySelector('[data-risk-delete="test-risk"]')`), true);
       await evaluate(client, `document.querySelector('[data-risk-delete="test-risk"]').click(); document.querySelector('#riskAcceptanceDeleteConfirm').click()`);
-      await waitFor(client, `!document.querySelector('#riskAcceptanceDeleteModal').open && document.querySelector('#riskAcceptanceTotal').textContent === '0'`, 'risk delete');
+      await waitFor(client, `!document.querySelector('#riskAcceptanceDeleteModal').open && document.querySelector('#raResultCount').textContent === '(0)'`, 'risk delete');
       await evaluate(client, `document.querySelector('#riskAcceptanceDashboardTab').click()`);
       assert.equal(await evaluate(client, `!document.querySelector('#riskAcceptanceDashboardPanel').hidden && document.querySelector('#riskAcceptanceListPanel').hidden`), true);
       for (const width of [1440, 768, 390]) {

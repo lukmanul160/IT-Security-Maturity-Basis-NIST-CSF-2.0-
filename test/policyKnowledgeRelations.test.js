@@ -40,13 +40,18 @@ test('policy search includes only linked note content and combines with category
     policyRegisterStatusFilter: { value: 'all' },
     policyRegisterOwnerFilter: { value: 'all' },
   };
+  for (const id of ['pdCategory', 'pdOwner', 'pdStatus', 'pdReview']) inputs[id] = { value: '', selectedOptions: [{textContent: 'Semua'}] };
+  inputs.pdDrillStatus = {}; inputs.pdClearDrill = {};
   const tr = { dataset: { policyId: '1' }, style: {}, querySelectorAll: () => ['Kebijakan umum', 'Security', 'CISO', 'Annual', 'Draft', '', '', ''].map(textContent => ({ textContent })) };
   inputs.policyRegisterBody = { querySelectorAll: () => [tr] };
   for (const input of Object.values(inputs)) input.addEventListener = () => {};
   const context = vm.createContext({ $: id => inputs[id] || null, document: { querySelectorAll: () => [] } });
   vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/policy-register/form.js', 'utf8'), context);
   vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/policy-register/register-and-calendar.js', 'utf8'), context);
-  vm.runInContext(`policyKnowledgeNotes = [{id:2,title:'Akses',folder:'Security',content:'Aturan hak akses'}, {id:3,title:'Other',content:'rahasia unik'}]; policyRegisterRows = [{id:1,title:'Kebijakan umum',relatedNoteIds:['2']}]; filterPolicyRegisterTable();`, context);
+  vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/shared/governance-dashboard.js', 'utf8'), context);
+  const dashboard = fs.readFileSync('frontend/client/src/workspace/features/policy-register/dashboard.js', 'utf8');
+  vm.runInContext(dashboard.slice(0, dashboard.indexOf("$('policyRegisterView').addEventListener")), context);
+  vm.runInContext(`policyKnowledgeNotes = [{id:2,title:'Akses',folder:'Security',content:'Aturan hak akses'}, {id:3,title:'Other',content:'rahasia unik'}]; policyRegisterRows = [{id:1,title:'Kebijakan umum',category:'Security',owner:'CISO',approvalStatus:'Draft',relatedNoteIds:['2']}]; filterPolicyRegisterTable();`, context);
   assert.equal(tr.style.display, '');
   inputs.policyRegisterCategoryFilter.value = 'Privacy';
   vm.runInContext('filterPolicyRegisterTable()', context);

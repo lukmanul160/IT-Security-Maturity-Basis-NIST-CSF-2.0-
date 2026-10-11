@@ -145,6 +145,7 @@ async function replaceFile(relativePath, file) {
 	};
 }
 async function referenceCounts(relativePath) {
+	await require('./assessmentGapService').ensureStore();
 	const normalized = storagePath(relativePath);
 	const result = await pool.query(`SELECT
 	  (SELECT COUNT(*)::int FROM assessment_state,
@@ -162,7 +163,8 @@ async function referenceCounts(relativePath) {
       (SELECT COUNT(*)::int FROM managed_asset_photos WHERE evidence_path=ANY($1::text[])) +
       (SELECT COUNT(*)::int FROM asset_rack_photos WHERE evidence_path=ANY($1::text[])) AS assets,
       (SELECT COUNT(*)::int FROM knowledge_note_images WHERE evidence_path=ANY($1::text[])) AS images`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
-	return result.rows[0];
+	const gaps = await pool.query(`SELECT COUNT(*)::int AS count FROM assessment_gaps, LATERAL jsonb_array_elements(evidence) AS item WHERE item->>'path'=ANY($1::text[])`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
+	return {...result.rows[0], gaps:gaps.rows[0].count};
 }
 async function deleteFile(relativePath, { library = false } = {}) {
 	const normalized = storagePath(relativePath);
@@ -180,14 +182,14 @@ async function deleteFile(relativePath, { library = false } = {}) {
 	}
 	const counts = await referenceCounts(normalized);
 	// The assessment UI removes its own reference after this request succeeds.
-	if (counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0 || counts.assets > 0 || counts.images > 0) return;
+	if (counts.gaps > 0 || counts.assessment > 1 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0 || counts.assets > 0 || counts.images > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }
 async function removeUnreferencedFile(relativePath) {
 	const normalized = storagePath(relativePath);
 	const counts = await referenceCounts(normalized);
-	if (counts.assessment > 0 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0 || counts.assets > 0 || counts.images > 0) return;
+	if (counts.gaps > 0 || counts.assessment > 0 || counts.controls > 0 || counts.policies > 0 || counts.questionnaires > 0 || counts.audit > 0 || counts.assets > 0 || counts.images > 0) return;
 	await storage.remove(normalized);
 	await pool.query('DELETE FROM evidence_files WHERE path = $1', [normalized]);
 }

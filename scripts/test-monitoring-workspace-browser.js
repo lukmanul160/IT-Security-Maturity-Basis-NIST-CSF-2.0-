@@ -27,9 +27,26 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  assert.ok(await evaluate("!!(document.querySelector('[data-view=monitoring-dashboard]').compareDocumentPosition(document.querySelector('#assessmentNavGroup')) & Node.DOCUMENT_POSITION_FOLLOWING)"));
  assert.equal(await evaluate("document.querySelectorAll('.active-view').length"),1);
  const result=await evaluate("(async()=>{const r=await fetch('/api/monitoring-dashboard'),body=await r.json();return {status:r.status,count:body.modules.length,failures:body.modules.filter(m=>m.state!=='ready').map(m=>m.id),cards:document.querySelectorAll('[data-monitor-module]').length};})()");assert.equal(result.status,200);assert.equal(result.count,result.cards);assert.ok(result.count>=20);assert.deepEqual(result.failures,[]);
+ await evaluate("document.querySelector('[data-monitor-module=iso27001-soa] .monitor-open').click()");await wait("document.querySelector('[data-iso-tab=soa]').classList.contains('button-accent')");await evaluate("document.querySelector('[data-view=monitoring-dashboard]').click()");await wait("!!document.querySelector('#monitoringDashboardView.active-view .monitor-module-grid')");
  await evaluate("document.querySelector('[data-monitor-module=smtp] .monitor-open').click()");await wait("document.querySelector('[data-account-tab=smtp]').getAttribute('aria-selected')==='true'");await evaluate("document.querySelector('[data-view=monitoring-dashboard]').click()");await wait("!!document.querySelector('#monitoringDashboardView.active-view .monitor-module-grid')");
  await evaluate("document.querySelector('[data-view=asset-register]').click()");await wait("!!document.querySelector('#assetManagementView.active-view')");await evaluate("document.querySelector('[data-view=monitoring-dashboard]').click()");await wait("!!document.querySelector('#monitoringDashboardView.active-view .monitor-module-grid')");
  await delay(1500);await call('Page.reload');await delay(500);await wait("!!document.querySelector('#monitoringDashboardView.active-view .monitor-module-grid')");assert.equal(await evaluate("document.querySelectorAll('.active-view').length"),1);
+
+ assert.equal(await evaluate("document.querySelectorAll('.monitor-kpis > button').length"),8);
+ assert.equal(await evaluate("document.querySelectorAll('#monitoringDashboardView table').length"),0);
+ await evaluate("document.querySelector('.monitor-filters select').value='assets';document.querySelector('.monitor-filters select').dispatchEvent(new Event('change',{bubbles:true}))");
+ await wait("document.querySelectorAll('[data-monitor-module]').length===3");
+ assert.equal(await evaluate("Array.from(document.querySelectorAll('[data-monitor-module]')).every(n=>['asset-register','server-racks','asset-modelling'].includes(n.dataset.monitorModule))"),true);
+ await evaluate("document.querySelector('.monitor-filters select').value='all';document.querySelector('.monitor-filters select').dispatchEvent(new Event('change',{bubbles:true}))");
+ await wait("document.querySelectorAll('[data-monitor-module]').length>=20");
+ fs.writeFileSync('output/monitoring-governance-preview.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
+ for(const width of [1440,768,390]){
+ await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<600});await delay(300);
+ assert.equal(await evaluate('document.documentElement.scrollWidth>document.documentElement.clientWidth+1'),false,'monitor overflow at '+width);
+ await evaluate("NistTheme.set('dark')");await delay(300);
+ assert.equal(await evaluate("getComputedStyle(document.querySelector('.monitor-kpis > button')).backgroundColor"),'rgb(26, 38, 56)');
+ await evaluate("NistTheme.set('light')");await delay(300);
+ }
  assert.deepEqual(errors,[]);console.log('PASS: built workspace restores Monitoring Dashboard, sidebar sits above Assessment map, real read-only API data renders all permitted modules, navigation and reload preserve the active view, no browser exceptions.');
  auth.destroySession(token);
  }finally{ws?.close();chrome?.kill();if(server)await new Promise(r=>server.close(r));await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-monitor-workspace-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}

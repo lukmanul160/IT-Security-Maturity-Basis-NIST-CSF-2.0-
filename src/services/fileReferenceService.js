@@ -2,6 +2,7 @@
 async function detach(client, normalized) {
   const paths = [normalized, `upload/${normalized}`, `uploads/${normalized}`];
   const filter = expression => `COALESCE((SELECT jsonb_agg(item ORDER BY position) FROM jsonb_array_elements(CASE WHEN jsonb_typeof(${expression})='array' THEN ${expression} ELSE '[]'::jsonb END) WITH ORDINALITY AS files(item,position) WHERE NOT COALESCE(item->>'path'=ANY($1::text[]),false)), '[]'::jsonb)`;
+  await client.query(`UPDATE assessment_gaps SET evidence=${filter('evidence')},updated_at=NOW() WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(evidence) item WHERE item->>'path'=ANY($1::text[]))`,[paths]);
   await client.query(`UPDATE assessment_state SET data=jsonb_set(data,'{attachments}',
     COALESCE((SELECT jsonb_object_agg(key,${filter('value')}) FROM jsonb_each(data->'attachments')), '{}'::jsonb)), updated_at=NOW()
     WHERE jsonb_typeof(data->'attachments')='object' AND EXISTS (

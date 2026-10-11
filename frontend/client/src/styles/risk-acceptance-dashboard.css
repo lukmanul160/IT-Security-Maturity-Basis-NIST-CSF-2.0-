@@ -1,0 +1,54 @@
+#riskAcceptanceDashboardPanel { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; gap: 20px; }
+#riskAcceptanceDashboardPanel[hidden] { display: none; }
+#riskAcceptanceDashboardPanel > *, #riskAcceptanceDashboardPanel .excel-wrap { min-width: 0; max-width: 100%; }
+#riskAcceptanceDashboardPanel .section-heading { flex-wrap: wrap; gap: 12px; }
+#riskAcceptanceDashboardPanel .csf-actions { flex-wrap: wrap; }
+.ra-new-request { margin: 16px 0; }
+.ra-visuals { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; }
+.ra-visuals article { min-width: 0; }
+.ra-visuals label { display: grid; gap: 5px; font-size: 12px; }
+.ra-weekdays, .ra-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.ra-weekdays { margin: 16px 0 8px; text-align: center; font-size: 12px; }
+.ra-calendar-day { min-height: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 1px solid #94a3b833; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+.ra-calendar-day small { font-size: 10px; }
+.ra-calendar-day:disabled { opacity: .6; cursor: default; }
+.ra-calendar-day[aria-pressed="true"] { outline: 2px solid #2563eb; }
+.ra-day-overdue { background: #fee2e2; color: #991b1b; }
+.ra-day-soon { background: #fef3c7; color: #854d0e; }
+.ra-day-scheduled { background: #dcfce7; color: #166534; }
+.ra-stacked { display: flex; }
+.rd-bar .ra-approved { background: #22a56d; }
+.rd-bar .ra-conditional { background: #e7ad22; }
+.rd-bar .ra-pending { background: #22a5c6; }
+.rd-bar .ra-rejected { background: #dc5757; }
+.ra-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; font-size: 11px; }
+.ra-dot::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 5px; }
+.ra-dot.ra-approved { color: #168557; }
+.ra-dot.ra-conditional { color: #a76d00; }
+.ra-dot.ra-pending { color: #1598b4; }
+.ra-dot.ra-rejected { color: #c94646; }
+.ra-badge { display: inline-block; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: normal; }
+.ra-badge.ra-approved { background: #dcfce7; color: #166534; }
+.ra-badge.ra-conditional { background: #fef3c7; color: #854d0e; }
+.ra-badge.ra-pending { background: #cffafe; color: #155e75; }
+.ra-badge.ra-rejected { background: #fee2e2; color: #991b1b; }
+.ra-table { min-width: 1400px; }
+.ra-table td { vertical-align: top; }
+.ra-table td:first-child { min-width: 220px; max-width: 320px; white-space: normal; }
+.ra-table p { margin: 8px 0 0; }
+.ra-table small { display: block; margin-top: 6px; }
+.ra-text-preview { min-width: 200px; max-width: 260px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 100px; overflow: auto; }
+.ra-row-actions { display: flex; flex-wrap: wrap; gap: 5px; min-width: 130px; }
+.ra-coverage-item { display: flex; justify-content: space-between; gap: 14px; padding: 14px 0; border-bottom: 1px solid #94a3b833; }
+.ra-overdue-text { color: #dc2626; }
+.ra-complete-text { color: #15803d; }
+.ra-unavailable strong { font-size: 22px; }
+.ra-audit-entry { padding: 18px 0; border-bottom: 1px solid #94a3b833; }
+.ra-audit-entry pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 380px; overflow: auto; }
+@media (max-width: 850px) { .ra-visuals { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .ra-calendar-day { min-height: 50px; } .ra-calendar-day small { font-size: 8px; } }
+
+#riskAcceptanceListPanel { min-width: 0; max-width: 100%; }
+#riskAcceptanceListPanel .section-heading, #riskAcceptanceListPanel .csf-actions { flex-wrap: wrap; gap: 12px; }
+#riskAcceptanceListPanel .excel-wrap { max-width: 100%; }
+#raDrillStatus { overflow-wrap: anywhere; }

@@ -10,6 +10,18 @@ function load(fetch = async () => { throw new Error('Unexpected request'); }, ca
 function payload(module, data) { return { format: 'nist-basis-module', version: 1, module, exportedAt: '2026-09-14', data }; }
 test('every requested module exposes a transfer definition', () => { assert.equal(Object.keys(load().modules).length, 10); });
 
+test('assessment exports and reports include gap status, evidence and framework relationships',async()=>{
+  const api=load(async url=>({ok:true,json:async()=>url.includes('assessment-gaps')?[{id:'11111111-1111-4111-8111-111111111111',framework:url.endsWith('privacy')?'privacy':'csf',controlCode:'DE.AE-02',description:'Kurang poin a',status:'Open',evidence:[]}]:{scores:{},notes:{}}}));
+  for(const framework of ['csf','privacy']){const exported=await api.collect(framework);assert.equal(exported.data.gaps.length,1);api.validate(framework,exported);assert.ok(api.report(framework,exported).includes('Kurang poin a'));}
+});
+test('gap import uses the batch endpoint, validates before writes, and retains compatibility with old exports',async()=>{
+  const calls=[];const api=load(async(url,options)=>{calls.push({url,...options});return {ok:true,json:async()=>({imported:1})};});
+  const data={assessment:{scores:{},notes:{}},gaps:[{id:'11111111-1111-4111-8111-111111111111',framework:'csf',controlCode:'DE.AE-02',description:'a',status:'Closed',evidence:[]}]};
+  assert.equal(await api.importPayload('csf',payload('csf',data)),2);assert.equal(calls[1].url,'/api/assessment-gaps/csf/import');assert.equal(calls[1].method,'POST');
+  calls.length=0;await assert.rejects(api.importPayload('csf',payload('csf',{...data,gaps:[{...data.gaps[0],status:'Pending'}]})),/gap tidak valid/);assert.equal(calls.length,0);
+  await api.importPayload('csf',payload('csf',{assessment:{scores:{},notes:{}}}));assert.equal(calls.length,1);
+});
+
 test('TPRM exports include questionnaires, template sections, and CIA assessments in reports', async () => {
   const records = {
     '/api/tprm-questionnaires': [{ id: 1, vendorName: 'Vendor A', status: 'Draft', result: 'Pending', responses: { answer: '<answer>' } }],

@@ -3,18 +3,24 @@
 import part01 from './features/shared/state-and-access.js?raw';
 import submissionGuard from './features/shared/submission-guard.js?raw';
 import part02 from './features/risk-acceptance/forms.js?raw';
+import acceptanceDashboard from './features/risk-acceptance/dashboard.js?raw';
 import part03 from './features/policy-register/dropdowns.js?raw';
 import part04 from './features/policy-register/form.js?raw';
 import part05 from './features/policy-register/email-reminder.js?raw';
+import governanceDashboard from './features/shared/governance-dashboard.js?raw';
+import policyDashboard from './features/policy-register/dashboard.js?raw';
 import part06 from './features/policy-register/register-and-calendar.js?raw';
 import part07 from './features/tprm/navigation-and-questionnaires.js?raw';
 import part08 from './features/tprm/questionnaire-templates.js?raw';
 import part09 from './features/tprm/vendor-register.js?raw';
+import tprmDashboard from './features/tprm/dashboard.js?raw';
 import part10 from './features/risk-management/register.js?raw';
+import riskDashboard from './features/risk-management/dashboard.js?raw';
 import riskOptions from './features/risk-management/options.js?raw';
 import personnelForms from './features/personnel/organization-and-forms.js?raw';
 import part11 from './features/personnel/certifications.js?raw';
 import part12 from './features/assessment/overview-and-csf.js?raw';
+import assessmentGaps from './features/assessment/gaps.js?raw';
 import part13 from './features/iso27001/controls-and-evidence.js?raw';
 import part14 from './features/iso27001/objectives-and-soa.js?raw';
 import part15 from './features/assessment/control-editor.js?raw';
@@ -42,17 +48,23 @@ export default [
   part01,
   evidenceLibrary,
   part02,
+  acceptanceDashboard,
   part03,
   part04,
   part05,
+  governanceDashboard,
   part06,
+  policyDashboard,
   part07,
   part08,
   part09,
+  tprmDashboard,
   part10,
+  riskDashboard,
   riskOptions,
   personnelForms,
   part11,
+  assessmentGaps,
   part12,
   part13,
   part14,

@@ -69,13 +69,6 @@
     $('aftSearch').value = ''; $('aftFilter').value = '';
     setTab('manage'); render(); $('aftManageTab').focus();
   }
-  document.querySelectorAll('[data-aft-card]').forEach(card => {
-    card.addEventListener('click', () => openCard(card.dataset.aftCard));
-    card.addEventListener('keydown', event => {
-      if (!['Enter', ' '].includes(event.key)) return;
-      event.preventDefault(); openCard(card.dataset.aftCard);
-    });
-  });
   const form = $('aftForm');
   const canWrite = (action='update') => currentUserActions[key] ? canPerform(key,action) : ['admin', 'approver', 'editor', 'user'].includes(currentUserRole);
   const canDelete = () => currentUserActions[key] ? canPerform(key,'delete') : ['admin', 'approver'].includes(currentUserRole);
@@ -107,12 +100,10 @@
   $('aftDashboardRefresh').addEventListener('click', load);
   // Compare local calendar dates: due today is not overdue; closed records never count.
   function isOverdue(record) {
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    return record.data.status !== 'Closed' && Boolean(record.data.dueDate) && record.data.dueDate < today;
+    return record.data.status !== 'Closed' && Boolean(gdDate(record.data.dueDate)) && gdDays(record.data.dueDate) < 0;
   }
   function auditFindingDetails(audit) {
-    const findings = rows.filter(row => row.kind === 'finding' && row.parentId === audit.id);
+    const findings = afFindings().filter(row => row.parentId === audit.id);
     const pending = findings.filter(row => row.data.status !== 'Closed');
     const overdue = pending.filter(isOverdue).length;
     pending.sort((a, b) => Number(isOverdue(b)) - Number(isOverdue(a)) || (a.data.dueDate || '9999').localeCompare(b.data.dueDate || '9999'));
@@ -126,6 +117,91 @@
     if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || 'Permintaan gagal'); }
     return response.status === 204 ? null : response.json();
   }
+  function afFindings() {
+    return rows.filter(row => row.kind === 'finding' && (!$('afAudit').value || ancestors(row).some(parent => parent.id === $('afAudit').value)) &&
+      (!$('afOwner').value || row.data.owner === $('afOwner').value) && (!$('afSeverity').value || row.data.severity === $('afSeverity').value) &&
+      (!$('afStatus').value || row.data.status === $('afStatus').value) && gdReviewMatches(row.data.dueDate, $('afReview').value, row.data.status !== 'Closed'));
+  }
+  function afScopedRows() {
+    const findings = afFindings(), ids = new Set(findings.map(row => row.id));
+    findings.forEach(row => ancestors(row).forEach(parent => ids.add(parent.id)));
+    const filtered = ['afOwner', 'afSeverity', 'afStatus', 'afReview'].some(id => $(id).value);
+    return rows.filter(row => ids.has(row.id) || ancestors(row).some(parent => ids.has(parent.id) && parent.kind === 'finding') ||
+      !filtered && row.kind === 'audit' && (!$('afAudit').value || row.id === $('afAudit').value));
+  }
+  function afReset() {
+    ['afAudit', 'afOwner', 'afSeverity', 'afStatus', 'afReview', 'aftSearch', 'aftFilter'].forEach(id => { $(id).value = ''; });
+    cardFilter = null; path = []; render();
+  }
+  function afDrill(kind, value, label) {
+    if (!ready) return;
+    cardFilters.dashboard = { title: label, matches: row => {
+      if (kind === 'audit-records') return row.kind === 'audit';
+      if (kind === 'followups') return row.kind === 'followup';
+      if (kind === 'evidence') return row.kind === 'evidence';
+      if (row.kind !== 'finding') return false;
+      if (kind === 'open') return row.data.status !== 'Closed';
+      if (kind === 'closed') return row.data.status === 'Closed';
+      if (kind === 'high') return row.data.status !== 'Closed' && ['High', 'Critical'].includes(row.data.severity);
+      if (kind === 'overdue') return isOverdue(row);
+      if (kind === 'soon') return gdReviewMatches(row.data.dueDate, 'soon', row.data.status !== 'Closed');
+      if (kind === 'date') return gdDate(row.data.dueDate) === value && row.data.status !== 'Closed';
+      if (kind === 'month') return gdDate(row.data.dueDate).slice(0, 7) === value;
+      if (kind === 'audit') return ancestors(row).some(parent => parent.id === value);
+      if (kind === 'record') return row.id === value;
+      return String(row.data[kind] || '') === value;
+    }};
+    cardFilter = 'dashboard'; path = []; $('aftSearch').value = ''; $('aftFilter').value = ''; setTab('manage'); render(); $('aftManageTab').focus(); $('aftManagePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function renderAuditDashboard() {
+    gdOptions('afAudit', rows.filter(row => row.kind === 'audit').map(row => row.id), 'Semua audit');
+    Array.from($('afAudit').options).slice(1).forEach(option => { option.textContent = rows.find(row => row.id === option.value)?.data.title || option.value; });
+    gdOptions('afOwner', rows.filter(row => row.kind === 'finding').map(row => row.data.owner), 'Semua PIC');
+    const findings = afFindings(), scope = afScopedRows(), closed = findings.filter(row => row.data.status === 'Closed').length;
+    const overdue = findings.filter(isOverdue).length, high = findings.filter(row => row.data.status !== 'Closed' && ['High', 'Critical'].includes(row.data.severity)).length;
+    gdKpis('afKpis', [
+      ['audit-records', 'Jenis audit', scope.filter(row => row.kind === 'audit').length, 'Audit induk dalam cakupan', 'aftAuditCount'],
+      ['open', 'Finding terbuka', findings.length - closed, 'Status Open atau In progress', 'aftOpenCount'],
+      ['high', 'High / Critical terbuka', high, 'Temuan prioritas yang belum selesai'],
+      ['overdue', 'Lewat tenggat', overdue, 'Finding belum Closed', 'aftOverdueFindingCount'],
+      ['closed', 'Finding selesai', closed, `${findings.length ? Math.round(closed / findings.length * 100) : 0}% penyelesaian`, 'aftClosedFindingCount'],
+      ['soon', 'Tenggat dalam 30 hari', findings.filter(row => gdReviewMatches(row.data.dueDate, 'soon', row.data.status !== 'Closed')).length, 'Hari ini hingga H-30']
+    ], 'af-kpi');
+    document.querySelectorAll('#afKpis button').forEach(button => { button.disabled = !ready; });
+    $('afFilterStatus').textContent = `${findings.length} dari ${rows.filter(row => row.kind === 'finding').length} finding · ${scope.filter(row => row.kind === 'followup').length} follow-up · ${scope.filter(row => row.kind === 'evidence').length} evidence terkait.`;
+    gdBars('afFindingSummary', findings, row => row.data.status, 'af-status');
+    gdBars('afSeverities', findings, row => row.data.severity, 'af-severity');
+    gdBars('afOwners', findings, row => row.data.owner, 'af-owner');
+    gdBars('afAudits', findings, row => ancestors(row).find(parent => parent.kind === 'audit')?.id, 'af-audit');
+    $('afAudits').querySelectorAll('[data-af-audit] span').forEach(span => { span.textContent = rows.find(row => row.id === span.closest('button').dataset.afAudit)?.data.title || 'Audit tidak ditemukan'; });
+    gdTimeline('afTimeline', findings, row => row.data.dueDate, 'af-month');
+    gdCalendar('afCalendar', 'afMonth', findings.filter(row => row.data.status !== 'Closed'), row => row.data.dueDate, 'af-date');
+    const alerts = findings.filter(row => isOverdue(row) || gdReviewMatches(row.data.dueDate, 'soon', row.data.status !== 'Closed'));
+    alerts.sort((a, b) => a.data.dueDate.localeCompare(b.data.dueDate));
+    $('afAlertCount').textContent = alerts.length;
+    $('afAlerts').innerHTML = '<h3>Finding perlu perhatian</h3>' + (alerts.map(row => `<button type="button" class="rd-alert" data-af-record="${escapeHtml(row.id)}"><strong>${escapeHtml(row.data.title)}</strong><small>${escapeHtml(row.data.owner || 'PIC belum diisi')} · ${escapeHtml(row.data.dueDate)} · ${isOverdue(row) ? 'Overdue' : 'Dalam 30 hari'}</small></button>`).join('') || '<p class="muted">Tidak ada tenggat mendekat atau overdue dalam cakupan.</p>');
+  }
+  $('auditFindingView').addEventListener('change', event => {
+    if (['afAudit', 'afOwner', 'afSeverity', 'afStatus', 'afReview'].includes(event.target.id)) { cardFilter = null; path = []; render(); }
+    if (event.target.id === 'afMonth') gdCalendar('afCalendar', 'afMonth', afFindings().filter(row => row.data.status !== 'Closed'), row => row.data.dueDate, 'af-date');
+    if (event.target.id === 'afExport' && event.target.value) {
+      const scope = cardFilters[cardFilter];
+      const selected = afScopedRows().filter(row => !scope || scope.matches(row));
+      gdExport('audit-finding-dashboard', selected, [['ID', r => r.id], ['Parent ID', r => r.parentId], ['Kind', r => r.kind], ['Title', r => r.data.title], ['PIC', r => r.data.owner], ['Status', r => r.data.status], ['Severity', r => r.kind === 'finding' ? r.data.severity : ''], ['Date', r => r.data.dueDate]], event.target.value); event.target.value = '';
+    }
+  });
+  $('auditFindingView').addEventListener('click', event => {
+    const button = event.target.closest('button'); if (!button) return;
+    if (button.id === 'afReset' || button.id === 'afListReset') afReset();
+    if (button.id === 'afBackDashboard') setTab('dashboard');
+    if (button.id === 'afClearDrill') { cardFilter = null; path = []; render(); }
+    if (button.id === 'afAlertsButton') { $('afAlerts').hidden = !$('afAlerts').hidden; button.setAttribute('aria-expanded', String(!$('afAlerts').hidden)); }
+    if (button.dataset.afKpi) afDrill(button.dataset.afKpi, '', button.querySelector('.stat-label').textContent);
+    for (const kind of ['severity', 'owner', 'status', 'month', 'date', 'audit', 'record']) {
+      const value = button.dataset['af' + kind[0].toUpperCase() + kind.slice(1)];
+      if (value !== undefined) afDrill(kind, value, `${kind}: ${kind === 'audit' || kind === 'record' ? rows.find(row => row.id === value)?.data.title || value : value || 'Belum diisi'}`);
+    }
+  });
   function render() {
     const level = path.length, parentId = path.at(-1)?.id || null;
     $('aftNew').textContent = `Tambah ${labels[level]}`;
@@ -133,29 +209,17 @@
     $('aftNew').disabled = !ready;
     document.querySelectorAll('[data-aft-card]').forEach(card => card.setAttribute('aria-disabled', String(!ready)));
     $('aftReminderPanel').hidden = currentUserRole !== 'admin';
-    $('aftAuditCount').textContent = rows.filter(r => r.kind === 'audit').length;
-    $('aftOpenCount').textContent = rows.filter(r => r.kind === 'finding' && r.data.status !== 'Closed').length;
-    const findings = rows.filter(r => r.kind === 'finding');
-    const closedFindings = findings.filter(r => r.data.status === 'Closed').length;
-    const overdueFindings = findings.filter(r => isOverdue(r)).length;
-    $('aftClosedFindingCount').textContent = closedFindings;
-    $('aftResolutionRate').textContent = `${findings.length ? Math.round((closedFindings / findings.length) * 100) : 0}% penyelesaian`;
-    $('aftFindingSummary').innerHTML = [
-      ['Belum selesai', findings.length - closedFindings, '#2c7be5'],
-      ['Lewat tenggat', overdueFindings, '#b43f37'],
-      ['Selesai', closedFindings, '#21734f']
-    ].map(([label, value, color]) => `<div class="risk-summary-row"><span>${label}</span><strong>${value}</strong><i><b style="width:${findings.length ? Math.round((value / findings.length) * 100) : 0}%;background:${color}"></b></i></div>`).join('');
-    if ($('aftFollowupCount')) $('aftFollowupCount').textContent = rows.filter(r => r.kind === 'followup').length;
-    if ($('aftEvidenceCount')) $('aftEvidenceCount').textContent = rows.filter(r => r.kind === 'evidence').length;
-    $('aftOverdueFindingCount').textContent = overdueFindings;
+    renderAuditDashboard();
     $('aftBreadcrumb').innerHTML = [0, ...path.map((_, i) => i + 1)].map(i => `<button class="button ${i === level ? 'button-accent' : 'button-quiet'}" type="button" data-aft-level="${i}" ${i === level ? 'aria-current="page"' : ''}>${escapeHtml(i ? `${labels[i]}: ${path[i - 1].data.title}` : 'Semua Audit')}</button>`).join('');
     $('aftContext').textContent = path.length ? path.map(r => r.data.title).join(' → ') + (path.at(-1).data.description ? ' — ' + path.at(-1).data.description : '') : 'Pilih audit untuk melihat finding, lalu follow-up dan evidence terkait.';
     const search = $('aftSearch').value.toLowerCase();
     const scope = cardFilters[cardFilter];
-    const visible = rows.filter(r => (scope ? scope.matches(r) : r.kind === kinds[level] && r.parentId === parentId) && (!$('aftFilter').value || r.data.status === $('aftFilter').value) && Object.values(r.data).join(' ').toLowerCase().includes(search));
+    const visible = afScopedRows().filter(r => (scope ? scope.matches(r) : r.kind === kinds[level] && r.parentId === parentId) && (!$('aftFilter').value || r.data.status === $('aftFilter').value) && Object.values(r.data).join(' ').toLowerCase().includes(search));
+    $('afDrillStatus').textContent = `${visible.length} data ditampilkan · ${scope ? 'Drill-down: ' + scope.title : 'Hierarki audit'} · filter dashboard tetap berlaku.`;
+    $('afClearDrill').disabled = !cardFilter;
     $('aftDateColumn').textContent = ['followup', 'followups', 'evidence'].includes(cardFilter || kinds[level]) ? 'Tanggal evidence' : 'Tenggat';
     if (scope) $('aftContext').textContent = `${scope.title} — ${visible.length} data. Pilih Semua Audit untuk kembali ke daftar audit.`;
-    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" ? "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
+    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" → "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
   }
   window.addEventListener('evidence-file-deleted',event=>{
     const normalized=value=>String(value || '').replace(/^uploads?\//,'');

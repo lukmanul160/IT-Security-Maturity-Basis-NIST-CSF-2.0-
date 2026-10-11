@@ -11,7 +11,7 @@ function getPolicyNextReviewDate(row) {
   const reviewDate = row.lastReview || row.last_review || null;
   const cycle = row.reviewCycle || row.review_cycle || '';
   const months = getPolicyReviewCycleMonths(cycle);
-  if (!reviewDate || months === null || months === 0) return null;
+  if (!gdDate(reviewDate) || months === null || months === 0) return null;
 
   const start = new Date(`${String(reviewDate).slice(0, 10)}T00:00:00Z`);
   const next = new Date(start);
@@ -117,20 +117,9 @@ function renderPolicyReviewCalendar() {
 
 function renderPolicyRegisterRows() {
   const rows = policyRegisterRows.slice();
-  const total = rows.length;
-  const approved = rows.filter(row => String(row.approvalStatus || '').toLowerCase() === 'approved').length;
-  const due = rows.filter(row => String(row.approvalStatus || '').toLowerCase() === 'review due').length;
-  const owners = new Set(rows.map(row => row.owner).filter(Boolean)).size;
-
-  $('policyRegisterCount').textContent = `${total} policy${total === 1 ? '' : 'ies'}`;
-  $('policyRegisterTotalValue').textContent = total;
-  $('policyRegisterApprovedValue').textContent = approved;
-  $('policyRegisterDueValue').textContent = due;
-  $('policyRegisterOwnerValue').textContent = owners;
-
-  renderPolicySummaries(rows);
   updatePolicyFilters(rows);
   renderPolicyReviewCalendar();
+  renderPolicyDashboard();
 
   const body = $('policyRegisterBody');
   if (!body) return;
@@ -150,45 +139,6 @@ function renderPolicyRegisterRows() {
   filterPolicyRegisterTable();
 }
 
-function renderPolicySummaries(rows) {
-  const statusCounts = {};
-  const reviewCycleCounts = {};
-  const ownerCounts = {};
-
-  rows.forEach(row => {
-    const status = row.approvalStatus || 'Unassigned';
-    const cycle = row.reviewCycle || 'Not set';
-    const owner = row.owner || 'Unassigned';
-    
-    statusCounts[status] = (statusCounts[status] || 0) + 1;
-    reviewCycleCounts[cycle] = (reviewCycleCounts[cycle] || 0) + 1;
-    ownerCounts[owner] = (ownerCounts[owner] || 0) + 1;
-  });
-
-  const renderSummaryList = (counts) => {
-    const total = Object.values(counts).reduce((a, b) => a + b, 0);
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => `
-        <div class="risk-summary-row">
-          <span>${escapeHtml(name)}</span>
-          <strong>${count}</strong>
-          <i><b style="width: ${Math.round((count / total) * 100)}%"></b></i>
-        </div>
-      `).join('');
-  };
-
-  const statusList = $('policyStatusSummary');
-  if (statusList) statusList.innerHTML = renderSummaryList(statusCounts) || '<span style="color: var(--muted); font-size: 11px;">No data available</span>';
-
-  const reviewList = $('policyReviewSummary');
-  if (reviewList) reviewList.innerHTML = renderSummaryList(reviewCycleCounts) || '<span style="color: var(--muted); font-size: 11px;">No data available</span>';
-
-  const ownerList = $('policyOwnerSummary');
-  if (ownerList) ownerList.innerHTML = renderSummaryList(ownerCounts) || '<span style="color: var(--muted); font-size: 11px;">No data available</span>';
-}
-
 function updatePolicyFilters(rows) {
   const categories = [...new Set(rows.map(r => r.category).filter(Boolean))].sort();
   const statuses = [...new Set(rows.map(r => r.approvalStatus).filter(Boolean))].sort();
@@ -200,7 +150,7 @@ function updatePolicyFilters(rows) {
     const value = select.value;
     select.innerHTML = '<option value="all">All ' + (id.includes('Category') ? 'categories' : id.includes('Status') ? 'statuses' : 'owners') + '</option>' +
       options.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('');
-    select.value = value;
+    select.value = value || 'all'; if (select.selectedIndex < 0) select.value = 'all';
   };
 
   updateSelect('policyRegisterCategoryFilter', categories);
@@ -338,18 +288,25 @@ async function deletePolicyRegister(id) {
 function showPolicyRegisterView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('policyRegisterView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'policy-register')); saveUiState('policy-register'); loadPolicyDropdownOptions(); loadPolicyRegisterRows().catch(() => { $('policyRegisterStatus').textContent = 'Database unavailable'; }); }
 
 document.querySelectorAll('[data-policy-tab]').forEach(btn => {
+  btn.addEventListener('keydown', event => {
+    const buttons = [...document.querySelectorAll('[data-policy-tab]')].filter(button => !button.hidden);
+    const index = buttons.indexOf(btn);
+    const positions = { ArrowRight: (index + 1) % buttons.length, ArrowLeft: (index + buttons.length - 1) % buttons.length, Home: 0, End: buttons.length - 1 };
+    if (positions[event.key] === undefined) return;
+    event.preventDefault(); const target = buttons[positions[event.key]]; target.click(); target.focus();
+  });
   btn.addEventListener('click', (e) => {
     const tab = e.currentTarget.dataset.policyTab;
     if (tab === 'smtp' && currentUserRole !== 'admin') return;
-    document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-accent', b === e.target));
-    document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-quiet', b !== e.target));
+    document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-accent', b === e.currentTarget));
+    document.querySelectorAll('[data-policy-tab]').forEach(b => b.classList.toggle('button-quiet', b !== e.currentTarget));
     const dashboard = tab === 'dashboard';
     $('policyDashboardMetrics').hidden = !dashboard;
     $('policyDashboardSummary').hidden = !dashboard;
     $('policyRegisterPanel').hidden = tab !== 'register';
     $('policyReviewCalendarPanel').hidden = true;
     $('policySmtpPanel').hidden = tab !== 'smtp';
-    document.querySelectorAll('[data-policy-tab]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.policyTab === tab)));
+    document.querySelectorAll('[data-policy-tab]').forEach(button => { button.setAttribute('aria-selected', String(button.dataset.policyTab === tab)); button.tabIndex = button.dataset.policyTab === tab ? 0 : -1; });
   });
 });
 
@@ -364,7 +321,7 @@ $('policyRegisterClearFilters')?.addEventListener('click', () => {
   $('policyRegisterCategoryFilter').value = 'all';
   $('policyRegisterStatusFilter').value = 'all';
   $('policyRegisterOwnerFilter').value = 'all';
-  filterPolicyRegisterTable();
+  pdReset();
 });
 
 $('policyReviewCalendarMonthFilter')?.addEventListener('change', () => {
@@ -390,7 +347,7 @@ $('policyReviewCalendarToday')?.addEventListener('click', () => {
 });
 
 $('policyRegisterExportButton')?.addEventListener('click', () => {
-  const data = JSON.stringify(policyRegisterRows, null, 2);
+  const data = JSON.stringify(pdVisibleRows(), null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -401,31 +358,9 @@ $('policyRegisterExportButton')?.addEventListener('click', () => {
 });
 
 function filterPolicyRegisterTable() {
-  const categoryFilter = $('policyRegisterCategoryFilter')?.value || 'all';
-  const statusFilter = $('policyRegisterStatusFilter')?.value || 'all';
-  const ownerFilter = $('policyRegisterOwnerFilter')?.value || 'all';
-  const searchQuery = ($('policyRegisterSearch')?.value || '').toLowerCase();
-
-  const rows = $('policyRegisterBody');
-  if (!rows) return;
-  
-  rows.querySelectorAll('tr').forEach(tr => {
-    const cells = tr.querySelectorAll('td');
-    if (cells.length < 8) return;
-    
-    const title = cells[0].textContent.toLowerCase();
-    const category = cells[1].textContent;
-    const owner = cells[2].textContent;
-    const status = cells[4].textContent;
-    
-    const policy = policyRegisterRows.find(row => String(row.id) === tr.dataset.policyId);
-    const matchesSearch = !searchQuery || (policy ? policySearchText(policy) : title).includes(searchQuery);
-    const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || status === statusFilter;
-    const matchesOwner = ownerFilter === 'all' || owner === ownerFilter;
-    
-    tr.style.display = (matchesSearch && matchesCategory && matchesStatus && matchesOwner) ? '' : 'none';
-  });
+  const visible = new Set(pdVisibleRows().map(row => String(row.id)));
+  $('policyRegisterBody')?.querySelectorAll('tr[data-policy-id]').forEach(tr => { tr.hidden = !visible.has(tr.dataset.policyId); tr.style.display = tr.hidden ? 'none' : ''; });
+  pdRenderContext();
 }
 
 function showPolicyRegisterView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('policyRegisterView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'policy-register')); saveUiState('policy-register'); loadPolicyDropdownOptions(); loadPolicyRegisterRows().catch(() => { $('policyRegisterStatus').textContent = 'Database unavailable'; }); }

@@ -54,7 +54,7 @@ body.workspace-ui .excel-table td{padding:13px 12px;border-color:#edf1f7;font-si
 body.workspace-ui .excel-table tbody tr{transition:background .16s}
 body.workspace-ui .excel-table tbody tr:hover{background:#f4f8ff}
 body.workspace-ui .file-actions{gap:6px;flex-wrap:wrap}
-body.workspace-ui :is(.risk-register-form,.csf-form-grid,.smtp-settings,dialog,.toolbar,.filter-toolbar) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]),select,textarea){border:1px solid #d8e3f1;border-radius:9px;background:#fff;color:#29425f;padding:10px 12px;font-family:inherit;font-size:12px;min-height:40px;box-sizing:border-box;max-width:100%;transition:border-color .18s,box-shadow .18s}
+body.workspace-ui :is(.risk-register-form,.csf-form-grid,.smtp-settings,dialog,.toolbar,.filter-toolbar,.rd-controls,.ra-controls,.gd-controls,.gd-dashboard,#aftDashboardPanel) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]),select,textarea){border:1px solid #d8e3f1;border-radius:9px;background:#fff;color:#29425f;padding:10px 12px;font-family:inherit;font-size:12px;min-height:40px;box-sizing:border-box;max-width:100%;transition:border-color .18s,box-shadow .18s}
 body.workspace-ui :is(input,textarea)::placeholder{color:#8091a8;opacity:1}
 body.workspace-ui :is(input,textarea,select):focus{border-color:#80aaf0;box-shadow:0 0 0 3px #326fe010}
 body.workspace-ui :is(input[type=checkbox],input[type=radio],input[type=range]){accent-color:#326fe0}

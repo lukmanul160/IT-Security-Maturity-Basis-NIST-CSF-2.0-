@@ -1,3 +1,4 @@
+import './styles/assessment-gaps.css';
 /* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 import { createApp, nextTick } from 'vue';
 import App from './App.vue';
@@ -5,6 +6,9 @@ import './vue-shell.css';
 import './styles/workspace-theme.css';
 import './styles/workspace-sidebar.css';
 import './styles/module-transfer.css';
+import './styles/risk-dashboard.css';
+import './styles/risk-acceptance-dashboard.css';
+import './styles/governance-dashboard.css';
 import workspaceEnhancements from './workspace/generated/enhancements.js?raw';
 import workspaceRuntime from './workspace/runtime.js';
 import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';

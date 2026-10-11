@@ -2,6 +2,12 @@ const service = require('../services/riskManagementService');
 const wrap = handler => (req, res, next) => Promise.resolve(handler(req, res)).catch(next);
 module.exports = {
   dashboard: wrap(async (req, res) => res.json(await service.dashboard())),
+  report: wrap(async (req, res) => {
+    const report = await require('../services/riskDashboardReportService').createReport(req.body);
+    res.setHeader('Content-Type', report.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="risk-dashboard.${report.extension}"`);
+    res.send(report.buffer);
+  }),
   indicators: wrap(async (req, res) => res.json(await service.listIndicators())),
   dropdowns: wrap(async (req, res) => res.json(await service.listDropdowns())),
   createDropdown: wrap(async (req, res) => res.status(201).json(await service.createDropdown(req.body))),

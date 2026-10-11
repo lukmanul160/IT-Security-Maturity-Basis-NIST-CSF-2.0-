@@ -25,21 +25,21 @@ body.workspace-ui .topbar :is(.brand-block,.top-actions){position:relative;z-ind
 .header-owl-track{--owl-width:56px;--owl-height:64px;position:absolute;top:50%;left:16px;right:16px;transform:translateY(-50%);height:var(--owl-height);max-height:100%;overflow:hidden;pointer-events:none;user-select:none;z-index:0}
 .header-owl-walker{position:absolute;left:calc(50% - var(--owl-width)/2);bottom:0;width:var(--owl-width);height:var(--owl-height)}
 .header-owl{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 1px #0002)}
-.header-owl-awake{display:none}.header-owl-body{transform-origin:32px 70px;animation:header-owl-breathe 3s ease-in-out infinite}
-.header-owl-dream{position:absolute;left:44px;top:2px;font:600 11px/1 'Segoe UI',sans-serif;color:#ac821b;animation:header-owl-dream 3s ease-out infinite}.header-owl-dream span{font-size:8px}
-html[data-theme=dark] .header-owl-walker{left:0;animation:header-owl-patrol 36s linear infinite}
+.header-owl-awake{display:none}.header-owl-body{transform-origin:32px 70px;animation:header-owl-breathe 4.8s cubic-bezier(.45,0,.55,1) infinite}
+.header-owl-dream{position:absolute;left:44px;top:2px;font:600 11px/1 'Segoe UI',sans-serif;color:#ac821b;animation:header-owl-dream 4.8s ease-in-out infinite}.header-owl-dream span{font-size:8px}
+html[data-theme=dark] .header-owl-walker{left:0;animation:header-owl-patrol 42s cubic-bezier(.35,0,.65,1) infinite}
 html[data-theme=dark] .header-owl-awake{display:block}html[data-theme=dark] :is(.header-owl-asleep,.header-owl-dream){display:none}
-html[data-theme=dark] .header-owl{animation:header-owl-face 36s step-end infinite}
-html[data-theme=dark] .header-owl-body{animation:header-owl-step .55s ease-in-out infinite}
-html[data-theme=dark] .header-owl-foot{transform-origin:center;animation:header-owl-feet .55s ease-in-out infinite}html[data-theme=dark] .header-owl-foot.right{animation-delay:-.275s}
+html[data-theme=dark] .header-owl{transform-origin:50% 50%;animation:header-owl-face 42s linear infinite}
+html[data-theme=dark] .header-owl-body{animation:header-owl-step .9s cubic-bezier(.45,0,.55,1) infinite}
+html[data-theme=dark] .header-owl-foot{transform-origin:22px 69px;animation:header-owl-feet .9s cubic-bezier(.45,0,.55,1) infinite}html[data-theme=dark] .header-owl-foot.right{transform-origin:42px 69px;animation-delay:-.45s}
 @keyframes header-owl-patrol{0%,100%{left:0}50%{left:calc(100% - var(--owl-width))}}
-html[data-theme=dark] .header-owl-awake{transform-origin:32px 24px;animation:header-owl-blink 5s ease-in-out infinite}
-@keyframes header-owl-blink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.1)}}
-@keyframes header-owl-face{0%,100%{scale:1 1}50%{scale:-1 1}}
-@keyframes header-owl-step{50%{transform:translateY(-2px) rotate(3deg)}}
-@keyframes header-owl-feet{50%{transform:translateY(-3px)}}
-@keyframes header-owl-breathe{50%{transform:scaleY(.95)}}
-@keyframes header-owl-dream{0%{opacity:0;transform:translateY(3px)}30%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+html[data-theme=dark] .header-owl-awake{transform-origin:32px 24px;animation:header-owl-blink 6.2s ease-in-out infinite}
+@keyframes header-owl-blink{0%,91%,97%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+@keyframes header-owl-face{0%,49.3%{transform:rotateY(0deg)}50%,99.3%{transform:rotateY(180deg)}100%{transform:rotateY(360deg)}}
+@keyframes header-owl-step{0%,100%{transform:translateY(0) rotate(-1.2deg)}25%{transform:translateY(-1.3px) rotate(0deg)}50%{transform:translateY(0) rotate(1.2deg)}75%{transform:translateY(-1.3px) rotate(0deg)}}
+@keyframes header-owl-feet{0%,50%,100%{transform:translate(0,0) rotate(0deg)}65%{transform:translate(-.7px,-1.8px) rotate(-7deg)}80%{transform:translate(.8px,-3px) rotate(8deg)}}
+@keyframes header-owl-breathe{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(.6px) scale(1.008,.98)}}
+@keyframes header-owl-dream{0%,10%{opacity:0;transform:translate(0,3px)}35%,55%{opacity:.85}100%{opacity:0;transform:translate(2px,-6px)}}
 @media(prefers-reduced-motion:reduce){.header-owl-track *{animation:none!important}html[data-theme=dark] .header-owl-walker{left:calc(50% - var(--owl-width)/2)}}
 .governance-loading{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;background:#f4f8ff;color:#183453;text-align:center;font:600 15px/1.6 'Segoe UI',sans-serif}
 .governance-loading[hidden]{display:none!important}
@@ -74,7 +74,7 @@ html[data-theme=dark],html[data-theme=dark] body{
  --bg:#101827!important;--panel:#1a2638!important;--mint:#a7dfd0!important;--tw-color-ink:#e4ecf8;
  color-scheme:dark;color:#e4ecf8!important;background:#101827!important;
 }
-html[data-theme=dark] body.workspace-ui :is(.topbar,.sidebar,.sidebar-toggle,dialog,.tw-surface,.stat-panel,.insight-panel,.legend-panel,.panel,.framework-card,.summary-card,.certification-card,.smtp-card,.function-card,.assessment-table,.excel-wrap,.monitor-panel,.monitor-kpis article,.monitor-filters,.asset-filter-bar,.asset-relation-guide-grid article,.knowledge-text-editor .tiptap,.wiki-suggestions,.tm-palette,.tm-inspector,.tm-threat-card,.tm-register,.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-status,.tm-fullscreen,.backup-restore-panel,.file-backup-options,.file-backup-field){background:#1a2638!important;border-color:#35455c!important;color:#e4ecf8!important;box-shadow:0 2px 12px #0002}
+html[data-theme=dark] body.workspace-ui :is(.topbar,.sidebar,.sidebar-toggle,dialog,.tw-surface,.stat-panel,.insight-panel,.legend-panel,.panel,.framework-card,.summary-card,.certification-card,.smtp-card,.function-card,.assessment-table,.excel-wrap,.monitor-panel,.monitor-kpis article,.monitor-kpis > button,.monitor-filters,.asset-filter-bar,.asset-relation-guide-grid article,.knowledge-text-editor .tiptap,.wiki-suggestions,.tm-palette,.tm-inspector,.tm-threat-card,.tm-register,.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-status,.tm-fullscreen,.backup-restore-panel,.file-backup-options,.file-backup-field){background:#1a2638!important;border-color:#35455c!important;color:#e4ecf8!important;box-shadow:0 2px 12px #0002}
 html[data-theme=dark] body.workspace-ui :is(h1,h2,h3,h4,.brand-title,.brand-block h1,.section-heading h3,.page-heading h2,.stat-panel strong,.stat-label,.monitor-module-number strong,.monitor-kpis strong,.sidebar-group-toggle,.nav-item,.framework-note){color:#e4ecf8!important}
 html[data-theme=dark] body.workspace-ui :is(.muted,.lede,.eyebrow,.stat-detail,.stat-label,.control-question,.sidebar-footer,.monitor-module-number span,.monitor-kpis small,.monitor-metrics dt,.asset-filter-bar label,.monitor-filters label,.risk-register-form label,.csf-form-grid label,.editor-help,.monitor-empty){color:#a2b4cc!important}
 html[data-theme=dark] body.workspace-ui :is(.nav-item:hover,.sidebar-group-toggle:hover){background:#25374f!important;color:#d4e5ff!important}
@@ -212,6 +212,39 @@ body.workspace-ui .view{min-width:0;max-width:100%;overflow:auto;box-sizing:bord
 body.workspace-ui .organization-scroll{width:100%;min-width:0;max-width:100%;max-height:70vh;overflow:auto;position:relative;overscroll-behavior:contain;border-radius:8px}
 body.workspace-ui .organization-scroll .organization-structure{width:max-content;min-width:100%;box-sizing:border-box;overflow:visible}
 body.workspace-ui :is(.excel-wrap,.uploaded-files-wrap,.permission-matrix-wrap,.objective-calendar-table-wrap){min-width:0;max-width:100%;overflow:auto;box-sizing:border-box}
+/* Objective calendar: readable cells and pinned context in both themes. */
+#iso27001ObjectiveCalendarPanel .page-heading{gap:20px;flex-wrap:wrap}
+#iso27001ObjectiveCalendarPanel .csf-actions{align-items:end;gap:12px;flex-wrap:wrap}
+#iso27001ObjectiveCalendarPanel .csf-actions label{display:grid;gap:7px;font-size:12px;color:var(--muted,#64748b)}
+#isoObjectiveCalendarYear{min-width:116px;min-height:40px;padding:9px 12px;border:1px solid var(--line,#d9dfe5);border-radius:9px;font:inherit;background:var(--white,#fff);color:var(--ink,#243447)}
+.objective-calendar-help{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted,#64748b);line-height:1.7;margin:0 0 12px}
+#isoObjectiveCalendarForm{border-radius:10px;border:1px solid #dce4ef;background:#fff;max-height:68vh;scrollbar-width:thin;scrollbar-color:#9aafc8 #edf2f8;isolation:isolate}
+#isoObjectiveCalendarForm:focus-visible{outline:2px solid #4b83da;outline-offset:3px}
+#isoObjectiveCalendarForm .objective-calendar-table{min-width:2180px;border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed}
+#isoObjectiveCalendarForm :is(th,td){padding:14px;border:0;border-right:1px solid #dce4ef;border-bottom:1px solid #dce4ef;color:#29425f;background:#fff;vertical-align:top}
+#isoObjectiveCalendarForm thead th{position:sticky;top:0;z-index:2;background:#edf3fa;color:#29425f;padding:14px;font-size:12px;text-transform:capitalize;box-shadow:0 1px 0 #dce4ef}
+#isoObjectiveCalendarForm :is(thead th:first-child,tbody th){position:sticky;left:0;width:260px;box-sizing:border-box;box-shadow:1px 0 0 #dce4ef;text-align:left}
+#isoObjectiveCalendarForm thead th:first-child{z-index:4}
+#isoObjectiveCalendarForm tbody th{z-index:1;background:#f7f9fc}
+#isoObjectiveCalendarForm tbody th strong{display:block;font-size:13px;line-height:1.7;overflow-wrap:anywhere;color:inherit}
+#isoObjectiveCalendarForm tbody th small{display:block;font-size:11px;line-height:1.6;margin-top:8px;color:#6b809a}
+#isoObjectiveCalendarForm .objective-calendar-fields{display:grid;gap:10px}
+#isoObjectiveCalendarForm label{display:grid;gap:5px;margin:0;min-width:0}
+#isoObjectiveCalendarForm label>span{font-size:10px;font-weight:600;color:#6b809a}
+#isoObjectiveCalendarForm :is(input,select){display:block;width:100%;max-width:100%;min-width:0;min-height:36px;box-sizing:border-box;padding:8px 9px;margin:0!important;font:inherit;font-size:12px;line-height:1.5;border:1px solid #cbd8e7;border-radius:7px;background:#fff;color:#29425f}
+#isoObjectiveCalendarForm td.is-disabled{background:#f1f4f8;text-align:center;vertical-align:middle}
+.objective-no-evaluation{font-size:18px;color:#93a3b6}
+html[data-theme=dark] #isoObjectiveCalendarForm{background:#1a2638;border-color:#35455c;scrollbar-color:#526984 #142033}
+html[data-theme=dark] #isoObjectiveCalendarForm :is(th,td){background:#1a2638;color:#e4ecf8;border-color:#35455c}
+html[data-theme=dark] #isoObjectiveCalendarForm thead th{background:#24344b;color:#d6e5fa;box-shadow:0 1px 0 #35455c}
+html[data-theme=dark] #isoObjectiveCalendarForm tbody th{background:#202f45;box-shadow:1px 0 0 #35455c}
+html[data-theme=dark] #isoObjectiveCalendarForm thead th:first-child{box-shadow:1px 0 0 #35455c,0 1px 0 #35455c}
+html[data-theme=dark] #isoObjectiveCalendarForm :is(tbody th small,label>span){color:#a2b4cc}
+html[data-theme=dark] #isoObjectiveCalendarForm td.is-disabled{background:#142033}
+html[data-theme=dark] .objective-no-evaluation{color:#758da9}
+@media(max-width:650px){#isoObjectiveCalendarForm{max-height:72vh}#isoObjectiveCalendarForm :is(thead th:first-child,tbody th){width:190px}#isoObjectiveCalendarForm :is(th,td){padding:10px}.objective-calendar-help{font-size:11px}}
 .header-owl-feathers{stroke:#ffffff}html[data-theme=dark] .header-owl-feathers{stroke:#1a2638}
 @media(max-width:650px){.header-owl-track{--owl-width:44px;--owl-height:52px}.header-owl-dream{left:34px}}
 
+
+.uploaded-file-filters{flex-wrap:wrap;align-items:end;gap:12px}.uploaded-file-filters>label:not(.search-box){display:grid;gap:6px;min-width:150px;font-size:12px}.uploaded-file-filters .search-box{flex:1;min-width:210px}.uploaded-file-filters select{width:100%;max-width:100%}@media(max-width:600px){.uploaded-file-filters>label{width:100%;min-width:0!important}.uploaded-file-filters>button{width:100%}}

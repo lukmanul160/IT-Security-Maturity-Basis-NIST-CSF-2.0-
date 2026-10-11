@@ -9,6 +9,7 @@ test('main file deletion detaches every source, preserves other files and rolls 
   try {
     for (const sql of [
       'CREATE TEMP TABLE assessment_state(id TEXT PRIMARY KEY,data JSONB,updated_at TIMESTAMPTZ)',
+      'CREATE TEMP TABLE assessment_gaps(id TEXT PRIMARY KEY,description TEXT,status TEXT,evidence JSONB,updated_at TIMESTAMPTZ)',
       'CREATE TEMP TABLE controls(id TEXT PRIMARY KEY,evidence JSONB,updated_at TIMESTAMPTZ)',
       'CREATE TEMP TABLE policy_register(id INT PRIMARY KEY,attachment_path TEXT,attachment_name TEXT,attachment_type TEXT,updated_at TIMESTAMPTZ)',
       'CREATE TEMP TABLE tprm_due_diligence_questionnaires(id INT PRIMARY KEY,responses JSONB,updated_at TIMESTAMPTZ)',
@@ -19,6 +20,7 @@ test('main file deletion detaches every source, preserves other files and rolls 
     await client.query('INSERT INTO evidence_files VALUES($1)',[target]);
     await client.query('INSERT INTO assessment_state VALUES($1,$2,NOW())',['test',{scores:{one:3},attachments:{one:[{path:target},keep],two:[{path:'uploads/'+target}]}}]);
     await client.query('INSERT INTO controls VALUES($1,$2,NOW())',['test',JSON.stringify([{path:'upload/'+target},keep])]);
+    await client.query('INSERT INTO assessment_gaps VALUES($1,$2,$3,$4,NOW())',['gap-test','Kurang poin a','Open',JSON.stringify([{path:'upload/'+target},keep])]);
     await client.query("INSERT INTO policy_register VALUES(1,$1,'main.pdf','application/pdf',NOW())",[target]);
     await client.query('INSERT INTO tprm_due_diligence_questionnaires VALUES(1,$1,NOW())',[{answer:'yes',vendorDocuments:[{path:target},keep]}]);
     await client.query('INSERT INTO audit_finding_records VALUES($1,$2,$3,$4,NOW())',['one',{title:'Audit evidence',attachmentPath:target,attachments:[{path:target},keep]},'main.pdf',Buffer.from('legacy')]);
@@ -33,6 +35,7 @@ test('main file deletion detaches every source, preserves other files and rolls 
     const assessment=(await client.query('SELECT data FROM assessment_state')).rows[0].data;
     assert.deepEqual(assessment,{scores:{one:3},attachments:{one:[keep],two:[]}});
     assert.deepEqual((await client.query('SELECT evidence FROM controls')).rows[0].evidence,[keep]);
+    assert.deepEqual((await client.query('SELECT description,status,evidence FROM assessment_gaps')).rows[0],{description:'Kurang poin a',status:'Open',evidence:[keep]});
     assert.equal((await client.query('SELECT attachment_path FROM policy_register')).rows[0].attachment_path,'');
     assert.deepEqual((await client.query('SELECT responses FROM tprm_due_diligence_questionnaires')).rows[0].responses,{answer:'yes',vendorDocuments:[keep]});
     const audit=(await client.query('SELECT * FROM audit_finding_records ORDER BY id')).rows;

@@ -1,0 +1,24 @@
+.gd-dashboard, #aftDashboardPanel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; max-width: 100%; }
+.gd-dashboard[hidden], #aftDashboardPanel[hidden] { display: none; }
+.gd-dashboard > *, #aftDashboardPanel > * { min-width: 0; }
+#policyDashboardSummary { margin-top: 20px; }
+#policyDashboardSummary[hidden] { margin-top: 0; }
+.gd-visuals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.gd-visuals > article { min-width: 0; }
+.gd-visuals .section-heading { flex-wrap: wrap; gap: 12px; }
+.gd-visuals label { display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+.gd-visuals .ra-calendar { margin-top: 12px; }
+.gd-list-context { margin: 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.gd-list-context p { margin: 0; flex: 1 1 280px; overflow-wrap: anywhere; }
+.gd-list-context .csf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.gd-filter-status { margin: 18px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); font-size: 12px; }
+.gd-controls .csf-actions > select { width: auto !important; min-width: 128px; }
+body.workspace-ui :is(#afAlertCount, #pdAlertCount) { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; min-height: 22px; margin-left: 5px; padding: 0 6px; border-radius: 7px; background: var(--lime); color: var(--green); font-weight: 700; }
+@media (max-width: 850px) { .gd-visuals { grid-template-columns: 1fr; } }
+@media (max-width: 650px) { .gd-controls .csf-actions > select { min-width: 0; } }
+
+.asset-dashboard-sources { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.asset-dashboard-sources span { padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:12px; color:var(--muted); background:var(--paper); }
+.asset-main-tabs { flex-wrap:wrap; }
+.asset-dashboard .rd-kpi strong { overflow-wrap:anywhere; }
+.asset-dashboard .rd-kpi:disabled { opacity:.7; cursor:default; }

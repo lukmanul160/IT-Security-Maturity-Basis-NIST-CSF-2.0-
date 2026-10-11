@@ -39,7 +39,7 @@ const actionForms = {
 function applyActionControls() {
   if(!Object.keys(currentUserActions).length)return;
   const controls = new Map();
-  for(const element of document.querySelectorAll('[data-view]')) { const view=element.dataset.view; const key=view==='csf-manage' ? 'csf' : view==='privacy-manage' ? 'privacy' : view; if(currentUserActions[key]) controls.set(element,!canPerform(key,'read')); }
+  for(const element of document.querySelectorAll('[data-view]')) { const view=element.dataset.view; if(view==='asset-dashboard'){controls.set(element,!['asset-register','server-racks','asset-modelling'].some(key=>canPerform(key,'read')));continue;} const key=view==='csf-manage' ? 'csf' : view==='privacy-manage' ? 'privacy' : view; if(currentUserActions[key]) controls.set(element,!canPerform(key,'read')); }
   for(const [key,action,selector] of actionControlRules) {
     document.querySelectorAll(selector).forEach(element=>controls.set(element,(controls.get(element) || false) || !canPerform(key,action)));
   }
