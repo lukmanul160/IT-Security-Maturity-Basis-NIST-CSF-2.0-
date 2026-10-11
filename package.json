@@ -39,6 +39,8 @@
     "test:asset-workspace-browser": "node scripts/test-asset-workspace-browser.js",
     "test:assessment-gaps-browser": "node scripts/test-assessment-gaps-browser.js",
     "test:assessment-gaps-integration": "node scripts/test-assessment-gaps-integration.js",
+    "test:file-backup-browser": "node scripts/test-file-backup-batches-browser.js",
+    "test:file-backup-large": "node scripts/test-file-backup-large.js",
     "test:monitoring-browser": "node scripts/test-monitoring-dashboard-browser.js",
     "test:monitoring-workspace": "node scripts/test-monitoring-workspace-browser.js",
     "test:dark-modules-browser": "node scripts/test-dark-mode-modules-browser.js",

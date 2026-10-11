@@ -142,3 +142,89 @@ test('restore rejects corrupt CRC before changing live storage', async t => {
   const api = createFileBackupService({ store: { normalizePath, put: async () => assert.fail('unexpected write') } });
   await assert.rejects(api.restore({ path: input }), /checksum/);
 });
+
+async function batchFixture(t, rows, contents) {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'nist-batch-test-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const writes = [];
+  const db = { query: async sql => ({ rows: sql.startsWith('SELECT path,') ? rows : [{ id: 7 }] }) };
+  const store = { normalizePath,
+    openRead: async key => require('node:stream').Readable.from((function* () { const content = contents.get(key); for (let i = 0; i < content.length; i += 1024) yield content.subarray(i, i + 1024); })()),
+    read: async () => { throw new Error('Backup must use streaming'); },
+    put: async (key, data) => writes.push({ key, content: await fs.readFile(data.sourcePath), owner: data.uploadedBy }),
+  };
+  const api = createFileBackupService({ root, db, store, partLimit: 64 * 1024 });
+  async function uploads(parts) { const result = []; for (const part of parts) { const target = path.join(root, `upload-${require('node:crypto').randomUUID()}.zip`); await fs.copyFile(await api.resolve(part.fileName), target); result.push({ path: target, originalname: part.fileName }); } return result; }
+  return { api, root, writes, uploads };
+}
+test('batch backup streams a large single file across parts and restores in arbitrary order', async t => {
+  const binary = require('node:crypto').randomBytes(190 * 1024);
+  const rows = [{ path: 'Knowledge Notes/large.bin', name: 'large.bin', mime_type: 'application/octet-stream', uploaded_by: 7, open_page: 2 }, { path: 'Policy/empty.txt', name: 'empty.txt', mime_type: 'text/plain' }];
+  const f = await batchFixture(t, rows, new Map([[rows[0].path, binary], [rows[1].path, Buffer.alloc(0)]]));
+  const result = await f.api.create();
+  assert.equal(result.fileCount, 2); assert.equal(result.totalSize, binary.length);
+  assert.ok(result.parts.length > 2); assert.ok(result.parts.every(part => part.size <= 64 * 1024));
+  assert.equal((await f.api.list()).length, result.parts.length);
+  const input = await f.uploads([...result.parts].reverse());
+  assert.equal((await f.api.restore(input)).fileCount, 2);
+  assert.deepEqual(f.writes.find(item => item.key === rows[0].path).content, binary);
+  assert.equal(f.writes.find(item => item.key === rows[0].path).owner, 7);
+  assert.equal(f.writes.find(item => item.key === rows[1].path).content.length, 0);
+  for (const file of input) await assert.rejects(fs.stat(file.path), { code: 'ENOENT' });
+});
+test('incomplete, duplicate and mixed backup parts fail before any storage write', async t => {
+  const row = { path: 'Policy/large.bin', name: 'large.bin', mime_type: 'application/octet-stream' };
+  const f = await batchFixture(t, [row], new Map([[row.path, require('node:crypto').randomBytes(140 * 1024)]]));
+  const first = await f.api.create(), second = await f.api.create();
+  await assert.rejects(f.api.restore(await f.uploads(first.parts.slice(1))), /belum lengkap/);
+  await assert.rejects(f.api.restore(await f.uploads([first.parts[0], first.parts[0], ...first.parts.slice(2)])), /duplikat/);
+  await assert.rejects(f.api.restore(await f.uploads([second.parts[0], ...first.parts.slice(1)])), /berbeda/);
+  assert.deepEqual(f.writes, []);
+});
+test('batch restore folder selection restores only selected descendants', async t => {
+  const rows = ['Policy/large.bin', 'Asset Management/large.bin'].map(key => ({ path: key, name: 'large.bin', mime_type: 'application/octet-stream' }));
+  const f = await batchFixture(t, rows, new Map(rows.map(row => [row.path, Buffer.alloc(90 * 1024, 42)])));
+  const result = await f.api.create();
+  assert.equal((await f.api.restore(await f.uploads(result.parts), { folder: 'Policy' })).fileCount, 1);
+  assert.deepEqual(f.writes.map(item => item.key), ['Policy/large.bin']);
+});
+test('stream failure removes every staged or published batch part', async t => {
+  const f = await batchFixture(t, [{ path: 'Policy/fail.bin', name: 'fail.bin', mime_type: 'application/octet-stream' }], new Map());
+  await assert.rejects(f.api.create()); assert.deepEqual(await fs.readdir(f.root), []);
+});
+
+test('administrator batch restore route receives multiple staged ZIPs and folder selection', async t => {
+  const service = require('../src/services/fileBackupService');
+  let received;
+  t.mock.method(service, 'restore', async (files, options) => {
+    received = { files, options, bytes: await Promise.all(files.map(file => fs.readFile(file.path, 'utf8'))) };
+    for (const file of files) await fs.rm(file.path, { force: true });
+    return { restored: true, fileCount: 2, partCount: files.length };
+  });
+  const app = require('express')();
+  app.use((req, res, next) => { req.user = { role: 'admin' }; next(); });
+  app.use('/file-backups', require('../src/routes/fileBackupRoutes'));
+  const server = app.listen(0); await new Promise(resolve => server.once('listening', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const body = new FormData(); body.append('backups', new Blob(['first']), 'part-1.zip'); body.append('backups', new Blob(['second']), 'part-2.zip'); body.append('folder', 'Policy');
+  const response = await fetch(`http://127.0.0.1:${server.address().port}/file-backups/restore-batch`, { method: 'POST', body });
+  assert.equal(response.status, 200); assert.equal((await response.json()).partCount, 2);
+  assert.deepEqual(received.bytes, ['first', 'second']); assert.equal(received.options.folder, 'Policy');
+  for (const file of received.files) await assert.rejects(fs.stat(file.path), { code: 'ENOENT' });
+});
+
+test('missing physical files without database bytes are reported explicitly in backup and restore', async t => {
+ const root = await fs.mkdtemp(path.join(os.tmpdir(), 'nist-missing-backup-test-')); t.after(() => fs.rm(root, { recursive: true, force: true }));
+ const rows = ['Policy/present.txt', 'Policy/missing.pdf'].map(key => ({ path: key, name: path.basename(key), mime_type: 'application/octet-stream' }));
+ const writes=[];
+ const api = createFileBackupService({ root, db: { query: async sql => ({ rows: sql.startsWith('SELECT path,') ? rows : [] }) }, store: { normalizePath,
+  read: async key => { if(key.endsWith('missing.pdf'))throw Object.assign(new Error('missing'),{code:'ENOENT'});return Buffer.from('available'); },
+  put: async key => writes.push(key),
+ } });
+ const result=await api.create();assert.equal(result.complete,false);assert.equal(result.fileCount,1);assert.equal(result.missingFiles.length,1);assert.equal(result.missingFiles[0].path,'Policy/missing.pdf');
+ const zip=XLSX.CFB.read(await fs.readFile(await api.resolve(result.fileName)),{type:'buffer'});
+ const manifest=JSON.parse(Buffer.from(zip.FileIndex[zip.FullPaths.findIndex(name=>name.endsWith('/manifest.json'))].content).toString());
+ assert.equal(manifest.complete,false);assert.deepEqual(manifest.missingFiles,result.missingFiles);
+ const input=path.join(root,'restore.zip');await fs.copyFile(await api.resolve(result.fileName),input);
+ const restored=await api.restore({path:input,originalname:result.fileName});assert.equal(restored.fileCount,1);assert.equal(restored.missingFiles.length,1);assert.deepEqual(writes,['Policy/present.txt']);
+});

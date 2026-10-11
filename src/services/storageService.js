@@ -159,6 +159,17 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
     try { await fs.access(await physicalPath(loc)); return true; }
     catch (error) { if (error.code === 'ENOENT') return false; throw error; }
   }
+  async function openRead(relativePath) {
+    const loc = await location(relativePath);
+    try {
+      if (cloudConfig(loc)) return await cloud.adapter(cloudConfig(loc)).openRead(loc.key);
+      const handle = await fs.open(await physicalPath(loc), 'r');
+      return handle.createReadStream();
+    } catch (error) {
+      if (error.code === 'ENOENT' || error.code === 404 || error.$metadata?.httpStatusCode === 404) error.code = 'ENOENT';
+      throw error;
+    }
+  }
   async function removePhysical(loc) {
     if (cloudConfig(loc)) return cloud.adapter(cloudConfig(loc)).remove(loc.key);
     try { await fs.unlink(await physicalPath(loc)); }
@@ -182,7 +193,8 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
       const config = cloudConfig(nextLocation);
       if (config) {
         nextLocation.key = `${config.prefix ? `${config.prefix}/` : ''}${nextLocation.key}`;
-        await cloud.adapter(config).put(nextLocation.key, sourcePath ? await fs.readFile(sourcePath) : buffer, mimeType);
+        if (sourcePath) await cloud.adapter(config).putFile(nextLocation.key, sourcePath, mimeType);
+        else await cloud.adapter(config).put(nextLocation.key, buffer, mimeType);
       } else {
         await fs.access(root);
         const target = await physicalPath(nextLocation, { create: true });
@@ -191,8 +203,12 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
       }
       await client.query(`INSERT INTO file_storage_locations (path, root, object_key) VALUES ($1,$2,$3)
         ON CONFLICT (path) DO UPDATE SET root=EXCLUDED.root, object_key=EXCLUDED.object_key, updated_at=NOW()`, [normalized, root === localRoot ? '' : root, nextLocation.key]);
+      // Physical storage is authoritative; keep only small legacy photo mirrors in memory/database.
+      const mirror = (normalized.startsWith('Asset Management/') || normalized.startsWith('Knowledge Notes/'))
+        && (!sourcePath || (await fs.stat(sourcePath)).size <= 16 * 1024 * 1024)
+        ? (sourcePath ? await fs.readFile(sourcePath) : buffer) : null;
       await client.query(`INSERT INTO evidence_files (path, name, content, mime_type, updated_at, uploaded_by) VALUES ($1,$2,$5,$3,NOW(),$4)
-        ON CONFLICT (path) DO UPDATE SET name=EXCLUDED.name, content=EXCLUDED.content, mime_type=EXCLUDED.mime_type, updated_at=NOW()`, [normalized, name, mimeType, uploadedBy, (normalized.startsWith('Asset Management/') || normalized.startsWith('Knowledge Notes/')) ? (sourcePath ? await fs.readFile(sourcePath) : buffer) : null]);
+        ON CONFLICT (path) DO UPDATE SET name=EXCLUDED.name, content=EXCLUDED.content, mime_type=EXCLUDED.mime_type, updated_at=NOW()`, [normalized, name, mimeType, uploadedBy, mirror]);
       await client.query('COMMIT');
       committed = true;
       // Legacy copies remain untouched until explicitly deleted. Managed old versions are safe to retire.
@@ -215,7 +231,7 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
     }
     await client.query('DELETE FROM file_storage_locations WHERE path = $1', [normalized]);
   }
-  return { ensureStore, getSettings, validateSettings, testSettings, saveSettings, read, exists, put, remove };
+  return { ensureStore, getSettings, validateSettings, testSettings, saveSettings, read, openRead, exists, put, remove };
 }
 
 module.exports = { ...createStorageService(), createStorageService, normalizePath };

@@ -36,6 +36,8 @@ async function fixture() {
     return {
       async put(key, body) { if (failWrite) throw new Error('Access denied'); objects.set(keyFor(key), Buffer.from(body)); },
       async read(key) { if (!objects.has(keyFor(key))) throw Object.assign(new Error('Missing'), { code: 404 }); return objects.get(keyFor(key)); },
+      async openRead(key) { if (!objects.has(keyFor(key))) throw Object.assign(new Error('Missing'), { code: 404 }); return require('node:stream').Readable.from([objects.get(keyFor(key))]); },
+      async putFile(key, sourcePath) { if (failWrite) throw new Error('Access denied'); objects.set(keyFor(key), await fs.readFile(sourcePath)); },
       async exists(key) { return objects.has(keyFor(key)); },
       async remove(key) { objects.delete(keyFor(key)); },
     };
@@ -138,4 +140,17 @@ test('asset and note photos retain original database bytes after storage restore
  await f.service.put('Policy/file.pdf',{buffer:content,name:'file.pdf',mimeType:'application/pdf'});
  assert.equal(f.evidence.get('Policy/file.pdf').content,null);
  }finally{await f.cleanup();}
+});
+
+for (const mode of ['local', 's3', 'gcs']) test(`${mode}: streaming backup and staged restore preserve bytes`, async () => {
+  const f = await fixture();
+  try {
+    if (mode !== 'local') await f.service.saveSettings({ mode, bucket: 'batch-backup', region: 'ap-southeast-1' });
+    const sourcePath = path.join(f.localRoot, 'restore-input.bin');
+    const binary = Buffer.from([0, 255, 17, 128]); await fs.writeFile(sourcePath, binary);
+    await f.service.put('Policy/stream.bin', { sourcePath, name: 'stream.bin', mimeType: 'application/octet-stream' });
+    const pieces = []; for await (const chunk of await f.service.openRead('Policy/stream.bin')) pieces.push(chunk);
+    assert.deepEqual(Buffer.concat(pieces), binary);
+    await assert.rejects(f.service.openRead('Policy/missing.bin'), error => error.code === 'ENOENT');
+  } finally { await f.cleanup(); }
 });

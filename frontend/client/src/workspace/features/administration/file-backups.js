@@ -7,7 +7,7 @@ async function fileBackupRequest(url, options = {}) {
 async function loadFileBackups() {
   const rows = await fileBackupRequest('/api/file-backups');
   $('fileBackupCount').textContent = `${rows.length} backups`;
-  $('fileBackupBody').innerHTML = rows.map(row => `<tr><td><strong>${escapeHtml(row.fileName)}</strong></td><td>${escapeHtml(new Date(row.createdAt).toLocaleString('id-ID'))}</td><td>${formatBackupSize(row.size)}</td><td><div class="backup-row-actions"><a class="attachment-action-button" href="/api/file-backups/${encodeURIComponent(row.fileName)}">Download</a><button class="attachment-action-button danger" type="button" data-file-backup-delete="${escapeHtml(row.fileName)}">Delete</button></div></td></tr>`).join('') || '<tr><td colspan="4">Belum ada file backup.</td></tr>';
+  $('fileBackupBody').innerHTML = rows.map(row => `<tr><td><strong>${escapeHtml(row.fileName)}</strong>${row.partCount ? `<br><span class="muted">Bagian ${row.part} / ${row.partCount} ? pilih semua bagian saat restore</span>` : ""}</td><td>${escapeHtml(new Date(row.createdAt).toLocaleString('id-ID'))}</td><td>${formatBackupSize(row.size)}</td><td><div class="backup-row-actions"><a class="attachment-action-button" href="/api/file-backups/${encodeURIComponent(row.fileName)}">Download</a><button class="attachment-action-button danger" type="button" data-file-backup-delete="${escapeHtml(row.fileName)}">Delete</button></div></td></tr>`).join('') || '<tr><td colspan="4">Belum ada file backup.</td></tr>';
 }
 async function loadFileBackupFolders() {
   const folders = await fileBackupRequest('/api/file-backups/folders');
@@ -24,7 +24,8 @@ async function createFileBackup() {
   $('fileBackupStatus').textContent = folder ? `Membuat backup folder ${folder}...` : 'Membuat backup seluruh file unggahan...';
   try {
     const data = await fileBackupRequest('/api/file-backups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder }) });
-    $('fileBackupStatus').textContent = `Backup berhasil dibuat: ${data.fileName} (${data.fileCount} file)`;
+    $('fileBackupStatus').textContent = `Backup berhasil: ${data.fileCount} file, ${data.parts?.length || 1} bagian ZIP. Unduh semua bagian dari batch yang sama untuk restore.`;
+    if (data.missingFiles?.length) $('fileBackupStatus').textContent = `Backup belum lengkap: ${data.fileCount} file tersedia telah dicadangkan (${data.parts?.length || 1} ZIP), tetapi ${data.missingFiles.length} file tidak ditemukan. Daftar file yang perlu diunggah ulang tercantum dalam manifest ZIP: ${data.missingFiles.map(file => file.path).join('; ')}`;
     await loadFileBackups();
   } catch (error) { $('fileBackupStatus').textContent = error.message; }
   finally { button.disabled = false; }
@@ -50,19 +51,20 @@ $('fileBackupBody').addEventListener('click', event => {
   if (button) deleteFileBackup(button.dataset.fileBackupDelete).catch(error => { $('fileBackupStatus').textContent = error.message; });
 });
 if (uiState.view === 'file-backups') showFileBackupsView();
-let selectedFileBackupRestore = null;
+let selectedFileBackupRestore = [];
 $('fileBackupRestoreInput').addEventListener('change', event => {
-  selectedFileBackupRestore = event.target.files?.[0] || null;
-  if (selectedFileBackupRestore?.size > 500 * 1024 * 1024) {
-    selectedFileBackupRestore = null;
+  selectedFileBackupRestore = Array.from(event.target.files || []);
+  if (selectedFileBackupRestore.some(file => file.size > 500 * 1024 * 1024 || !/\.zip$/i.test(file.name))) {
+    selectedFileBackupRestore = [];
     event.target.value = '';
-    $('fileBackupStatus').textContent = 'ZIP maksimal 500 MB. Gunakan backup per folder.';
+    $('fileBackupStatus').textContent = 'Pilih bagian ZIP maksimal 500 MB per bagian. Ukuran total batch tidak dibatasi.';
   }
-  $('fileBackupRestoreFileName').textContent = selectedFileBackupRestore?.name || 'No file selected';
-  $('fileBackupRestoreButton').disabled = !selectedFileBackupRestore;
+  $('fileBackupRestoreFileName').textContent = selectedFileBackupRestore.length ? `${selectedFileBackupRestore.length} ZIP · ${formatBackupSize(selectedFileBackupRestore.reduce((sum, file) => sum + file.size, 0))}` : 'No file selected';
+  $('fileBackupRestoreFileName').title = selectedFileBackupRestore.map(file => file.name).join('\n');
+  $('fileBackupRestoreButton').disabled = !selectedFileBackupRestore.length;
 });
 $('fileBackupRestoreButton').addEventListener('click', async () => {
-  if (!selectedFileBackupRestore || !confirm('Restore akan mengganti file dengan path yang sama dan memulihkan metadata unggahan. Lanjutkan?')) return;
+  if (!selectedFileBackupRestore.length || !confirm('Restore akan mengganti file dengan path yang sama dan memulihkan metadata unggahan. Lanjutkan?')) return;
   const button = $('fileBackupRestoreButton');
   button.disabled = true;
   $('fileBackupRestoreInput').disabled = true;
@@ -70,18 +72,19 @@ $('fileBackupRestoreButton').addEventListener('click', async () => {
   $('fileBackupStatus').textContent = 'Memvalidasi dan memulihkan file backup...';
   try {
     const body = new FormData();
-    body.append('backup', selectedFileBackupRestore);
+    selectedFileBackupRestore.forEach(file => body.append('backups', file));
     body.append('folder', $('fileBackupRestoreFolder').value.trim());
-    const result = await fileBackupRequest('/api/file-backups/restore', { method: 'POST', body });
+    const result = await fileBackupRequest('/api/file-backups/restore-batch', { method: 'POST', body });
     $('fileBackupStatus').textContent = `Restore berhasil: ${result.fileCount} file dipulihkan.`;
-    selectedFileBackupRestore = null;
+    if (result.missingFiles?.length) $('fileBackupStatus').textContent += ` Perhatian: backup asal tidak lengkap; ${result.missingFiles.length} file tidak tersedia saat backup dibuat dan perlu diunggah ulang.`;
+    selectedFileBackupRestore = [];
     $('fileBackupRestoreInput').value = '';
     $('fileBackupRestoreFileName').textContent = 'No file selected';
     await refreshEvidenceLibrary();
     await loadFileBackupFolders();
   } catch (error) { $('fileBackupStatus').textContent = error.message; }
   finally {
-    button.disabled = !selectedFileBackupRestore;
+    button.disabled = !selectedFileBackupRestore.length;
     $('fileBackupRestoreInput').disabled = false;
     $('fileBackupCreateButton').disabled = false;
   }

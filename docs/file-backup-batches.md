@@ -1,0 +1,15 @@
+﻿# File Backup dan Batch Restore
+
+Pilih **Semua folder** untuk mencadangkan seluruh file unggahan yang terdaftar, termasuk subfolder evidence, foto aset/rak dan gambar Knowledge Notes. Pilihan satu folder tetap mencakup seluruh turunannya. File Backup tidak mencadangkan source code, database, atau file di luar pustaka unggahan; gunakan Database Backup untuk data aplikasi dan hubungan lampiran.
+
+Tidak ada batas ukuran total atau jumlah file pada backup baru. Data dibaca secara streaming dan disimpan sementara ke disk. Arsip dibagi otomatis dengan ukuran maksimal 500 MiB (500 × 1024 × 1024 byte) per ZIP. Pemecahan menggunakan ukuran sebelum kompresi dan menyediakan ruang untuk metadata/header ZIP; ukuran hasil ZIP dapat lebih kecil. File tunggal yang besar dipecah menjadi potongan dan disatukan kembali saat restore. Kapasitas disk/storage tetap menentukan jumlah data yang dapat diproses.
+
+Unduh **seluruh bagian** dengan ID batch yang sama (`...-part-0001-of-0004.zip`, dst.). Saat restore, pilih semua ZIP tersebut sekaligus melalui **Select backup files**, lalu **Restore selected batch**. Urutan pemilihan bebas. Folder restore opsional hanya menentukan file yang dipulihkan; seluruh bagian tetap diperlukan untuk memvalidasi kelengkapan batch.
+
+Restore memeriksa identitas batch, jumlah dan nomor bagian, metadata, path, ukuran, CRC ZIP, serta urutan potongan sebelum menulis file aktif. Bagian hilang/duplikat, batch tercampur atau arsip rusak ditolak. Path, nama, MIME, pemilik yang masih tersedia, dan halaman PDF dipulihkan melalui storage aktif. File lain tetap tersimpan. Kegagalan storage setelah penulisan dimulai dilaporkan dengan jumlah file yang sudah dipulihkan; restore bukan transaksi atomik lintas seluruh storage.
+
+ZIP lama versi 1 tetap dapat dipulihkan satu per satu. Backup baru versi 2 tidak mempunyai batas total 2 GB; batas ekstraksi 2 GB hanya dipertahankan untuk keamanan format ZIP lama. Per bagian versi 2, ekstraksi dibatasi 500 MiB. Manifest versi 2 menyimpan metadata file yang ada pada bagian tersebut, tidak menggandakan seluruh pustaka pada setiap bagian.
+
+Endpoint administrator: `POST /api/file-backups` membuat backup, `POST /api/file-backups/restore-batch` menerima multipart field `backups` (banyak ZIP), dan `/restore` lama menerima field `backup`. Maksimal 500 MiB per unggahan bagian, tanpa batas ukuran gabungan pada multer. Reverse proxy atau hosting perlu mengizinkan ukuran dan durasi multipart sesuai kapasitas server. Metadata legacy foto kecil tetap disalin ke database; file besar mengandalkan storage fisik agar restore tidak memuat seluruh file ke memori.
+
+Jika file tercatat di database tetapi tidak tersedia di storage maupun kolom content legacy, backup tetap menyimpan file yang tersedia dan mengembalikan `complete: false` serta daftar `missingFiles`. UI menampilkan **Backup belum lengkap** beserta path yang perlu diunggah ulang; manifest menyimpan laporan yang sama dan restore meneruskan peringatannya. File hilang tidak diganti dengan file kosong. Gangguan akses storage selain file tidak ditemukan tetap menggagalkan proses untuk menghindari hasil backup yang menyesatkan.
