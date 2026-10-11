@@ -16,6 +16,7 @@ async function detach(client, normalized) {
   await client.query(`UPDATE tprm_due_diligence_questionnaires SET responses=jsonb_set(responses,'{vendorDocuments}',${filter("responses->'vendorDocuments'")}), updated_at=NOW()
     WHERE jsonb_typeof(responses->'vendorDocuments')='array' AND EXISTS (SELECT 1 FROM jsonb_array_elements(responses->'vendorDocuments') AS item WHERE item->>'path'=ANY($1::text[]))`, [paths]);
   // Legacy binary copies must also be cleared so migrations cannot restore a deleted file.
+  await client.query(`UPDATE personnel_certifications SET certificate_file=NULL,updated_at=NOW() WHERE certificate_file->>'path'=ANY($1::text[])`, [paths]);
   const auditRows = await client.query(`SELECT id,data,filename FROM audit_finding_records
     WHERE data->>'attachmentPath'=ANY($1::text[]) OR EXISTS (
       SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(data->'attachments')='array' THEN data->'attachments' ELSE '[]'::jsonb END) AS item WHERE item->>'path'=ANY($1::text[])) FOR UPDATE`, [paths]);

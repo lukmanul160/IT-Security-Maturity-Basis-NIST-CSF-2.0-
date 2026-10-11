@@ -2,8 +2,8 @@ const service = require('../services/personnelCertificationService');
 const wrap = handler => (req, res, next) => Promise.resolve(handler(req, res)).catch(next);
 module.exports = {
   list: wrap(async (req, res) => res.json(await service.list())),
-  create: wrap(async (req, res) => res.status(201).json(await service.create(req.body))),
-  update: wrap(async (req, res) => res.json(await service.update(req.params.id, req.body))),
+  create: wrap(async (req, res) => res.status(201).json(await require('../services/personnelCertificateFileService').saveRequest(req, null))),
+  update: wrap(async (req, res) => res.json(await require('../services/personnelCertificateFileService').saveRequest(req, req.params.id))),
   updateLayout: wrap(async (req, res) => res.json(await service.updateLayout(req.params.id, req.body))),
   remove: wrap(async (req, res) => { await service.remove(req.params.id); res.status(204).end(); }),
   organizationList: wrap(async (req, res) => res.json(await service.listOrganizationPersonnel())),

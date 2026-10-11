@@ -14,10 +14,12 @@ test('main file deletion detaches every source, preserves other files and rolls 
       'CREATE TEMP TABLE policy_register(id INT PRIMARY KEY,attachment_path TEXT,attachment_name TEXT,attachment_type TEXT,updated_at TIMESTAMPTZ)',
       'CREATE TEMP TABLE tprm_due_diligence_questionnaires(id INT PRIMARY KEY,responses JSONB,updated_at TIMESTAMPTZ)',
       'CREATE TEMP TABLE audit_finding_records(id TEXT PRIMARY KEY,data JSONB,filename TEXT,content BYTEA,updated_at TIMESTAMPTZ)',
+      'CREATE TEMP TABLE personnel_certifications(id INT,certificate_file JSONB,updated_at TIMESTAMPTZ)',
       'CREATE TEMP TABLE evidence_files(path TEXT PRIMARY KEY)'
     ]) await client.query(sql);
     const target='folder/main.pdf', keep={path:'upload/folder/keep.pdf',name:'keep.pdf'};
     await client.query('INSERT INTO evidence_files VALUES($1)',[target]);
+    await client.query('INSERT INTO personnel_certifications VALUES(1,$1,NOW())',[{path:'upload/'+target,name:'main.pdf',type:'application/pdf'}]);
     await client.query('INSERT INTO assessment_state VALUES($1,$2,NOW())',['test',{scores:{one:3},attachments:{one:[{path:target},keep],two:[{path:'uploads/'+target}]}}]);
     await client.query('INSERT INTO controls VALUES($1,$2,NOW())',['test',JSON.stringify([{path:'upload/'+target},keep])]);
     await client.query('INSERT INTO assessment_gaps VALUES($1,$2,$3,$4,NOW())',['gap-test','Kurang poin a','Open',JSON.stringify([{path:'upload/'+target},keep])]);
@@ -32,6 +34,7 @@ test('main file deletion detaches every source, preserves other files and rolls 
     assert.equal((await client.query('SELECT * FROM evidence_files')).rowCount,1);
     t.mock.method(storage,'remove',async(path)=>assert.equal(path,target));
     await service.deleteFile(target,{library:true});
+    assert.equal((await client.query('SELECT certificate_file FROM personnel_certifications')).rows[0].certificate_file,null);
     const assessment=(await client.query('SELECT data FROM assessment_state')).rows[0].data;
     assert.deepEqual(assessment,{scores:{one:3},attachments:{one:[keep],two:[]}});
     assert.deepEqual((await client.query('SELECT evidence FROM controls')).rows[0].evidence,[keep]);

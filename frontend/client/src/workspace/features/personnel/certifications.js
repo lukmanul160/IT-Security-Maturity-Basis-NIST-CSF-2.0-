@@ -14,7 +14,11 @@ async function saveCertification(event) {
   const id = $('certificationId').value;
   if (!canManagePersonnelCertifications(id ? 'update' : 'create')) return;
   try {
-    const response = await fetch(id ? `/api/personnel-certifications/${id}` : '/api/personnel-certifications', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(certificationData()) });
+    const body = new FormData();
+    body.append('data', JSON.stringify(certificationData()));
+    if ($('certificationFile').files[0]) body.append('certificate', $('certificationFile').files[0]);
+    body.append('removeCertificate', String($('certificationFileRemove').checked));
+    const response = await fetch(id ? `/api/personnel-certifications/${id}` : '/api/personnel-certifications', { method: id ? 'PUT' : 'POST', body });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Sertifikasi gagal disimpan');
     $('certificationModal').close();
     await loadCertifications();

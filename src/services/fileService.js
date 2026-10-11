@@ -108,6 +108,7 @@ async function replaceFile(relativePath, file) {
 	}
 
 	if (normalized.startsWith('Knowledge Notes/') && /\.(png|jpe?g|gif|webp)$/i.test(normalized)) require('./knowledgeImageService').validate({path:file.originalname,content:file.buffer});
+	if (normalized.startsWith('Personnel Certification/')) require('./personnelCertificateFileService').validate(file);
 	if (normalized.startsWith('Asset Management/') && !normalized.startsWith('Asset Management/imports/')) require('./assetRackPhotoService').validateFile(file);
 	if (normalized.startsWith('Asset Management/imports/')) { if(file.buffer.length>100*1024*1024)throw Object.assign(new Error('File import maksimal 100 MB.'),{status:400});let payload;try{payload=JSON.parse(file.buffer.toString('utf8'));}catch{throw Object.assign(new Error('File JSON tidak valid.'),{status:400});}require('./assetTransferService').validate(payload); }
 	else if (normalized.startsWith('Knowledge Notes/imports/')) require('./knowledgeDocumentService').validate({path:file.originalname,content:file.buffer});
@@ -162,7 +163,7 @@ async function referenceCounts(relativePath) {
 	  (SELECT COUNT(*)::int FROM audit_finding_records WHERE data->>'attachmentPath' = ANY($1::text[]) OR EXISTS (SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(data->'attachments')='array' THEN data->'attachments' ELSE '[]'::jsonb END) AS item WHERE item->>'path' = ANY($1::text[]))) AS audit,
       (SELECT COUNT(*)::int FROM managed_asset_photos WHERE evidence_path=ANY($1::text[])) +
       (SELECT COUNT(*)::int FROM asset_rack_photos WHERE evidence_path=ANY($1::text[])) AS assets,
-      (SELECT COUNT(*)::int FROM knowledge_note_images WHERE evidence_path=ANY($1::text[])) AS images`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
+      (SELECT COUNT(*)::int FROM knowledge_note_images WHERE evidence_path=ANY($1::text[])) AS images, (SELECT COUNT(*)::int FROM personnel_certifications WHERE certificate_file->>'path'=ANY($1::text[])) AS certificates`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
 	const gaps = await pool.query(`SELECT COUNT(*)::int AS count FROM assessment_gaps, LATERAL jsonb_array_elements(evidence) AS item WHERE item->>'path'=ANY($1::text[])`, [[normalized, `upload/${normalized}`, `uploads/${normalized}`]]);
 	return {...result.rows[0], gaps:gaps.rows[0].count};
 }

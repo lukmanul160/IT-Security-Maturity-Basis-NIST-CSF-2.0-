@@ -84,6 +84,16 @@ test('registered personnel workflow and legacy migration in isolated PostgreSQL 
       assert.ok(rows.some(row => row.certificationName === 'CISM'));
     });
 
+    await t.test('certificate attachments persist across edits and layout updates', async () => {
+      const certificateFile = {path:'upload/Personnel Certification/Certificates/test/CISSP.pdf',name:'CISSP.pdf',type:'application/pdf',size:1024};
+      await service.update(first.id,{personnelId:employee.id,certificationName:'CISSP',certificateFile});
+      await service.update(first.id,{personnelId:employee.id,certificationName:'CISSP updated'});
+      await service.updateLayout(first.id,{certificationLevel:'Intermediate'});
+      assert.deepEqual((await service.list()).find(row=>row.id===first.id).certificateFile,certificateFile);
+      await service.update(first.id,{personnelId:employee.id,certificationName:'CISSP',certificateFile:null});
+      assert.equal((await service.list()).find(row=>row.id===first.id).certificateFile,null);
+    });
+
     await t.test('editing employee identity updates all certificates without regrouping by name', async () => {
       await service.updateOrganizationPersonnel(employee.id, { personnelName: 'Senior Analyst', employeeId: 'EMP3', personnelRole: 'SOC Lead', supervisorName: '' });
       const rows = (await service.list()).filter(row => row.personnelId === employee.id);

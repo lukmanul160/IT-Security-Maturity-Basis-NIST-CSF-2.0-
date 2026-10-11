@@ -168,6 +168,7 @@ function resetCertificationForm() {
   setCertificationEditable(true);
   ensureCertificationLevelField();
   $('certificationForm').reset();
+  showCertificatePreview(null);
   $('certificationForm').hidden = false;
   $('certificationId').value = '';
   $('certificationDelete').hidden = true;
@@ -202,6 +203,7 @@ function fillCertificationForm(row) {
   $('certificationIssueDate').value = row.issueDate || '';
   $('certificationExpiryDate').value = row.expiryDate || '';
   $('certificationNotes').value = row.notes || '';
+  showCertificatePreview(row.certificateFile, row.id);
   $('certificationFormTitle').textContent = `Edit ${row.certificationName}`;
   $('certificationStatus').textContent = `Editing ${row.personnelName}`;
   setCertificationEditable(canManagePersonnelCertifications('update'));
@@ -226,3 +228,40 @@ new MutationObserver(resizeCertificationCanvases).observe($('certificationBoard'
 function roadmapCatalogData() { return { domain: $('roadmapCatalogDomain').value, certificationName: $('roadmapCatalogName').value, issuer: $('roadmapCatalogIssuer').value, referenceUrl: $('roadmapCatalogUrl').value, certificationLevel: $('roadmapCatalogLevel').value, notes: $('roadmapCatalogNotes').value }; }
 function setRoadmapCatalogEditable(editable) { $('roadmapCatalogForm').querySelectorAll('input, textarea, select').forEach(element => { if (element.id !== 'roadmapCatalogId') element.disabled = !editable; }); $('roadmapCatalogSave').hidden = !editable; $('roadmapCatalogDelete').hidden = !canManagePersonnelCertifications('delete') || !$('roadmapCatalogId').value; }
 function openRoadmapCatalogModal(row = null) { const editable = canManagePersonnelCertifications(row ? 'update' : 'create'); const referenceUrl = row?.referenceUrl || ''; $('roadmapCatalogForm').reset(); $('roadmapCatalogId').value = row?.id || ''; $('roadmapCatalogDomain').value = row?.domain || ''; $('roadmapCatalogName').value = row?.certificationName || ''; $('roadmapCatalogIssuer').value = row?.issuer || ''; $('roadmapCatalogUrl').value = referenceUrl; $('roadmapCatalogLevel').value = row?.certificationLevel || 'Intermediate'; $('roadmapCatalogNotes').value = row?.notes || ''; $('roadmapCatalogReferenceLink').href = referenceUrl || '#'; $('roadmapCatalogReferenceLink').hidden = !/^https?:\/\//i.test(referenceUrl); $('roadmapCatalogFormTitle').textContent = row ? row.certificationName : 'New catalog item'; $('roadmapCatalogStatus').textContent = editable ? 'Ready' : 'Read-only'; setRoadmapCatalogEditable(editable); const modal = $('roadmapCatalogModal'); if (!modal.open) modal.showModal(); }
+
+let certificatePreviewUrl = null;
+let currentCertificateFile = null;
+function showCertificatePreview(file, id = '') {
+  if (certificatePreviewUrl) URL.revokeObjectURL(certificatePreviewUrl);
+  certificatePreviewUrl = null;
+  currentCertificateFile = file;
+  const preview = $('certificationFilePreview');
+  preview.replaceChildren(); preview.hidden = !file;
+  $('certificationFileName').textContent = file ? file.name : 'Belum ada sertifikat yang diunggah.';
+  const download = $('certificationFileDownload'); download.hidden = !file || !id;
+  if (!file) return;
+  let url;
+  if (file instanceof File) { certificatePreviewUrl = URL.createObjectURL(file); url = certificatePreviewUrl; }
+  else url = '/api/personnel-certifications/' + encodeURIComponent(id) + '/certificate';
+  const element = document.createElement(file.type === 'application/pdf' ? 'iframe' : 'img');
+  element.src = url; element.title = 'Preview sertifikat'; element.alt = file.name;
+  preview.appendChild(element);
+  download.href = '/api/personnel-certifications/' + encodeURIComponent(id) + '/certificate?download=1';
+}
+$('certificationFile').addEventListener('change', () => {
+  const file = $('certificationFile').files[0];
+  if (!file) return;
+  if (!['application/pdf','image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 5*1024*1024) {
+    $('certificationStatus').textContent = 'Gunakan PDF, PNG, JPEG, atau WebP, maksimum 5 MB.';
+    $('certificationFile').value = ''; return;
+  }
+  $('certificationFileRemove').checked = false;
+  showCertificatePreview(file);
+});
+$('certificationFileRemove').addEventListener('change', () => {
+  const remove = $('certificationFileRemove').checked;
+  $('certificationFilePreview').hidden = remove || !currentCertificateFile;
+  $('certificationFileDownload').hidden = remove || !currentCertificateFile || currentCertificateFile instanceof File;
+  if (remove) $('certificationFile').value = '';
+});
+$('certificationModal').addEventListener('close', () => showCertificatePreview(null));

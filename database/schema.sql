@@ -116,6 +116,7 @@ CREATE INDEX IF NOT EXISTS risk_dropdown_options_field_idx
   ON risk_dropdown_options (field_name, sort_order, option_value);
 
 CREATE TABLE IF NOT EXISTS personnel_certifications (
+  certificate_file JSONB,
   id BIGSERIAL PRIMARY KEY,
   -- Backfilled, constrained and indexed by personnel-certification-links.sql during setup.
   personnel_id BIGINT,

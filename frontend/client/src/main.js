@@ -1,3 +1,4 @@
+import './styles/personnel-certificate.css';
 import './styles/assessment-gaps.css';
 import './styles/upload-progress.css';
 import { installUploadProgress } from './services/uploadProgress';

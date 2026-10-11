@@ -10,7 +10,7 @@ function number(value, fallback) { const result = Number(value); return Number.i
 function validate(data) { if (!data || !/^[1-9]\d*$/.test(text(data.personnelId))) throw invalid('Pilih pegawai yang sudah terdaftar sebelum menambahkan sertifikasi.'); if (!text(data.certificationName)) throw invalid('certificationName is required'); if (data.issueDate && !/^\d{4}-\d{2}-\d{2}$/.test(data.issueDate)) throw invalid('issueDate must be a valid date'); if (data.expiryDate && !/^\d{4}-\d{2}-\d{2}$/.test(data.expiryDate)) throw invalid('expiryDate must be a valid date'); if (text(data.referenceUrl) && !/^https?:\/\//i.test(text(data.referenceUrl))) throw invalid('referenceUrl must use http or https'); }
 function level(value) { return ['Entry Level', 'Intermediate', 'Advanced / Expert'].includes(value) ? value : 'Intermediate'; }
 function values(data) { return [text(data.personnelName), text(data.employeeId), text(data.personnelRole), text(data.supervisorName), text(data.certificationName), text(data.issuer), text(data.referenceUrl), level(data.certificationLevel), text(data.status || 'Planned'), date(data.issueDate), date(data.expiryDate), text(data.notes), Boolean(data.onCanvas), number(data.positionX, 24), number(data.positionY, 24), number(data.cardWidth, 260), number(data.cardHeight, 190)]; }
-function map(row) { return { id: row.id, personnelId: row.personnel_id, personnelName: row.personnel_name, employeeId: row.employee_id, personnelRole: row.personnel_role, supervisorName: row.supervisor_name || '', certificationName: row.certification_name, issuer: row.issuer, referenceUrl: row.reference_url, certificationLevel: level(row.certification_level), status: row.status, issueDate: date(row.issue_date), expiryDate: date(row.expiry_date), notes: row.notes, onCanvas: Boolean(row.on_canvas), positionX: row.position_x, positionY: row.position_y, cardWidth: row.card_width, cardHeight: row.card_height, createdAt: row.created_at, updatedAt: row.updated_at }; }
+function map(row) { return { certificateFile: row.certificate_file || null, id: row.id, personnelId: row.personnel_id, personnelName: row.personnel_name, employeeId: row.employee_id, personnelRole: row.personnel_role, supervisorName: row.supervisor_name || '', certificationName: row.certification_name, issuer: row.issuer, referenceUrl: row.reference_url, certificationLevel: level(row.certification_level), status: row.status, issueDate: date(row.issue_date), expiryDate: date(row.expiry_date), notes: row.notes, onCanvas: Boolean(row.on_canvas), positionX: row.position_x, positionY: row.position_y, cardWidth: row.card_width, cardHeight: row.card_height, createdAt: row.created_at, updatedAt: row.updated_at }; }
 
 async function transaction(action) {
   const client = await pool.connect();
@@ -40,6 +40,7 @@ async function ensureStore() {
   await pool.query('ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS certification_level TEXT NOT NULL DEFAULT \'Intermediate\'');
   await pool.query('ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS on_canvas BOOLEAN NOT NULL DEFAULT FALSE');
   await pool.query('ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS supervisor_name TEXT NOT NULL DEFAULT \'\'');
+  await pool.query("ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS certificate_file JSONB");
   // Roadmap catalog rows now live in certification_roadmap_catalog; drop any legacy leftovers here.
   await pool.query("DELETE FROM personnel_certifications WHERE status = 'Catalog'");
   const migration = await fs.readFile(path.join(__dirname, '../../database/personnel-certification-links.sql'), 'utf8');
@@ -56,8 +57,8 @@ async function create(data) {
   validate(data);
   return transaction(async client => {
     const person = await registeredPersonnel(client, data);
-    const insertFields = [...fields, 'personnel_id'];
-    const result = await client.query(`INSERT INTO personnel_certifications (${insertFields.join(', ')}) VALUES (${insertFields.map((_, index) => `$${index + 1}`).join(', ')}) RETURNING *`, [...values(person), person.personnelId]);
+    const insertFields = [...fields, 'personnel_id', 'certificate_file'];
+    const result = await client.query(`INSERT INTO personnel_certifications (${insertFields.join(', ')}) VALUES (${insertFields.map((_, index) => `$${index + 1}`).join(', ')}) RETURNING *`, [...values(person), person.personnelId, data.certificateFile || null]);
     return map(result.rows[0]);
   });
 }
@@ -66,8 +67,10 @@ async function update(id, data) {
   return transaction(async client => {
     const person = await registeredPersonnel(client, data);
     const editableFields = [...fields.slice(0, 12), 'personnel_id'];
+    const editableValues = [...values(person).slice(0, 12), person.personnelId];
+    if (Object.hasOwn(data, 'certificateFile')) { editableFields.push('certificate_file'); editableValues.push(data.certificateFile); }
     const assignments = editableFields.map((field, index) => `${field} = $${index + 1}`).join(', ');
-    const result = await client.query(`UPDATE personnel_certifications SET ${assignments}, updated_at = NOW() WHERE id = $${editableFields.length + 1} RETURNING *`, [...values(person).slice(0, 12), person.personnelId, id]);
+    const result = await client.query(`UPDATE personnel_certifications SET ${assignments}, updated_at = NOW() WHERE id = $${editableFields.length + 1} RETURNING *`, [...editableValues, id]);
     if (!result.rowCount) throw Object.assign(new Error('Certification not found'), { status: 404 });
     return map(result.rows[0]);
   });
