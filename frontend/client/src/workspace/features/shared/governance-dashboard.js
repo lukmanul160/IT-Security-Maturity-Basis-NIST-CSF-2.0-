@@ -36,7 +36,7 @@ function gdCalendar(id, monthId, rows, dateOf, attribute) {
   }).join('');
 }
 function gdKpis(id, metrics, attribute) {
-  $(id).innerHTML = metrics.map(([kind, label, value, detail, valueId]) => `<button class="stat-panel rd-kpi" type="button" data-${attribute}="${kind}"><span class="stat-label">${escapeHtml(label)}</span><strong${valueId ? ` id="${valueId}"` : ''}>${escapeHtml(String(value))}</strong><span class="stat-detail">${escapeHtml(detail)}</span></button>`).join('');
+  $(id).innerHTML = metrics.map(([kind, label, value, detail, valueId]) => `<div class="dashboard-help-wrap"><button class="stat-panel rd-kpi" type="button" data-${attribute}="${kind}"><span class="stat-label">${escapeHtml(label)}</span><strong${valueId ? ` id="${valueId}"` : ''}>${escapeHtml(String(value))}</strong><span class="stat-detail">${escapeHtml(detail)}</span></button><button type="button" class="dashboard-help-button" data-dashboard-help aria-label="Penjelasan ${escapeHtml(label)}">?</button></div>`).join('');
 }
 function gdExport(filename, rows, columns, format) {
   const cell = value => { let text = String(value ?? ''); if (/^[\s]*[=+@-]/.test(text)) text = "'" + text; return '"' + text.replaceAll('"', '""') + '"'; };

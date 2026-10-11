@@ -88,17 +88,17 @@ function renderRiskDashboard() {
   rdPopulateFilters();
   const rows = rdBaseRows(), active = rows.filter(rdActive), paired = rows.filter(r => rdScore(r) !== null && rdScore(r, 'residual') !== null);
   const sum = (list, mode) => list.reduce((n, r) => n + (rdScore(r, mode) || 0), 0);
-  const avg = list => list.length ? (sum(list, 'inherent') / list.length).toFixed(1) : '—';
+  const avg = list => {const rated=list.filter(r=>rdScore(r)!==null);return rated.length?(sum(rated,'inherent')/rated.length).toFixed(1):'Belum dinilai';};
   const change = paired.length ? ((sum(paired, 'residual') - sum(paired, 'inherent')) / paired.length).toFixed(1) : '—';
   const cards = [
-    ['all', 'Total exposure score', `${sum(rows, 'inherent')} / ${sum(rows, 'residual')}`, 'Inherent / residual · skor, bukan nilai uang'],
+    ['all', 'Total risk scores', `Inherent ${sum(rows, 'inherent')} | Residual ${sum(rows, 'residual')}`, `${rows.filter(r=>rdScore(r)!==null).length} inherent / ${rows.filter(r=>rdScore(r,'residual')!==null).length} residual dinilai; bukan nilai uang`],
     ['active', 'Total active risks', active.length, `${rows.length} risiko dalam cakupan`],
     ['high', 'High risks', active.filter(r => rdHigh(r)).length, 'Risiko aktif · skor 15–25'],
     ['residual', 'Residual high', active.filter(r => rdHigh(r, 'residual')).length, 'Risiko aktif setelah treatment'],
     ['overdue', 'Overdue treatment', rows.filter(rdOverdue).length, 'Deadline terlewat · kecuali Closed'],
-    ['paired', 'Risk score net change', change, `${paired.length} penilaian lengkap · residual − inherent`]
+    ['paired', 'Rata-rata perubahan setelah treatment', change, `${paired.length} penilaian lengkap · residual − inherent`]
   ];
-  $('rdKpis').innerHTML = cards.map(([key, label, value, detail]) => `<button type="button" class="stat-panel rd-kpi" data-rd-kpi="${key}"><span class="stat-label">${label}</span><strong>${value}</strong><span class="stat-detail">${detail}</span></button>`).join('');
+  $('rdKpis').innerHTML = cards.map(([key, label, value, detail]) => `<div class="dashboard-help-wrap"><button type="button" class="stat-panel rd-kpi" data-rd-kpi="${key}"><span class="stat-label">${label}</span><strong>${value}</strong><span class="stat-detail">${detail}</span></button><button type="button" class="dashboard-help-button" data-dashboard-help aria-label="Penjelasan ${label}">?</button></div>`).join('');
   $('riskManagementCount').textContent = `${riskManagementRows.length} risks`;
   const invalidRange = $('rdPeriod').value === 'custom' && $('rdStart').value && $('rdEnd').value && $('rdStart').value > $('rdEnd').value;
   $('rdFilterStatus').textContent = invalidRange ? 'Tanggal mulai harus sebelum tanggal akhir.' : `${rows.length} dari ${riskManagementRows.length} risiko · rata-rata inherent ${avg(rows)} · data diperbarui saat refresh atau penyimpanan.`;
@@ -121,7 +121,7 @@ function renderRiskDashboard() {
     const points = months.map((key, index) => [30 + index * 440 / Math.max(1, months.length - 1), 130 - (monthCounts.get(key) || 0) * 105 / Math.max(1, ...monthCounts.values())]);
     $('rdTrend').innerHTML = `<svg class="rd-trend" viewBox="0 0 500 165" role="group" aria-label="Jumlah risiko High saat ini menurut bulan pendaftaran"><path d="M30 130H470" class="rd-axis"/><polyline points="${points.map(p => p.join(',')).join(' ')}" class="rd-line"/>${points.map(([x, y], n) => `<circle cx="${x}" cy="${y}" r="6" data-rd-month="${months[n]}" tabindex="0" role="button" aria-label="${months[n]}, ${monthCounts.get(months[n]) || 0} risiko High"/><text x="${x}" y="${y - 10}" text-anchor="middle">${monthCounts.get(months[n]) || 0}</text>`).join('')}</svg><div class="rd-months">${months.map(key => `<button type="button" class="button button-quiet" data-rd-month="${key}">${key}: ${monthCounts.get(key) || 0}</button>`).join('')}</div>`;
   } else $('rdTrend').innerHTML = '<p class="muted">Tanggal pendaftaran belum tersedia pada data dalam cakupan.</p>';
-  $('rdIndicators').innerHTML = [['High aktif', active.filter(r => rdHigh(r)).length, active.length, 'high'], ['Treatment overdue', active.filter(rdOverdue).length, active.length, 'overdue'], ['Residual high aktif', active.filter(r => rdHigh(r, 'residual')).length, active.length, 'residual']].map(([label, n, total, key]) => `<button type="button" class="rd-indicator" data-rd-kpi="${key}"><span>${label}</span><strong>${total ? Math.round(n / total * 100) : 0}%</strong><progress max="${Math.max(1, total)}" value="${n}" aria-label="${label}"></progress><small>${n} / ${total} risiko aktif</small></button>`).join('');
+  $('rdIndicators').innerHTML = [['High aktif', active.filter(r => rdHigh(r)).length, active.length, 'high'], ['Treatment overdue', active.filter(rdOverdue).length, active.length, 'overdue'], ['Residual high aktif', active.filter(r => rdHigh(r, 'residual')).length, active.length, 'residual']].map(([label, n, total, key]) => `<div class="dashboard-help-wrap"><button type="button" class="rd-indicator" data-rd-kpi="${key}"><span>${label}</span><strong>${total ? Math.round(n / total * 100) : 0}%</strong><progress max="${Math.max(1, total)}" value="${n}" aria-label="${label}"></progress><small>${n} / ${total} risiko aktif</small></button><button type="button" class="dashboard-help-button" data-dashboard-help aria-label="Penjelasan ${label}">?</button></div>`).join('');
   const alerts = rows.filter(r => rdOverdue(r) || rdActive(r) && rdHigh(r, 'residual'));
   $('rdAlertCount').textContent = alerts.length;
   $('rdAlerts').innerHTML = '<h3>Risiko yang memerlukan perhatian</h3>' + (alerts.map(r => `<button type="button" class="rd-alert" data-rd-view="${escapeHtml(r.riskId)}"><strong>${escapeHtml(r.riskId)}</strong> · ${escapeHtml(r.identificationRisk)}<small>${rdOverdue(r) ? 'Treatment terlambat: ' + escapeHtml(String(r.deadline).slice(0, 10)) : 'Residual masih High'}</small></button>`).join('') || '<p class="muted">Tidak ada treatment overdue atau residual High aktif.</p>');

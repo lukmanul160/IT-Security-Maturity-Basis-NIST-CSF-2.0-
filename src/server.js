@@ -46,6 +46,7 @@ async function start() {
   await ensurePolicyRegisterStore();
   await require('./services/policyReminderService').ensureStore();
   await ensureAuditStore();
+  await require('./services/auditRetentionService').ensureStore();
   require('./middleware/audit').startAuditRecovery();
   await require('./services/auditFindingService').ensureStore();
   await require('./services/auditFindingReminderService').ensureStore();
@@ -58,6 +59,7 @@ async function start() {
       resolve();
     });
   });
+  require('./services/auditRetentionService').startScheduler();
   require('./services/assetManagementService').startScheduler();
   require('./services/policyReminderService').startScheduler();
   require('./services/auditFindingReminderService').startScheduler();

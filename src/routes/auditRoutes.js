@@ -3,6 +3,17 @@ const auditService = require('../services/auditService');
 const { requireAdmin } = require('../middleware/authorization');
 
 const router = express.Router();
+const retention=require('../services/auditRetentionService');
+router.get('/retention',requireAdmin,async(req,res,next)=>{try{res.json(await retention.read());}catch(error){next(error);}});
+router.put('/retention',requireAdmin,async(req,res,next)=>{try{res.json(await retention.save(req.body));}catch(error){if(error.status)return res.status(error.status).json({error:error.message});next(error);}});
+
+router.get('/export',requireAdmin,async(req,res,next)=>{
+ try{const format=req.query.format||'csv',iterator=auditService.exportChunks(req.query,format),first=await iterator.next();
+ res.set('Content-Type',format==='csv'?'text/csv; charset=utf-8':'application/json; charset=utf-8');res.set('Cache-Control','no-store');res.attachment('application-activity-'+new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok'}).format(new Date())+'.'+format);
+ const write=chunk=>new Promise(resolve=>{if(res.destroyed)return resolve(false);if(res.write(chunk))return resolve(true);const done=()=>{res.off('drain',drain);res.off('close',close);};const drain=()=>{done();resolve(true);};const close=()=>{done();resolve(false);};res.once('drain',drain);res.once('close',close);});
+ if(!first.done&&await write(first.value))for await(const chunk of iterator){if(!await write(chunk))break;}if(!res.destroyed)res.end();
+ }catch(error){if(res.headersSent)res.destroy(error);else if(error.status)res.status(error.status).json({error:error.message});else next(error);}
+});
 router.get('/', requireAdmin, async (req, res, next) => {
   try { res.json(await auditService.list(req.query)); } catch (error) { next(error); }
 });

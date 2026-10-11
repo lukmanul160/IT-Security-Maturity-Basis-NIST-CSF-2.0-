@@ -80,7 +80,7 @@ function renderRiskAcceptanceDashboard() {
     ['missing', 'Tanpa tanggal review', models.filter(model => model.missing).length, 'Pengajuan tidak ditolak · perlu melengkapi tanggal'],
     ['financial', 'Accepted financial exposure', 'Belum tersedia', 'Nilai finansial belum menjadi input formulir']
   ];
-  $('raKpis').innerHTML = metrics.map(([kind, label, value, detail]) => `<button type="button" class="stat-panel rd-kpi ${kind === 'financial' ? 'ra-unavailable' : ''}" data-ra-kpi="${kind}"><span class="stat-label">${label}</span><strong>${value}</strong><span class="stat-detail">${detail}</span></button>`).join('');
+  $('raKpis').innerHTML = metrics.map(([kind, label, value, detail]) => `<div class="dashboard-help-wrap"><button type="button" class="stat-panel rd-kpi ${kind === 'financial' ? 'ra-unavailable' : ''}" data-ra-kpi="${kind}"><span class="stat-label">${label}</span><strong>${value}</strong><span class="stat-detail">${detail}</span></button><button type="button" class="dashboard-help-button" data-dashboard-help aria-label="Penjelasan ${label}">?</button></div>`).join('');
   $('raFilterStatus').textContent = `${rows.length} dari ${riskAcceptanceForms.length} pengajuan · status sesuai input formulir, bukan validasi kewenangan penandatangan.`;
   raRenderCalendar(rows);
   const groups = (field, kind, stacked = false) => {
