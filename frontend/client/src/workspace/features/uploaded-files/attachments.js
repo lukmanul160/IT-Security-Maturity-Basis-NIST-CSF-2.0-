@@ -134,7 +134,7 @@ async function useExistingPrivacyAttachment(targetKey, sourceKey, sourceIndex) {
   await persistSelectedEvidence(targetKey, source, true);
 }
 async function ensureUploadStructure() { for (const fn of functions) { const functionDirectory = await uploadDirectoryHandle.getDirectoryHandle(fn.name, { create: true }); await functionDirectory.getDirectoryHandle('Policy', { create: true }); await functionDirectory.getDirectoryHandle('Practice', { create: true }); } }
-const updateUploadProgress = (key, percent, message, status = '') => { uploadStatuses.set(key, { percent, message, status }); document.querySelectorAll(`[data-progress-key="${key}"]`).forEach(progress => { progress.className = `upload-progress ${status}`; progress.querySelector('.upload-progress-track i').style.width = `${percent}%`; progress.querySelector('small').textContent = message; }); };
+const updateUploadProgress = (key, percent, message, status = '') => { uploadStatuses.set(key, { percent, message, status }); document.querySelectorAll(`[data-progress-key="${key}"]`).forEach(progress => { progress.className = `upload-progress ${status}${percent == null ? " is-indeterminate" : ""}`; progress.querySelector('.upload-progress-track i').style.width = `${percent == null ? 35 : percent}%`; progress.querySelector('small').textContent = message; }); };
 async function uploadAttachment(input) {
   const files = [...input.files]; if (!files.length) return;
   const key = input.dataset.attachment;
@@ -142,8 +142,8 @@ async function uploadAttachment(input) {
   if (isPrivacy) await privacyDataReady;
   const owner = attachmentStateFor(key);
   try {
-    updateUploadProgress(key, 2, `Uploading ${files.length} file(s)...`);
-    const metadataList = await saveFilesToServer(input.dataset.function, input.dataset.kind, files);
+    updateUploadProgress(key, 0, `Uploading ${files.length} file(s)...`);
+    const metadataList = await saveFilesToServer(input.dataset.function, input.dataset.kind, files, info => updateUploadProgress(key, info.percent, info.label, info.phase === "error" ? "fail" : ""));
     const attachments = [...(owner.attachments[key] || [])];
     metadataList.forEach(metadata => {
       const existing = attachments.findIndex(attachment => attachment.path === metadata.path);
@@ -183,7 +183,7 @@ async function replaceAttachment(input) {
 
 const apiFileUrl = filePath => `/api/files/${filePath.replace(/^upload\//, '').split('/').map(encodeURIComponent).join('/')}`;
 const apiFileOpenUrl = filePath => `/api/files/open/${filePath.replace(/^upload\//, '').split('/').map(encodeURIComponent).join('/')}`;
-async function saveFilesToServer(functionName, kind, files) { const formData = new FormData(); formData.append('functionName', functionName); formData.append('kind', kind); formData.append('rejectDuplicate', 'true'); files.forEach(file => formData.append('files', file, file.name)); const response = await fetch('/api/files/batch', { method: 'POST', body: formData }); if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || 'Upload failed'); } const uploaded = await response.json(); await refreshEvidenceLibrary(); return uploaded; }
+async function saveFilesToServer(functionName, kind, files, onUploadProgress) { const formData = new FormData(); formData.append('functionName', functionName); formData.append('kind', kind); formData.append('rejectDuplicate', 'true'); files.forEach(file => formData.append('files', file, file.name)); const response = await fetch('/api/files/batch', { method: 'POST', body: formData, onUploadProgress }); if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || 'Upload failed'); } const uploaded = await response.json(); await refreshEvidenceLibrary(); return uploaded; }
 function isoRecordContext(key) { const [, framework, ...idParts] = String(key).split('|'); const id = idParts.length ? idParts.join('|') : framework; const isSoa = idParts.length ? framework === 'iso27001-soa' : iso27001SoaRows.some(row => row.id === id); const rows = isSoa ? iso27001SoaRows : iso27001Rows; return { id, isSoa, rows, row: rows.find(item => item.id === id) }; }
 function isoAttachmentFor(key, index) { return isoRecordContext(key).row?.evidence?.[index]; }
 async function openAttachment(key, index) { const attachment = key === 'policy-register' ? policyRegisterFiles().find(file => file.sourceIndex === index) : key.startsWith('iso|') ? isoAttachmentFor(key, index) : (attachmentStateFor(key).attachments[key] || [])[index]; if (attachment) window.open(apiFileOpenUrl(attachment.path), '_blank', 'noopener'); }

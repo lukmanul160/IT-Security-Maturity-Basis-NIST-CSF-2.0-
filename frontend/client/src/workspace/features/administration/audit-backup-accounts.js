@@ -2,10 +2,50 @@ async function loadAuditTrail() { const eventType = $('auditEventFilter')?.value
 function formatBackupSize(bytes) { const value = Number(bytes) || 0; if (value < 1024) return `${value} B`; if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`; return `${(value / (1024 * 1024)).toFixed(1)} MB`; }
 async function loadBackups() { const response = await fetch('/api/backups', { cache: 'no-store' }); if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Backup list unavailable'); const rows = await response.json(); $('backupCount').textContent = `${rows.length} backup${rows.length === 1 ? '' : 's'}`; $('backupBody').innerHTML = rows.map(row => `<tr><td><strong>${escapeHtml(row.fileName)}</strong></td><td>${escapeHtml(new Date(row.createdAt).toLocaleString('id-ID'))}</td><td>${formatBackupSize(row.size)}</td><td><div class="backup-row-actions"><a class="attachment-action-button" href="/api/backups/${encodeURIComponent(row.fileName)}">Download</a><button class="attachment-action-button danger" type="button" data-backup-delete="${escapeHtml(row.fileName)}">Delete</button></div></td></tr>`).join('') || '<tr><td colspan="4">Belum ada database backup.</td></tr>'; }
 async function deleteBackup(fileName) { if (!confirm(`Hapus backup ${fileName}?`)) return; const status = $('backupStatus'); const response = await fetch(`/api/backups/${encodeURIComponent(fileName)}`, { method: 'DELETE' }); if (!response.ok) { status.textContent = (await response.json().catch(() => ({}))).error || 'Backup delete failed'; return; } status.textContent = `Backup dihapus: ${fileName}`; await loadBackups(); }
-async function createBackup() { const button = $('backupCreateButton'); const status = $('backupStatus'); button.disabled = true; status.textContent = 'Membuat backup database...'; try { const response = await fetch('/api/backups', { method: 'POST' }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || 'Database backup failed'); status.textContent = `Backup berhasil dibuat: ${data.fileName}`; await loadBackups(); } catch (error) { status.textContent = error.message; } finally { button.disabled = false; } }
+async function createBackup() {
+  const button = $('backupCreateButton'), status = $('backupStatus');
+  button.disabled = true; $('backupRestoreInput').disabled = true; $('backupRestoreButton').disabled = true;
+  $('backupReloginLink').hidden = true;
+  window.NistUploadProgress.setProgress('backup', { label: 'Membuat backup database...', detail: 'PostgreSQL sedang mencadangkan schema dan data. Persentase proses server belum tersedia.' });
+  status.textContent = 'Membuat backup database...';
+  try {
+    const response = await fetch('/api/backups', { method: 'POST' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Database backup failed');
+    status.textContent = 'Backup berhasil dibuat: ' + data.fileName;
+    window.NistUploadProgress.setProgress('backup', { phase: 'success', label: 'Backup database selesai', percent: 100, detail: data.fileName + ' ? ' + formatBackupSize(data.size) });
+    await loadBackups().catch(error => { status.textContent += ' Daftar belum diperbarui: ' + error.message; });
+  } catch (error) { status.textContent = error.message; window.NistUploadProgress.setProgress('backup', { phase: 'error', label: 'Backup database gagal', detail: error.message }); }
+  finally { button.disabled = false; $('backupRestoreInput').disabled = false; $('backupRestoreButton').disabled = !selectedRestoreFile; }
+}
 let selectedRestoreFile = null;
-function selectRestoreFile(event) { selectedRestoreFile = event.target.files?.[0] || null; $('backupRestoreFileName').textContent = selectedRestoreFile?.name || 'No file selected'; $('backupRestoreButton').disabled = !selectedRestoreFile; }
-async function restoreBackup() { if (!selectedRestoreFile || !confirm('Restore akan mengganti data database saat ini dan tidak dapat dibatalkan. Lanjutkan?')) return; const button = $('backupRestoreButton'); const status = $('backupStatus'); const formData = new FormData(); formData.append('backup', selectedRestoreFile, selectedRestoreFile.name); button.disabled = true; status.textContent = 'Restoring database...'; try { const response = await fetch('/api/backups/restore', { method: 'POST', body: formData }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || 'Database restore failed'); status.textContent = `Restore berhasil: ${data.fileName}`; selectedRestoreFile = null; $('backupRestoreInput').value = ''; $('backupRestoreFileName').textContent = 'No file selected'; await loadBackups(); } catch (error) { status.textContent = error.message; button.disabled = false; } }
+function selectRestoreFile(event) {
+  selectedRestoreFile = event.target.files?.[0] || null;
+  $('backupRestoreFileName').textContent = selectedRestoreFile ? selectedRestoreFile.name + ' ? ' + formatBackupSize(selectedRestoreFile.size) : 'No file selected';
+  $('backupRestoreButton').disabled = !selectedRestoreFile;
+  window.NistUploadProgress.showFiles('backup', selectedRestoreFile ? [selectedRestoreFile] : []);
+  $('backupProgressPanel').hidden = true;
+}
+async function restoreBackup() {
+  if (!selectedRestoreFile || !confirm('Restore akan mengganti data database saat ini dan tidak dapat dibatalkan. Lanjutkan?')) return;
+  const button = $('backupRestoreButton'), status = $('backupStatus'), file = selectedRestoreFile;
+  const body = new FormData(); body.append('backup', file, file.name);
+  button.disabled = true; $('backupRestoreInput').disabled = true; $('backupCreateButton').disabled = true; $('backupReloginLink').hidden = true;
+  status.textContent = 'Mengunggah backup database...';
+  try {
+    const response = await fetch('/api/backups/restore', { method: 'POST', body, uploadProgressTarget: 'backup', onUploadProgress: info => {
+      if (info.phase === 'processing') window.NistUploadProgress.setProgress('backup', { label: 'Memulihkan database di server...', detail: 'Unggahan selesai. PostgreSQL sedang memulihkan schema dan data; tunggu konfirmasi hasil.' });
+    } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Database restore failed');
+    status.textContent = 'Restore berhasil: ' + data.fileName + '. Silakan login kembali untuk menggunakan data hasil restore.';
+    window.NistUploadProgress.setProgress('backup', { phase: 'success', label: 'Restore database selesai', percent: 100, detail: data.fileName });
+    window.NistUploadProgress.showFiles('backup', [file], 'Dipulihkan');
+    $('backupReloginLink').hidden = false;
+    selectedRestoreFile = null; $('backupRestoreInput').value = ''; $('backupRestoreFileName').textContent = 'No file selected';
+  } catch (error) { status.textContent = error.message; window.NistUploadProgress.setProgress('backup', { phase: 'error', label: 'Restore database gagal', detail: error.message }); }
+  finally { button.disabled = !selectedRestoreFile; $('backupRestoreInput').disabled = false; $('backupCreateButton').disabled = false; }
+}
 function showBackupsView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('backupsView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'backups')); saveUiState('backups'); loadBackups().catch(error => { $('backupStatus').textContent = error.message; }); }
 const accountTabPanels = { profile: 'accountProfilePanel', permissions: 'permissionManagementPanel', matrix: 'accountAccessMatrixPanel', users: 'accountUsersPanel', audit: 'accountAuditPanel', smtp: 'accountSmtpPanel', storage: 'accountStoragePanel' };
 let activeAccountTab = 'profile';

@@ -1,7 +1,11 @@
 function importData(file) {
+  const progressTask = window.NistUploadProgress.begin([file], 'Membaca file assessment...');
   const reader = new FileReader();
+  reader.onprogress = event => progressTask.update({ phase: 'reading', label: 'Membaca file assessment...', detail: file.name, percent: event.lengthComputable && event.total ? event.loaded / event.total * 100 : null });
+  reader.onerror = () => { $('saveState').textContent = 'File assessment gagal dibaca.'; progressTask.update({ phase: 'error', label: 'File gagal dibaca', detail: file.name, percent: null }); };
   reader.onload = async () => {
     try {
+      progressTask.update({ phase: 'processing', label: 'Memvalidasi dan menyimpan assessment...', percent: null });
       const fileData = JSON.parse(reader.result);
       const imported = fileData.assessment || fileData;
       if (!imported || typeof imported !== 'object' || typeof imported.scores !== 'object' || typeof imported.notes !== 'object') throw new Error('Invalid assessment file');
@@ -22,7 +26,9 @@ function importData(file) {
       $('assessmentView').classList.remove('active-view');
       $('csfView').classList.add('active-view');
       $('saveState').textContent = 'Progress dan path evidence berhasil diimport';
+      progressTask.update({ phase: 'success', label: 'Import assessment selesai', detail: file.name, percent: 100 });
     } catch (error) {
+      progressTask.update({ phase: 'error', label: 'Import assessment gagal', detail: error.message, percent: null });
       $('saveState').textContent = `Import gagal: ${error.message}`;
     }
   };

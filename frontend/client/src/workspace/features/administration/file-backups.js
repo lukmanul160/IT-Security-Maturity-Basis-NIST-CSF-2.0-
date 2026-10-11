@@ -20,15 +20,19 @@ async function loadFileBackupFolders() {
 async function createFileBackup() {
   const button = $('fileBackupCreateButton');
   button.disabled = true;
+  $('fileBackupRestoreButton').disabled = true;
+  $('fileBackupRestoreInput').disabled = true;
+  window.NistUploadProgress.setProgress('fileBackup', { label: 'Membuat arsip file di server...', detail: 'Membaca file dan membuat seluruh bagian ZIP. Persentase pemrosesan server belum tersedia.' });
   const folder = $('fileBackupFolder').value;
   $('fileBackupStatus').textContent = folder ? `Membuat backup folder ${folder}...` : 'Membuat backup seluruh file unggahan...';
   try {
     const data = await fileBackupRequest('/api/file-backups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder }) });
     $('fileBackupStatus').textContent = `Backup berhasil: ${data.fileCount} file, ${data.parts?.length || 1} bagian ZIP. Unduh semua bagian dari batch yang sama untuk restore.`;
     if (data.missingFiles?.length) $('fileBackupStatus').textContent = `Backup belum lengkap: ${data.fileCount} file tersedia telah dicadangkan (${data.parts?.length || 1} ZIP), tetapi ${data.missingFiles.length} file tidak ditemukan. Daftar file yang perlu diunggah ulang tercantum dalam manifest ZIP: ${data.missingFiles.map(file => file.path).join('; ')}`;
-    await loadFileBackups();
-  } catch (error) { $('fileBackupStatus').textContent = error.message; }
-  finally { button.disabled = false; }
+    window.NistUploadProgress.setProgress('fileBackup', { phase: 'success', label: data.missingFiles?.length ? 'Backup selesai dengan catatan' : 'Backup file selesai', percent: 100, detail: `${data.fileCount} file · ${data.parts?.length || 1} ZIP${data.missingFiles?.length ? ` · ${data.missingFiles.length} file tidak ditemukan` : ''}` });
+    await loadFileBackups().catch(error => { $('fileBackupStatus').textContent += ` Daftar backup belum diperbarui: ${error.message}`; });
+  } catch (error) { $('fileBackupStatus').textContent = error.message; window.NistUploadProgress.setProgress('fileBackup', { phase: 'error', label: 'Backup gagal', detail: error.message }); }
+  finally { button.disabled = false; $('fileBackupRestoreInput').disabled = false; $('fileBackupRestoreButton').disabled = !selectedFileBackupRestore.length; }
 }
 async function deleteFileBackup(fileName) {
   if (!confirm(`Hapus file backup ${fileName}?`)) return;
@@ -61,6 +65,8 @@ $('fileBackupRestoreInput').addEventListener('change', event => {
   }
   $('fileBackupRestoreFileName').textContent = selectedFileBackupRestore.length ? `${selectedFileBackupRestore.length} ZIP · ${formatBackupSize(selectedFileBackupRestore.reduce((sum, file) => sum + file.size, 0))}` : 'No file selected';
   $('fileBackupRestoreFileName').title = selectedFileBackupRestore.map(file => file.name).join('\n');
+  window.NistUploadProgress.showFiles('fileBackup', selectedFileBackupRestore);
+  $('fileBackupProgressPanel').hidden = true;
   $('fileBackupRestoreButton').disabled = !selectedFileBackupRestore.length;
 });
 $('fileBackupRestoreButton').addEventListener('click', async () => {
@@ -74,15 +80,16 @@ $('fileBackupRestoreButton').addEventListener('click', async () => {
     const body = new FormData();
     selectedFileBackupRestore.forEach(file => body.append('backups', file));
     body.append('folder', $('fileBackupRestoreFolder').value.trim());
-    const result = await fileBackupRequest('/api/file-backups/restore-batch', { method: 'POST', body });
+    const result = await fileBackupRequest('/api/file-backups/restore-batch', { method: 'POST', body, uploadProgressTarget: 'fileBackup' });
     $('fileBackupStatus').textContent = `Restore berhasil: ${result.fileCount} file dipulihkan.`;
     if (result.missingFiles?.length) $('fileBackupStatus').textContent += ` Perhatian: backup asal tidak lengkap; ${result.missingFiles.length} file tidak tersedia saat backup dibuat dan perlu diunggah ulang.`;
+    window.NistUploadProgress.showFiles('fileBackup', selectedFileBackupRestore, 'Dipulihkan');
+    window.NistUploadProgress.setProgress('fileBackup', { phase: 'success', label: 'Batch restore selesai', percent: 100, detail: `${result.fileCount} file dipulihkan dari ${selectedFileBackupRestore.length} ZIP.` });
     selectedFileBackupRestore = [];
     $('fileBackupRestoreInput').value = '';
     $('fileBackupRestoreFileName').textContent = 'No file selected';
-    await refreshEvidenceLibrary();
-    await loadFileBackupFolders();
-  } catch (error) { $('fileBackupStatus').textContent = error.message; }
+    try { await refreshEvidenceLibrary(); await loadFileBackupFolders(); } catch (error) { $('fileBackupStatus').textContent += ` Muat ulang daftar file: ${error.message}`; }
+  } catch (error) { $('fileBackupStatus').textContent = error.message; window.NistUploadProgress.setProgress('fileBackup', { phase: 'error', label: 'Batch restore gagal', detail: error.message }); }
   finally {
     button.disabled = !selectedFileBackupRestore.length;
     $('fileBackupRestoreInput').disabled = false;

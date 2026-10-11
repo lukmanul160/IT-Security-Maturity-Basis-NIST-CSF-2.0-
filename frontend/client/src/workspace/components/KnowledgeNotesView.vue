@@ -161,6 +161,7 @@ async function importFiles(event, unreadable=[],directoryFolders=[]){
  const files=[...event.target.files];event.target.value='';
  if((!files.length&&!directoryFolders.length)||!access.value.create||busy.value)return;
  busy.value=true;status.value='Membaca file catatan...';
+ const uploadTask=window.NistUploadProgress.begin(files,'Membaca file catatan...');
  const started=performance.now();let readFinished,uploadFinished;
  try{
   const skipped=[];
@@ -169,7 +170,7 @@ async function importFiles(event, unreadable=[],directoryFolders=[]){
   const assetPaths=imageFiles.map(file=>[destination,file.webkitRelativePath||file.name].filter(Boolean).join('/'));
   const assetFolders=assetPaths.map(path=>path.split('/').slice(0,-1).join('/')).filter(Boolean);
   const noteFiles=files.filter(file=>!isImageFile(file.name));
-  const payload=!noteFiles.length&&imageFiles.length ? {notes:[],folders:[...new Set([...directoryFolders,...assetFolders])]} : await readNoteImport(noteFiles,activeFolder.value==='*'?'':activeFolder.value,{onReading:({completed,total,path})=>{status.value=`Membaca catatan ${completed}/${total}. Mengakses: ${path}`;},onProgress:({completed,total,path})=>{status.value=`Membaca catatan ${completed}/${total}: ${path}`;},onSkipped:path=>skipped.push(path),onUnreadable:(path,error)=>unreadable.push(path+': '+error.message),folderPaths:[...directoryFolders,...assetFolders.map(path=>destination&&path.startsWith(destination+'/')?path.slice(destination.length+1):path)]});
+  const payload=!noteFiles.length&&imageFiles.length ? {notes:[],folders:[...new Set([...directoryFolders,...assetFolders])]} : await readNoteImport(noteFiles,activeFolder.value==='*'?'':activeFolder.value,{onReading:({completed,total,path})=>{status.value=`Membaca catatan ${completed}/${total}. Mengakses: ${path}`;uploadTask.update({phase:'reading',label:'Membaca file catatan...',detail:status.value,percent:total?completed/total*100:null});},onProgress:({completed,total,path})=>{status.value=`Membaca catatan ${completed}/${total}: ${path}`;uploadTask.update({phase:'reading',label:'Membaca file catatan...',detail:status.value,percent:total?completed/total*100:null});},onSkipped:path=>skipped.push(path),onUnreadable:(path,error)=>unreadable.push(path+': '+error.message),folderPaths:[...directoryFolders,...assetFolders.map(path=>destination&&path.startsWith(destination+'/')?path.slice(destination.length+1):path)]});
   if(unreadable.length)throw new Error('Impor dibatalkan; belum ada file atau folder yang disimpan.');
   readFinished=performance.now();
   const originalNotes=noteFiles.filter(file=>(files.some(item=>Boolean(item.webkitRelativePath))?/\.(md|txt)$/i:/\.(md|txt|json)$/i).test(file.name));
@@ -180,9 +181,10 @@ async function importFiles(event, unreadable=[],directoryFolders=[]){
    body.append('documentPaths',JSON.stringify(originalNotes.map(file=>[destination,file.webkitRelativePath||file.name].filter(Boolean).join('/'))));
    originalNotes.forEach(file=>body.append('documents',file.originalFile||file,file.name));
    status.value=`Mengunggah ${imageFiles.length} gambar dan ${originalNotes.length} file catatan ke vault...`;
-   notes.value=await uploadImport(body);
-  }else {status.value='Menyimpan catatan dan folder ke vault...';notes.value=await request('/import','POST',payload);}
+   notes.value=await uploadImport(body,uploadTask);
+  }else {status.value='Menyimpan catatan dan folder ke vault...';uploadTask.update({phase:'processing',label:status.value,percent:null});notes.value=await request('/import','POST',payload);}
   uploadFinished=performance.now();
+  uploadTask.update({phase:'processing',label:'Memperbarui daftar gambar dan folder...',percent:null});
   status.value='Memperbarui daftar gambar dan folder...';
   const [loadedImages,loadedFolders]=await Promise.all([request('/images'),request('/folders')]);
   noteImages.value=loadedImages;folders.value=loadedFolders;
@@ -192,19 +194,12 @@ async function importFiles(event, unreadable=[],directoryFolders=[]){
   search.value='';
   status.value=payload.notes.length+' catatan dan '+payload.folders.length+' folder dan '+imageFiles.length+' gambar berhasil diimpor. Struktur folder dipertahankan.'+(skipped.length?' '+skipped.length+' file bukan .md/.txt tidak diimpor: '+skipped.slice(0,5).join(', ')+(skipped.length>5?' …':''):'');
   status.value+=` Durasi: baca ${((readFinished-started)/1000).toFixed(1)} dtk; upload & simpan ${((uploadFinished-readFinished)/1000).toFixed(1)} dtk; perbarui daftar ${((performance.now()-uploadFinished)/1000).toFixed(1)} dtk.`;
- }catch(e){status.value=e.message;}finally{if(unreadable.length)status.value+=' '+unreadable.length+' lokasi gagal dibaca: '+unreadable.slice(0,5).join('; ')+(unreadable.length>5?' …':'')+'. Coba Pilih folder alternatif untuk membaca ulang.';busy.value=false;}
+ uploadTask.update({phase:'success',label:'Impor Knowledge Notes selesai',detail:status.value,percent:100});
+ }catch(e){status.value=e.message;uploadTask.update({phase:'error',label:'Impor Knowledge Notes gagal',detail:e.message,percent:null});}finally{if(unreadable.length)status.value+=' '+unreadable.length+' lokasi gagal dibaca: '+unreadable.slice(0,5).join('; ')+(unreadable.length>5?' …':'')+'. Coba Pilih folder alternatif untuk membaca ulang.';busy.value=false;}
 }
-function uploadImport(body){
- return new Promise((resolve,reject)=>{
-  const xhr=new XMLHttpRequest();
-  xhr.open('POST','/api/knowledge-notes/import-with-images');
-  xhr.responseType='json';
-  xhr.upload.onprogress=event=>{if(event.lengthComputable)status.value=`Mengunggah file ke vault: ${Math.round(event.loaded/event.total*100)}%`;};
-  xhr.upload.onload=()=>{status.value='Upload selesai. Menyimpan catatan, gambar, dan file asli ke vault...';};
-  xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300)resolve(xhr.response);else reject(new Error(xhr.response?.error||'Impor gambar gagal.'));};
-  xhr.onerror=()=>reject(new Error('Koneksi terputus saat impor. Muat ulang daftar vault untuk memeriksa hasilnya.'));
-  xhr.send(body);
- });
+async function uploadImport(body, uploadTask){
+ const response=await fetch('/api/knowledge-notes/import-with-images',{method:'POST',body,uploadTask,onUploadProgress:info=>{status.value=info.label;}});
+ const data=await response.json();if(!response.ok)throw new Error(data.error||'Impor gambar gagal.');return data;
 }
 function open(){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active-view'));document.getElementById('knowledgeNotesView').classList.add('active-view');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view==='knowledge-notes'));try{const state=JSON.parse(localStorage.getItem('nist-maturity-ui')||'{}');localStorage.setItem('nist-maturity-ui',JSON.stringify({...state,view:'knowledge-notes'}));}catch{}if(!ready.value)load();}
 function unload(event){if(dirty.value){event.preventDefault();event.returnValue='';}}

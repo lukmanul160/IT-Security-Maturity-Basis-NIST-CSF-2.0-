@@ -1,0 +1,28 @@
+.backup-operation-progress,.app-upload-center{color:var(--ink,#172335);background:var(--surface,#fff);border:1px solid var(--line,#dce4ef);border-radius:12px;padding:16px;box-shadow:0 6px 24px #17233512}
+.backup-operation-progress{margin:16px 0}.backup-operation-progress[hidden],.upload-selected-files[hidden]{display:none!important}
+.upload-task-close[hidden],#backupReloginLink[hidden]{display:none!important}
+.upload-progress-heading,.upload-task-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.upload-progress-heading strong,.upload-task-heading strong{font-size:13px;line-height:1.5}.upload-progress-heading span{color:var(--muted,#64748b);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.backup-operation-progress progress,.app-upload-center progress{display:block;width:100%;height:10px;border:0;border-radius:999px;overflow:hidden;accent-color:#3976dd;background:#e6edf7}
+.backup-operation-progress progress::-webkit-progress-bar,.app-upload-center progress::-webkit-progress-bar{background:#e6edf7;border-radius:999px}
+.backup-operation-progress progress::-webkit-progress-value,.app-upload-center progress::-webkit-progress-value{background:#3976dd;border-radius:999px;transition:width .15s ease}
+.backup-operation-progress progress::-moz-progress-bar,.app-upload-center progress::-moz-progress-bar{background:#3976dd;border-radius:999px}
+.backup-operation-progress progress:indeterminate,.app-upload-center progress:indeterminate{background:linear-gradient(90deg,#e6edf7 0%,#8ab4f3 45%,#e6edf7 70%);background-size:200% 100%;animation:app-upload-pulse 1.4s linear infinite}
+.backup-operation-progress progress:indeterminate::-webkit-progress-bar,.app-upload-center progress:indeterminate::-webkit-progress-bar{background:transparent}
+[data-phase=success] progress{accent-color:#218c65}[data-phase=success] progress::-webkit-progress-value{background:#218c65}
+[data-phase=error]{border-color:#e9b4b4}[data-phase=error] .upload-progress-detail{color:#b13737}
+.upload-progress-detail{font-size:12px;line-height:1.6;margin:9px 0 0;overflow-wrap:anywhere;color:var(--muted,#64748b)}
+.upload-selected-files{list-style:none;padding:0;margin:12px 0;max-height:220px;overflow:auto;border:1px solid var(--line,#dce4ef);border-radius:8px}
+.upload-file-item{display:flex;align-items:center;gap:12px;padding:10px 12px;font-size:12px;line-height:1.5;border-bottom:1px solid var(--line,#dce4ef)}.upload-file-item:last-child{border-bottom:0}
+.upload-file-item strong{flex:1;min-width:0;overflow-wrap:anywhere}.upload-file-size,.upload-file-state{color:var(--muted,#64748b);font-size:11px}.upload-file-size{white-space:nowrap}
+.app-upload-center{position:fixed;right:24px;bottom:24px;width:min(420px,calc(100vw - 32px));max-height:65vh;overflow:auto;z-index:10000;box-sizing:border-box}
+.app-upload-center h3{font-size:14px;margin:0 0 12px}.app-upload-task+.app-upload-task{border-top:1px solid var(--line,#dce4ef);padding-top:16px;margin-top:16px}.app-upload-center .upload-selected-files{max-height:140px;margin-bottom:0}
+.app-upload-center-inline{position:relative;right:auto;bottom:auto;width:100%;max-height:340px;margin-top:16px;box-shadow:none;flex-basis:100%;grid-column:1/-1}
+.upload-task-close{font:inherit;font-size:11px;border:1px solid var(--line,#dce4ef);border-radius:6px;background:transparent;color:inherit;padding:4px 8px;cursor:pointer}
+.upload-progress.is-indeterminate .upload-progress-track i{width:35%!important;animation:app-upload-slide 1.4s ease-in-out infinite}
+html[data-theme=dark] :is(.backup-operation-progress,.app-upload-center){background:#142034;border-color:#33445f;color:#e7edf7}
+html[data-theme=dark] :is(.upload-selected-files,.upload-file-item,.app-upload-task,.upload-task-close){border-color:#33445f}
+html[data-theme=dark] :is(.upload-progress-detail,.upload-file-size,.upload-file-state,.upload-progress-heading span){color:#b4c3db}
+@keyframes app-upload-pulse{from{background-position:100% 0}to{background-position:-100% 0}}@keyframes app-upload-slide{0%,100%{transform:translateX(0)}50%{transform:translateX(180%)}}
+@media(prefers-reduced-motion:reduce){.backup-operation-progress progress:indeterminate,.app-upload-center progress:indeterminate,.upload-progress.is-indeterminate .upload-progress-track i{animation:none}.backup-operation-progress progress::-webkit-progress-value,.app-upload-center progress::-webkit-progress-value{transition:none}}
+@media(max-width:600px){.app-upload-center{right:16px;bottom:16px;max-height:55vh}.app-upload-center-inline{right:auto;bottom:auto;max-height:280px}.upload-file-item{flex-wrap:wrap;gap:4px 10px}.upload-file-item strong{flex-basis:100%}.upload-progress-heading{align-items:flex-start}}

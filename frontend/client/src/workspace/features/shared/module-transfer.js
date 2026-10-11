@@ -155,7 +155,7 @@ const moduleTransfer = (() => {
       for (const item of modules[key].sections) {
         if(item.optional && payload.data[item.key]===undefined)continue;
         if(item.gap){const permission=({csf:'assessment',privacy:'privacy-assessment'})[item.framework]||item.framework;if(!canPerform(permission,'update'))throw new Error('Izin Edit diperlukan untuk import gap.');const result=await request(item.url+'/import','POST',{gaps:payload.data[item.key]});completed+=result.imported;progress?.(completed);continue;}
-        if (item.assessment) { if(!canPerform(key==='csf' ? 'assessment' : 'privacy-assessment','update')) throw new Error('Izin Edit diperlukan untuk impor assessment.'); await request(item.url, 'PUT', payload.data[item.key]); completed++; continue; }
+        if (item.assessment) { if(!canPerform(key==='csf' ? 'assessment' : 'privacy-assessment','update')) throw new Error('Izin Edit diperlukan untuk impor assessment.'); await request(item.url, 'PUT', payload.data[item.key]); completed++; progress?.(completed); continue; }
         const existing = await request(item.url);
         for (const original of payload.data[item.key]) {
           const row = { ...original };
@@ -177,9 +177,9 @@ const moduleTransfer = (() => {
       return completed;
     } catch (error) { const failure = new Error(`${completed} data sudah tersimpan; import dihentikan. ${error.message}`); failure.completedCount = completed; throw failure; }
   }
-  function preview(key, payload, status, filename) {
+  function preview(key, payload, status, filename, fileSize = 0) {
     const dialog = document.createElement('dialog');
-    const count = modules[key].sections.map(item => `${item.title}: ${item.assessment ? 1 : payload.data[item.key].length}`).join(' · ');
+    const count = modules[key].sections.map(item => `${item.title}: ${item.assessment ? 1 : (payload.data[item.key] || []).length}`).join(' · ');
     dialog.innerHTML = `<h2>Import ${escape(modules[key].title)}</h2><p>${escape(count)}</p><p>ID yang sama diperbarui, data baru ditambahkan. Assessment diganti dengan isi file. File evidence tidak disertakan; referensinya memerlukan file yang sudah tersedia di server. Gunakan file dari instalasi yang sama agar ID tetap cocok.</p><p>Jika ada kegagalan, data yang sudah tersimpan tetap tersimpan. Detail hasil akan ditampilkan.</p><button type="button" data-confirm>Import sekarang</button> <button type="button" data-cancel>Batal</button><p role="status"></p>`;
     document.body.append(dialog);
     dialog.querySelector('[data-cancel]').onclick = () => dialog.close();
@@ -187,12 +187,15 @@ const moduleTransfer = (() => {
     dialog.querySelector('[data-confirm]').onclick = async () => {
       const buttons = dialog.querySelectorAll('button'); buttons.forEach(button => { button.disabled = true; });
       const message = dialog.querySelector('[role="status"]');
+      const progressTask = window.NistUploadProgress.begin([{ name: filename, size: fileSize }], 'Menyimpan data import...');
+      const total = modules[key].sections.reduce((sum, item) => sum + (item.optional && payload.data[item.key] === undefined ? 0 : item.assessment ? 1 : (payload.data[item.key] || []).length), 0);
       const blockClose = event => event.preventDefault(); dialog.addEventListener('cancel', blockClose);
       try {
-        const count = await runAuditedTransfer('import', key, filename, () => importPayload(key, payload, count => { message.textContent = `${count} data tersimpan…`; }), 'Import selesai; jumlah record tersimpan tercatat pada count.');
+        const count = await runAuditedTransfer('import', key, filename, () => importPayload(key, payload, count => { message.textContent = `${count} / ${total} data tersimpan`; progressTask.update({ phase: 'processing', label: 'Menyimpan data import...', detail: message.textContent, percent: total && count < total ? count / total * 100 : null }); }), 'Import selesai; jumlah record tersimpan tercatat pada count.');
         status.textContent = `${count} data berhasil diimport.`;
+        progressTask.update({ phase: 'success', label: 'Import selesai', detail: status.textContent, percent: 100 });
         window.location.reload();
-      } catch (error) { message.textContent = error.message; status.textContent = error.message; }
+      } catch (error) { message.textContent = error.message; status.textContent = error.message; progressTask.update({ phase: 'error', label: 'Import dihentikan', detail: error.message, percent: null }); }
       finally { dialog.removeEventListener('cancel', blockClose); dialog.querySelector('[data-cancel]').disabled = false; }
     };
     dialog.showModal();
@@ -223,7 +226,8 @@ const moduleTransfer = (() => {
       toolbar.querySelector('[data-import]').onclick = () => { input.value = ''; input.click(); };
       input.onchange = async () => {
         const file = input.files[0]; if (!file) return;
-        try { if (file.size > 10 * 1024 * 1024) throw new Error('Ukuran file maksimal 10 MB.'); preview(key, validate(key, JSON.parse(await file.text())), status, file.name); }
+        const progressTask = window.NistUploadProgress.begin([file], 'Membaca dan memvalidasi JSON...');
+        try { if (file.size > 10 * 1024 * 1024) throw new Error('Ukuran file maksimal 10 MB.'); const payload = validate(key, JSON.parse(await file.text())); progressTask.update({ phase: 'success', label: 'File siap ditinjau', detail: file.name, percent: 100 }); preview(key, payload, status, file.name, file.size); }
         catch (error) {
           try { await recordTransferActivity('import', key, file.name, 0, 'failed', 'File import ditolak sebelum penyimpanan.', error.message); }
           catch (auditError) { error.message += ` ${auditError.message}`; }

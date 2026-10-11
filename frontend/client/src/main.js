@@ -1,4 +1,6 @@
 import './styles/assessment-gaps.css';
+import './styles/upload-progress.css';
+import { installUploadProgress } from './services/uploadProgress';
 /* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 import { createApp, nextTick } from 'vue';
 import App from './App.vue';
@@ -14,6 +16,7 @@ import workspaceRuntime from './workspace/runtime.js';
 import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';
 
 async function bootstrap() {
+  installUploadProgress();
   createApp(App).mount('#app');
   await nextTick();
   window.NistI18n?.mount();
