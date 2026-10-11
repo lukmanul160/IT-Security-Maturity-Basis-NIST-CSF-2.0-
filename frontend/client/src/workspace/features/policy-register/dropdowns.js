@@ -1,4 +1,8 @@
 function getPolicyDropdownOptions(key) {
+  if(key==='owners')return [...new Set([...getStoredPolicyDropdownOptions(key),...(window.NistReminderRecipients?.registered||[]).map(row=>row.owner)])];
+  return getStoredPolicyDropdownOptions(key);
+}
+function getStoredPolicyDropdownOptions(key) {
   if (policyDropdownState[key] && policyDropdownState[key].length) return [...policyDropdownState[key]];
   const stored = localStorage.getItem(`policyDropdown_${key}`);
   if (stored) {

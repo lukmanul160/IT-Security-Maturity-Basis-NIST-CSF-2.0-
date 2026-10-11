@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 function setup(){
  const source=fs.readFileSync('frontend/client/src/workspace/components/AssetManagementView.vue','utf8');
  const c=vm.createContext({ref:value=>({value}),computed:fn=>({get value(){return fn();}}),nextTick:async()=>{},onMounted(){},onBeforeUnmount(){}});
- vm.runInContext(source.match(/<script setup>([\s\S]*?)<\/script>/)[1].replace(/import .*?from 'vue';/,''),c);
+ vm.runInContext(source.match(/<script setup>([\s\S]*?)<\/script>/)[1].replace(/^import .*?;$/gm,''),c);
  vm.runInContext(`assets.value=[{id:'a',tag:'A',name:'Server',type:'Server',status:'planned',owner:'Alice',assetAssessment:{confidentiality:1,integrity:1,availability:1,likelihood:1}},{id:'b',tag:'B',name:'Firewall',type:'Firewall',status:'in-use',owner:'Bob',managedVendorId:'10',managedVendorName:'Vendor IT',renewalDate:'1900-01-01',reminderDays:30,assetAssessment:{confidentiality:5,integrity:4,availability:3,likelihood:4}},{id:'c',tag:'C',name:'Backup',type:'Server',status:'maintenance',owner:'Bob',assetAssessment:{confidentiality:3,integrity:2,availability:1,likelihood:2}}];racks.value=[{id:'r1',name:'Rack Jakarta',location:'Jakarta',units:12},{id:'r2',name:'Rack Bandung',location:'Bandung',units:42}];selectedRack.value='r1';placements.value=[{asset_id:'a',rack_id:'r1',start_unit:1,height:2,facing:'front',full_depth:true},{asset_id:'b',rack_id:'r1',start_unit:3,height:1,facing:'rear',full_depth:false}];relations.value=[{id:'one',source_id:'a',target_id:'b',type:'protects',notes:'Security',change_reference:'CHG-1'},{id:'two',source_id:'b',target_id:'c',type:'connects-to',notes:'Network',change_reference:''}];`,c);
  return c;
 }

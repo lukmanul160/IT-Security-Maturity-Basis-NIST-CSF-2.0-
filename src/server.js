@@ -35,6 +35,7 @@ async function start() {
   await ensurePermissionStore();
   await require('./services/assetManagementService').ensureStore();
   await require('./services/assetReminderSettingsService').ensureStore();
+  await require('./services/reminderRecipientService').ensureStore();
   await require('./services/assetDiagramService').ensureStore();
   await require('./services/assetRackPhotoService').ensureStore();
   await require('./services/threatModelService').ensureStore();

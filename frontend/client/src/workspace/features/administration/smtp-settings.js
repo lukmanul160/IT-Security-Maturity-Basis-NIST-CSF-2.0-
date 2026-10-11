@@ -43,7 +43,7 @@ $('globalSmtpForm').addEventListener('submit',guardFormSubmission(async event =>
     payload.password=$('globalSmtpPassword').value;payload.clearPassword=$('globalSmtpClearPassword').checked;
     const saved = await globalSmtpRequest(globalSmtpAccountId ? 'PUT' : 'POST',globalSmtpAccountId ? '/accounts/' + globalSmtpAccountId : '/accounts',payload);
     await loadGlobalSmtpAccounts(saved.id || globalSmtpAccountId);
-    $('globalSmtpStatus').textContent='SMTP tersimpan. Pilih akun ini pada pengaturan reminder Policy Register atau Audit.';
+    $('globalSmtpStatus').textContent='SMTP tersimpan. Pilih akun ini pada pengaturan reminder Policy Register, Audit Finding, atau renewal Asset Management.';
   } catch(error) { $('globalSmtpStatus').textContent=error.message; }
   finally {if(button)button.disabled=false;}
 }));

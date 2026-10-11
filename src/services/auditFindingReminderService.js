@@ -5,7 +5,7 @@ const templateDefaults = {
   subjectTemplate: 'Pengingat tindak lanjut audit: {{auditTitle}} - {{finding}}',
   bodyTemplate: 'Yth. Bapak/Ibu PIC dan tim terkait,\n\nMohon menindaklanjuti temuan audit berikut sebelum tanggal tenggat.\n\nJenis audit: {{auditTitle}}\nFinding: {{finding}}\nPIC penanggung jawab: {{owner}}\nStatus saat ini: {{status}}\nTenggat penyelesaian: {{dueDate}}\n\nDeskripsi temuan / rekomendasi:\n{{description}}\n\nLangkah yang perlu dilakukan:\n1. Tinjau temuan dan rekomendasi di atas.\n2. Lakukan tindak lanjut dan unggah evidence pendukung di Audit Finding Tracker.\n3. Perbarui status finding sesuai hasil tindak lanjut. Jika sudah selesai, ubah status menjadi Closed.\n\nJika ada kendala, koordinasikan dengan tim audit sebelum tenggat.\n\nTerima kasih atas perhatian dan kerja samanya.\n\nEmail ini merupakan pengingat otomatis dari Audit Finding Tracker.'
 };
-const defaults = { ...templateDefaults, smtpAccountId: 'default', enabled: false, daysBefore: 7, repeatDaily: false, startUnit: 'days', repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, recipients: [] };
+const defaults = { ...templateDefaults, smtpAccountId: 'default', enabled: false, daysBefore: 7, repeatDaily: false, startUnit: 'days', repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, recipients: [], owners: [], recipientMode: 'owners' };
 const invalid = message => Object.assign(new Error(message), { status: 400 });
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS audit_finding_reminder_settings (id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL)`);
@@ -21,7 +21,8 @@ async function ensureStore() {
 }
 async function read() {
   const result = await pool.query('SELECT settings FROM audit_finding_reminder_settings WHERE id=1');
-  return { ...defaults, ...result.rows[0]?.settings };
+  const stored=result.rows[0]?.settings;
+  return { ...defaults, ...stored, recipientMode:stored?.recipientMode || (stored?.recipients?.length?'broadcast':'owners') };
 }
 async function getSettings() {
   const settings = await read();
@@ -30,7 +31,17 @@ async function getSettings() {
 function validate(data) {
   if (!data || typeof data.enabled !== 'boolean' || !Number.isInteger(data.daysBefore) || data.daysBefore < 0 || data.daysBefore > 365) throw invalid('Status dan jadwal reminder tidak valid (0–365 hari).');
   if (['host','port','security','username','password','from','clearPassword'].some(key => Object.hasOwn(data,key))) throw invalid('Koneksi SMTP diatur melalui Admin > Pengaturan SMTP.');
-  if (!Array.isArray(data.recipients) || data.recipients.length > 100 || data.recipients.some(to => !smtp.email(to))) throw invalid('Daftar email penerima tidak valid (maksimum 100).');
+  const legacyRecipients=data.recipients ?? [];
+  if (!Array.isArray(legacyRecipients) || legacyRecipients.length > 100 || legacyRecipients.some(to => !smtp.email(to))) throw invalid('Daftar email penerima tidak valid (maksimum 100).');
+  const ownerInput=data.owners ?? [];
+  if(!Array.isArray(ownerInput)||ownerInput.length>500)throw invalid('Daftar email owner tidak valid (maksimum 500).');
+  const owners=ownerInput.map(row=>{
+    if(typeof row?.owner!=='string'||!row.owner.trim()||row.owner.trim().length>160||!smtp.email(row.email))throw invalid('Isi PIC / owner dan email yang valid.');
+    return {owner:row.owner.trim(),email:row.email.trim().toLowerCase()};
+  });
+  if(new Set(owners.map(row=>row.owner)).size!==owners.length)throw invalid('PIC / owner tidak boleh duplikat.');
+  const recipientMode=data.recipientMode || (owners.length?'owners':legacyRecipients.length?'broadcast':'owners');
+  if(!['owners','broadcast'].includes(recipientMode))throw invalid('Mode penerima tidak valid.');
   if (data.repeatDaily !== undefined && typeof data.repeatDaily !== 'boolean') throw invalid('Pilihan pengulangan reminder tidak valid.');
   const startUnit = data.startUnit ?? 'days';
   const repeatUnit = data.repeatUnit ?? 'days';
@@ -40,8 +51,8 @@ function validate(data) {
   if (!Number.isInteger(repeatEvery) || repeatEvery < 1 || repeatEvery > (repeatUnit === 'months' ? 36 : 365)) throw invalid('Interval reminder tidak valid.');
   const maxDeliveries = data.maxDeliveries === undefined ? defaults.maxDeliveries : data.maxDeliveries;
   if (!Number.isInteger(maxDeliveries) || maxDeliveries < 1 || maxDeliveries > 366) throw invalid('Jumlah pengiriman harus bilangan bulat antara 1 dan 366.');
-  const recipients = [...new Set(data.recipients.map(to => to.trim().toLowerCase()))];
-  if (data.enabled && !recipients.length) throw invalid('Isi penerima sebelum mengaktifkan reminder.');
+  const recipients = [...new Set(legacyRecipients.map(to => to.trim().toLowerCase()))];
+  if (data.enabled && recipientMode==='broadcast' && !recipients.length) throw invalid('Isi penerima sebelum mengaktifkan reminder.');
   const templates = {};
   for (const [field, limit] of [['subjectTemplate', 200], ['bodyTemplate', 10000]]) {
     const value = data[field] === undefined ? templateDefaults[field] : data[field];
@@ -49,7 +60,7 @@ function validate(data) {
     if ([...value.matchAll(/{{([^{}]+)}}/g)].some(match => !['auditTitle','finding','owner','status','dueDate','description'].includes(match[1]))) throw invalid('Variabel email tidak dikenal. Gunakan auditTitle, finding, owner, status, dueDate, atau description.');
     templates[field] = value;
   }
-  return { ...templates, smtpAccountId: smtp.accountId(data.smtpAccountId), enabled: data.enabled, daysBefore: data.daysBefore, repeatDaily: data.repeatDaily ?? false, startUnit, repeatEvery, repeatUnit, maxDeliveries, recipients };
+  return { ...templates, smtpAccountId: smtp.accountId(data.smtpAccountId), enabled: data.enabled, daysBefore: data.daysBefore, repeatDaily: data.repeatDaily ?? false, startUnit, repeatEvery, repeatUnit, maxDeliveries, recipients, owners, recipientMode };
 }
 async function saveSettings(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw invalid('Pengaturan reminder tidak valid.');
@@ -69,7 +80,7 @@ function renderMessage(row, settings = templateDefaults) {
   };
 }
 function reminderSlot(row, options, now = new Date()) {
-  if (row.kind !== 'finding' || row.data?.status === 'Closed') return null;
+  if (row.kind !== 'finding' || row.data?.status !== 'Open') return null;
   return scheduleSlot(row.data?.dueDate, options, now);
 }
 function eligible(row, daysBefore, now = new Date()) {
@@ -91,11 +102,11 @@ async function runReminders(now = new Date()) {
     if (!locked) return;
     const settings = await read();
     if (!settings.enabled) return;
-    const result = await client.query(`SELECT f.id, f.kind, f.data, a.data->>'title' AS "auditTitle" FROM audit_finding_records f JOIN audit_finding_records a ON a.id=f.parent_id AND a.kind='audit' WHERE f.kind='finding' AND f.data->>'status' <> 'Closed'`);
+    const result = await client.query(`SELECT f.id, f.kind, f.data, a.data->>'title' AS "auditTitle" FROM audit_finding_records f JOIN audit_finding_records a ON a.id=f.parent_id AND a.kind='audit' WHERE f.kind='finding' AND f.data->>'status' = 'Open'`);
     const pending = result.rows.filter(row => reminderSlot(row, settings, now) !== null);
     if (!pending.length) return;
     const delivery = await smtp.createMailer(settings.smtpAccountId); mailer = delivery.mailer;
-    for (const row of pending) for (const to of settings.recipients) {
+    for (const row of pending) for (const to of recipientsFor(row,settings)) {
       const params = [row.id, row.data.dueDate, to];
       const history = await client.query(`SELECT COUNT(*)::int AS count,
         COALESCE(BOOL_OR(reminder_date >= $4::date), false) AS sent_in_slot
@@ -117,4 +128,14 @@ function startScheduler() {
   const tick = async () => { if (running) return; running = true; try { await runReminders(); } catch { console.error('[audit-finding-reminder] Scheduler failed'); } finally { running = false; } };
   const timer = setInterval(tick, 60 * 60 * 1000); timer.unref(); void tick(); return timer;
 }
-module.exports = { templateDefaults, ensureStore, getSettings, saveSettings, validate, renderMessage, eligible, reminderSlot, testEmail, runReminders, startScheduler };
+function recipientsFor(row,settings){
+  if(row.kind!=='finding'||row.data?.status!=='Open')return [];
+  const direct=String(row.data.ownerEmail||'').trim();
+  if(direct)return smtp.email(direct)?[direct.toLowerCase()]:[];
+  const owner=String(row.data.owner||'').trim();
+  const mapped=(settings.owners||[]).find(item=>item.owner===owner);
+  if(mapped)return smtp.email(mapped.email)?[mapped.email.trim().toLowerCase()]:[];
+  if((settings.recipientMode || ((settings.recipients||[]).length?'broadcast':'owners'))!=='broadcast')return [];
+  return [...new Set((settings.recipients||[]).filter(smtp.email).map(to=>to.trim().toLowerCase()))];
+}
+module.exports = { templateDefaults, ensureStore, getSettings, saveSettings, validate, renderMessage, eligible, reminderSlot, recipientsFor, testEmail, runReminders, startScheduler };

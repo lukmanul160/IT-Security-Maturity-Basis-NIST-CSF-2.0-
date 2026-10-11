@@ -38,6 +38,22 @@ function validateRiskIds(ids){if(!Array.isArray(ids)||ids.length>500||ids.some(i
 async function saveRiskLinks(id,ids){validateRiskIds(ids);return transaction(async c=>{if(!(await c.query('SELECT id FROM managed_assets WHERE id=$1 FOR UPDATE',[id])).rows.length)throw fail('Aset tidak ditemukan.',404);if(ids.length&&(await c.query('SELECT risk_id FROM risk_register WHERE risk_id=ANY($1::text[]) FOR SHARE',[ids])).rows.length!==ids.length)throw fail('Risk Register telah berubah atau risiko tidak ditemukan. Muat ulang pilihan risiko.',409);await c.query('DELETE FROM asset_related_risks WHERE asset_id=$1',[id]);if(ids.length)await c.query('INSERT INTO asset_related_risks(asset_id,risk_id) SELECT $1,unnest($2::text[])',[id,ids]);await c.query('UPDATE managed_assets SET updated_at=NOW() WHERE id=$1',[id]);return {riskRegisterIds:ids};});}
 function due(asset,today){return asset.reminderEnabled&&asset.renewalDate&&!['retired','disposed'].includes(asset.status)&&Math.floor((Date.parse(asset.renewalDate+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000)<=asset.reminderDays;}
 let running=false;
-async function runReminders(){if(running)return;running=true;let c,mailer;try{await ensureStore();c=await pool.connect();if(!(await c.query('SELECT pg_try_advisory_lock(872147) AS locked')).rows[0].locked)return;const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const assets=(await list('assets')).filter(a=>due(a,today));if(!assets.length)return;const reminderSettings=require('./assetReminderSettingsService');const settings=await reminderSettings.read();const transport=await smtp.createMailer(settings.smtpAccountId);mailer=transport.mailer;for(const a of assets){if((await c.query('SELECT 1 FROM asset_renewal_deliveries WHERE asset_id=$1 AND renewal_date=$2 AND recipient=$3 AND sent_on=$4',[a.id,a.renewalDate,a.ownerEmail,today])).rowCount)continue;try{await smtp.send(mailer,{from:transport.from,to:a.ownerEmail,...reminderSettings.renderMessage(settings,a)});await c.query('INSERT INTO asset_renewal_deliveries VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[a.id,a.renewalDate,a.ownerEmail,today]);}catch(e){console.error('[asset-reminder]',a.id,e.message);}}}finally{mailer?.close?.();try{if(c)await c.query('SELECT pg_advisory_unlock(872147)');}finally{c?.release();running=false;}}}
+async function runReminders(now=new Date()){
+ if(running)return;running=true;let c,mailer,locked=false;
+ try{
+  await ensureStore();c=await pool.connect();locked=(await c.query('SELECT pg_try_advisory_lock(872147) AS locked')).rows[0].locked;if(!locked)return;
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+  const reminderSettings=require('./assetReminderSettingsService');const settings={...reminderSettings.defaults,...await reminderSettings.read()};
+  const calendarNow=new Date(today+'T12:00:00');
+  const assets=(await list('assets')).filter(a=>reminderSettings.reminderSlot(a,settings,calendarNow));if(!assets.length)return;
+  const transport=await smtp.createMailer(settings.smtpAccountId);mailer=transport.mailer;
+  for(const a of assets){
+   const slot=reminderSettings.reminderSlot(a,settings,calendarNow);
+   const history=await c.query('SELECT COUNT(*)::int AS count, COALESCE(BOOL_OR(sent_on >= $4::date),false) AS sent_in_slot FROM asset_renewal_deliveries WHERE asset_id=$1 AND renewal_date=$2 AND recipient=$3',[a.id,a.renewalDate,a.ownerEmail,slot]);
+   const previous=history.rows[0]||{count:0,sent_in_slot:false};if(previous.sent_in_slot||previous.count>=(settings.repeatDaily?settings.maxDeliveries:1))continue;
+   try{await smtp.send(mailer,{from:transport.from,to:a.ownerEmail,...reminderSettings.renderMessage(settings,a)});await c.query('INSERT INTO asset_renewal_deliveries VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[a.id,a.renewalDate,a.ownerEmail,today]);}catch(e){console.error('[asset-reminder]',a.id,e.message);}
+  }
+ }finally{mailer?.close?.();try{if(c&&locked)await c.query('SELECT pg_advisory_unlock(872147)');}finally{c?.release();running=false;}}
+}
 function startScheduler(){const run=()=>runReminders().catch(e=>console.error('[asset-reminder]',e.message));run();const timer=setInterval(run,60*60*1000);timer.unref();return timer;}
 module.exports={ensureStore,list,saveAsset,saveRack,place,relate,remove,validateAsset,validatePlacement,due,statuses,types,relationships,managedVendorCatalog,validateRiskIds,saveRiskLinks,runReminders,startScheduler};

@@ -45,19 +45,12 @@
                     <label>Ingatkan mulai H-<input id="policySmtpDays" type="number" min="0" max="365" required value="30"><small>Isi 0 untuk mengingatkan mulai hari jatuh tempo.</small></label>
                     <label>Satuan waktu mulai<select id="policySmtpStartUnit"><option value="days">Hari</option><option value="months">Bulan</option></select><small>Maksimal 365 hari atau 36 bulan sebelum tenggat review.</small></label>
                     <label class="smtp-check smtp-wide"><input id="policySmtpRepeat" type="checkbox"><span>Aktifkan pengulangan sampai hari H</span></label>
-                    <label>Ulangi setiap<input id="policySmtpRepeatEvery" type="number" min="1" max="365" value="1" required></label>
+                    <div class="smtp-wide"><button type="button" class="button button-quiet" id="policySmtpPreset30">Gunakan H-30 / setiap 5 hari</button><p id="policySmtpSchedulePreview" role="status" aria-live="polite"></p></div><label>Ulangi setiap<input id="policySmtpRepeatEvery" type="number" min="1" max="365" value="1" required></label>
                     <label>Satuan interval<select id="policySmtpRepeatUnit"><option value="days">Hari</option><option value="months">Bulan</option></select></label>
                     <label class="smtp-wide">Maksimum jumlah pengiriman<input id="policySmtpMaxDeliveries" type="number" min="1" max="366" value="366" required><small>Termasuk pengiriman pertama, per kebijakan, tenggat, dan penerima. Tanpa pengulangan, hanya dikirim sekali.</small></label>
                     <p class="smtp-wide">Contoh: mulai H-3 bulan, ulangi setiap 1 bulan, maksimum 4 kali untuk H-3, H-2, H-1 bulan dan hari H.</p>
                     <label class="smtp-wide">Email penerima per owner<textarea id="policySmtpOwners" rows="5" aria-describedby="policySmtpOwnersHelp" placeholder="CISO = nama@example.com&#10;IT Manager = it@example.com"></textarea></label>
-                    <div class="smtp-wide" id="policySmtpOwnersHelp">
-                      <p><strong>Format: Nama owner = alamat email</strong></p>
-                      <p>Gunakan tanda sama dengan (<strong>=</strong>) untuk memisahkan owner dan email. Tekan <strong>Enter</strong> untuk menambahkan owner berikutnya. Jangan gunakan koma atau titik koma.</p>
-                      <p style="margin-top:10px">Contoh pengisian:</p>
-                      <pre style="margin:8px 0;padding:12px;background:#f3f8f5;border:1px solid var(--line);border-radius:7px;font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere">CISO = nama@example.com
-IT Manager = it@example.com</pre>
-                      <p>Nama owner harus sama persis dengan pilihan <strong>Owner</strong> pada Policy Register. Setiap owner hanya boleh ditulis sekali dengan satu alamat email. Semua kebijakan milik owner tersebut akan menggunakan alamat ini untuk pengingat review. Owner yang belum dicantumkan tidak menerima email reminder.</p>
-                    </div>
+                    <div class="smtp-wide" id="policySmtpOwnersHelp"><p>Cari dan pilih nama/jabatan pada register penerima. Nama harus sama dengan Owner kebijakan. Simpan reminder untuk menerapkan pilihan.</p></div>
                   </div>
                   <details class="smtp-note"><summary>Cara kerja jadwal reminder</summary><p>Jatuh tempo dihitung dari Last review + Review cycle: Annual 12 bulan, Biannual 6 bulan, Quarterly 3 bulan. Pemeriksaan setiap jam. Pengiriman mengikuti interval hingga jumlah maksimum tercapai atau hari H. Bulan mengikuti kalender; tanggal yang tidak tersedia memakai hari terakhir bulan. Jadwal terlewat dikirim sekali pada pemeriksaan berikutnya, selama belum melewati hari H. Perbarui Last review setelah review selesai untuk menghitung tenggat berikutnya. Ad hoc, siklus lainnya, dan owner tanpa email dilewati.</p></details>
                 </section>

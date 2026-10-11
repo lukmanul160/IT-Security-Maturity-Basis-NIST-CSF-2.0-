@@ -2,6 +2,7 @@ import './styles/personnel-certificate.css';
 import './styles/assessment-gaps.css';
 import './styles/upload-progress.css';
 import { installUploadProgress } from './services/uploadProgress';
+import { installMutationGuard } from './services/mutationGuard';
 /* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 import { createApp, nextTick } from 'vue';
 import App from './App.vue';
@@ -18,6 +19,7 @@ import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';
 
 async function bootstrap() {
   installUploadProgress();
+  installMutationGuard();
   createApp(App).mount('#app');
   await nextTick();
   window.NistI18n?.mount();

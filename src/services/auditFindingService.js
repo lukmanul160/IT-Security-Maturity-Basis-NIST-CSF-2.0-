@@ -15,11 +15,18 @@ function normalize(kind, data) {
     if (result[key].length > max) fail(`${key} terlalu panjang`);
   }
   if (!result.title) fail('Judul wajib diisi');
-  result.status = data.status || 'Open';
-  if (!statuses.includes(result.status)) fail('Status tidak valid');
+  if(kind==='finding'||kind==='audit'){
+    result.status = kind==='audit'?'Open':data.status || 'Open';
+    if (!statuses.includes(result.status)) fail('Status tidak valid');
+  }
   result.severity = data.severity || 'Medium';
   if (!['Low', 'Medium', 'High', 'Critical'].includes(result.severity)) fail('Severity tidak valid');
-  result.dueDate = data.dueDate || '';
+  result.dueDate = kind==='finding' ? data.dueDate || '' : '';
+  if(kind==='finding'){
+    result.ownerEmail=String(data.ownerEmail||'').trim().toLowerCase();
+    if(result.ownerEmail&&(result.ownerEmail.length>254||!require('./smtpService').email(result.ownerEmail)))fail('Email PIC / owner finding tidak valid.');
+    if(result.ownerEmail&&!result.owner)fail('Isi PIC / owner untuk email finding.');
+  }
   if (result.dueDate && (!/^\d{4}-\d{2}-\d{2}$/.test(result.dueDate) || Number.isNaN(Date.parse(result.dueDate)) || new Date(result.dueDate).toISOString().slice(0, 10) !== result.dueDate)) fail('Tanggal tidak valid');
   return result;
 }
@@ -32,8 +39,23 @@ async function ensureStore() {
   )`);
   await pool.query('CREATE INDEX IF NOT EXISTS audit_finding_parent_idx ON audit_finding_records(parent_id)');
   await pool.query(await fs.readFile(path.join(__dirname, '../../database/audit-evidence-files.sql'), 'utf8'));
+  await pool.query(`UPDATE audit_finding_records a SET data=jsonb_set(a.data,'{status}',to_jsonb(CASE
+    WHEN NOT EXISTS(SELECT 1 FROM audit_finding_records f WHERE f.parent_id=a.id AND f.kind='finding') THEN 'Open'
+    WHEN NOT EXISTS(SELECT 1 FROM audit_finding_records f WHERE f.parent_id=a.id AND f.kind='finding' AND f.data->>'status' IS DISTINCT FROM 'Closed') THEN 'Closed'
+    WHEN EXISTS(SELECT 1 FROM audit_finding_records f WHERE f.parent_id=a.id AND f.kind='finding' AND f.data->>'status' IN ('In progress','Closed')) THEN 'In progress'
+    ELSE 'Open' END::text)) WHERE a.kind='audit'`);
 }
-const projection = `id, kind, parent_id AS "parentId", data, filename, octet_length(content) AS size, updated_at AS "updatedAt"`;
+async function syncAuditStatus(client,id){
+  if(!id)return;
+  const result=await client.query(`SELECT COUNT(*)::int AS total,
+    COUNT(*) FILTER(WHERE data->>'status'='Closed')::int AS closed,
+    COUNT(*) FILTER(WHERE data->>'status' IN ('Closed','In progress'))::int AS started
+    FROM audit_finding_records WHERE parent_id=$1 AND kind='finding'`,[id]);
+  const counts=result.rows[0];
+  const status=counts.total>0&&counts.closed===counts.total?'Closed':counts.started>0?'In progress':'Open';
+  await client.query(`UPDATE audit_finding_records SET data=jsonb_set(data,'{status}',to_jsonb($2::text)),updated_at=NOW() WHERE id=$1 AND kind='audit' AND data->>'status' IS DISTINCT FROM $2`,[id,status]);
+}
+const projection = `id, kind, parent_id AS "parentId", data, filename, octet_length(content) AS size, updated_at AS "updatedAt", created_at AS "createdAt"`;
 function attachments(row) {
   if (Array.isArray(row.data?.attachments)) return row.data.attachments;
   return row.data?.attachmentPath ? [{path:row.data.attachmentPath,name:row.filename || row.data.attachmentPath.split('/').pop()}] : [];
@@ -66,9 +88,18 @@ async function save(kind, id, parentId, input, file, user) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Deletion takes an exclusive table lock first; use the same lock order.
+    await client.query('LOCK TABLE audit_finding_records IN ROW EXCLUSIVE MODE');
+    const ancestors=await client.query(`WITH RECURSIVE ancestors AS (
+      SELECT id,kind,parent_id FROM audit_finding_records WHERE id=$1
+      UNION ALL SELECT p.id,p.kind,p.parent_id FROM audit_finding_records p JOIN ancestors c ON p.id=c.parent_id
+    ) SELECT id FROM ancestors WHERE kind='audit'`,[id||parentId||null]);
+    const auditId=ancestors.rows[0]?.id;
+    if(auditId)await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`audit-finding-status:${auditId}`]);
     if (id) {
       const existing = (await client.query('SELECT kind, parent_id, data, filename FROM audit_finding_records WHERE id=$1 FOR UPDATE', [id])).rows[0];
       if (!existing || existing.kind !== kind) fail('Data tidak ditemukan', 404);
+      if(kind==='finding'&&!Object.hasOwn(input,'ownerEmail')&&data.owner===existing.data.owner)data.ownerEmail=existing.data.ownerEmail||'';
       parentId = existing.parent_id;
       if (kind === 'evidence') {
         retained = attachments(existing);
@@ -104,6 +135,8 @@ async function save(kind, id, parentId, input, file, user) {
     const result = id
       ? await client.query(`UPDATE audit_finding_records SET data=$2, updated_at=NOW(), filename=$3, content=$4 WHERE id=$1 RETURNING ${projection}`, [id, data, filename, null])
       : await client.query(`INSERT INTO audit_finding_records(id,kind,parent_id,data,filename,content) VALUES($1,$2,$3,$4,$5,$6) RETURNING ${projection}`, [recordId, kind, parentId || null, data, filename, null]);
+    await syncAuditStatus(client,kind==='audit'?recordId:kind==='finding'?parentId:null);
+    if(kind==='audit')result.rows[0]=(await client.query(`SELECT ${projection} FROM audit_finding_records WHERE id=$1`,[recordId])).rows[0];
     await client.query('COMMIT');
     return result.rows[0];
   } catch (error) { await client.query('ROLLBACK'); throw error; }
@@ -122,11 +155,13 @@ async function remove(id, user) {
     ) SELECT * FROM subtree ORDER BY depth DESC,id`,[id])).rows;
     const row=subtree.find(item=>Number(item.depth)===0);
     if(!row)fail('Data tidak ditemukan',404);
+    const parentId=row.kind==='finding'?(await client.query('SELECT parent_id FROM audit_finding_records WHERE id=$1',[id])).rows[0].parent_id:null;
     const permissions = require('./permissionService');
     if (user && !await permissions.has(user.role,'audit-finding-tracker','delete')) fail('Role tidak memiliki izin hapus.',403);
     for(const record of subtree)if(record.kind==='evidence')for(const item of attachments(record))await evidenceAccess.assertAccess(item.path,user);
     // Removing references never deletes the main files from Uploaded files.
     for(const record of subtree)await client.query('DELETE FROM audit_finding_records WHERE id=$1',[record.id]);
+    await syncAuditStatus(client,parentId);
     await client.query('COMMIT');
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally{client.release();}

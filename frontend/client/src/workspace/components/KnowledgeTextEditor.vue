@@ -6,10 +6,10 @@ import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from '@tiptap/markdown';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import { TableKit } from '@tiptap/extension-table';
+import { Table, TableKit } from '@tiptap/extension-table';
 import DOMPurify from 'dompurify';
 import { wikiAtCursor, wikiSuggestions } from '../features/shared/wikiCompletion.mjs';
-import { Extension } from '@tiptap/core';
+import { Extension, generateHTML } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { wikiLinkRanges } from '../features/shared/noteNavigation.mjs';
@@ -108,14 +108,46 @@ function handleKey(event){
 const safeUrl=url=>/^https?:\/\//i.test(url);
 // Preserve Obsidian links outside fenced/inline code when Markdown escapes brackets.
 function markdownContent(instance){return restoreImageMarkdown(instance.getMarkdown().split(/(`{3,}[\s\S]*?`{3,}|~{3,}[\s\S]*?~{3,}|`+[^`]*`+)/g).map((part,index)=>index%2?part:part.replace(/\\\[\\\[([^\n]*?)\\\]\\\]/g,'[[$1]]')).join(''),props.images);}
+// HTML tables retain column widths, merged cells and multiple paragraphs in Markdown exports.
+const NoteTable=Table.extend({renderMarkdown(node){return generateHTML({type:'doc',content:[node]},[StarterKit,TableKit,TaskList,TaskItem,NoteImage]);}});
+const tableRows=ref(3),tableColumns=ref(3),tableSelected=ref(false),tableWidth=ref(0);
+function syncTable(instance){
+ tableSelected.value=instance.isActive('table');
+ const { $from }=instance.state.selection;
+ for(let depth=$from.depth;depth>0;depth--) if($from.node(depth).type.name==='table'){
+  const first=$from.node(depth).firstChild;let width=0;
+  first?.forEach(cell=>{width+=(cell.attrs.colwidth||[]).reduce((sum,n)=>sum+(Number(n)||0),0);});
+  tableWidth.value=width;return;
+ }
+ tableWidth.value=0;
+}
+function tableAction(command){if(!props.editable||props.readonly||!editor.value)return;editor.value.chain().focus()[command]().run();}
+function insertTable(){
+ if(!props.editable||props.readonly||!editor.value)return;
+ const clamp=value=>Math.min(20,Math.max(1,Math.round(Number(value)||3)));
+ tableRows.value=clamp(tableRows.value);tableColumns.value=clamp(tableColumns.value);
+ editor.value.chain().focus().insertTable({rows:tableRows.value,cols:tableColumns.value,withHeaderRow:true}).run();
+}
+function resizeTable(value){
+ if(!props.editable||props.readonly||!editor.value||!tableSelected.value)return;
+ const {state}=editor.value;const {$from}=state.selection;
+ for(let depth=$from.depth;depth>0;depth--) if($from.node(depth).type.name==='table'){
+  const table=$from.node(depth),position=$from.before(depth),tr=state.tr;
+  let columns=0;table.firstChild.forEach(cell=>{columns+=cell.attrs.colspan;});
+  const requested=Number(value),width=requested>0?Math.max(columns*60,Math.min(2400,Math.round(requested))):0;
+  table.descendants((node,offset)=>{if(['tableCell','tableHeader'].includes(node.type.name))tr.setNodeMarkup(position+1+offset,undefined,{...node.attrs,colwidth:width?Array(node.attrs.colspan).fill(Math.round(width/columns)):null});});
+  editor.value.view.dispatch(tr);editor.value.commands.focus();return;
+ }
+}
 const editor=useEditor({
- extensions:[StarterKit.configure({underline:false,link:{openOnClick:false,autolink:false,linkOnPaste:false,isAllowedUri:safeUrl,HTMLAttributes:{target:'_blank',rel:'noopener noreferrer'}}}),TaskList,TaskItem.configure({nested:true}),TableKit.configure({table:{resizable:false}}),Markdown,wikiNavigation,NoteImage.configure({allowBase64:false})],
+ extensions:[StarterKit.configure({underline:false,link:{openOnClick:false,autolink:false,linkOnPaste:false,isAllowedUri:safeUrl,HTMLAttributes:{target:'_blank',rel:'noopener noreferrer'}}}),TaskList,TaskItem.configure({nested:true}),TableKit.configure({table:false}),NoteTable.configure({resizable:true,cellMinWidth:60}),Markdown,wikiNavigation,NoteImage.configure({allowBase64:false})],
  content:displayImageMarkdown(props.modelValue,props.images,props.folder),contentType:'markdown',editable:props.editable&&!props.readonly,
  editorProps:{attributes:{'aria-label':'Isi catatan','role':'textbox','aria-multiline':'true'},transformPastedHTML:html=>DOMPurify.sanitize(html,{FORBID_TAGS:['iframe','script','style','object','embed'],FORBID_ATTR:['style']}),handlePaste:pasteContent,handleKeyDown:(_view,event)=>{if(handleKey(event))return true;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();emit('save');return true;}return false;}},
  onUpdate:({editor})=>emit('update:modelValue',markdownContent(editor)),
- onSelectionUpdate:({editor})=>{updateCompletion(editor);syncImageSelection(editor);},
+ onSelectionUpdate:({editor})=>{updateCompletion(editor);syncImageSelection(editor);syncTable(editor);},
  onTransaction:({editor})=>{updateCompletion(editor);syncImageSelection(editor);},
- onFocus:({editor})=>updateCompletion(editor),
+ onCreate:({editor})=>syncTable(editor),
+ onFocus:({editor})=>{updateCompletion(editor);syncTable(editor);},
  onBlur:()=>{completion.value=null;},
 });
 watch(()=>props.modelValue,value=>{if(editor.value&&markdownContent(editor.value)!==value)editor.value.commands.setContent(displayImageMarkdown(value,props.images,props.folder),{contentType:'markdown',emitUpdate:false});});
@@ -144,6 +176,17 @@ function format(kind){
  <div class="knowledge-text-editor" :class="{'is-readonly':readonly}">
   <div v-if="missingImages.length" class="missing-images" role="status">Gambar rujukan belum ditemukan di Knowledge Vault. Impor file/folder gambar sesuai jalur ini agar otomatis tampil:<ul><li v-for="path in missingImages" :key="path" data-no-translate>{{ path }}</li></ul></div>
   <div v-if="!readonly" class="toolbar formatting" role="toolbar" aria-label="Format teks"><button v-for="[kind,label] in buttons" :key="kind" :data-format="kind" :disabled="!editable" :aria-pressed="active(kind)" @mousedown.prevent @click="format(kind)">{{ label }}</button></div>
+  <div v-if="!readonly" class="toolbar table-controls" role="group" aria-label="Pengaturan tabel">
+   <label>Baris <input v-model="tableRows" type="number" min="1" max="20" :disabled="!editable" aria-label="Jumlah baris tabel"></label>
+   <label>Kolom <input v-model="tableColumns" type="number" min="1" max="20" :disabled="!editable" aria-label="Jumlah kolom tabel"></label>
+   <button type="button" data-table-action="insert" :disabled="!editable" @mousedown.prevent @click="insertTable">Sisipkan tabel</button>
+   <template v-if="tableSelected">
+    <button v-for="[command,label] in [['addRowBefore','+ Baris atas'],['addRowAfter','+ Baris bawah'],['deleteRow','Hapus baris'],['addColumnBefore','+ Kolom kiri'],['addColumnAfter','+ Kolom kanan'],['deleteColumn','Hapus kolom'],['toggleHeaderRow','Header'],['deleteTable','Hapus tabel']]" :key="command" type="button" :data-table-action="command" :disabled="!editable" @mousedown.prevent @click="tableAction(command)">{{label}}</button>
+    <label>Lebar tabel <input type="number" min="60" max="2400" :value="tableWidth||''" placeholder="Otomatis" :disabled="!editable" aria-label="Lebar tabel dalam pixel" @change="resizeTable($event.target.value)"> px</label>
+    <button type="button" data-table-action="autoWidth" :disabled="!editable" @mousedown.prevent @click="resizeTable(0)">Lebar otomatis</button>
+    <small>Geser batas kolom untuk mengubah lebar. Tab berpindah sel.</small>
+   </template>
+  </div>
   <div v-if="!readonly" class="toolbar"><button :disabled="!editable||!allowImageUpload||imageBusy" @mousedown.prevent @click="imageInput.click()">Masukkan gambar</button><input ref="imageInput" type="file" accept=".png,.jpg,.jpeg,.gif,.webp" hidden @change="selectImage"><span role="status">{{ imageStatus }}</span></div><div v-if="selectedImage&&!readonly" class="toolbar image-sizing" aria-label="Ukuran gambar"><label>Lebar gambar <input type="number" min="48" max="1600" step="10" :value="selectedImageWidth" :disabled="!editable" @change="resizeImage($event.target.value)"> px</label><button v-for="[width,label] in [[160,'Kecil'],[320,'Sedang'],[640,'Besar']]" :key="width" :disabled="!editable" @mousedown.prevent @click="resizeImage(width)">{{label}}</button><button :disabled="!editable" @mousedown.prevent @click="resizeImage(null)">Otomatis</button></div><EditorContent :editor="editor" />
   <div v-if="completion" class="wiki-suggestions" :style="{left:completion.left+'px',top:completion.top+'px'}" role="listbox" aria-label="Cari tautan catatan">
    <strong>{{ completion.query?'Hasil pencarian: '+completion.query:'Pilih catatan yang sudah ada' }}</strong>
@@ -165,7 +208,7 @@ function format(kind){
 .knowledge-text-editor :deep(blockquote){border-left:3px solid #8b5cf6;padding-left:16px;margin:12px 0}
 .knowledge-text-editor :deep(pre){background:#f1eef8;padding:14px;border-radius:6px;white-space:pre-wrap}.knowledge-text-editor :deep(code){font-family:monospace;background:#f1eef8}
 .knowledge-text-editor :deep(ul[data-type=taskList]){list-style:none!important;padding-left:0}.knowledge-text-editor :deep(li[data-type=taskItem]){display:flex;gap:10px;align-items:baseline}.knowledge-text-editor :deep(li[data-type=taskItem]>div){flex:1}.knowledge-text-editor :deep(input[type=checkbox]){width:auto!important}
-.knowledge-text-editor :deep(table){border-collapse:collapse;width:100%}.knowledge-text-editor :deep(td),.knowledge-text-editor :deep(th){border:1px solid #d8dce8;padding:8px}
+.knowledge-text-editor :deep(table){border-collapse:collapse;table-layout:fixed;max-width:none;margin:12px 0}.knowledge-text-editor :deep(td),.knowledge-text-editor :deep(th){border:1px solid #d8dce8;padding:8px}
 .formatting button[aria-pressed=true]{background:#eee6ff;border-color:#8b5cf6}.editor-help{display:block;margin-top:10px}.is-readonly :deep(.tiptap){border:0;padding:8px 0}
 .knowledge-text-editor :deep(img){display:block;max-width:100%;height:auto;border-radius:6px;margin:10px 0;object-fit:contain;object-position:left center}
 .knowledge-text-editor :deep(img:not([width])){max-width:min(100%,320px);max-height:280px}
@@ -173,4 +216,5 @@ function format(kind){
 .image-sizing label{display:flex;gap:6px;align-items:center;font-size:12px}.image-sizing input{width:80px!important;padding:5px!important}
 .knowledge-text-editor :deep(.wiki-note-link){color:#6148af;text-decoration:underline;cursor:pointer}
 .wiki-suggestions{position:fixed;z-index:10000;width:min(320px,calc(100vw - 16px));max-height:260px;overflow:auto;padding:8px;background:white;border:1px solid #d8dce8;border-radius:8px;box-shadow:0 8px 28px #25203d33}.wiki-suggestions strong{display:block;font-size:12px;padding:5px}.wiki-suggestions button{display:block;width:100%;text-align:left;margin:3px 0;padding:7px 10px}.wiki-suggestions button span,.wiki-suggestions button small{display:block}.wiki-suggestions>small{font-size:10px}.wiki-selected{background:#eee6ff!important;border-color:#8b5cf6!important}
+.table-controls{padding:10px;border:1px solid #8294ad55;border-radius:8px}.table-controls label{display:flex;align-items:center;gap:6px;font-size:12px}.table-controls input{width:80px!important;padding:6px!important}.knowledge-text-editor :deep(.tableWrapper){overflow-x:auto;max-width:100%;margin:12px 0}.knowledge-text-editor :deep(td),.knowledge-text-editor :deep(th){position:relative;min-width:60px;vertical-align:top}.knowledge-text-editor :deep(th){font-weight:700;background:#8294ad15}.knowledge-text-editor :deep(.column-resize-handle){position:absolute;right:-2px;top:0;bottom:0;width:4px;background:#8b5cf6;pointer-events:none}.knowledge-text-editor :deep(.resize-cursor){cursor:col-resize}.knowledge-text-editor :deep(.selectedCell:after){content:'';position:absolute;inset:0;pointer-events:none;background:#8b5cf622}
 </style>

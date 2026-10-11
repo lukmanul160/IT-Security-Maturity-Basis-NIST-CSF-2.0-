@@ -49,19 +49,26 @@ function addEvidenceSelectSearch(select) {
   input.setAttribute('aria-label','Search uploaded evidence');
   const preview = document.createElement('div');
   select.before(input); select.after(preview);
+  let page=1;
+  const pager=document.createElement('div');pager.className='list-pagination';preview.after(pager);
   const apply = () => {
-    const matches = [];
-    for (const option of select.options) {
-      if (!option.value || option.disabled) continue;
-      let reference;
-      try { reference = JSON.parse(option.value); } catch { continue; }
-      const file = evidenceLibrary.find(item=>item.path===reference.path) || reference;
-      option.hidden = !evidenceMatches(file,input.value);
-      if (!option.hidden && input.value.trim()) matches.push(`<div><strong>${escapeHtml(file.name)}</strong>${evidenceMatchPreview(file,input.value)}</div>`);
+    const matches=[];
+    for(const option of select.options){
+      if(!option.value||option.disabled)continue;
+      let reference;try{reference=JSON.parse(option.value);}catch{continue;}
+      const file=evidenceLibrary.find(item=>item.path===reference.path)||reference;
+      option.hidden=true;
+      if(evidenceMatches(file,input.value))matches.push({option,file});
     }
-    preview.innerHTML = input.value.trim() ? matches.slice(0,10).join('') || '<small>No matching evidence.</small>' : '';
+    const pages=Math.max(1,Math.ceil(matches.length/8));page=Math.min(page,pages);
+    const visible=matches.slice((page-1)*8,page*8);
+    visible.forEach(({option})=>{option.hidden=false;});
+    if(select.selectedOptions[0]?.hidden)select.value='';
+    preview.innerHTML=input.value.trim()?visible.map(({file})=>`<div><strong>${escapeHtml(file.name)}</strong>${evidenceMatchPreview(file,input.value)}</div>`).join('')||'<small>No matching evidence.</small>':'';
+    pager.innerHTML=`<button type="button" data-page="${page-1}" ${page===1?'disabled':''}>Previous</button><span>${page} / ${pages} ? ${matches.length} file</span><button type="button" data-page="${page+1}" ${page===pages?'disabled':''}>Next</button>`;
   };
-  input.addEventListener('input', apply);
+  pager.addEventListener('click',event=>{const button=event.target.closest('[data-page]');if(button){page=Number(button.dataset.page);apply();}});
+  input.addEventListener('input',()=>{page=1;apply();});
   select.addEventListener('evidence-library-updated', apply);
   new MutationObserver(apply).observe(select,{childList:true});
 }

@@ -6,15 +6,19 @@
   let rows = [], path = [], editing = null, ready = false;
   let cardFilter = null;
   let removedAttachments = new Set();
-  let libraryFiles = [], selectedLibrary = new Set(), libraryRequest = 0;
+  let libraryFiles = [], selectedLibrary = new Set(), libraryRequest = 0, libraryPage = 1;
   function renderLibrary() {
     const query = $('aftLibrarySearch').value.toLowerCase();
     const attached = new Set(evidenceFiles(editing).filter(file=>!removedAttachments.has(file.path)).map(file=>file.path));
-    $('aftLibraryList').innerHTML = libraryFiles.filter(file=>!attached.has(file.path) && evidenceMatches(file, query)).map(file=>`<label class="toolbar"><input name="aft-library-path-${escapeHtml(file.path)}" type="checkbox" data-aft-library-path="${escapeHtml(file.path)}" ${selectedLibrary.has(file.path) ? 'checked' : ''}><span>${escapeHtml(file.name)} <small>${escapeHtml(file.source)}</small>${evidenceMatchPreview(file, query)}</span></label>`).join('') || '<p class="muted">Tidak ada file yang dapat dipilih.</p>';
+    const matches=libraryFiles.filter(file=>!attached.has(file.path) && evidenceMatches(file, query));
+    const pages=Math.max(1,Math.ceil(matches.length/8));libraryPage=Math.min(libraryPage,pages);
+    $('aftLibraryPage').textContent=`${libraryPage} / ${pages} ? ${matches.length} file`;
+    $('aftLibraryPrevious').disabled=libraryPage===1;$('aftLibraryNext').disabled=libraryPage===pages;
+    $('aftLibraryList').innerHTML = matches.slice((libraryPage-1)*8,libraryPage*8).map(file=>`<label class="toolbar"><input name="aft-library-path-${escapeHtml(file.path)}" type="checkbox" data-aft-library-path="${escapeHtml(file.path)}" ${selectedLibrary.has(file.path) ? 'checked' : ''}><span>${escapeHtml(file.name)} <small>${escapeHtml(file.source)}</small>${evidenceMatchPreview(file, query)}</span></label>`).join('') || '<p class="muted">Tidak ada file yang dapat dipilih.</p>';
   }
   async function loadLibrary() {
     const version = ++libraryRequest;
-    libraryFiles = []; renderLibrary();
+    libraryFiles = []; libraryPage=1; renderLibrary();
     $('aftLibraryStatus').textContent = 'Memuat file yang dapat Anda akses...';
     try {
       const files = await request('/available-files');
@@ -24,7 +28,9 @@
       renderLibrary(); $('aftLibraryStatus').textContent = `${files.length} file tersedia.`;
     } catch (error) { if (version === libraryRequest) $('aftLibraryStatus').textContent = error.message; }
   }
-  $('aftLibrarySearch').addEventListener('input', renderLibrary);
+  $('aftLibrarySearch').addEventListener('input',()=>{libraryPage=1;renderLibrary();});
+  $('aftLibraryPrevious').addEventListener('click',()=>{libraryPage=Math.max(1,libraryPage-1);renderLibrary();});
+  $('aftLibraryNext').addEventListener('click',()=>{libraryPage++;renderLibrary();});
   $('aftLibraryReload').addEventListener('click', loadLibrary);
   $('aftLibraryList').addEventListener('change', event => {
     const path = event.target.dataset.aftLibraryPath;
@@ -109,7 +115,7 @@
     pending.sort((a, b) => Number(isOverdue(b)) - Number(isOverdue(a)) || (a.data.dueDate || '9999').localeCompare(b.data.dueDate || '9999'));
     return `<p class="muted">${findings.length} finding · ${findings.length - pending.length} selesai · ${pending.length} belum selesai · <strong class="${overdue ? 'aft-overdue' : ''}">${overdue} lewat tenggat</strong></p><details class="insight-panel" data-aft-details="${audit.id}"><summary>Lihat ${pending.length} finding belum selesai</summary>${pending.length ? `<div class="excel-wrap"><table class="excel-table"><thead><tr><th>Finding / Severity</th><th>PIC</th><th>Status</th><th>Tenggat</th><th>Follow-up</th></tr></thead><tbody>${pending.map(finding => {
       const actions = rows.filter(row => row.kind === 'followup' && row.parentId === finding.id);
-      return `<tr><td><strong>${escapeHtml(finding.data.title)}</strong><br>${escapeHtml(finding.data.severity)}<br><small>${escapeHtml(finding.data.description)}</small></td><td>${escapeHtml(finding.data.owner || 'Belum ditentukan')}</td><td>${escapeHtml(finding.data.status)}</td><td>${escapeHtml(finding.data.dueDate || 'Tanpa tenggat')}${isOverdue(finding) ? '<br><strong class="aft-overdue">Lewat tenggat</strong>' : ''}</td><td>${actions.filter(action => action.data.status === 'Closed').length}/${actions.length} selesai<br><button class="button button-quiet" type="button" data-aft-finding="${finding.id}">Buka Follow-up</button></td></tr>`;
+      return `<tr><td><strong>${escapeHtml(finding.data.title)}</strong><br>${escapeHtml(finding.data.severity)}<br><small>${escapeHtml(finding.data.description)}</small></td><td>${escapeHtml(finding.data.owner || 'Belum ditentukan')}</td><td>${escapeHtml(finding.data.status)}</td><td>${escapeHtml(finding.data.dueDate || 'Tanpa tenggat')}${isOverdue(finding) ? '<br><strong class="aft-overdue">Lewat tenggat</strong>' : ''}</td><td>${actions.length} follow-up<br><button class="button button-quiet" type="button" data-aft-finding="${finding.id}">Buka Follow-up</button></td></tr>`;
     }).join('')}</tbody></table></div>` : `<p class="muted">${findings.length ? 'Semua finding sudah selesai.' : 'Belum ada finding pada audit ini.'}</p>`}</details>`;
   }
   async function request(url = '', options = {}) {
@@ -187,7 +193,7 @@
     if (event.target.id === 'afExport' && event.target.value) {
       const scope = cardFilters[cardFilter];
       const selected = afScopedRows().filter(row => !scope || scope.matches(row));
-      gdExport('audit-finding-dashboard', selected, [['ID', r => r.id], ['Parent ID', r => r.parentId], ['Kind', r => r.kind], ['Title', r => r.data.title], ['PIC', r => r.data.owner], ['Status', r => r.data.status], ['Severity', r => r.kind === 'finding' ? r.data.severity : ''], ['Date', r => r.data.dueDate]], event.target.value); event.target.value = '';
+      gdExport('audit-finding-dashboard', selected, [['ID', r => r.id], ['Parent ID', r => r.parentId], ['Kind', r => r.kind], ['Title', r => r.data.title], ['PIC', r => r.data.owner], ['Status', r => r.kind==='finding'?r.data.status:''], ['Severity', r => r.kind === 'finding' ? r.data.severity : ''], ['Date', r => r.kind==='finding'?r.data.dueDate:['followup','evidence'].includes(r.kind)?r.createdAt:'']], event.target.value); event.target.value = '';
     }
   });
   $('auditFindingView').addEventListener('click', event => {
@@ -214,12 +220,16 @@
     $('aftContext').textContent = path.length ? path.map(r => r.data.title).join(' → ') + (path.at(-1).data.description ? ' — ' + path.at(-1).data.description : '') : 'Pilih audit untuk melihat finding, lalu follow-up dan evidence terkait.';
     const search = $('aftSearch').value.toLowerCase();
     const scope = cardFilters[cardFilter];
+    const findingView=scope?['open-findings','closed-findings','overdue-findings'].includes(cardFilter):kinds[level]==='finding';
+    $('aftFilter').hidden=!findingView;if(!findingView)$('aftFilter').value='';
+    $('aftStatusColumn').hidden=!findingView;
+    $('aftDateColumn').hidden=!scope&&level===0;
     const visible = afScopedRows().filter(r => (scope ? scope.matches(r) : r.kind === kinds[level] && r.parentId === parentId) && (!$('aftFilter').value || r.data.status === $('aftFilter').value) && Object.values(r.data).join(' ').toLowerCase().includes(search));
     $('afDrillStatus').textContent = `${visible.length} data ditampilkan · ${scope ? 'Drill-down: ' + scope.title : 'Hierarki audit'} · filter dashboard tetap berlaku.`;
     $('afClearDrill').disabled = !cardFilter;
-    $('aftDateColumn').textContent = ['followup', 'followups', 'evidence'].includes(cardFilter || kinds[level]) ? 'Tanggal evidence' : 'Tenggat';
+    $('aftDateColumn').textContent = ['followup', 'followups', 'evidence'].includes(cardFilter || kinds[level]) ? 'Tanggal dibuat' : 'Tenggat finding';
     if (scope) $('aftContext').textContent = `${scope.title} — ${visible.length} data. Pilih Semua Audit untuk kembali ke daftar audit.`;
-    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" → "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td>${escapeHtml(r.data.status)}</td><td>${escapeHtml(r.data.dueDate || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
+    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" → "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td ${findingView?'':'hidden'}>${escapeHtml(r.kind==='finding'?r.data.status:'')}</td><td ${!scope&&level===0?'hidden':''}>${escapeHtml((r.kind==='finding'?r.data.dueDate:['followup','evidence'].includes(r.kind)?new Date(r.createdAt).toLocaleDateString('id-ID'):'') || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
   }
   window.addEventListener('evidence-file-deleted',event=>{
     const normalized=value=>String(value || '').replace(/^uploads?\//,'');
@@ -238,7 +248,10 @@
     editing = record || null; form.reset();
     if (record) for (const [name, value] of Object.entries(record.data)) if (form.elements.namedItem(name)) form.elements.namedItem(name).value = value;
     const kind = record?.kind || kinds[path.length];
-    $('aftDateLabel').textContent = ['followup', 'evidence'].includes(kind) ? 'Tanggal evidence' : 'Tenggat';
+    $('aftDateField').hidden=kind!=='finding';form.elements.dueDate.disabled=kind!=='finding';
+    $('aftStatusField').hidden=kind!=='finding';form.elements.status.disabled=kind!=='finding';
+    $('aftOwnerEmailField').hidden=kind!=='finding';form.elements.ownerEmail.disabled=kind!=='finding';
+    $('aftDateLabel').textContent='Tenggat finding';
     removedAttachments = new Set();
     selectedLibrary = new Set(); libraryFiles = []; libraryRequest++;
     $('aftLibrarySearch').value = '';
@@ -336,7 +349,12 @@
     $('aftReminderRepeatUnit').value = data.repeatUnit ?? 'days';
     $('aftReminderRepeatDaily').checked = data.repeatDaily === true;
     $('aftReminderMaxDeliveries').value = data.maxDeliveries ?? 366;
-    $('aftReminderRecipients').value = data.recipients.join('\n');
+    window.NistReminderSchedule?.refresh('aftReminder');
+    $('aftReminderRecipients').value = (data.recipients||[]).join('\n');
+    $('aftReminderOwners').value=(data.owners||[]).map(item=>`${item.owner} = ${item.email}`).join('\n');
+  $('aftReminderOwners').dispatchEvent(new Event('recipients-populated'));
+    $('aftReminderRecipientMode').value=data.recipientMode||'owners';
+    $('aftReminderBroadcastField').hidden=$('aftReminderRecipientMode').value!=='broadcast';
     $('aftReminderConnection').textContent = data.smtpConfigured ? 'Akun SMTP tersimpan sudah dikonfigurasi.' : 'SMTP Admin belum dikonfigurasi. Lengkapi koneksi sebelum mengaktifkan reminder.';
   }
   async function loadReminder() {
@@ -348,13 +366,14 @@
       $('aftReminderStatus').textContent = 'Pengaturan siap diedit.';
     } catch (error) { $('aftReminderStatus').textContent = error.message; $('aftReminderReload').disabled = false; }
   }
+  $('aftReminderRecipientMode').addEventListener('change',()=>{$('aftReminderBroadcastField').hidden=$('aftReminderRecipientMode').value!=='broadcast';});
   $('aftReminderReload').addEventListener('click', loadReminder);
   $('aftReminderSmtp').addEventListener('click', () => { $('accountButton').click(); document.querySelector('[data-account-tab="smtp"]').click(); });
   $('aftReminderForm').addEventListener('submit', guardFormSubmission(async event => {
     event.preventDefault();
     $('aftReminderSave').disabled = true;
     try {
-      const data = await request('/reminder-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ smtpAccountId: $('aftReminderAccount').value, subjectTemplate: $('aftReminderSubject').value, bodyTemplate: $('aftReminderBody').value, enabled: $('aftReminderEnabled').checked, daysBefore: Number($('aftReminderDays').value), startUnit: $('aftReminderStartUnit').value, repeatEvery: Number($('aftReminderRepeatEvery').value), repeatUnit: $('aftReminderRepeatUnit').value, repeatDaily: $('aftReminderRepeatDaily').checked, maxDeliveries: Number($('aftReminderMaxDeliveries').value), recipients: $('aftReminderRecipients').value.split('\n').map(to => to.trim()).filter(Boolean) }) });
+      const data = await request('/reminder-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ smtpAccountId: $('aftReminderAccount').value, subjectTemplate: $('aftReminderSubject').value, bodyTemplate: $('aftReminderBody').value, enabled: $('aftReminderEnabled').checked, daysBefore: Number($('aftReminderDays').value), startUnit: $('aftReminderStartUnit').value, repeatEvery: Number($('aftReminderRepeatEvery').value), repeatUnit: $('aftReminderRepeatUnit').value, repeatDaily: $('aftReminderRepeatDaily').checked, maxDeliveries: Number($('aftReminderMaxDeliveries').value), recipientMode:$('aftReminderRecipientMode').value,owners:$('aftReminderOwners').value.split('\n').map(line=>line.trim()).filter(Boolean).map(line=>{const index=line.lastIndexOf('=');return {owner: index<0?'':line.slice(0,index).trim(),email:index<0?line:line.slice(index+1).trim()};}), recipients: $('aftReminderRecipients').value.split('\n').map(to => to.trim()).filter(Boolean) }) });
       populateReminder(data);
       if (!data.subjectTemplate || !data.bodyTemplate) {
         $('aftReminderStatus').textContent = 'Isi template tetap ditampilkan, tetapi server belum mengonfirmasi penyimpanannya. Restart server aplikasi untuk memuat pembaruan, lalu simpan kembali.';

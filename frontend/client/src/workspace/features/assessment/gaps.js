@@ -105,14 +105,18 @@ async function populateGapEvidence() {
   select.disabled=true;status.textContent='Memuat evidence...';
   search.addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault();});
   await refreshEvidenceLibrary();if(!select.isConnected)return;
-  const files=[...selectableEvidenceRecords()];
+  const files=[...selectableEvidenceRecords()];let page=1;
+  const pager=document.createElement('div');pager.className='list-pagination';status.after(pager);
+  pager.addEventListener('click',event=>{const button=event.target.closest('[data-file-page]');if(button){page=Number(button.dataset.filePage);filter();}});
   const filter=()=>{
     const matches=files.map((file,index)=>({file,index})).filter(({file})=>evidenceMatches(file,search.value));
-    select.innerHTML='<option value="">'+(matches.length?'Pilih file...':'Tidak ada file yang sesuai pencarian')+'</option>'+matches.map(({file,index})=>`<option value="${index}">${escapeHtml(file.name)}${file.source?' — '+escapeHtml(file.source):''}</option>`).join('');
+    const pages=Math.max(1,Math.ceil(matches.length/8));page=Math.min(page,pages);
+    pager.innerHTML=`<button type="button" data-file-page="${page-1}" ${page===1?'disabled':''}>Previous</button><span>${page} / ${pages}</span><button type="button" data-file-page="${page+1}" ${page===pages?'disabled':''}>Next</button>`;
+    select.innerHTML='<option value="">'+(matches.length?'Pilih file...':'Tidak ada file yang sesuai pencarian')+'</option>'+matches.slice((page-1)*8,page*8).map(({file,index})=>`<option value="${index}">${escapeHtml(file.name)}${file.source?' — '+escapeHtml(file.source):''}</option>`).join('');
     select.disabled=!matches.length;
     status.textContent=evidenceLibraryError || `${matches.length} dari ${files.length} file tersedia`;
   };
-  search.addEventListener('input',filter);filter();
+  search.addEventListener('input',()=>{page=1;filter();});filter();
   select.onchange=()=>{const file=files[Number(select.value)];if(select.value!==''&&file&&!gapContext.draftEvidence.some(item=>item.path===file.path)){gapContext.draftEvidence.push(evidenceReference(file));renderGapDraftEvidence();}select.value='';};
   if(evidenceLibraryError)$('gapDialogMessage').textContent=evidenceLibraryError;
 }

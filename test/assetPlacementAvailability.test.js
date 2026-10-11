@@ -21,7 +21,7 @@ test('asset status and relation changes accept missing change references',async(
 });
 
 test('selection remarks identify occupied racks, block new installs and allow explicit move dialogs',()=>{
- const source=fs.readFileSync('frontend/client/src/workspace/components/AssetManagementView.vue','utf8');const script=source.match(/<script setup>([\s\S]*?)<\/script>/)[1].replace(/import .*?from 'vue';/,'');
+ const source=fs.readFileSync('frontend/client/src/workspace/components/AssetManagementView.vue','utf8');const script=source.match(/<script setup>([\s\S]*?)<\/script>/)[1].replace(/^import .*?;$/gm,'');
  const context=vm.createContext({ref:value=>({value}),computed:fn=>({get value(){return fn();}}),nextTick:async()=>{},onMounted(){},onBeforeUnmount(){}});vm.runInContext(script,context);
  vm.runInContext("racks.value=[{id:'r1',name:'Rack 01'},{id:'r2',name:'Rack 02'}];placements.value=[{asset_id:'a',rack_id:'r1',start_unit:2,height:2}];placement.value={assetId:'a',rackId:'r2'};",context);
  assert.match(vm.runInContext("assetRackRemark('a')",context),/Rack 01.*U2-U3/);assert.match(vm.runInContext('placementSelectionError.value',context),/sudah dipakai/);

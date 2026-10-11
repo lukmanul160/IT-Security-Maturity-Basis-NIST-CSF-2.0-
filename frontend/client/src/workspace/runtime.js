@@ -1,6 +1,8 @@
 // Ordered classic-script source: keep shared scope and initialization order intact.
 // See features/README.md before moving code between sections.
 import part01 from './features/shared/state-and-access.js?raw';
+import reminderRecipients from './features/shared/reminder-recipients.js?raw';
+import reminderPreview from './features/shared/reminder-preview.js?raw';
 import submissionGuard from './features/shared/submission-guard.js?raw';
 import part02 from './features/risk-acceptance/forms.js?raw';
 import acceptanceDashboard from './features/risk-acceptance/dashboard.js?raw';
@@ -45,6 +47,8 @@ import threatNavigation from './features/shared/threat-navigation.js?raw';
 
 export default [
   submissionGuard,
+  reminderRecipients,
+  reminderPreview,
   part01,
   evidenceLibrary,
   part02,

@@ -30,7 +30,13 @@ test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { s
     const audit = await service.save('audit', null, null, { title: 'Audit test' });
     await assert.rejects(service.save('followup', null, audit.id, { title: 'Invalid hierarchy' }), { status: 400 });
     const finding = await service.save('finding', null, audit.id, { title: 'Finding test' });
+    await service.save('finding',finding.id,audit.id,{title:'Finding test',status:'Closed',owner:'PIC IT',ownerEmail:'pic@example.com'});
+    assert.equal((await service.list()).find(row=>row.id===audit.id).data.status,'Closed');
+    await service.save('finding',finding.id,audit.id,{title:'Finding test',status:'Open',owner:'PIC IT'});
+    assert.equal((await service.list()).find(row=>row.id===audit.id).data.status,'Open');
+    assert.equal((await service.list()).find(row=>row.id===finding.id).data.ownerEmail,'pic@example.com');
     const followup = await service.save('followup', null, finding.id, { title: 'Action test' });
+    assert.ok(followup.createdAt);assert.equal(followup.data.status,undefined);assert.equal(followup.data.dueDate,'');
     await assert.rejects(service.save('evidence', null, followup.id, { title: 'Missing file' }), { status: 400 });
     const file = { originalname: 'proof.txt', buffer: Buffer.from('proof'), size: 5 };
     const alice = { username: 'alice', role: 'user' }, bob = { username: 'bob', role: 'user' }, admin = { username: 'admin', role: 'admin' };
@@ -111,4 +117,12 @@ test('PostgreSQL hierarchy, binary evidence, update and protected deletion', { s
     await service.remove(unrelatedAudit.id,admin);
     assert.equal((await service.list()).length, 0);
   } finally { await client.query('DROP TABLE IF EXISTS pg_temp.role_permissions, pg_temp.audit_finding_records, pg_temp.evidence_files, pg_temp.file_storage_locations, pg_temp.file_storage_settings, pg_temp.app_users'); client.release(); await pool.end(); }
+});
+
+test('only findings accept status deadlines and owner email',()=>{
+ for(const kind of ['followup','evidence']){
+  const data=service.normalize(kind,{title:'Test',status:'Closed',dueDate:'2030-01-01'});
+  assert.equal(data.status,undefined);assert.equal(data.dueDate,'');
+ }
+ assert.throws(()=>service.normalize('finding',{title:'Test',owner:'PIC',ownerEmail:'bad'}),{status:400});
 });

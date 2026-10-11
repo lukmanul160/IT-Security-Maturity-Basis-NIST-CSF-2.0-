@@ -4,8 +4,8 @@ const service = require('../src/services/auditFindingReminderService');
 const smtp = require('../src/services/smtpService');
 const { pool } = require('../src/config/database');
 test('settings validate recipients and refuse module SMTP credentials', () => {
-  assert.deepEqual(service.validate({enabled:true,daysBefore:7,recipients:['A@example.com','a@example.com']}), {...service.templateDefaults,smtpAccountId:'default',enabled:true,daysBefore:7,repeatDaily:false,startUnit:'days',repeatEvery:1,repeatUnit:'days',maxDeliveries:366,recipients:['a@example.com']});
-  for (const change of [{recipients:[]},{recipients:['invalid']},{daysBefore:-1},{repeatDaily:'yes'},{startUnit:'years'},{repeatUnit:'weeks'},{repeatEvery:0},{repeatEvery:1.5},{repeatEvery:37,repeatUnit:'months'},{daysBefore:37,startUnit:'months'},{maxDeliveries:0},{maxDeliveries:367},{maxDeliveries:1.5},{maxDeliveries:'3'},{password:'secret'}]) assert.throws(()=>service.validate({enabled:true,daysBefore:7,recipients:['a@example.com'],...change}),{status:400});
+  assert.deepEqual(service.validate({enabled:true,daysBefore:7,recipients:['A@example.com','a@example.com']}), {...service.templateDefaults,smtpAccountId:'default',enabled:true,daysBefore:7,repeatDaily:false,startUnit:'days',repeatEvery:1,repeatUnit:'days',maxDeliveries:366,owners:[],recipientMode:'broadcast',recipients:['a@example.com']});
+  for (const change of [{recipients:[],recipientMode:'broadcast'},{recipients:['invalid']},{daysBefore:-1},{repeatDaily:'yes'},{startUnit:'years'},{repeatUnit:'weeks'},{repeatEvery:0},{repeatEvery:1.5},{repeatEvery:37,repeatUnit:'months'},{daysBefore:37,startUnit:'months'},{maxDeliveries:0},{maxDeliveries:367},{maxDeliveries:1.5},{maxDeliveries:'3'},{password:'secret'}]) assert.throws(()=>service.validate({enabled:true,daysBefore:7,recipients:['a@example.com'],...change}),{status:400});
 });
 test('reminders include audit title and finding, skip closed/undated/future and stop after due date', () => {
   const row = {kind:'finding',auditTitle:'Audit title',data:{title:'Finding title',status:'Open',dueDate:'2026-09-20'}};
@@ -122,4 +122,14 @@ test('settings endpoints reject non-admin before service access', async t => {
   const server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});
   try { for(const [method,path] of [['GET',''],['PUT',''],['POST','/test']])assert.equal((await fetch(`http://127.0.0.1:${server.address().port}/tracker/reminder-settings${path}`,{method})).status,403); }
   finally { await new Promise(resolve=>server.close(resolve)); }
+});
+
+test('finding recipients follow owner and only Open findings',()=>{
+ const row={kind:'finding',data:{status:'Open',owner:'PIC IT',ownerEmail:'direct@example.com'}};
+ const settings={recipientMode:'owners',owners:[{owner:'PIC IT',email:'mapped@example.com'}],recipients:['global@example.com']};
+ assert.deepEqual(service.recipientsFor(row,settings),['direct@example.com']);
+ assert.deepEqual(service.recipientsFor({...row,data:{...row.data,ownerEmail:''}},settings),['mapped@example.com']);
+ assert.deepEqual(service.recipientsFor({...row,data:{status:'Open',owner:'Unknown'}},settings),[]);
+ for(const status of ['In progress','Closed'])assert.deepEqual(service.recipientsFor({...row,data:{...row.data,status}},settings),[]);
+ assert.equal(service.eligible({...row,data:{...row.data,status:'In progress',dueDate:'2026-09-20'}},7,new Date(2026,8,16,12)),false);
 });

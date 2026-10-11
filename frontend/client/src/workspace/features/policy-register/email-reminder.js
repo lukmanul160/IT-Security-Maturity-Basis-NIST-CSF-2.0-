@@ -23,8 +23,10 @@ function populatePolicySmtp(data) {
   $('policySmtpRepeatEvery').value = data.repeatEvery ?? 1;
   $('policySmtpRepeatUnit').value = data.repeatUnit ?? 'days';
   $('policySmtpMaxDeliveries').value = data.maxDeliveries ?? 366;
+  window.NistReminderSchedule?.refresh('policySmtp');
   $('policySmtpEnabled').checked = data.enabled;
   $('policySmtpOwners').value = data.owners.map(row => `${row.owner} = ${row.email}`).join('\n');
+  $('policySmtpOwners').dispatchEvent(new Event('recipients-populated'));
   $('policyReminderConnectionStatus').textContent = data.smtpConfigured ? 'Akun SMTP tersimpan sudah dikonfigurasi.' : 'SMTP belum dikonfigurasi. Buka pengaturan SMTP sebelum mengaktifkan reminder.';
 }
 $('policySmtpOpen').addEventListener('click', async () => {

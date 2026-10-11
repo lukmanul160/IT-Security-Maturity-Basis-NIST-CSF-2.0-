@@ -6,7 +6,7 @@ function guardFormSubmission(handler) {
     const form = event.currentTarget;
     if (pendingFormSubmissions.has(form)) return;
     pendingFormSubmissions.add(form);
-    const buttons = [...form.elements].filter(control => control.type === 'submit');
+    const buttons = [...form.elements].filter(control => ['submit','button','reset'].includes(control.type));
     const disabled = buttons.map(button => button.disabled);
     const previousBusy = form.getAttribute('aria-busy');
     buttons.forEach(button => { button.disabled = true; });
