@@ -23,6 +23,7 @@ router.use('/asset-management', require('./assetManagementRoutes'));
 router.use('/knowledge-notes', require('./knowledgeNoteRoutes'));
 router.use('/threat-modelling', require('./threatModelRoutes'));
 router.use('/audit-finding-tracker', require('./auditFindingRoutes'));
+router.use('/website-settings',require('./websiteSettingsRoutes'));
 router.use('/reminder-recipients',require('./reminderRecipientRoutes'));
 router.use('/smtp-settings', require('./smtpRoutes'));
 router.get('/health', (req, res) => res.json({ ok: true }));

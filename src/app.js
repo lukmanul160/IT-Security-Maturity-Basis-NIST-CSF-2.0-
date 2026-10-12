@@ -74,6 +74,9 @@ app.post('/api/office-presence', requireAuth, async (req, res, next) => {
 });
 app.get(['/virtual-office', '/virtual-office/'], (req, res) => res.sendFile(path.join(publicRoot, 'virtual-office', 'index.html')));
 app.use('/virtual-office/assets', express.static(path.join(publicRoot, 'virtual-office', 'assets'), { index: false, fallthrough: false }));
+app.get('/api/public/website-settings',async(req,res,next)=>{try{res.set('Cache-Control','no-store').json(require('./services/websiteSettingsService').publicSettings(await require('./services/websiteSettingsService').read()));}catch(error){next(error);}});
+app.get('/website-assets/:kind',async(req,res,next)=>{try{if(!['logo','favicon'].includes(req.params.kind))return res.sendStatus(404);const data=await require('./services/websiteSettingsService').read();const asset=data[req.params.kind];res.set('Cache-Control','no-cache');if(!asset)return res.sendFile(path.join(publicRoot,'brand-logo.png'));res.type(asset.mime).send(Buffer.from(asset.base64,'base64'));}catch(error){next(error);}});
+app.get('/branding.js',(req,res)=>res.sendFile(path.join(publicRoot,'branding.js')));
 app.get('/brand-logo.jpeg', (req, res) => {
 	res.sendFile(path.join(publicRoot, 'brand-logo.jpeg'), error => {
 		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);
@@ -81,10 +84,7 @@ app.get('/brand-logo.jpeg', (req, res) => {
 });
 app.get('/loading-logo.png', (req, res) => res.sendFile(path.join(publicRoot, 'loading-logo.png'), { maxAge: '7d' }));
 app.get(['/brand-logo.png', '/favicon.ico'], (req, res) => {
-	res.type('png');
-	res.sendFile(path.join(publicRoot, 'brand-logo.png'), error => {
-		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);
-	});
+	res.redirect('/website-assets/'+(req.path==='/favicon.ico'?'favicon':'logo'));
 });
 // Only demonstration screenshots are public. Other workspace files require auth.
 app.use('/landing-media', express.static(path.join(publicRoot, 'landing-media'), {

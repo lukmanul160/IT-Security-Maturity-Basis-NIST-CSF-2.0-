@@ -45,7 +45,8 @@ async function runReminders(now=new Date()){
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
   const reminderSettings=require('./assetReminderSettingsService');const settings={...reminderSettings.defaults,...await reminderSettings.read()};
   const calendarNow=new Date(today+'T12:00:00');
-  const assets=(await list('assets')).filter(a=>reminderSettings.reminderSlot(a,settings,calendarNow));if(!assets.length)return;
+  const recipientEmails=await require('./reminderRecipientService').emailMap(c);
+  const assets=(await list('assets')).map(a=>({...a,ownerEmail:recipientEmails.has(String(a.owner).trim().toLowerCase())?recipientEmails.get(String(a.owner).trim().toLowerCase()):a.ownerEmail})).filter(a=>reminderSettings.reminderSlot(a,settings,calendarNow));if(!assets.length)return;
   const transport=await smtp.createMailer(settings.smtpAccountId);mailer=transport.mailer;
   for(const a of assets){
    const slot=reminderSettings.reminderSlot(a,settings,calendarNow);

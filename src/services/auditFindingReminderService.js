@@ -106,7 +106,8 @@ async function runReminders(now = new Date()) {
     const pending = result.rows.filter(row => reminderSlot(row, settings, now) !== null);
     if (!pending.length) return;
     const delivery = await smtp.createMailer(settings.smtpAccountId); mailer = delivery.mailer;
-    for (const row of pending) for (const to of recipientsFor(row,settings)) {
+    const recipientEmails=await require('./reminderRecipientService').emailMap(client);
+    for (const row of pending) for (const to of recipientsFor(row,settings,recipientEmails)) {
       const params = [row.id, row.data.dueDate, to];
       const history = await client.query(`SELECT COUNT(*)::int AS count,
         COALESCE(BOOL_OR(reminder_date >= $4::date), false) AS sent_in_slot
@@ -128,8 +129,10 @@ function startScheduler() {
   const tick = async () => { if (running) return; running = true; try { await runReminders(); } catch { console.error('[audit-finding-reminder] Scheduler failed'); } finally { running = false; } };
   const timer = setInterval(tick, 60 * 60 * 1000); timer.unref(); void tick(); return timer;
 }
-function recipientsFor(row,settings){
+function recipientsFor(row,settings,recipientEmails=new Map()){
   if(row.kind!=='finding'||row.data?.status!=='Open')return [];
+  const ownerKey=String(row.data.owner||'').trim().toLowerCase();
+  if(recipientEmails.has(ownerKey)){const registered=recipientEmails.get(ownerKey);return registered?[registered]:[];}
   const direct=String(row.data.ownerEmail||'').trim();
   if(direct)return smtp.email(direct)?[direct.toLowerCase()]:[];
   const owner=String(row.data.owner||'').trim();

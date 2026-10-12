@@ -47,7 +47,7 @@ async function restoreBackup() {
   finally { button.disabled = !selectedRestoreFile; $('backupRestoreInput').disabled = false; $('backupCreateButton').disabled = false; }
 }
 function showBackupsView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('backupsView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'backups')); saveUiState('backups'); loadBackups().catch(error => { $('backupStatus').textContent = error.message; }); }
-const accountTabPanels = { profile: 'accountProfilePanel', permissions: 'permissionManagementPanel', matrix: 'accountAccessMatrixPanel', users: 'accountUsersPanel', audit: 'accountAuditPanel', smtp: 'accountSmtpPanel', storage: 'accountStoragePanel' };
+const accountTabPanels = { profile: 'accountProfilePanel', permissions: 'permissionManagementPanel', matrix: 'accountAccessMatrixPanel', users: 'accountUsersPanel', audit: 'accountAuditPanel', smtp: 'accountSmtpPanel', storage: 'accountStoragePanel', website: 'accountWebsitePanel' };
 let activeAccountTab = 'profile';
 function setAccountTab(tab = activeAccountTab) {
   const admin = currentUserRole === 'admin';

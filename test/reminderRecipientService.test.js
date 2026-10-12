@@ -2,6 +2,7 @@ const test=require('node:test');const assert=require('node:assert/strict');
 const service=require('../src/services/reminderRecipientService');const {pool}=require('../src/config/database');
 test('recipient register validates names and email addresses',()=>{
  assert.deepEqual(service.validate({owner:' SOC Manager ',email:' SOC@EXAMPLE.COM '}),{owner:'SOC Manager',email:'soc@example.com'});
+ assert.deepEqual(service.validate({owner:'CISO',email:''}),{owner:'CISO',email:''});
  for(const data of [{owner:'',email:'a@example.com'},{owner:'SOC',email:'invalid'},{owner:'x'.repeat(161),email:'a@example.com'}])assert.throws(()=>service.validate(data),{status:400});
 });
 test('register persists recipients and updates same name without duplicates',async t=>{
@@ -20,6 +21,7 @@ test('register persists recipients and updates same name without duplicates',asy
  await assert.rejects(service.remove('Security Team'),{status:404});
  assert.deepEqual(await service.list(),[{owner:'soc manager',email:'replacement@example.com'}]);
  t.mock.method(require('../src/services/auditService'),'record',async()=>{});
+ await service.registerOwners(['CISO','IT Governance','SOC Manager']);await service.registerOwners(['CISO']);assert.equal((await service.list()).filter(row=>row.owner==='CISO').length,1);assert.equal((await service.list()).find(row=>row.owner==='CISO').email,'');assert.equal((await service.list()).find(row=>row.owner==='soc manager').email,'replacement@example.com');
  const auth=require('../src/config/auth');
  const server=require('../src/app').listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
  const admin=auth.createSession({username:'recipient-test-admin',role:'admin'}),viewer=auth.createSession({username:'recipient-test-viewer',role:'viewer'});

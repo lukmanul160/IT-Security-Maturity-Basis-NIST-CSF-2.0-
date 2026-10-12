@@ -160,6 +160,7 @@ async function createDropdown(data) {
     [data.fieldName, normalizeText(data.optionValue), Number(data.sortOrder || 0)]
   );
 
+  if(data.fieldName==='owners')await require('./reminderRecipientService').registerOwners([normalizeText(data.optionValue)]);
   return result.rows[0];
 }
 
@@ -177,6 +178,7 @@ async function updateDropdown(id, data) {
     throw Object.assign(new Error('Dropdown option not found'), { status: 404 });
   }
 
+  if(data.fieldName==='owners')await require('./reminderRecipientService').registerOwners([normalizeText(data.optionValue)]);
   return result.rows[0];
 }
 

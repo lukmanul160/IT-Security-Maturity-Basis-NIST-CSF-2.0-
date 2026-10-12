@@ -133,3 +133,5 @@ test('finding recipients follow owner and only Open findings',()=>{
  for(const status of ['In progress','Closed'])assert.deepEqual(service.recipientsFor({...row,data:{...row.data,status}},settings),[]);
  assert.equal(service.eligible({...row,data:{...row.data,status:'In progress',dueDate:'2026-09-20'}},7,new Date(2026,8,16,12)),false);
 });
+
+test('registered PIC email takes priority over stale finding email',()=>{const row={kind:'finding',data:{status:'Open',owner:'CISO',ownerEmail:'old@example.com'}};assert.deepEqual(require('../src/services/auditFindingReminderService').recipientsFor(row,{},new Map([['ciso','current@example.com']])),['current@example.com']);assert.deepEqual(require('../src/services/auditFindingReminderService').recipientsFor(row,{},new Map([['ciso','']])),[]);});

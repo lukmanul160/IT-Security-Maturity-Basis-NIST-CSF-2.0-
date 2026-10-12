@@ -273,3 +273,7 @@ body.landing-page nav>.button{flex-shrink:0;padding:10px 16px;white-space:nowrap
 @media(max-width:700px){body.landing-page nav .brand{flex-shrink:1;white-space:normal}body.landing-page nav>.button span{display:none}}
 
 .recipient-register-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;padding:10px 0;border-bottom:1px solid var(--line,#dce5f2)}.recipient-register-row>span{flex:1;min-width:180px;overflow-wrap:anywhere}.recipient-register-row .button{min-height:34px;padding:7px 12px}
+
+.list-pagination{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-block:12px}
+
+.owner-smtp-link{display:block;width:fit-content;padding:5px 0;border:0;background:transparent;color:#3478ef;font:inherit;font-size:12px;text-align:left;text-decoration:underline;cursor:pointer}.owner-smtp-link:disabled{opacity:.6;cursor:default}.owner-smtp-dialog{box-sizing:border-box;width:min(660px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid var(--line,#dce5f2);border-radius:16px;padding:24px;background:var(--paper,#fff);color:var(--ink,#182338)}.owner-smtp-dialog::backdrop{background:#10203866}.owner-smtp-dialog label{display:grid;gap:7px;margin-block:12px}.owner-smtp-dialog input,.owner-smtp-dialog select{max-width:100%;box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--line,#dce5f2);border-radius:8px}.owner-smtp-dialog h3{overflow-wrap:anywhere}

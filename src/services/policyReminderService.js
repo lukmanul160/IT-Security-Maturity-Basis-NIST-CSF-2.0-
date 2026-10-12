@@ -104,10 +104,12 @@ async function runReminders(now = new Date()) {
     if (!settings.enabled) return;
     const delivery = await smtp.createMailer(settings.smtpAccountId);
     mailer = delivery.mailer;
+    const recipientEmails=await require('./reminderRecipientService').emailMap(client);
     const policies = await client.query('SELECT id, title, owner, review_cycle, last_review::text FROM policy_register');
     for (const policy of policies.rows) {
       const due = nextReview(policy);
-      const to = settings.owners.find(row => row.owner === policy.owner)?.email;
+      const ownerKey=String(policy.owner).trim().toLowerCase();
+      const to = recipientEmails.has(ownerKey)?recipientEmails.get(ownerKey):settings.owners.find(row => row.owner === policy.owner)?.email;
       if (!due || !to) continue;
       const slot = scheduleSlot(due, settings, now);
       if (!slot) continue;
