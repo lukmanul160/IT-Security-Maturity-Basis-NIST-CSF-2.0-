@@ -2,15 +2,17 @@ import * as THREE from 'three';
 import { OrbitControls } from './OrbitControls.js';
 import { installCameraNavigation } from './camera-navigation.js';
 import { applyStandingPose, applySeatedPose, applyWorkingPose } from './avatar-pose.js';
-import { chooseActivity, createPlaceReservations, createCrowdGrid, canTraverseOffice, toiletAccess } from './office-activities.js';
+import { chooseActivity, createPlaceReservations, createCrowdGrid, canTraverseOffice, toiletAccess, shuffledDeskSlots } from './office-activities.js';
+import { drawGameDisplay } from './game-display.js';
 const $ = id => document.getElementById(id);
 const colors = { admin: '#596dad', approver: '#ab825c', editor: '#5c9d91', viewer: '#a081a8', user: '#708a5c' };
 let renderer, controls, camera, scene, room, navigation, ambient, sun, desks = [], avatars = new Map(), users = [], filter = 'all', selected = null, paused = matchMedia('(prefers-reduced-motion: reduce)').matches, capacity = 0, lastTime = 0, simTime = 0;
 const host = $('scene');
-const places=createPlaceReservations(),crowd=createCrowdGrid();
+const places=createPlaceReservations(),crowd=createCrowdGrid(),workPlaces=createPlaceReservations();
 const lowPower=matchMedia('(pointer: coarse)').matches||(navigator.hardwareConcurrency||8)<=4;
 const frameInterval=1000/(lowPower?20:30);
-let pingBall;
+let pingBall,gameScreen;
+let gameDisplayFrame=-1,gameDisplayPlaying=null;
 let dirty=true,lastDraw=0,placeSlots={},peopleSignature='';
 const materials = new Map();
 function mat(color) { if (!materials.has(color)) materials.set(color, new THREE.MeshStandardMaterial({ color, roughness: .78 })); return materials.get(color); }
@@ -41,7 +43,7 @@ function updateLabel(sprite,text,force=false) {
 }
 function plant(parent,x,z) { box(parent,x,.3,z,.55,.6,.55,'#c6b59e'); box(parent,x,.95,z,.12,1,.12,'#6b7860'); for (let i=0;i<5;i++) ball(parent,x+Math.sin(i*2)*.25,1.4+(i%2)*.25,z+Math.cos(i*2)*.25,.38,'#749471'); }
 function chair(parent,x,z,color='#718379') { box(parent,x,.67,z,.83,.16,.8,color); box(parent,x,1.13,z+.35,.83,.95,.16,color); box(parent,x,.3,z,.13,.6,.13,'#425449'); box(parent,x,.08,z,.8,.08,.6,'#425449'); }
-function dispose(group) { group.traverse(o => { if(o.isSprite){o.material.map.dispose();o.material.dispose();}if(o.isInstancedMesh)o.dispose(); }); group.removeFromParent(); }
+function dispose(group) { group.traverse(o => { if(o.isSprite){o.material.map.dispose();o.material.dispose();}if(o.isInstancedMesh)o.dispose();if(o.userData.ownedDisplay){o.material.map.dispose();o.material.dispose();o.geometry.dispose();} }); group.removeFromParent(); }
 function batchFurniture(group) {
   const batches=new Map();
   for(const mesh of [...group.children]) {
@@ -93,7 +95,7 @@ function buildRoom(count) {
     box(room,x,1.05,-6,2.1,.15,1,'#65798c');chair(room,x,-5);
   }
   label(room,'PLAYSTATION / GAME LOUNGE',21,3.4,0,5);
-  box(room,21,1.9,1,4,2.1,.16,'#253448');box(room,21,1.9,1.1,3.7,1.8,.02,'#657bc2');
+  box(room,21,1.9,1,4,2.1,.16,'#253448');
   box(room,23.5,.8,1.5,.3,.8,.6,'#f1f3fa');box(room,23.5,.8,1.18,.09,.7,.02,'#253448');
   for(const x of [20,22])chair(room,x,4,'#7687a5');
   label(room,'PINGPONG',21,3.3,8,4);
@@ -101,6 +103,12 @@ function buildRoom(count) {
   for(const x of [20.1,21.9])for(const z of [7.7,10.3])box(room,x,.5,z,.12,1,.12,'#43566b');
   batchFurniture(room);
   pingBall=ball(room,21,1.5,9,.09,'#fff3d1');pingBall.visible=false;
+  const gameCanvas=document.createElement('canvas');gameCanvas.width=512;gameCanvas.height=256;
+  const gameTexture=new THREE.CanvasTexture(gameCanvas);gameTexture.colorSpace=THREE.SRGBColorSpace;
+  gameScreen=new THREE.Mesh(new THREE.PlaneGeometry(3.7,1.8),new THREE.MeshBasicMaterial({map:gameTexture,side:THREE.DoubleSide}));
+  gameScreen.position.set(21,1.9,1.1);gameScreen.userData.ownedDisplay=true;room.add(gameScreen);
+  gameDisplayFrame=-1;gameDisplayPlaying=null;updateGameDisplay(0);
+  workPlaces.clear();avatars.forEach(a=>{a.workDesk=null;});
   places.clear();
   placeSlots={
     brew:[{x:13,z:-7.8,key:'coffee-machine'}],
@@ -206,7 +214,7 @@ function setRoute(a,phase) {
   // Two travel lanes avoid head-on crossings; keep the open front strip clear of desks.
   const lane=z>a.pos.z?3.5:4.4;
   let exitZ=a.pos.z;
-  if(a.state==='online')exitZ=desks[a.index].z+2.3;
+  if(a.state==='online')exitZ=(desks[a.workDesk?.index??a.index]).z+2.3;
   else if(previous?.area==='cafe')exitZ+=1.0;
   else if(previous?.area==='lounge')exitZ-=1.0;
   a.points=[new THREE.Vector3(a.pos.x,0,exitZ),new THREE.Vector3(lane,0,exitZ),new THREE.Vector3(lane,0,z),new THREE.Vector3(x,0,z)];
@@ -226,11 +234,18 @@ function tickAvatar(a,dt,t) {
   a.cup.visible=a.snack.visible=a.book.visible=a.phone.visible=a.bottle.visible=a.controller.visible=a.paddle.visible=a.chatter.visible=false;a.group.rotation.z=0;a.group.position.y=0;
   if(online) {
     places.release(a.user.id);a.place=null;a.waiting=false;
-    applyWorkingPose(a,desks[a.index],t);
+    if(!a.workDesk){
+      const candidates=shuffledDeskSlots(desks,a.lastWorkDesk);
+      a.workDesk=workPlaces.reserve(a.user.id,'work',candidates.filter(slot=>crowd.canMove(a.user.id,slot)));
+      if(!a.workDesk)a.workDesk=workPlaces.reserve(a.user.id,'work',candidates);
+      a.lastWorkDesk=a.workDesk.key;
+    }
+    applyWorkingPose(a,desks[a.workDesk.index],t);
   } else {
     const phase=Math.floor((t+a.index*13)/32)+a.index;
-    if(a.state==='online') { const desk=desks[a.index]; a.pos.set(desk.x,0,desk.z+1.1); }
+    if(a.state==='online') { const desk=desks[a.workDesk?.index??a.index]; a.pos.set(desk.x,0,desk.z+1.1); }
     if(a.phase===-1||a.state==='online'||(a.phase!==phase&&!a.points[a.route]&&a.arrivedAt!==null&&t-a.arrivedAt>=12))setRoute(a,phase);
+    workPlaces.release(a.user.id);a.workDesk=null;
     const target=a.points[a.route]; let walking=false;
     if(target) {
       const delta=target.clone().sub(a.pos),distance=delta.length();
@@ -269,7 +284,16 @@ function tickAvatar(a,dt,t) {
   if(online)a.name.rotation.z=0;
   crowd.update(a.user.id,a.pos,a.group.visible);
   a.group.userData.pose=online?'working':a.waiting?'waiting':a.points[a.route]?'walking':a.activityDefinition?.pose;
-  a.group.userData.place=a.place?.key||`desk-${a.index}`;
+  a.group.userData.place=a.workDesk?.key||a.place?.key||`desk-${a.index}`;
+}
+function updateGameDisplay(time) {
+  if(!gameScreen)return;
+  const playing=[...avatars.values()].some(a=>!a.user.online&&!a.waiting&&a.activityDefinition?.pose==='game'&&!a.points[a.route]);
+  const frame=playing?Math.floor(time*8):0;
+  if(frame===gameDisplayFrame&&playing===gameDisplayPlaying)return;
+  drawGameDisplay(gameScreen.material.map.image,playing,time);
+  gameScreen.material.map.needsUpdate=true;gameScreen.userData.playing=playing;
+  gameDisplayFrame=frame;gameDisplayPlaying=playing;
 }
 function renderPeople() {
   const query=$('search').value.toLowerCase();
@@ -308,11 +332,11 @@ window.addEventListener('nist:theme-change',applyOfficeTheme);
 async function sync() {
   try {const response=await fetch('/api/public/virtual-office',{cache:'no-store'});if(!response.ok)throw new Error();const data=await response.json();
     users=data.users;const old=capacity;if(capacity!==data.capacity){buildRoom(data.capacity);if(!old)view();}
-    for(const [id,a] of avatars)if(!users.some(u=>u.id===id)){places.release(id);crowd.update(id,a.pos,false);dispose(a.group);avatars.delete(id);}
+    for(const [id,a] of avatars)if(!users.some(u=>u.id===id)){places.release(id);workPlaces.release(id);crowd.update(id,a.pos,false);dispose(a.group);avatars.delete(id);}
     users.forEach((u,i)=>{if(!avatars.has(u.id))avatars.set(u.id,makeAvatar(u,i));const a=avatars.get(u.id);a.user=u;a.index=i;updateLabel(a.name,u.name);
       if(u.online&&!a.popup){a.popup=label(a.group,'',0,3.5,0,3.8);a.popup.material.map.image.height=256;a.popup.scale.y=3.8/3;a.popup.userData.label.kind='activity';}
       if(a.popup){a.popup.visible=u.online;if(u.online)updateLabel(a.popup,u.activity);}
-      tickAvatar(a,0,simTime);});
+      tickAvatar(a,0,simTime);});updateGameDisplay(simTime);
     $('online').textContent=users.filter(u=>u.online).length;$('members').textContent=users.length;$('total').textContent=users.length;$('capacity').textContent=data.capacity;
     $('connection').textContent='● Live · '+new Date(data.updatedAt).toLocaleTimeString('id-ID');$('notice').style.display='none';renderPeople();
     dirty=true;
@@ -332,7 +356,7 @@ try {
     const dt=lastTime?Math.min((ms-lastTime)/1000,.12):0;lastTime=ms;lastDraw=ms;
     navigation.update(dt);controls.update();
     const animated=!paused&&avatars.size>0;
-    if(animated){simTime+=dt;crowd.clear();avatars.forEach(a=>crowd.update(a.user.id,a.pos,a.group.visible));avatars.forEach(a=>tickAvatar(a,dt,simTime));const players=[...avatars.values()].filter(a=>!a.user.online&&!a.waiting&&a.activityDefinition?.pose==='pingpong'&&!a.points[a.route]);pingBall.visible=players.length===2;if(pingBall.visible)pingBall.position.set(21+Math.sin(simTime*2)*.55,1.2+Math.abs(Math.cos(simTime*4))*.6,9+Math.sin(simTime*4)*1.9);}
+    if(animated){simTime+=dt;crowd.clear();avatars.forEach(a=>crowd.update(a.user.id,a.pos,a.group.visible));avatars.forEach(a=>tickAvatar(a,dt,simTime));updateGameDisplay(simTime);const players=[...avatars.values()].filter(a=>!a.user.online&&!a.waiting&&a.activityDefinition?.pose==='pingpong'&&!a.points[a.route]);pingBall.visible=players.length===2;if(pingBall.visible)pingBall.position.set(21+Math.sin(simTime*2)*.55,1.2+Math.abs(Math.cos(simTime*4))*.6,9+Math.sin(simTime*4)*1.9);}
     if(!dirty&&!animated&&!navigation.active)return;
     renderer.render(scene,camera);dirty=false;
   }
@@ -345,4 +369,4 @@ $('search').oninput=renderPeople;
 document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(o=>o.classList.toggle('selected',o===b));renderPeople();});
 document.querySelectorAll('[data-camera]').forEach(b=>b.onclick=()=>view(b.dataset.camera));$('reset').onclick=()=>view();
 function updatePause(){ $('pause').textContent=paused?'▶ Lanjutkan':'Ⅱ Jeda';$('pause').setAttribute('aria-pressed',String(paused));}updatePause();$('pause').onclick=()=>{paused=!paused;dirty=true;updatePause();};
-export { camera, controls, avatars, renderer, frameInterval };
+export { camera, controls, avatars, renderer, frameInterval, gameScreen, updateGameDisplay };

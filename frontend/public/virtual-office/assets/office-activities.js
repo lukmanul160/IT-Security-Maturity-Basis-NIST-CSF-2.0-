@@ -22,6 +22,16 @@ export function chooseActivity(seed, phase) {
   return activities[((phase * 7 + seed) % activities.length + activities.length) % activities.length];
 }
 
+export function shuffledDeskSlots(desks, lastKey, random = Math.random) {
+  const slots = desks.map((desk, index) => ({ x: desk.x, z: desk.z + 1, index, key: `desk-${index}` }));
+  for (let i = slots.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [slots[i], slots[j]] = [slots[j], slots[i]];
+  }
+  // Prefer a different desk when this user starts another active session.
+  return [...slots.filter(slot => slot.key !== lastKey), ...slots.filter(slot => slot.key === lastKey)];
+}
+
 export function createPlaceReservations() {
   const occupied = new Map(), assigned = new Map();
   return {

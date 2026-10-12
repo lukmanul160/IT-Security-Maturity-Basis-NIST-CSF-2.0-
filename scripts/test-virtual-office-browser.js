@@ -18,6 +18,27 @@ await evaluate("(async()=>{window.officeQa=await import('/virtual-office/assets/
 assert.equal(await evaluate("officeQa.avatars.get(1).name.userData.label.text"),'Maya Putri');
 assert.equal(await evaluate("officeQa.avatars.get(1).popup.userData.label.text"),'Viewing the monitoring dashboard.');
 assert.equal(await evaluate("Boolean(officeQa.avatars.get(4).popup?.visible)"),false);
+// Working users keep unique randomly allocated desks while their session stays active.
+const workSeats=await evaluate("[...officeQa.avatars.values()].filter(a=>a.user.online).map(a=>({key:a.workDesk.key,x:a.pos.x,z:a.pos.z,seatX:a.workDesk.x,seatZ:a.workDesk.z}))");
+assert.equal(new Set(workSeats.map(seat=>seat.key)).size,3);
+assert.ok(workSeats.every(seat=>seat.x===seat.seatX&&seat.z===seat.seatZ));
+// Exercise the actual TV texture with a seated player, animation, and standby.
+const display=await evaluate(`(()=>{const a=officeQa.avatars.get(4),saved={waiting:a.waiting,activityDefinition:a.activityDefinition,points:a.points,route:a.route};a.waiting=false;a.activityDefinition={pose:'game'};a.points=[];a.route=0;officeQa.updateGameDisplay(1);const canvas=officeQa.gameScreen.material.map.image,first=canvas.toDataURL();const playing=officeQa.gameScreen.userData.playing;officeQa.updateGameDisplay(2);const moved=first!==canvas.toDataURL();Object.assign(a,saved);officeQa.updateGameDisplay(0);return {playing,moved,standby:!officeQa.gameScreen.userData.playing};})()`);
+assert.deepEqual(display,{playing:true,moved:true,standby:true});
+// Enter native fullscreen with a browser user gesture, then verify canvas resizing and exit.
+await call('Runtime.evaluate',{expression:"document.getElementById('fullscreen').click()",userGesture:true});
+await waitFor("document.fullscreenElement===document.querySelector('.scene-panel')");
+await waitFor("document.querySelector('canvas').getBoundingClientRect().height>700");
+assert.equal(await evaluate("document.getElementById('fullscreen').getAttribute('aria-pressed')"),'true');
+await evaluate("document.getElementById('fullscreen').click()");
+await waitFor("!document.fullscreenElement && document.getElementById('fullscreen').getAttribute('aria-pressed')==='false'");
+// Exercise the viewport fallback used by browsers without the Fullscreen API.
+await evaluate("document.querySelector('.scene-panel').requestFullscreen=undefined;document.getElementById('fullscreen').click()");
+await waitFor("document.querySelector('.scene-panel').classList.contains('office-expanded')");
+assert.equal(await evaluate("document.body.classList.contains('office-fullscreen-open')"),true);
+await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));delete document.querySelector('.scene-panel').requestFullscreen");
+assert.equal(await evaluate("document.getElementById('fullscreen').getAttribute('aria-pressed')"),'false');
+assert.equal(await evaluate("document.body.classList.contains('office-fullscreen-open')"),false);
 // Verify posture on the actual rendered character, including recovery from the old sideways pose.
 const posture=await evaluate(`(()=>{const a=officeQa.avatars.get(1);a.group.rotation.set(.4,.7,Math.PI/2);poseQa.applyWorkingPose(a,{x:-13,z:-10},0);a.group.updateMatrixWorld(true);const upperUp=new threeQa.Vector3(0,1,0).applyQuaternion(a.upper.getWorldQuaternion(new threeQa.Quaternion()));const shinUp=new threeQa.Vector3(0,1,0).applyQuaternion(a.legs[0].shin.getWorldQuaternion(new threeQa.Quaternion()));return {upperUp:upperUp.y,shinUp:shinUp.y,root:[a.group.rotation.x,a.group.rotation.y,a.group.rotation.z],foot:a.legs[0].foot.getWorldPosition(new threeQa.Vector3()).y};})()`);
 assert.ok(posture.upperUp>.999&&posture.shinUp>.999);assert.deepEqual(posture.root,[0,0,0]);assert.ok(posture.foot>.05&&posture.foot<.2);

@@ -78,3 +78,18 @@ test('toilet access routes avoid walls in both directions', async () => {
   assert.equal(canTraverseOffice({x:8,z:8},{x:8,z:11}),false);
   assert.equal(canTraverseOffice({x:8,z:11},{x:12,z:11}),false);
 });
+
+test('active desks are shuffled, unique, stable while occupied, and prefer a different seat on return', async () => {
+  const { shuffledDeskSlots, createPlaceReservations } = await import(pathToFileURL(path.resolve(__dirname,'../frontend/public/virtual-office/assets/office-activities.js')));
+  const desks=Array.from({length:6},(_,i)=>({x:i*3,z:0}));
+  const shuffled=shuffledDeskSlots(desks,'desk-1',()=>0);
+  assert.equal(shuffled.length,6);assert.equal(new Set(shuffled.map(slot=>slot.key)).size,6);
+  assert.equal(shuffled.at(-1).key,'desk-1');assert.notEqual(shuffled[0].key,'desk-1');
+  assert.notDeepEqual(shuffled.map(slot=>slot.index),[0,1,2,3,4,5]);
+  const reservations=createPlaceReservations();
+  const seats=desks.map((_,i)=>reservations.reserve(i,'work',shuffled));
+  assert.equal(new Set(seats.map(slot=>slot.key)).size,6);
+  assert.equal(reservations.reserve(0,'work',shuffledDeskSlots(desks,null,()=>.9)).key,seats[0].key);
+  reservations.release(0);
+  assert.equal(reservations.reserve(6,'work',shuffled).key,seats[0].key);
+});
