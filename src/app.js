@@ -56,6 +56,24 @@ app.use((req, res, next) => {
 	return next();
 });
 app.use('/api/auth', authRoutes);
+// Public office exposes display names, roles and module labels, never session tokens.
+app.get('/api/public/virtual-office', async (req, res, next) => {
+	try { res.set('Cache-Control', 'no-store').json(await require('./services/virtualOfficeService').snapshot()); }
+	catch (error) { next(error); }
+});
+app.post('/api/office-presence', requireAuth, async (req, res, next) => {
+	try {
+		const key = req.body?.module;
+		const service = require('./services/virtualOfficeService');
+		if (typeof key !== 'string' || !Object.hasOwn(service.labels, key)) return res.status(400).json({ error: 'Invalid module' });
+		if (key !== 'backups' && !(await require('./services/permissionService').has(req.user.role, key, 'read'))) return res.status(403).json({ error: 'Forbidden' });
+		if (key === 'backups' && req.user.role !== 'admin') return res.sendStatus(403);
+		req.user.officeModule = key;
+		res.sendStatus(204);
+	} catch (error) { next(error); }
+});
+app.get(['/virtual-office', '/virtual-office/'], (req, res) => res.sendFile(path.join(publicRoot, 'virtual-office', 'index.html')));
+app.use('/virtual-office/assets', express.static(path.join(publicRoot, 'virtual-office', 'assets'), { index: false, fallthrough: false }));
 app.get('/brand-logo.jpeg', (req, res) => {
 	res.sendFile(path.join(publicRoot, 'brand-logo.jpeg'), error => {
 		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);

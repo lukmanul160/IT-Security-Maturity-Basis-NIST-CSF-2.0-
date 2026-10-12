@@ -5,6 +5,7 @@ RUN npm ci
 COPY frontend ./frontend
 COPY src/shared ./src/shared
 COPY scripts/prepare-vue-client.js ./scripts/prepare-vue-client.js
+COPY scripts/prepare-virtual-office.js ./scripts/prepare-virtual-office.js
 RUN npm run build && npm prune --omit=dev
 
 FROM node:24-trixie-slim AS runtime

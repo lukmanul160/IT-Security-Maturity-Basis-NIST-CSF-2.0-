@@ -1886,7 +1886,7 @@
   function mount() {
     const existing = document.querySelector('[data-language-select]');
     if (existing) {
-      const host = document.querySelector('.top-actions');
+      const host = document.querySelector('[data-language-slot]') || document.querySelector('.top-actions');
       if (host) { existing.parentElement.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font:12px system-ui;color:inherit'; host.prepend(existing.parentElement); }
       return;
     }
@@ -1894,8 +1894,8 @@
     label.className = 'language-switcher';
     label.setAttribute('data-no-translate', '');
     label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font:12px system-ui;color:inherit;';
-    label.innerHTML = '<span>Bahasa / Language</span><select data-language-select aria-label="Bahasa / Language" style="padding:7px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#1e293b"><option value="id">Indonesia</option><option value="en">English</option></select>';
-    const host = document.querySelector('.top-actions') || document.querySelector('header nav') || document.querySelector('.login-form-panel');
+    label.innerHTML = (document.querySelector('[data-language-compact]') ? '' : '<span>Bahasa / Language</span>') + '<select data-language-select aria-label="Bahasa / Language" style="padding:7px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#1e293b"><option value="id">Indonesia</option><option value="en">English</option></select>';
+    const host = document.querySelector('[data-language-slot]') || document.querySelector('.top-actions') || document.querySelector('header nav') || document.querySelector('.login-form-panel');
     if (host) host.prepend(label);
     else { label.style.cssText += 'position:fixed;right:16px;top:12px;z-index:1000;background:white;padding:8px;border-radius:8px;color:#1e293b'; document.body.append(label); }
     label.querySelector('select').value = language;

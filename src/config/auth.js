@@ -94,4 +94,12 @@ function endDatabaseRestore() {
 	restoring = false;
 }
 
-module.exports = { authenticate, createSession, getSession, destroySession, destroyUserSessions, parseCookies, sessionCookie, beginDatabaseRestore, endDatabaseRestore };
+function getOfficeSessions() {
+	const active = new Map();
+	for (const [token] of sessions) {
+		const session = getSession(token);
+		if (session) active.set(session.username, { module: session.officeModule || 'account', createdAt: session.createdAt });
+	}
+	return active;
+}
+module.exports = { authenticate, createSession, getSession, destroySession, destroyUserSessions, parseCookies, sessionCookie, beginDatabaseRestore, endDatabaseRestore, getOfficeSessions };

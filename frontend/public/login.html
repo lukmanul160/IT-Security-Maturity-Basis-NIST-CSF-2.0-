@@ -62,7 +62,6 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
 <link rel="stylesheet" href="/theme.css">
 </head>
 <body class="workspace-ui login-page">
-  <div class="login-theme-control"><button type="button" class="button button-quiet theme-toggle" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false"><svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13a8.5 8.5 0 0 1-9.5-9.5A8.5 8.5 0 1 0 20.5 13Z"/></svg><svg data-theme-icon="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span data-theme-label>Dark mode</span></button></div>
 <div id="governanceLoading" class="governance-loading" role="status" aria-live="polite" aria-label="Memuat Governance Assessment" hidden><div class="governance-loading-mark"><img src="/loading-logo.png?v=1" alt="" width="88" height="88" decoding="async" fetchpriority="high"><span class="governance-loading-ring" aria-hidden="true"></span></div><p>Memuat Governance Assessment<span class="governance-loading-dots" aria-hidden="true">...</span></p></div>
   <main class="login-layout">
     <section class="login-story" aria-label="NIST Basis workspace">
@@ -73,6 +72,7 @@ body.login-page{background:radial-gradient(ellipse at 10% 15%,#d6e7ff,transparen
       <span class="login-story-footer">NIST CSF &middot; Privacy Framework &middot; ISO 27001</span>
     </section>
     <section class="login-form-panel" aria-labelledby="loginTitle">
+      <div class="login-preferences"><span data-language-slot></span><button type="button" class="button button-quiet theme-toggle" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false"><svg data-theme-icon="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13a8.5 8.5 0 0 1-9.5-9.5A8.5 8.5 0 1 0 20.5 13Z"/></svg><svg data-theme-icon="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span data-theme-label>Dark mode</span></button></div>
       <a href="/" style="display:inline-block;margin-bottom:20px;color:#475569;font-size:13px">&larr; Kembali ke beranda</a>
       <h1 id="loginTitle">Welcome back</h1>
       <p>Masuk untuk melanjutkan assessment Anda.</p>

@@ -1,5 +1,6 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
+require('./prepare-virtual-office');
 
 const projectRoot = path.resolve(__dirname, '..');
 const workspaceSourceDirectory = path.join(projectRoot, 'frontend', 'client', 'src', 'workspace');
