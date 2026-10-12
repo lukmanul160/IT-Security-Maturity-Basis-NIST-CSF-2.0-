@@ -32,6 +32,7 @@ const moduleTransfer = (() => {
     'questionnaire-templates': { title: 'Questionnaire Templates', views: ['questionnaireTemplateView'], sections: [section('templates', 'Questionnaire templates', '/api/questionnaire-templates', 'id template_name description sections is_default')] },
     'tprm-register': { title: 'Third-Party Risk Register', views: ['tprmRegisterView'], sections: [section('register', 'Third-party risk register', '/api/tprm', 'id thirdParty questionnaireId serviceDependency riskLevel assessmentStatus relationshipStatus nextReview notes riskRegisterIds dueDiligenceAssessment')] },
     csf: { title: 'NIST CSF Assessment', views: ['assessmentView', 'csfView'], sections: [section('assessment', 'Maturity assessment', '/api/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('csf')] },
+    ikas: {title:'IKAS BSSN v1.2.1',views:['ikasView','ikasAssessmentView','ikasManageView'],sections:[section('controls','Kontrol dan rubrik IKAS','/api/ikas','id function category subcategory implementation references minimumEvidence notes applicability ikas',{control:true}),section('assessment','Assessment IKAS','/api/ikas/assessment','id score notes attachments',{assessment:true}),gapSection('ikas')]},
     privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('privacy')] },
     iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'year objective indicator baseline targetValue owner evaluationFrequency periodTargets notes'),gapSection('iso27001'),gapSection('iso27001-soa')] },
     'risk-acceptance': { title: 'Risk Acceptance', views: ['riskAcceptanceView'], sections: [section('register', 'Acceptance register', '/api/risk-acceptance', 'id requestorName assetName department riskDescription benefitJustification mitigationPlan businessOwnerDecision remediationDate cisDecision cisConditions')] },
@@ -61,6 +62,11 @@ const moduleTransfer = (() => {
       headers[item.key] = item.assessment
         ? { scores: 'Object: ID kontrol -> angka 0–5', policyScores: 'Object: ID kontrol -> angka 0–5', practiceScores: 'Object: ID kontrol -> angka 0–5', notes: 'Object: ID kontrol / policy-ID / practice-ID -> teks', attachments: 'Object: ID kontrol -> daftar referensi evidence' }
         : Object.fromEntries([...new Set([...item.columns, ...(item.key === 'certifications' ? ['personnelId'] : [])])].map(field => [field, label(field)]));
+    }
+    if(key==='ikas'){
+      delete data.assessment.policyScores;delete data.assessment.practiceScores;delete headers.assessment.policyScores;delete headers.assessment.practiceScores;data.assessment.respondent={};data.assessment.targetScores={};
+      headers.assessment.respondent='Object: D4–D18 mengikuti sheet Responden; D13 adalah tahun assessment';
+      headers.controls.ikas={subcategoryId:'1.1.1',subcategory:'Judul subkategori',scope:'Ruang lingkup',rubric:['Indeks 0','Indeks 1','Indeks 2','Indeks 3','Indeks 4','Indeks 5'],weight:'Bobot domain: 0.25, 0.30, 0.25, 0.20'};
     }
     return {
       format: 'nist-basis-module', version: 1, module: key,
@@ -118,7 +124,7 @@ const moduleTransfer = (() => {
   }
   function rows(item, value) {
     if (!item.assessment) return value || [];
-    const controlId = key => key.replace(/^(?:privacy-)?(?:policy|practice)-/, '');
+    const controlId = key => key.replace(/^(?:privacy-|ikas-)?(?:policy|practice)-/, '');
     const ids = [...new Set(['scores', 'policyScores', 'practiceScores', 'notes', 'attachments'].flatMap(field => Object.keys(value[field] || {}).map(controlId)))];
     const related = (field, id) => Object.fromEntries(Object.entries(value[field] || {}).filter(([key]) => controlId(key) === id));
     return ids.sort().map(id => ({ id, policyScore: value.policyScores?.[id], practiceScore: value.practiceScores?.[id], score: value.scores?.[id], notes: related('notes', id), attachments: related('attachments', id) }));
@@ -154,8 +160,8 @@ const moduleTransfer = (() => {
       }
       for (const item of modules[key].sections) {
         if(item.optional && payload.data[item.key]===undefined)continue;
-        if(item.gap){const permission=({csf:'assessment',privacy:'privacy-assessment'})[item.framework]||item.framework;if(!canPerform(permission,'update'))throw new Error('Izin Edit diperlukan untuk import gap.');const result=await request(item.url+'/import','POST',{gaps:payload.data[item.key]});completed+=result.imported;progress?.(completed);continue;}
-        if (item.assessment) { if(!canPerform(key==='csf' ? 'assessment' : 'privacy-assessment','update')) throw new Error('Izin Edit diperlukan untuk impor assessment.'); await request(item.url, 'PUT', payload.data[item.key]); completed++; progress?.(completed); continue; }
+        if(item.gap){const permission=({csf:'assessment',privacy:'privacy-assessment',ikas:'ikas-assessment'})[item.framework]||item.framework;if(!canPerform(permission,'update'))throw new Error('Izin Edit diperlukan untuk import gap.');const result=await request(item.url+'/import','POST',{gaps:payload.data[item.key]});completed+=result.imported;progress?.(completed);continue;}
+        if (item.assessment) { if(!canPerform(key==='csf' ? 'assessment' : key+'-assessment','update')) throw new Error('Izin Edit diperlukan untuk impor assessment.'); await request(item.url, 'PUT', payload.data[item.key]); completed++; progress?.(completed); continue; }
         const existing = await request(item.url);
         for (const original of payload.data[item.key]) {
           const row = { ...original };

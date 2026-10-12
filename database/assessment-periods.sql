@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS assessment_periods (
-  framework_id TEXT NOT NULL CHECK (framework_id IN ('csf','privacy','iso27001')),
+  framework_id TEXT NOT NULL CHECK (framework_id IN ('csf','privacy','iso27001','ikas')),
   assessment_year INTEGER NOT NULL CHECK (assessment_year BETWEEN 2000 AND 2100),
   legacy BOOLEAN NOT NULL DEFAULT FALSE,
   data JSONB,
@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS assessment_periods (
   CHECK ((legacy AND data IS NULL) OR (NOT legacy AND jsonb_typeof(data)='object'))
 );
 CREATE UNIQUE INDEX IF NOT EXISTS assessment_period_legacy_idx ON assessment_periods(framework_id) WHERE legacy;
+ALTER TABLE assessment_periods DROP CONSTRAINT IF EXISTS assessment_periods_framework_id_check;
+ALTER TABLE assessment_periods ADD CONSTRAINT assessment_periods_framework_id_check CHECK (framework_id IN ('csf','privacy','iso27001','ikas'));
 CREATE TABLE IF NOT EXISTS assessment_period_files (
   framework_id TEXT NOT NULL,
   assessment_year INTEGER NOT NULL,

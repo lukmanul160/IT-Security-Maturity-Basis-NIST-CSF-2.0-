@@ -8,7 +8,10 @@ function load(fetch = async () => { throw new Error('Unexpected request'); }, ca
   return context.api;
 }
 function payload(module, data) { return { format: 'nist-basis-module', version: 1, module, exportedAt: '2026-09-14', data }; }
-test('every requested module exposes a transfer definition', () => { assert.equal(Object.keys(load().modules).length, 10); });
+test('every requested module exposes a transfer definition', () => { const modules=load().modules;assert.equal(Object.keys(modules).length,11);assert.deepEqual(Array.from(modules.ikas.sections,row=>row.key),['controls','assessment','gaps']); });
+test('IKAS transfer template describes respondent fields and all six maturity rubrics',()=>{
+  const template=load().template('ikas');assert.equal(template.headers.controls.ikas.rubric.length,6);assert.ok(template.headers.assessment.respondent.includes('D13'));assert.deepEqual(Object.keys(template.data.assessment.respondent),[]);
+});
 
 test('assessment exports and reports include gap status, evidence and framework relationships',async()=>{
   const api=load(async url=>({ok:true,json:async()=>url.includes('assessment-gaps')?[{id:'11111111-1111-4111-8111-111111111111',framework:url.endsWith('privacy')?'privacy':'csf',controlCode:'DE.AE-02',description:'Kurang poin a',status:'Open',evidence:[]}]:{scores:{},notes:{}}}));

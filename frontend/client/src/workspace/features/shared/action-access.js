@@ -1,5 +1,7 @@
 // UI controls mirror server action permissions; ownership remains a separate check.
 const actionControlRules = [
+  ['ikas-assessment','delete','[data-ikas-reset]'],['ikas-assessment','update','[data-ikas-index],[data-ikas-note],[data-ikas-target],[data-ikas-upload],[data-ikas-select-file],[data-ikas-detach],[data-ikas-replace],#ikasRespondentForm input,#ikasRespondentForm select,#ikasRespondentForm button,[data-ikas-import-excel]'],
+  ['ikas','create','#ikasNewButton'],['ikas','update','[data-ikas-edit]'],['ikas','delete','[data-ikas-delete]'],
   ['assessment','delete','#csfTopResetButton'],['privacy-assessment','delete','#privacyResetButton'],['iso27001','delete','#iso27001ResetButton'],['risk-management','delete','#riskRegisterResetButton'],
   ['assessment','update','#assessmentView [data-delete-attachment],#csfView [data-delete-attachment],#assessmentView [data-attachment],#csfView [data-attachment],#assessmentView [data-replace-attachment],#csfView [data-replace-attachment]'],
   ['privacy-assessment','update','#privacyView [data-delete-attachment],#privacyAssessmentView [data-delete-attachment],#privacyView [data-attachment],#privacyAssessmentView [data-attachment],#privacyView [data-replace-attachment],#privacyAssessmentView [data-replace-attachment]'],
@@ -46,7 +48,7 @@ function applyActionControls() {
   for(const element of document.querySelectorAll('#policyRegisterFile,#policyRegisterUseExisting,#policyRegisterFileReplace')) controls.set(element,(controls.get(element) || false) || !canPerform('policy-register',$('policyRegisterId')?.value ? 'update' : 'create'));
   for(const toolbar of document.querySelectorAll('[data-module-transfer]')) {
     const module=toolbar.dataset.moduleTransfer;
-    const keys=module==='csf' ? ['assessment'] : module==='privacy' ? ['privacy-assessment'] : module==='personnel' ? ['personnel-certification'] : module==='iso27001' ? ['iso27001','iso27001-soa'] : [module];
+    const keys=module==='csf' ? ['assessment'] : module==='ikas'?['ikas-assessment']:module==='privacy' ? ['privacy-assessment'] : module==='personnel' ? ['personnel-certification'] : module==='iso27001' ? ['iso27001','iso27001-soa'] : [module];
     toolbar.querySelectorAll('[data-import],input[type="file"]').forEach(element=>controls.set(element,!keys.every(key=>canPerform(key,'create') || canPerform(key,'update'))));
     toolbar.querySelectorAll('[data-export],[data-report]').forEach(element=>controls.set(element,!keys.every(key=>canPerform(key,'read'))));
   }

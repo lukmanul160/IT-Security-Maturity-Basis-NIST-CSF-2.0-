@@ -17,6 +17,7 @@ const backupRoutes = require('./backupRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
+router.use(require('./ikasWorkbookRoutes'));
 router.use('/assessment-periods', require('./assessmentPeriodRoutes'));
 router.use(require('../middleware/assessmentYear').assessmentYear);
 router.use('/assessment-gaps', require('./assessmentGapRoutes'));

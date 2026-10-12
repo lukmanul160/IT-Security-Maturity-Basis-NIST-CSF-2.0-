@@ -174,6 +174,7 @@ function readPrivacyCore() {
 }
 
 async function initializeFrameworks() {
+  await ensureFramework({id:'ikas',name:'IKAS BSSN',version:'1.2.1',description:'Instrumen Penilaian Kematangan Keamanan Siber BSSN'});
   await ensureFramework({ id: 'csf', name: 'NIST Cybersecurity Framework', version: '2.0', description: 'NIST CSF 2.0 controls' });
   await ensureFramework({ id: 'privacy', name: 'NIST Privacy Framework', version: '1.0', description: 'NIST Privacy Framework controls' });
   await ensureFramework({ id: 'iso27001', name: 'ISO/IEC 27001:2022', version: '2022', description: 'ISO 27001 clauses 4-10 requirements and audit checklist' });

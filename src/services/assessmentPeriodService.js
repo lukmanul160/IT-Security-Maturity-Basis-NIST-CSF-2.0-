@@ -5,14 +5,14 @@ const { pool } = require('../config/database');
 const access = require('./evidenceAccessService');
 const gaps = require('./assessmentGapService');
 const fail = (message, status = 400) => Object.assign(new Error(message), { status });
-const permissions = { csf: ['assessment'], privacy: ['privacy-assessment'], iso27001: ['iso27001', 'iso27001-soa'] };
+const permissions = { csf: ['assessment'], privacy: ['privacy-assessment'], iso27001: ['iso27001', 'iso27001-soa'], ikas:['ikas-assessment'] };
 const controlFields = ['function','category','subcategory','implementation','references','minimumEvidence','notes','applicability'];
 const validId = value => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 let ready;
 function ensureStore() {
   if (!ready) ready = fs.readFile(path.join(__dirname, '../../database/assessment-periods.sql'), 'utf8')
-    .then(sql => pool.query(sql)).catch(error => { ready = null; throw error; });
+    .then(async sql => {await pool.query(sql);await require('./ikasService').initializePeriods(pool);}).catch(error => { ready = null; throw error; });
   return ready;
 }
 function validateYear(value) {
@@ -63,7 +63,9 @@ function prepareSnapshot(source, mode, year, actor) {
     const now = new Date().toISOString();
     for (const framework of Object.keys(data.gaps)) data.gaps[framework] = data.gaps[framework].map(row => ({...row,id:crypto.randomUUID(),createdBy:actor,updatedBy:actor,createdAt:now,updatedAt:now}));
     data.objectives = data.objectives.map((row, index) => ({...row,id:index + 1,year}));
+    if(data.assessment.respondent)data.assessment.respondent.D13=String(year);
   }
+  if(data.controls.ikas)data.assessment=require('../shared/ikasScoring').normalize(data.assessment);
   return data;
 }
 function references(data) {
@@ -132,6 +134,7 @@ async function mutate(framework, year, operation) {
     await client.query('BEGIN');
     const row = await period(framework,year,client,'FOR UPDATE');
     if (row.legacy) throw fail('Gunakan endpoint assessment awal untuk tahun ini.',409);
+    if(framework==='ikas')row.data.assessment=require('../shared/ikasScoring').normalize(row.data.assessment);
     const result = await operation(row.data,client);
     await persist(client,framework,year,row.data);
     await client.query('COMMIT'); return result;
@@ -184,6 +187,13 @@ async function controlMutation(data, client, descriptor, method, body, user) {
   }
   if (method === 'POST' && ['function','category','subcategory'].some(field => !value[field]?.trim())) throw fail('Function, category, dan subcategory wajib diisi.');
   if (!['Applicable','Not applicable'].includes(value.applicability)) throw fail('Applicability tidak valid.');
+  if(framework==='ikas' && !evidenceOnly){
+    if(body.ikas!==undefined)value.ikas=require('./ikasService').validateControlMetadata(body.ikas);
+    if(method==='POST'&&!value.ikas)throw fail('Rubrik indeks IKAS wajib diisi.');
+    const domain=require('./ikasService').seed.domains.find(row=>row.name===value.function);
+    if(!domain)throw fail('Pilih salah satu dari empat domain IKAS.');
+    value.ikas.weight=domain.weight;
+  }
   if (body.evidence !== undefined) value.evidence = await canonicalEvidence(body.evidence,previous?.evidence || [],user,client);
   if (evidenceOnly && body.evidence === undefined) throw fail('Evidence wajib diisi.');
   if (method === 'POST') rows.push(value); else rows[index] = value;
@@ -221,7 +231,7 @@ async function gapMutation(data, client, descriptor, method, body, user) {
 async function execute(owner, year, descriptor, method, body, user, query = {}) {
   if (method === 'GET') {
     const data = (await period(owner,year)).data;
-    if (descriptor.kind === 'assessment') return data.assessment;
+    if (descriptor.kind === 'assessment') return owner==='ikas'?require('../shared/ikasScoring').normalize(data.assessment):data.assessment;
     if (descriptor.kind === 'controls') return [...data.controls[descriptor.framework]].sort((a,b) => a.id.localeCompare(b.id,undefined,{numeric:true}));
     if (descriptor.kind === 'targets') return data.targets[descriptor.framework];
     if (descriptor.kind === 'gaps') return data.gaps[descriptor.framework];
@@ -230,8 +240,19 @@ async function execute(owner, year, descriptor, method, body, user, query = {}) 
   }
   return mutate(owner,year,async(data,client) => {
     if (descriptor.kind === 'assessment') {
-      if (descriptor.reset) { for (const files of Object.values(data.assessment.attachments || {})) await access.assertReferences([],files,user); data.assessment = emptyAssessment(); return null; }
-      return data.assessment = await validateAssessment(body,data.assessment,user);
+      if(owner==='ikas' && method!=='GET' && !descriptor.reset){
+        if(!object(body))throw fail('Data assessment tidak valid.');
+        for(const key of ['scores','policyScores','practiceScores','notes','attachments','targetScores'])if(body[key]!==undefined&&!object(body[key]))throw fail('Data assessment tidak valid.');
+        for(const key of ['scores','policyScores','practiceScores'])for(const value of Object.values(body?.[key]||{}))if(!Number.isInteger(value))throw fail('Indeks IKAS harus bilangan bulat antara 0 dan 5.');
+        if(body?.respondent!==undefined && (!object(body.respondent)||Object.values(body.respondent).some(value=>typeof value!=='string')))throw fail('Data responden IKAS tidak valid.');
+        if(body?.respondent?.D15?.trim()){
+          const target=Number(body.respondent.D15);if(!Number.isFinite(target)||target<0||target>5)throw fail('Target Nilai IKAS harus antara 0 dan 5.');
+        }
+      }
+      if (descriptor.reset) { for (const files of Object.values(data.assessment.attachments || {})) await access.assertReferences([],files,user); data.assessment = owner==='ikas'?require('../shared/ikasScoring').normalize():emptyAssessment(); return null; }
+      const value=owner==='ikas'?require('../shared/ikasScoring').normalize(body):body;
+      const validated=await validateAssessment(value,data.assessment,user);
+      return data.assessment=owner==='ikas'?require('../shared/ikasScoring').normalize(validated):validated;
     }
     if (descriptor.kind === 'controls') return controlMutation(data,client,descriptor,method,body,user);
     if (descriptor.kind === 'gaps') return gapMutation(data,client,descriptor,method,body,user);
@@ -273,4 +294,36 @@ async function detachFile(client, normalized) {
     await persist(client,row.framework_id,row.assessment_year,row.data);
   }
 }
-module.exports = {ensureStore,permissions,validateYear,list,period,create,remove,execute,prepareSnapshot,references,fileReferenceCount,detachFile};
+async function importIkas(year,payload,user){
+  await ensureStore();
+  return mutate('ikas',year,async data=>{
+    const permissions=require('./permissionService');
+    const previous=new Map(data.controls.ikas.map(row=>[row.id,row])),incoming=new Set(payload.controls.map(row=>row.id));
+    if(payload.controls.some(row=>previous.has(row.id)&&previous.get(row.id).function!==row.function&&!payload.domains.includes(previous.get(row.id).function)))throw fail('ID pertanyaan sudah digunakan oleh domain yang tidak dipilih.');
+    if(payload.controls.some(row=>!previous.has(row.id))&&!await permissions.has(user?.role,'ikas','create'))throw fail('Izin Add kontrol IKAS diperlukan untuk pertanyaan baru.',403);
+    if(data.controls.ikas.some(row=>payload.domains.includes(row.function)&&!incoming.has(row.id))&&!await permissions.has(user?.role,'ikas','delete'))throw fail('Izin Delete kontrol IKAS diperlukan untuk perubahan struktur domain.',403);
+    data.controls.ikas=[...data.controls.ikas.filter(row=>!payload.domains.includes(row.function)),...payload.controls.map(row=>({...row,notes:previous.get(row.id)?.notes||'',evidence:previous.get(row.id)?.evidence||[],minimumEvidence:previous.get(row.id)?.minimumEvidence||''}))];
+    data.controls.ikas.sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
+    const retained=new Set(data.controls.ikas.map(row=>row.id));
+    for(const row of previous.values())if(!retained.has(row.id)){
+      await access.assertReferences([],row.evidence||[],user);
+      await access.assertReferences([],data.assessment.attachments[row.id]||[],user);
+      for(const gap of data.gaps.ikas.filter(gap=>gap.controlCode===row.id))await access.assertReferences([],gap.evidence,user);
+      delete data.assessment.scores[row.id];delete data.assessment.notes[row.id];delete data.assessment.attachments[row.id];
+    }
+    data.gaps.ikas=data.gaps.ikas.filter(row=>retained.has(row.controlCode));
+    const scores={...data.assessment.scores},notes={...data.assessment.notes};
+    for(const row of payload.controls){delete scores[row.id];if(payload.scores[row.id]!==undefined)scores[row.id]=payload.scores[row.id];notes[row.id]=payload.notes[row.id]||'';}
+    const respondent=payload.respondent&&payload.domains.length===4?{...payload.respondent,D13:String(year)}:data.assessment.respondent;
+    if(payload.targetScore!==undefined){
+      for(const row of data.controls.ikas.filter(row=>payload.domains.includes(row.function)))data.assessment.targetScores[row.category]=payload.targetScore;
+    }
+    const categories=[...new Set(data.controls.ikas.map(row=>row.category))];
+    const targets=new Map(data.targets.ikas.map(row=>[row.category,row.targetScore]));
+    data.targets.ikas=categories.map(category=>({category,targetScore:data.assessment.targetScores[category]??targets.get(category)??3}));
+    data.assessment=require('../shared/ikasScoring').normalize(await validateAssessment({...data.assessment,scores,notes,respondent},data.assessment,user));
+    if(payload.template)data.ikasWorkbookTemplate=payload.template;
+    return {domains:payload.domains,questions:payload.controls.length};
+  });
+}
+module.exports = {ensureStore,permissions,validateYear,list,period,create,remove,execute,prepareSnapshot,references,fileReferenceCount,detachFile,importIkas};

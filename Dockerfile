@@ -22,7 +22,7 @@ COPY scripts ./scripts
 COPY database ./database
 COPY data/csf-data.json data/privacy-data.json data/iso-27001-data.json \
      data/iso-27001-soa-data.json data/personnel-certifications-seed.json \
-     data/risk-indicators.json ./data/
+     data/risk-indicators.json data/ikas-data.json data/ikas-template.xlsx ./data/
 RUN mkdir -p upload backup data/audit-pending && chown -R node:node /app
 USER node
 EXPOSE 8000

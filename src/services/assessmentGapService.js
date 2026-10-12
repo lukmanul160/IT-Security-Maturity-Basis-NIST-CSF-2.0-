@@ -3,7 +3,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const { pool } = require('../config/database');
 const access = require('./evidenceAccessService');
-const permissionKeys = { csf:'assessment', privacy:'privacy-assessment', iso27001:'iso27001', 'iso27001-soa':'iso27001-soa' };
+const permissionKeys = { csf:'assessment', privacy:'privacy-assessment', ikas:'ikas-assessment', iso27001:'iso27001', 'iso27001-soa':'iso27001-soa' };
 const fail = (message,status=400) => Object.assign(new Error(message),{status});
 let ready;
 function ensureStore() {

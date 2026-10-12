@@ -3,7 +3,7 @@ const assessmentPeriodStorage = 'nist-assessment-years';
 let assessmentYears;
 try { assessmentYears = JSON.parse(localStorage.getItem(assessmentPeriodStorage) || '{}'); } catch { assessmentYears = {}; }
 if (!assessmentYears || typeof assessmentYears !== 'object' || Array.isArray(assessmentYears)) assessmentYears = {};
-for (const key of ['csf','privacy','iso27001']) if (!Number.isInteger(assessmentYears[key])) assessmentYears[key] = 2026;
+for (const key of ['csf','privacy','iso27001','ikas']) if (!Number.isInteger(assessmentYears[key])) assessmentYears[key] = 2026;
 const assessmentNativeFetch = window.fetch.bind(window);
 const assessmentPeriodLists = new Map();
 const assessmentPendingWrites = new Set();
@@ -12,6 +12,7 @@ function assessmentGroupForUrl(input) {
   const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.origin);
   if (url.origin !== location.origin) return null;
   const path = url.pathname;
+  if (/^\/api\/(?:ikas(?:\/|$)|ikas-workbook(?:\/|$)|assessment-gaps\/ikas(?:\/|$)|frameworks\/ikas\/(?:controls|targets)(?:\/|$))/.test(path)) return 'ikas';
   if (/^\/api\/(?:assessment(?:\/|$)|csf(?:\/|$)|assessment-gaps\/csf(?:\/|$)|frameworks\/csf\/(?:controls|targets)(?:\/|$))/.test(path)) return 'csf';
   if (/^\/api\/(?:privacy(?:\/|$)|assessment-gaps\/privacy(?:\/|$)|frameworks\/privacy\/(?:controls|targets)(?:\/|$))/.test(path)) return 'privacy';
   if (/^\/api\/(?:frameworks\/iso27001(?:-soa)?\/(?:controls|targets|objectives|assessment)(?:\/|$)|assessment-gaps\/iso27001(?:-soa)?(?:\/|$))/.test(path)) return 'iso27001';

@@ -108,8 +108,8 @@ test('CSF and privacy canvas labels use the current language without changing sc
   const sandbox = {
     window: { devicePixelRatio: 1, NistI18n: i18n },
     $: () => canvas, document: { documentElement: { dataset: {} }, querySelectorAll: () => [] },
-    categorySummary: () => [], privacyRows: [{ category: 'Inventory and Mapping (ID.IM-P)' }],
-    privacyScoreFor: () => 2
+    categorySummary: () => [{category:'Organizational Context (GV.OC)',policy:2,practice:2}], csfTargetScoreFor: () => 3, privacyRows: [{ category: 'Inventory and Mapping (ID.IM-P)' }],
+    privacyScoreFor: () => 2, privacyTargetScoreFor: () => 3
   };
   vm.createContext(sandbox);
   for (const file of ['assessment/overview-and-csf.js', 'privacy/assessment.js']) {

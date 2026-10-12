@@ -7,23 +7,23 @@ function describe(path, method) {
   if (parts[0] === 'assessment') {
     framework='csf';kind='assessment';reset=parts[1]==='reset';permission='assessment';
     if(parts.length>(reset?2:1)||(parts[1]&&!reset))return null;
-  } else if(parts[0]==='privacy'&&parts[1]==='assessment') {
-    framework='privacy';kind='assessment';reset=parts[2]==='reset';permission='privacy-assessment';
+  } else if(['privacy','ikas'].includes(parts[0])&&parts[1]==='assessment') {
+    framework=parts[0];kind='assessment';reset=parts[2]==='reset';permission=framework+'-assessment';
     if(parts.length>(reset?3:2)||(parts[2]&&!reset))return null;
-  } else if(['csf','privacy'].includes(parts[0])) {
+  } else if(['csf','privacy','ikas'].includes(parts[0])) {
     framework=parts[0];kind='controls';code=parts[1];permission=framework;if(parts.length>2)return null;
-  } else if(parts[0]==='frameworks'&&['csf','privacy','iso27001','iso27001-soa'].includes(parts[1])) {
+  } else if(parts[0]==='frameworks'&&['csf','privacy','ikas','iso27001','iso27001-soa'].includes(parts[1])) {
     framework=parts[1];kind=parts[2];
     if(kind==='assessment'&&framework==='iso27001'&&parts[3]==='reset'&&parts.length===4){kind='iso-reset';reset=true;}
     else if(kind==='controls'){code=parts[3];evidenceOnly=parts[4]==='evidence';if(parts.length>5||(parts[4]&&!evidenceOnly))return null;}
     else if(kind==='targets'){category=parts[3];if(parts.length>4)return null;}
     else if(kind==='objectives'&&framework==='iso27001'){id=parts[3];if(parts.length>4)return null;}
     else return null;
-    permission=['iso27001','iso27001-soa'].includes(framework)?framework:kind==='targets'?service.permissions[framework][0]:'framework';
-  } else if(parts[0]==='assessment-gaps'&&['csf','privacy','iso27001','iso27001-soa'].includes(parts[1])) {
+    permission=framework==='ikas'?(kind==='targets'?'ikas-assessment':'ikas'):['iso27001','iso27001-soa'].includes(framework)?framework:kind==='targets'?service.permissions[framework][0]:'framework';
+  } else if(parts[0]==='assessment-gaps'&&['csf','privacy','ikas','iso27001','iso27001-soa'].includes(parts[1])) {
     framework=parts[1];kind='gaps';importing=parts[2]==='import';code=importing?undefined:parts[2];id=parts[3];
     if(parts.length>4||(importing&&id))return null;
-    permission=framework==='csf'?'assessment':framework==='privacy'?'privacy-assessment':framework;
+    permission=framework==='csf'?'assessment':['privacy','ikas'].includes(framework)?framework+'-assessment':framework;
   } else return null;
   let allowed;
   if(reset)allowed=['POST'];

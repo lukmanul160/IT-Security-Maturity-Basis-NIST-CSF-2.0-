@@ -1,6 +1,6 @@
 // Explicit findings are independent of maturity scores and free-form reasoning.
 const assessmentGapState = new Map();
-const gapPermissions = {csf:'assessment',privacy:'privacy-assessment',iso27001:'iso27001','iso27001-soa':'iso27001-soa'};
+const gapPermissions = {csf:'assessment',privacy:'privacy-assessment',ikas:'ikas-assessment',iso27001:'iso27001','iso27001-soa':'iso27001-soa'};
 let gapContext = null;
 let gapPage = 1;
 function gapRows(framework) { return assessmentGapState.get(framework)?.rows || []; }
@@ -47,7 +47,7 @@ function gapDialog() {
   return dialog;
 }
 function gapControlTitle(row) {
-  const controls=row.framework==='csf'?csfRows:row.framework==='privacy'?privacyRows:row.framework==='iso27001'?iso27001Rows:iso27001SoaRows;
+  const controls=row.framework==='ikas'?ikasRows:row.framework==='csf'?csfRows:row.framework==='privacy'?privacyRows:row.framework==='iso27001'?iso27001Rows:iso27001SoaRows;
   return controls.find(item=>item.id===row.controlCode)?.subcategory || row.controlCode;
 }
 function renderAssessmentGapTabs() {

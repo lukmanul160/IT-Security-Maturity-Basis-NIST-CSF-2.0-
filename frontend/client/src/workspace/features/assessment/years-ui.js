@@ -1,9 +1,9 @@
-const assessmentPeriodViews = {csf:['csfView','assessmentView','csfManageView'],privacy:['privacyView','privacyAssessmentView','privacyManageView'],iso27001:['iso27001View']};
+const assessmentPeriodViews = {csf:['csfView','assessmentView','csfManageView'],privacy:['privacyView','privacyAssessmentView','privacyManageView'],iso27001:['iso27001View'],ikas:['ikasView','ikasAssessmentView','ikasManageView']};
 function canCreateAssessmentYear(group) {
-  return (group === 'iso27001' ? ['iso27001','iso27001-soa'] : [group === 'csf' ? 'assessment' : 'privacy-assessment']).every(key => canPerform(key,'create'));
+  return (group === 'iso27001' ? ['iso27001','iso27001-soa'] : [group === 'csf' ? 'assessment' : group+'-assessment']).every(key => canPerform(key,'create'));
 }
 function canDeleteAssessmentYear(group) {
-  return (group === 'iso27001' ? ['iso27001','iso27001-soa'] : [group === 'csf' ? 'assessment' : 'privacy-assessment']).every(key => canPerform(key,'delete') && canPerform(key,'read'));
+  return (group === 'iso27001' ? ['iso27001','iso27001-soa'] : [group === 'csf' ? 'assessment' : group+'-assessment']).every(key => canPerform(key,'delete') && canPerform(key,'read'));
 }
 async function openDeleteAssessmentYearDialog(group) {
   if(document.querySelector('form[aria-busy="true"]')||document.querySelector('.upload-progress.is-indeterminate'))throw new Error('Selesaikan penyimpanan atau upload sebelum menghapus tahun.');
@@ -99,7 +99,8 @@ fetch('/api/auth/me',{cache:'no-store'}).then(response=>response.ok?response.jso
   else if(uiState.view==='privacy-assessment'&&(user.role==='admin'||user.permissions?.includes('privacy-assessment')))Promise.resolve(privacyDataReady).then(()=>showPrivacyAssessment(uiState.function));
   else if(uiState.view==='iso27001'||uiState.view==='iso27001-soa')document.querySelector('[data-view=iso27001]')?.click();
   for(const toolbar of document.querySelectorAll('[data-assessment-period]')) {
-    const keys=toolbar.dataset.assessmentPeriod==='iso27001'?['iso27001','iso27001-soa']:[toolbar.dataset.assessmentPeriod==='csf'?'assessment':'privacy-assessment'];
+    const group=toolbar.dataset.assessmentPeriod;
+    const keys=group==='iso27001'?['iso27001','iso27001-soa']:[group==='csf'?'assessment':group+'-assessment'];
     toolbar.querySelector('button').disabled=!(user.role==='admin'||keys.every(key=>user.actions?.[key]?.read&&user.actions?.[key]?.create));
     assessmentPeriodsFor(toolbar.dataset.assessmentPeriod).then(periods=>{toolbar.querySelector('[data-delete-assessment-year]').disabled=periods.length<=1||!(user.role==='admin'||keys.every(key=>user.actions?.[key]?.read&&user.actions?.[key]?.delete));}).catch(()=>{});
   }

@@ -6,7 +6,7 @@ router.use('/:framework',async(req,res,next)=>{
   if(!Object.hasOwn(service.permissions,framework))return res.status(404).json({error:'Framework assessment tidak tersedia.'});
   const action=req.method==='GET'?'read':req.method==='DELETE'?'delete':'create';
   if(action==='read'){
-    const keys=framework==='csf'?['assessment','csf']:framework==='privacy'?['privacy-assessment','privacy']:service.permissions[framework];
+    const keys=framework==='csf'?['assessment','csf']:['privacy','ikas'].includes(framework)?[framework+'-assessment',framework]:service.permissions[framework];
     const allowed=await Promise.all(keys.map(key=>permissions.has(req.user?.role,key,'read')));
     if(!allowed.some(Boolean))return res.status(403).json({error:'Akses assessment tidak diizinkan.'});
     return next();

@@ -7,6 +7,7 @@ const permissions = [
   ['threat-modelling', 'Threat Modelling'],
   ['framework', 'Choose framework'], ['csf', 'CSF 2.0'], ['privacy', 'Privacy Framework'], ['iso27001', 'ISO 27001:2022'], ['iso27001-soa', 'SOA (Statement of Applicability)'],
   ['assessment', 'CSF assessment'], ['privacy-assessment', 'Privacy assessment'],
+  ['ikas','IKAS BSSN'],['ikas-assessment','IKAS BSSN assessment'],
   ['risk-acceptance', 'Risk Acceptance'], ['audit-finding-tracker', 'Audit Finding Tracker'], ['risk-management', 'Risk Management'], ['policy-register', 'Policy Register'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'],
   ['files', 'Uploaded files'], ['account', 'Account Management']
 ];
@@ -50,6 +51,11 @@ for (const role of validRoles) defaults[role].push('knowledge-notes','monitoring
 for (const key of ['asset-register','server-racks','asset-modelling']) {
   pageActionMatrix[key] = pageActionMatrix['threat-modelling'];
   for (const role of validRoles) if (!defaults[role].includes(key)) defaults[role].push(key);
+}
+
+for(const key of ['ikas','ikas-assessment']){
+  pageActionMatrix[key]=pageActionMatrix[key==='ikas'?'csf':'assessment'];
+  for(const role of validRoles)if(!defaults[role].includes(key))defaults[role].push(key);
 }
 
 function normalizeAction(action) {

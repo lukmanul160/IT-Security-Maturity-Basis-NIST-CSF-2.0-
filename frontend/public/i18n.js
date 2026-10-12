@@ -2,6 +2,7 @@
 (function (global) {
   'use strict';
   const pairs = [
+    ['Kantor virtual', 'Virtual office'],
     ['Mode gelap','Dark mode'], ['Mode terang','Light mode'], ['Beralih ke mode gelap','Switch to dark mode'], ['Beralih ke mode terang','Switch to light mode'],
     ["Pantau assessment, risiko, aset, vendor, dan aktivitas aplikasi dalam satu tampilan.", "Monitor assessments, risks, assets, vendors, and application activity in one view."],
     ["Ringkasan operasional", "Operational overview"],
