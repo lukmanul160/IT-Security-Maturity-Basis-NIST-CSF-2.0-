@@ -50,6 +50,10 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
         if(url.pathname==='/api/auth/me'){const keys=['framework','csf','privacy','assessment','privacy-assessment','iso27001','iso27001-soa','monitoring-dashboard','files','account','risk-management','policy-register','risk-acceptance','personnel-certification','tprm','tprm-tiering','tprm-register','tprm-questionnaire','questionnaire-templates','audit-finding-tracker'];return response({username:'Assessment Browser Fixture',fullName:'Assessment Browser Fixture',role:'admin',permissions:keys,actions:Object.fromEntries(keys.map(key=>[key,{read:true,create:true,update:true,delete:true}]))});}
         if(parts[1]==='assessment-periods'){
           const group=parts[2];if(method==='GET')return response(fixture.periods[group]);
+          if(method==='DELETE'){
+            const year=Number(parts[3]);if(fixture.periods[group].length<=1)return response({error:'Assessment terakhir tidak dapat dihapus'},409);
+            delete fixture.data[group][year];fixture.periods[group]=fixture.periods[group].filter(row=>row.year!==year);save();return new Response(null,{status:204});
+          }
           const body=JSON.parse(options.body);if(fixture.data[group][body.year])return response({error:'Tahun sudah tersedia'},409);
           const data=structuredClone(fixture.data[group][body.sourceYear]);
           if(body.mode==='new'){data.assessment=empty();data.objectives=[];for(const key of Object.keys(data.controls)){data.controls[key]=data.controls[key].map(row=>({...row,notes:'',evidence:[]}));data.gaps[key]=[];}}
@@ -99,7 +103,18 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
       assert.equal(await evaluate("document.querySelector('.assessment-year-dialog').scrollWidth>document.querySelector('.assessment-year-dialog').clientWidth+1"),false,'dialog fits '+width);
       assert.equal(await evaluate('document.documentElement.scrollWidth>document.documentElement.clientWidth+1'),false,'page fits '+width);
     }
-    await evaluate("document.querySelector('[data-year-cancel]').click()");assert.deepEqual(errors,[]);
+    await evaluate("document.querySelector('[data-year-cancel]').click()");
+    for(const group of ['csf','privacy','iso27001']){
+      await evaluate(`document.querySelector('[data-view=${group}]').click()`);
+      await wait(`${toolbar(group)}?.querySelector('[data-delete-assessment-year]').disabled===false`);
+      await evaluate(`${toolbar(group)}.querySelector('[data-delete-assessment-year]').click()`);
+      await wait("!!document.querySelector('.assessment-year-dialog[open]')");
+      await evaluate("(()=>{const form=document.querySelector('.assessment-year-dialog form');form.elements.confirmation.value='2028';form.requestSubmit();})()");
+      await wait(`${toolbar(group)}?.querySelector('select').value==='2027' && !document.querySelector('.assessment-year-dialog[open]')`);
+      assert.equal(await evaluate(`${toolbar(group)}.querySelector('select option[value="2028"]')===null`),true);
+      assert.equal(await evaluate(`JSON.parse(sessionStorage.getItem('qa-assessment-years')).data.${group}[2026]!==undefined`),true);
+    }
+    assert.deepEqual(errors,[]);
     console.log('PASS: annual selectors, Duplicate/New for CSF/Privacy/ISO/SOA, autosave isolation, reload persistence, historical data, year-aware exports, desktop/tablet/mobile. Assessment writes use browser fixtures only.');
   } finally {
     if(token)auth.destroySession(token);ws?.close();chrome?.kill();

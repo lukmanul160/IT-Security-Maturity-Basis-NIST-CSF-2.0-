@@ -102,6 +102,30 @@ async function create(framework, input, user) {
     throw error;
   } finally { client.release(); }
 }
+async function remove(framework, year) {
+  validateFramework(framework); year = validateYear(year);
+  await ensureStore(); await gaps.ensureStore();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // Serialize removals for a framework so its final year cannot disappear.
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['assessment-period-delete:' + framework]);
+    const row = await period(framework, year, client, 'FOR UPDATE');
+    const count = Number((await client.query('SELECT COUNT(*) AS count FROM assessment_periods WHERE framework_id=$1', [framework])).rows[0].count);
+    if (count <= 1) throw fail('Assessment terakhir tidak dapat dihapus. Buat tahun lain terlebih dahulu.', 409);
+    if (row.legacy) {
+      const frameworks = framework === 'iso27001' ? ['iso27001','iso27001-soa'] : [framework];
+      await client.query('DELETE FROM assessment_gaps WHERE framework_id=ANY($1::text[])', [frameworks]);
+      await client.query('DELETE FROM framework_category_targets WHERE framework_id=ANY($1::text[])', [frameworks]);
+      await client.query('DELETE FROM controls WHERE framework_id=ANY($1::text[])', [frameworks]);
+      if (framework === 'iso27001') await client.query('DELETE FROM information_security_objectives WHERE objective_year=$1', [year]);
+      else await client.query('DELETE FROM assessment_state WHERE id=$1', [framework === 'csf' ? 'default' : 'privacy']);
+    }
+    await client.query('DELETE FROM assessment_periods WHERE framework_id=$1 AND assessment_year=$2', [framework, year]);
+    await client.query('COMMIT');
+  } catch (error) { await client.query('ROLLBACK'); throw error; }
+  finally { client.release(); }
+}
 async function mutate(framework, year, operation) {
   const client = await pool.connect();
   try {
@@ -249,4 +273,4 @@ async function detachFile(client, normalized) {
     await persist(client,row.framework_id,row.assessment_year,row.data);
   }
 }
-module.exports = {ensureStore,permissions,validateYear,list,period,create,execute,prepareSnapshot,references,fileReferenceCount,detachFile};
+module.exports = {ensureStore,permissions,validateYear,list,period,create,remove,execute,prepareSnapshot,references,fileReferenceCount,detachFile};

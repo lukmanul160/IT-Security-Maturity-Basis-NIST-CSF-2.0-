@@ -21,6 +21,14 @@ CREATE TABLE IF NOT EXISTS assessment_period_files (
 );
 CREATE INDEX IF NOT EXISTS assessment_period_files_path_idx ON assessment_period_files(path);
 -- Preserve the installation's existing assessments as 2026 without moving data.
+CREATE TABLE IF NOT EXISTS assessment_period_initializations (
+  framework_id TEXT PRIMARY KEY
+);
+WITH initialized AS (
+  INSERT INTO assessment_period_initializations(framework_id)
+  VALUES ('csf'),('privacy'),('iso27001')
+  ON CONFLICT DO NOTHING RETURNING framework_id
+)
 INSERT INTO assessment_periods(framework_id,assessment_year,legacy,creation_mode)
-VALUES ('csf',2026,TRUE,'legacy'),('privacy',2026,TRUE,'legacy'),('iso27001',2026,TRUE,'legacy')
+SELECT framework_id,2026,TRUE,'legacy' FROM initialized
 ON CONFLICT DO NOTHING;

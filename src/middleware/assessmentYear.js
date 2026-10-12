@@ -36,11 +36,16 @@ function describe(path, method) {
   return {framework,owner:framework==='iso27001-soa'?'iso27001':framework,kind,code,id,category,reset,evidenceOnly,import:importing,permission,action,allowed};
 }
 async function assessmentYear(req,res,next) {
-  if(req.query.assessmentYear===undefined)return next();
   const descriptor=describe(req.path,req.method);
+  if(req.query.assessmentYear===undefined){
+    if(!descriptor)return next();
+    await service.ensureStore();
+    const defaultPeriod=await service.period(descriptor.owner,2026);
+    if(defaultPeriod.legacy)return next();
+  }
   if(!descriptor)return next(fail('Endpoint ini tidak mendukung tahun assessment.',404));
   if(!descriptor.allowed.includes(req.method))return next(fail('Metode assessment tidak tersedia.',405));
-  const year=service.validateYear(req.query.assessmentYear);
+  const year=service.validateYear(req.query.assessmentYear ?? 2026);
   if(!await permissions.has(req.user?.role,descriptor.permission,descriptor.action))return res.status(403).json({error:'Akses assessment tidak diizinkan.'});
   if(descriptor.kind==='iso-reset'&&!await permissions.has(req.user?.role,'iso27001-soa','delete'))return res.status(403).json({error:'Izin Delete SOA diperlukan untuk reset ISO 27001/SOA.'});
   if(descriptor.kind==='objectives'&&((req.query.year!==undefined&&Number(req.query.year)!==year)||(['POST','PUT'].includes(req.method)&&Number(req.body?.year)!==year)))return next(fail('Tahun sasaran harus sesuai tahun assessment.'));

@@ -1,5 +1,9 @@
 # Assessment per tahun
 
+Tombol **Hapus tahun** menghapus assessment tahun terpilih setelah pengguna mengetik tahun sebagai konfirmasi. Memerlukan izin Read dan Delete (ISO memerlukan keduanya pada ISO dan SOA). Tahun lain serta file evidence tetap tersimpan; referensi tahun yang dihapus dilepaskan. ISO dan SOA dihapus bersama, termasuk sasaran tahun tersebut. Assessment terakhir tidak dapat dihapus: buat tahun lain dahulu agar struktur tetap tersedia sebagai sumber New/Duplicate. Tahun 2026 juga dapat dihapus dan dibuat ulang dari tahun lain; tahun yang dihapus tidak muncul kembali saat startup.
+
+API penghapusan: `DELETE /api/assessment-periods/:framework/:year`, sukses `204`, tahun tidak tersedia `404`, assessment terakhir `409`. API tanpa parameter tetap menunjuk 2026 dan mengembalikan `404` jika 2026 telah dihapus.
+
 NIST CSF, Privacy, dan ISO 27001/SOA memiliki pemilih **Tahun assessment** serta tombol **+ New / Duplicate**. Pilih tahun tujuan dan tahun sumber. Setelah dibuat, halaman berpindah ke tahun baru; tahun terpilih bertahan setelah reload. ISO 27001 dan SOA memakai satu periode bersama.
 
 - **New** menyalin struktur kontrol dari tahun sumber. Skor, catatan, gap, sasaran ISO, serta referensi evidence kosong; target maturity dimulai dari 3 dan applicability dari Applicable.

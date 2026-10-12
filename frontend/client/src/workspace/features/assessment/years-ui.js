@@ -2,6 +2,34 @@ const assessmentPeriodViews = {csf:['csfView','assessmentView','csfManageView'],
 function canCreateAssessmentYear(group) {
   return (group === 'iso27001' ? ['iso27001','iso27001-soa'] : [group === 'csf' ? 'assessment' : 'privacy-assessment']).every(key => canPerform(key,'create'));
 }
+function canDeleteAssessmentYear(group) {
+  return (group === 'iso27001' ? ['iso27001','iso27001-soa'] : [group === 'csf' ? 'assessment' : 'privacy-assessment']).every(key => canPerform(key,'delete') && canPerform(key,'read'));
+}
+async function openDeleteAssessmentYearDialog(group) {
+  if(document.querySelector('form[aria-busy="true"]')||document.querySelector('.upload-progress.is-indeterminate'))throw new Error('Selesaikan penyimpanan atau upload sebelum menghapus tahun.');
+  const periods=await assessmentPeriodsFor(group),year=assessmentYears[group];
+  if(periods.length<=1)throw new Error('Assessment terakhir tidak dapat dihapus. Buat tahun lain terlebih dahulu.');
+  const dialog=document.createElement('dialog');dialog.className='assessment-year-dialog';
+  dialog.innerHTML=`<form><h2>Hapus assessment ${year}?</h2><p>Seluruh hasil, kontrol, catatan, gap, dan referensi evidence untuk tahun ${year} akan dihapus permanen${group==='iso27001'?', termasuk SOA dan sasaran ISO':''}. Tahun lain dan file evidence tetap tersimpan.</p><label>Ketik ${year} untuk konfirmasi<input name="confirmation" required autocomplete="off" pattern="${year}"></label><p role="status" aria-live="polite"></p><div class="assessment-year-actions"><button type="submit" class="button button-quiet danger">Hapus assessment ${year}</button><button type="button" class="button button-quiet" data-cancel>Batal</button></div></form>`;
+  dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();
+  dialog.querySelector('form').onsubmit=async event=>{
+    event.preventDefault();const form=event.currentTarget,buttons=[...form.querySelectorAll('button')];
+    if(form.elements.confirmation.value!==String(year))return;
+    buttons.forEach(button=>button.disabled=true);form.setAttribute('aria-busy','true');
+    try {
+      await Promise.allSettled([...assessmentPendingWrites]);
+      if(assessmentWriteErrors.has(group))throw new Error('Penyimpanan gagal. Simpan kembali perubahan sebelum menghapus tahun.');
+      const response=await fetch(`/api/assessment-periods/${group}/${year}`,{method:'DELETE'});
+      if(!response.ok)throw new Error((await response.json().catch(()=>({}))).error||'Assessment gagal dihapus.');
+      assessmentPeriodLists.delete(group);
+      const remaining=await assessmentPeriodsFor(group);
+      assessmentYears[group]=remaining[0].year;
+      localStorage.setItem(assessmentPeriodStorage,JSON.stringify(assessmentYears));location.reload();
+    } catch(error){form.querySelector('[role=status]').textContent=error.message;buttons.forEach(button=>button.disabled=false);form.removeAttribute('aria-busy');}
+  };
+  dialog.addEventListener('cancel',event=>{if(dialog.querySelector('form').hasAttribute('aria-busy'))event.preventDefault();});
+  dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();
+}
 async function selectAssessmentYear(group,year,status) {
   if (document.querySelector('form[aria-busy="true"]') || document.querySelector('.upload-progress.is-indeterminate')) {
     status.textContent = 'Selesaikan penyimpanan atau upload sebelum mengganti tahun.'; return;
@@ -47,15 +75,18 @@ async function installAssessmentPeriods() {
     for (const id of views) {
       const view = $(id);if (!view || view.querySelector('[data-assessment-period]'))continue;
       const toolbar = document.createElement('div');toolbar.className = 'assessment-year-toolbar';toolbar.dataset.assessmentPeriod = group;
-      toolbar.innerHTML = '<label>Tahun assessment <select aria-label="Tahun assessment"></select></label><button type="button" class="button button-quiet">+ New / Duplicate</button><span role="status" aria-live="polite">Memuat tahun...</span>';
+      toolbar.innerHTML = '<label>Tahun assessment <select aria-label="Tahun assessment"></select></label><button type="button" class="button button-quiet">+ New / Duplicate</button><button type="button" class="button button-quiet danger" data-delete-assessment-year disabled>Hapus tahun</button><span role="status" aria-live="polite">Memuat tahun...</span>';
       view.prepend(toolbar);
       const select = toolbar.querySelector('select'), button = toolbar.querySelector('button'), status = toolbar.querySelector('[role=status]');
       button.onclick = () => void openAssessmentYearDialog(group).catch(error=>{status.textContent=error.message;});
-      select.onchange = () => {select.disabled=true;button.disabled=true;void selectAssessmentYear(group,select.value,status).finally(()=>{select.value=String(assessmentYears[group]);select.disabled=false;button.disabled=!canCreateAssessmentYear(group);});};
+      const deleteButton=toolbar.querySelector('[data-delete-assessment-year]');
+      deleteButton.onclick=()=>void openDeleteAssessmentYearDialog(group).catch(error=>{status.textContent=error.message;});
+      select.onchange = () => {select.disabled=true;button.disabled=true;deleteButton.disabled=true;void selectAssessmentYear(group,select.value,status).finally(()=>{select.value=String(assessmentYears[group]);select.disabled=false;button.disabled=!canCreateAssessmentYear(group);deleteButton.disabled=!canDeleteAssessmentYear(group);});};
       button.disabled = true;
       void assessmentPeriodsFor(group).then(periods => {
         select.replaceChildren(...periods.map(row => {const option=document.createElement('option');option.value=row.year;option.textContent=row.year;return option;}));
         select.value = assessmentYears[group];status.textContent = `Assessment ${assessmentYears[group]}`;button.disabled = !canCreateAssessmentYear(group);
+        deleteButton.disabled=periods.length<=1||!canDeleteAssessmentYear(group);
       }).catch(error => {status.textContent=error.message;select.disabled=true;});
     }
   }
@@ -70,5 +101,6 @@ fetch('/api/auth/me',{cache:'no-store'}).then(response=>response.ok?response.jso
   for(const toolbar of document.querySelectorAll('[data-assessment-period]')) {
     const keys=toolbar.dataset.assessmentPeriod==='iso27001'?['iso27001','iso27001-soa']:[toolbar.dataset.assessmentPeriod==='csf'?'assessment':'privacy-assessment'];
     toolbar.querySelector('button').disabled=!(user.role==='admin'||keys.every(key=>user.actions?.[key]?.read&&user.actions?.[key]?.create));
+    assessmentPeriodsFor(toolbar.dataset.assessmentPeriod).then(periods=>{toolbar.querySelector('[data-delete-assessment-year]').disabled=periods.length<=1||!(user.role==='admin'||keys.every(key=>user.actions?.[key]?.read&&user.actions?.[key]?.delete));}).catch(()=>{});
   }
 }).catch(()=>{});

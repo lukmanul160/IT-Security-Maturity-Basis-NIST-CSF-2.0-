@@ -97,6 +97,22 @@ test('yearly assessments copy all results, start empty, isolate mutations, and p
     assert.equal((await request('/assessment/reset?assessmentYear=2028','POST')).status,204);
     assert.equal((await request('/assessment?assessmentYear=2027')).body.notes.one,'2027 reasoning');
     assert.equal(await service.fileReferenceCount('test/evidence.pdf'),3);
+    assert.equal((await request('/assessment-periods/csf/2027','DELETE',undefined,editor)).status,403);
+    assert.equal((await request('/assessment-periods/csf/1999','DELETE')).status,400);
+    assert.equal((await request('/assessment-periods/csf/2099','DELETE')).status,404);
+    assert.equal((await request('/assessment-periods/csf/2028','DELETE')).status,204);
+    assert.equal((await request('/assessment?assessmentYear=2028')).status,404);
+    assert.equal((await request('/assessment?assessmentYear=2027')).body.notes.one,'2027 reasoning');
+    assert.equal((await request('/assessment-periods/csf/2026','DELETE')).status,204);
+    assert.equal((await request('/assessment')).status,404);
+    assert.equal((await request('/assessment-periods/csf/2027','DELETE')).status,409);
+    // Startup migration must never resurrect a deleted legacy year.
+    await scoped.query(await require('node:fs/promises').readFile(require('node:path').join(__dirname,'../database/assessment-periods.sql'),'utf8'));
+    assert.deepEqual((await request('/assessment-periods/csf')).body.map(row=>row.year),[2027]);
+    assert.equal((await request('/assessment-periods/csf','POST',{year:2026,sourceYear:2027,mode:'new'})).status,201);
+    assert.deepEqual((await request('/assessment')).body.notes,{});
+    assert.equal((await request('/assessment-periods/csf/2026','DELETE')).status,204);
+    assert.equal((await scoped.query('SELECT COUNT(*)::int AS count FROM evidence_files')).rows[0].count,1);
     const client=await scoped.connect();
     try {
       await client.query('BEGIN');await service.detachFile(client,'test/evidence.pdf');await client.query('ROLLBACK');
@@ -108,6 +124,13 @@ test('yearly assessments copy all results, start empty, isolate mutations, and p
     assert.deepEqual((await request('/frameworks/iso27001-soa/controls?assessmentYear=2027')).body[0].evidence,[]);
     assert.deepEqual((await request('/assessment-gaps/privacy?assessmentYear=2027')).body[0].evidence,[]);
     assert.equal((await request('/assessment?assessmentYear=2027')).body.notes.one,'2027 reasoning');
+    for(const framework of ['privacy','iso27001']) {
+      assert.equal((await request('/assessment-periods/'+framework+'/2027','DELETE')).status,204);
+      assert.equal((await request('/assessment-periods/'+framework+'/2027','DELETE')).status,404);
+      assert.deepEqual((await request('/assessment-periods/'+framework)).body.map(row=>row.year),[2028,2026]);
+    }
+    assert.equal((await request('/frameworks/iso27001-soa/controls?assessmentYear=2027')).status,404);
+    assert.equal((await request('/frameworks/iso27001-soa/controls?assessmentYear=2026')).body[0].notes,'Original note');
   } finally {
     tokens.forEach(token=>auth.destroySession(token));
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
