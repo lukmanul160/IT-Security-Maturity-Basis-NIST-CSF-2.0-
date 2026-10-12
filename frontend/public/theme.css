@@ -271,3 +271,5 @@ body.landing-page nav>.button{flex-shrink:0;padding:10px 16px;white-space:nowrap
 
 @media(min-width:701px) and (max-width:1000px){body.landing-page nav .nav-links{min-width:0;overflow-x:auto;scrollbar-width:none}body.landing-page nav .nav-links a{flex-shrink:0}body.landing-page nav .nav-links::-webkit-scrollbar{display:none}}
 @media(max-width:700px){body.landing-page nav .brand{flex-shrink:1;white-space:normal}body.landing-page nav>.button span{display:none}}
+
+.recipient-register-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;padding:10px 0;border-bottom:1px solid var(--line,#dce5f2)}.recipient-register-row>span{flex:1;min-width:180px;overflow-wrap:anywhere}.recipient-register-row .button{min-height:34px;padding:7px 12px}
