@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from './OrbitControls.js';
 import { installCameraNavigation } from './camera-navigation.js';
 import { applyStandingPose, applySeatedPose, applyWorkingPose } from './avatar-pose.js';
-import { chooseActivity, createPlaceReservations, createCrowdGrid } from './office-activities.js';
+import { chooseActivity, createPlaceReservations, createCrowdGrid, canTraverseOffice, toiletAccess } from './office-activities.js';
 const $ = id => document.getElementById(id);
 const colors = { admin: '#596dad', approver: '#ab825c', editor: '#5c9d91', viewer: '#a081a8', user: '#708a5c' };
 let renderer, controls, camera, scene, room, navigation, ambient, sun, desks = [], avatars = new Map(), users = [], filter = 'all', selected = null, paused = matchMedia('(prefers-reduced-motion: reduce)').matches, capacity = 0, lastTime = 0, simTime = 0;
@@ -10,6 +10,7 @@ const host = $('scene');
 const places=createPlaceReservations(),crowd=createCrowdGrid();
 const lowPower=matchMedia('(pointer: coarse)').matches||(navigator.hardwareConcurrency||8)<=4;
 const frameInterval=1000/(lowPower?20:30);
+let pingBall;
 let dirty=true,lastDraw=0,placeSlots={},peopleSignature='';
 const materials = new Map();
 function mat(color) { if (!materials.has(color)) materials.set(color, new THREE.MeshStandardMaterial({ color, roughness: .78 })); return materials.get(color); }
@@ -59,8 +60,8 @@ function waitingPosition(index,front=camera.userData.front||13) {return {x:-13.4
 function buildRoom(count) {
   if (room) dispose(room); room = new THREE.Group(); scene.add(room); desks=[];
   const rows = Math.ceil(count/6), depth = Math.max(26,rows*3.6+8+Math.max(0,Math.ceil(count/18)-5)*1.15), front=depth/2;
-  box(room,0,-.3,0,34,.6,depth,'#c2cbbd'); box(room,0,.01,0,33.6,.06,depth-.4,'#e6e3d8');
-  box(room,0,1.8,-front,34,3.6,.25,'#e1e9df'); box(room,-17,1.8,0,.25,3.6,depth,'#e1e9df');
+  box(room,5,-.3,0,44,.6,depth,'#c2cbbd'); box(room,5,.01,0,43.6,.06,depth-.4,'#e6e3d8');
+  box(room,5,1.8,-front,44,3.6,.25,'#e1e9df'); box(room,-17,1.8,0,.25,3.6,depth,'#e1e9df');
   for(let x=-14;x<15;x+=5) { box(room,x,2.05,-front+.15,3.9,2,.12,'#b9d6d1'); box(room,x,2.05,-front+.24,.09,2,.12,'#f7faf4'); }
   box(room,10,.055,-6,10,.05,11,'#d9e1d1'); box(room,10,.06,4.7,10,.06,8,'#d9dedf'); box(room,10,.06,10.8,10,.06,4,'#e9ddd0');
   for(let i=0;i<count;i++) {
@@ -84,9 +85,28 @@ function buildRoom(count) {
   box(room,10,1,10.6,.13,2,3,'#d1c1ae');label(room,'TOILET',10,3.1,10,3);
   for(const [x,z] of [[-15,-front+1],[15,-front+1],[15,1],[15,7],[-15,front-1],[5,front-1]]) plant(room,x,z);
   label(room,'THE COMMONS',-5,.5,front-1,6);
+  box(room,21,.07,0,10,.06,23,'#d3dce4');
+  label(room,'COMMAND CENTER',21,3.5,-10,5);
+  for(const x of [18.5,21,23.5]) {
+    box(room,x,2.35,-8,2.2,1.4,.15,'#263c4c');box(room,x,2.35,-7.9,2,1.2,.02,'#71b6ba');
+    for(let i=0;i<4;i++)box(room,x-.7+i*.45,2.15,-7.87,.22,.25+i*.14,.02,'#d3edba');
+    box(room,x,1.05,-6,2.1,.15,1,'#65798c');chair(room,x,-5);
+  }
+  label(room,'PLAYSTATION / GAME LOUNGE',21,3.4,0,5);
+  box(room,21,1.9,1,4,2.1,.16,'#253448');box(room,21,1.9,1.1,3.7,1.8,.02,'#657bc2');
+  box(room,23.5,.8,1.5,.3,.8,.6,'#f1f3fa');box(room,23.5,.8,1.18,.09,.7,.02,'#253448');
+  for(const x of [20,22])chair(room,x,4,'#7687a5');
+  label(room,'PINGPONG',21,3.3,8,4);
+  box(room,21,1,9,2.4,.15,3.6,'#347e99');box(room,21,1.09,9,.04,.02,3.6,'#f1f5e9');box(room,21,1.28,9,2.5,.4,.04,'#d4ded9');
+  for(const x of [20.1,21.9])for(const z of [7.7,10.3])box(room,x,.5,z,.12,1,.12,'#43566b');
   batchFurniture(room);
+  pingBall=ball(room,21,1.5,9,.09,'#fff3d1');pingBall.visible=false;
   places.clear();
   placeSlots={
+    brew:[{x:13,z:-7.8,key:'coffee-machine'}],
+    gaming:[20,22].map((x,i)=>({x,z:4,key:`gaming-${i}`})),
+    monitoring:[18.5,21,23.5].map((x,i)=>({x,z:-5,key:`monitoring-${i}`})),
+    pingpong:[6.5,11.5].map((z,i)=>({x:21,z,key:`pingpong-${i}`})),
     cafe:[{x:9,z:-4},{x:11,z:-4},{x:9,z:0},{x:11,z:0}].map((p,i)=>({...p,key:`cafe-${i}`})),
     lounge:[7.4,8.6,11.4,12.6].map((x,i)=>({x,z:3.65,key:`lounge-${i}`})),
     toilet:[8,12].map((x,i)=>({x,z:11,key:`toilet-${i}`})),
@@ -154,15 +174,25 @@ function makeAvatar(user,index) {
   const book=new THREE.Group();group.add(book);book.position.set(0,1.15,-.37);box(book,-.115,0,0,.22,.045,.29,'#eee6c9');box(book,.115,0,0,.22,.045,.29,'#eee6c9');box(book,0,-.03,0,.48,.035,.32,'#5e7f97');book.visible=false;
   const phone=new THREE.Group();group.add(phone);phone.position.set(.33,1.32,-.4);box(phone,0,0,0,.15,.25,.04,'#34494b');box(phone,0,0,-.025,.12,.2,.01,'#9cc1c7');phone.visible=false;
   const bottle=new THREE.Group();group.add(bottle);bottle.position.set(.4,1.25,-.3);box(bottle,0,0,0,.13,.33,.13,'#92bab3');box(bottle,0,.19,0,.09,.05,.09,'#e2ece4');bottle.visible=false;
+  const controller=box(group,0,1.15,-.42,.42,.12,.2,'#eef1f7');controller.visible=false;
+  const paddle=ball(arms[1].elbow,0,-.45,0,.16,'#c86465');paddle.scale.z=.25;paddle.visible=false;
+  const chatter=label(group,'',0,3,0,2.7);chatter.visible=false;
   group.traverse(object=>{if(object.isMesh)object.castShadow=false;});
   const shadow=new THREE.Mesh(shadowGeometry,shadowMaterial);shadow.rotation.x=-Math.PI/2;shadow.position.y=.065;shadow.scale.set(.55,.4,1);group.add(shadow);
   const name=label(group,user.name,0,2.4,0,2,colors[user.role]);
-  const spawn=waitingPosition(index);
-  return {group,upper,body,arms,legs,eyes,skirtMesh,cup,snack,book,phone,bottle,name,index,user,seed,state:'',pos:new THREE.Vector3(spawn.x,0,spawn.z),points:[],route:0,phase:-1,waiting:false};
+  let spawn=waitingPosition(index);
+  for(let offset=0;offset<capacity+18;offset++) {
+    const candidate=waitingPosition((index+offset)%(capacity+18));
+    if(crowd.canMove(user.id,candidate)){spawn=candidate;break;}
+  }
+  crowd.update(user.id,spawn);
+  return {group,upper,body,arms,legs,eyes,skirtMesh,cup,snack,book,phone,bottle,controller,paddle,chatter,name,index,user,seed,state:'',pos:new THREE.Vector3(spawn.x,0,spawn.z),points:[],route:0,phase:-1,waiting:false};
 }
 function activity(a) { return a.user.online ? a.user.activity : `${a.waiting?'Menunggu tempat kosong':a.activityDefinition?.name||'Keliling kantor'} · simulasi`; }
 function setRoute(a,phase) {
-  a.phase=phase;a.activityDefinition=chooseActivity(a.seed,phase);
+  a.arrivedAt=null;a.phase=phase;a.activityDefinition=chooseActivity(a.seed,phase);
+  const pingPlayers=[...avatars.values()].filter(other=>other!==a&&!other.user.online&&other.place?.area==='pingpong');
+  if(pingPlayers.length===1)a.activityDefinition={name:'Main pingpong',area:'pingpong',pose:'pingpong'};
   const area=a.activityDefinition.area,previous=a.place;
   let candidates=placeSlots[area];
   if(a.activityDefinition.pose==='walk'){
@@ -174,49 +204,65 @@ function setRoute(a,phase) {
   const {x,z}=a.place;
   if(previous?.key===a.place.key&&a.pos.distanceTo(new THREE.Vector3(x,0,z))<.15){a.points=[];a.route=0;return;}
   // Two travel lanes avoid head-on crossings; keep the open front strip clear of desks.
-  const lane=z>a.pos.z?5.15:6.15;
+  const lane=z>a.pos.z?3.5:4.4;
   let exitZ=a.pos.z;
   if(a.state==='online')exitZ=desks[a.index].z+2.3;
   else if(previous?.area==='cafe')exitZ+=1.0;
   else if(previous?.area==='lounge')exitZ-=1.0;
-  a.points=[new THREE.Vector3(a.pos.x,0,exitZ),new THREE.Vector3(lane,0,exitZ),new THREE.Vector3(lane,0,z),new THREE.Vector3(x,0,z)];a.route=0;
+  a.points=[new THREE.Vector3(a.pos.x,0,exitZ),new THREE.Vector3(lane,0,exitZ),new THREE.Vector3(lane,0,z),new THREE.Vector3(x,0,z)];
+  const entry=a.place.area==='toilet'?toiletAccess(x):null;
+  if(entry)a.points=[new THREE.Vector3(a.pos.x,0,exitZ),new THREE.Vector3(lane,0,exitZ),new THREE.Vector3(lane,0,8),...entry.map(p=>new THREE.Vector3(p.x,0,p.z))];
+  if(a.pos.z>9.45&&a.pos.x>6&&a.pos.x<14) {
+    a.points=[...toiletAccess(a.pos.x).reverse().map(p=>new THREE.Vector3(p.x,0,p.z)),new THREE.Vector3(lane,0,8),...(entry?entry.map(p=>new THREE.Vector3(p.x,0,p.z)):[new THREE.Vector3(lane,0,z),new THREE.Vector3(x,0,z)])];
+  }
+  const wing=a.place.x>17;
+  if(wing&&!(a.pos.z>9.45&&a.pos.x>6&&a.pos.x<14))a.points=[new THREE.Vector3(a.pos.x,0,exitZ),new THREE.Vector3(lane,0,exitZ),new THREE.Vector3(lane,0,7),new THREE.Vector3(17.2,0,7),new THREE.Vector3(17.2,0,z),new THREE.Vector3(x,0,z)];
+  if(a.pos.x>17)a.points=[new THREE.Vector3(17.2,0,a.pos.z),new THREE.Vector3(17.2,0,7),...(wing?[new THREE.Vector3(17.2,0,z),new THREE.Vector3(x,0,z)]:[new THREE.Vector3(lane,0,7),...(entry?entry.map(p=>new THREE.Vector3(p.x,0,p.z)):[new THREE.Vector3(lane,0,z),new THREE.Vector3(x,0,z)])])];
+  if(wing&&a.pos.z>9.45&&a.pos.x>6&&a.pos.x<14)a.points=[...toiletAccess(a.pos.x).reverse().map(p=>new THREE.Vector3(p.x,0,p.z)),new THREE.Vector3(17.2,0,8),new THREE.Vector3(17.2,0,z),new THREE.Vector3(x,0,z)];
+  a.route=0;
 }
 function tickAvatar(a,dt,t) {
   const online=a.user.online;
-  a.cup.visible=a.snack.visible=a.book.visible=a.phone.visible=a.bottle.visible=false;a.group.rotation.z=0;a.group.position.y=0;
+  a.cup.visible=a.snack.visible=a.book.visible=a.phone.visible=a.bottle.visible=a.controller.visible=a.paddle.visible=a.chatter.visible=false;a.group.rotation.z=0;a.group.position.y=0;
   if(online) {
     places.release(a.user.id);a.place=null;a.waiting=false;
     applyWorkingPose(a,desks[a.index],t);
   } else {
     const phase=Math.floor((t+a.index*13)/32)+a.index;
     if(a.state==='online') { const desk=desks[a.index]; a.pos.set(desk.x,0,desk.z+1.1); }
-    if(a.phase!==phase || a.state==='online')setRoute(a,phase);
+    if(a.phase===-1||a.state==='online'||(a.phase!==phase&&!a.points[a.route]&&a.arrivedAt!==null&&t-a.arrivedAt>=12))setRoute(a,phase);
     const target=a.points[a.route]; let walking=false;
     if(target) {
       const delta=target.clone().sub(a.pos),distance=delta.length();
       if(distance<.12){a.route++;}else {
         walking=true;delta.normalize();const next=a.pos.clone().addScaledVector(delta,Math.min(distance,dt*1.7));
-        if(crowd.canMove(a.user.id,next)){a.pos.copy(next);a.blockedTime=0;}
+        if(canTraverseOffice(a.pos,next)&&crowd.canMove(a.user.id,next)){a.pos.copy(next);a.blockedTime=0;}
         else {
           a.blockedTime=(a.blockedTime||0)+dt;
-          if(a.blockedTime>.8){const side=a.pos.clone().add(new THREE.Vector3(delta.z,0,-delta.x).multiplyScalar(dt*1.2));if(crowd.canMove(a.user.id,side))a.pos.copy(side);}
+          if(a.blockedTime>.8){const side=a.pos.clone().add(new THREE.Vector3(delta.z,0,-delta.x).multiplyScalar(dt*1.2));if(canTraverseOffice(a.pos,side)&&crowd.canMove(a.user.id,side))a.pos.copy(side);}
         }
         a.group.rotation.y=Math.atan2(-delta.x,-delta.z);
       }
     }
     applyStandingPose(a,walking?Math.sin(t*7)*.45:0);
     a.arms.forEach((arm,i)=>{arm.rotation.x=walking?Math.sin(t*7+i*Math.PI)*.35:0;});
-    if(!walking) {
+    if(!a.points[a.route]) {
+      if(a.arrivedAt===null)a.arrivedAt=t;
       const pose=a.waiting?'wait':a.activityDefinition?.pose;
-      if(a.place?.area==='cafe'||a.place?.area==='lounge')applySeatedPose(a);
+      if(a.place?.area==='cafe'||a.place?.area==='lounge'||a.place?.area==='gaming'||a.place?.area==='monitoring')applySeatedPose(a);
       if(pose==='coffee'||pose==='eat'||pose==='water'){a.cup.visible=pose==='coffee';a.snack.visible=pose==='eat';a.bottle.visible=pose==='water';a.arms[1].rotation.x=1.2+Math.sin(t*2)*.13;a.arms[1].elbow.rotation.x=1.2;}
+      if(pose==='brew'){a.cup.visible=true;a.arms[1].rotation.x=1.1+Math.sin(t*3)*.2;a.arms[1].elbow.rotation.x=.6;}
+      if(pose==='game'){a.controller.visible=true;a.arms.forEach((arm,i)=>{arm.rotation.x=.95+Math.sin(t*8+i)*.05;arm.elbow.rotation.x=.8;});}
+      if(pose==='monitor'){a.arms.forEach((arm,i)=>{arm.rotation.x=1.2+Math.sin(t*6+i)*.06;arm.elbow.rotation.x=.4;});}
+      if(pose==='pingpong'){a.group.rotation.y=a.place.z<9?Math.PI:0;a.paddle.visible=true;a.arms[1].rotation.x=.8+Math.sin(t*4+(a.place.z<9?0:Math.PI))*.65;a.arms[1].elbow.rotation.x=.7;}
+      if(pose==='chat'||pose==='chatDrink'){a.chatter.visible=true;updateLabel(a.chatter,['Apa kabar?','Rehat sebentar yuk!','Sudah ngopi?'][Math.floor(t/4+a.seed)%3]);a.arms[0].rotation.z=-.3-Math.sin(t*2)*.2;if(pose==='chatDrink'){a.cup.visible=true;a.arms[1].rotation.x=1.2;a.arms[1].elbow.rotation.x=1;}}
       if(pose==='sleep')a.eyes.forEach(eye=>{eye.scale.y=.005;});
       if(pose==='read'){a.book.visible=true;a.arms.forEach(arm=>{arm.rotation.x=.9;arm.elbow.rotation.x=.6;});}
       if(pose==='phone'){a.phone.visible=true;a.arms[1].rotation.x=1.1;a.arms[1].elbow.rotation.x=.9;}
       if(pose==='stretch')a.arms.forEach((arm,i)=>{arm.rotation.z=(i?1:-1)*(2.2+Math.sin(t*1.5)*.3);});
       if(pose==='chat'){a.arms[1].rotation.x=.6+Math.sin(t*2)*.25;a.arms[1].elbow.rotation.x=.7;}
       if(pose==='garden'){a.bottle.visible=true;a.arms[1].rotation.x=.9+Math.sin(t*1.5)*.1;}
-      if(pose==='toilet') {a.group.visible=false;a.state='offline';crowd.update(a.user.id,a.pos,false);return;}
+      if(pose==='toilet') {a.group.userData.pose='toilet';a.group.userData.place=a.place.key;a.group.position.copy(a.pos);a.group.visible=false;a.state='offline';crowd.update(a.user.id,a.pos,false);return;}
     }
   }
   a.group.visible=true;a.group.position.x=a.pos.x;a.group.position.z=a.pos.z;a.state=online?'online':'offline';
@@ -244,7 +290,7 @@ function showDetail() {const a=avatars.get(selected);if(!a){selected=null;$('det
 function focusUser(id) {selected=id;const a=avatars.get(id);if(!a)return;showDetail();controls.target.set(a.pos.x,0,a.pos.z);camera.position.set(a.pos.x+8,11,a.pos.z+10);controls.update();}
 function view(key='all') {
   const front=camera.userData.front||13;
-  const views={all:[[33,34,36],[0,0,0]],work:[[12,22,22],[-6,0,0]],cafe:[[23,17,9],[10,0,-5]],rest:[[22,15,23],[10,0,6]]};const [pos,target]=views[key]||views.all;
+  const views={all:[[33,34,36],[0,0,0]],work:[[12,22,22],[-6,0,0]],cafe:[[23,17,9],[10,0,-5]],rest:[[22,15,23],[10,0,6]],gaming:[[32,14,17],[21,0,3]],monitoring:[[32,14,6],[21,0,-6]],pingpong:[[30,12,21],[21,0,9]]};const [pos,target]=views[key]||views.all;
   camera.position.fromArray(pos);controls.target.fromArray(target);if(key==='all'&&front>13){camera.position.multiplyScalar(front/13);}controls.update();
   document.querySelectorAll('[data-camera]').forEach(b=>b.classList.toggle('selected',b.dataset.camera===key));
 }
@@ -286,7 +332,7 @@ try {
     const dt=lastTime?Math.min((ms-lastTime)/1000,.12):0;lastTime=ms;lastDraw=ms;
     navigation.update(dt);controls.update();
     const animated=!paused&&avatars.size>0;
-    if(animated){simTime+=dt;crowd.clear();avatars.forEach(a=>crowd.update(a.user.id,a.pos,a.group.visible));avatars.forEach(a=>tickAvatar(a,dt,simTime));}
+    if(animated){simTime+=dt;crowd.clear();avatars.forEach(a=>crowd.update(a.user.id,a.pos,a.group.visible));avatars.forEach(a=>tickAvatar(a,dt,simTime));const players=[...avatars.values()].filter(a=>!a.user.online&&!a.waiting&&a.activityDefinition?.pose==='pingpong'&&!a.points[a.route]);pingBall.visible=players.length===2;if(pingBall.visible)pingBall.position.set(21+Math.sin(simTime*2)*.55,1.2+Math.abs(Math.cos(simTime*4))*.6,9+Math.sin(simTime*4)*1.9);}
     if(!dirty&&!animated&&!navigation.active)return;
     renderer.render(scene,camera);dirty=false;
   }

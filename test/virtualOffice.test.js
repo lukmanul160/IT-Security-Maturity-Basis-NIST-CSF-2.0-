@@ -16,9 +16,9 @@ test('shared places are exclusive, reusable after departure and isolated from wa
   const grid=createCrowdGrid();grid.update(1,{x:0,z:0});grid.update(2,{x:1,z:0});
   assert.equal(grid.canMove(2,{x:.3,z:0}),false);assert.equal(grid.canMove(2,{x:1.5,z:0}),true);
   grid.update(1,{x:0,z:0},false);assert.equal(grid.canMove(2,{x:.3,z:0}),true);
-  const sequence=Array.from({length:12},(_,phase)=>chooseActivity(49,phase).name);
+  const sequence=Array.from({length:activities.length},(_,phase)=>chooseActivity(49,phase).name);
   assert.equal(new Set(sequence).size,activities.length);
-  assert.notDeepEqual(sequence,Array.from({length:12},(_,phase)=>chooseActivity(50,phase).name));
+  assert.notDeepEqual(sequence,Array.from({length:activities.length},(_,phase)=>chooseActivity(50,phase).name));
 });
 test('public office displays registered names and valid sessions without publishing account secrets', async t => {
   const rows = [{ id: 1, username: 'private.admin', full_name: '  Maya Putri  ', role: 'admin' }, { id: 2, username: 'editor01', full_name: ' ', role: 'editor' }];
@@ -66,4 +66,15 @@ test('audit activity uses English descriptions without exposing raw paths or dat
   assert.equal(describeActivity({ event_type:'data.update', path:'/api/auth/users/private-secret', status_code:200 }), 'Updating user accounts.');
   assert.equal(describeActivity(null), 'Signed in. No activity has been recorded yet.');
   assert.equal(describeActivity({ event_type:'request.error', path:'/api/files/private-secret', status_code:403 }), 'An attempt to access files was unsuccessful.');
+});
+
+test('toilet access routes avoid walls in both directions', async () => {
+  const { toiletAccess, canTraverseOffice } = await import(pathToFileURL(path.resolve(__dirname,'../frontend/public/virtual-office/assets/office-activities.js')));
+  for(const x of [8,12]) {
+    const route=toiletAccess(x);
+    for(let i=1;i<route.length;i++)assert.ok(canTraverseOffice(route[i-1],route[i]));
+    route.reverse();for(let i=1;i<route.length;i++)assert.ok(canTraverseOffice(route[i-1],route[i]));
+  }
+  assert.equal(canTraverseOffice({x:8,z:8},{x:8,z:11}),false);
+  assert.equal(canTraverseOffice({x:8,z:11},{x:12,z:11}),false);
 });

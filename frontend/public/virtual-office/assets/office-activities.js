@@ -1,4 +1,9 @@
 export const activities = [
+  { name: 'Membuat kopi', area: 'brew', pose: 'brew' },
+  { name: 'Main PlayStation', area: 'gaming', pose: 'game' },
+  { name: 'Memantau command center', area: 'monitoring', pose: 'monitor' },
+  { name: 'Main pingpong', area: 'pingpong', pose: 'pingpong' },
+  { name: 'Mengobrol sambil minum', area: 'lounge', pose: 'chatDrink' },
   { name: 'Minum kopi', area: 'cafe', pose: 'coffee' },
   { name: 'Makan di kafetaria', area: 'cafe', pose: 'eat' },
   { name: 'Tidur sambil duduk di lounge', area: 'lounge', pose: 'sleep' },
@@ -14,7 +19,7 @@ export const activities = [
 ];
 
 export function chooseActivity(seed, phase) {
-  return activities[((phase * 5 + seed) % activities.length + activities.length) % activities.length];
+  return activities[((phase * 7 + seed) % activities.length + activities.length) % activities.length];
 }
 
 export function createPlaceReservations() {
@@ -65,4 +70,32 @@ export function createCrowdGrid(distance = .85) {
       return true;
     },
   };
+}
+
+// Clearance includes the avatar body, not only its center.
+export const toiletWalls = [
+  { minX: 4.6, maxX: 15.4, minZ: 8.55, maxZ: 9.45 },
+  { minX: 9.55, maxX: 10.45, minZ: 8.7, maxZ: 12.5 },
+  { minX: 6.1, maxX: 13.9, minZ: 11.55, maxZ: 12.45 },
+];
+export function canTraverseOffice(from, to) {
+  return !toiletWalls.some(wall => {
+    let start = 0, end = 1;
+    for (const axis of ['X', 'Z']) {
+      const key = axis.toLowerCase(), delta = to[key] - from[key];
+      if (Math.abs(delta) < 1e-9) {
+        if (from[key] < wall['min' + axis] || from[key] > wall['max' + axis]) return false;
+      } else {
+        const a = (wall['min' + axis] - from[key]) / delta;
+        const b = (wall['max' + axis] - from[key]) / delta;
+        start = Math.max(start, Math.min(a, b)); end = Math.min(end, Math.max(a, b));
+      }
+    }
+    return start <= end;
+  });
+}
+export function toiletAccess(x) {
+  // Separate entrances on either side of the central divider.
+  const outside = x < 10 ? 4 : 16;
+  return [{ x: outside, z: 8 }, { x: outside, z: 10.2 }, { x, z: 10.2 }, { x, z: 11 }];
 }
