@@ -17,6 +17,8 @@ const backupRoutes = require('./backupRoutes');
 const healthController = require('../controllers/healthController');
 
 const router = express.Router();
+router.use('/assessment-periods', require('./assessmentPeriodRoutes'));
+router.use(require('../middleware/assessmentYear').assessmentYear);
 router.use('/assessment-gaps', require('./assessmentGapRoutes'));
 router.use('/monitoring-dashboard', require('./monitoringDashboardRoutes'));
 router.use('/asset-management', require('./assetManagementRoutes'));

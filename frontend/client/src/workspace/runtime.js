@@ -1,5 +1,7 @@
 // Ordered classic-script source: keep shared scope and initialization order intact.
 // See features/README.md before moving code between sections.
+import assessmentYearsContext from './features/assessment/years-context.js?raw';
+import assessmentYearsUi from './features/assessment/years-ui.js?raw';
 import part01 from './features/shared/state-and-access.js?raw';
 import dashboardHelp from './features/shared/dashboard-help.js?raw';
 import reminderRecipients from './features/shared/reminder-recipients.js?raw';
@@ -47,6 +49,7 @@ import actionAccess from './features/shared/action-access.js?raw';
 import threatNavigation from './features/shared/threat-navigation.js?raw';
 
 export default [
+  assessmentYearsContext,
   submissionGuard,
   dashboardHelp,
   reminderRecipients,
@@ -89,5 +92,6 @@ export default [
   moduleTransfer,
   smtpSettings,
   actionAccess,
-  threatNavigation
+  threatNavigation,
+  assessmentYearsUi,
 ].join('');

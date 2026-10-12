@@ -28,6 +28,7 @@ async function start() {
   await require('./services/storageService').ensureStore();
   await initializeFrameworks();
   await require('./services/assessmentGapService').ensureStore();
+  await require('./services/assessmentPeriodService').ensureStore();
   await ensureRiskAcceptanceStore();
   await ensureRiskManagementStore();
   await ensurePersonnelCertificationStore();

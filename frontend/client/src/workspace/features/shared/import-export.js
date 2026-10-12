@@ -38,11 +38,11 @@ async function exportData() {
   let gaps;
   try {const response=await fetch('/api/assessment-gaps/csf',{cache:'no-store'});if(!response.ok)throw new Error((await response.json()).error||'Export gap gagal');gaps=await response.json();}catch(error){$('saveState').textContent=error.message;return;}
   try { await recordTransferActivity('export', 'assessment', 'nist-csf-2.0-assessment.json'); } catch (error) { $('saveState').textContent = error.message; return; }
-  const fileData = JSON.stringify({ framework: 'NIST CSF 2.0', exportVersion: 3, exportedAt: new Date().toISOString(), uploadFolderName: localStorage.getItem(uploadFolderStorageKey) || '', ui: { view: uiState.view, function: activeFunction }, assessment: state, gaps }, null, 2);
+  const fileData = JSON.stringify({ framework: 'NIST CSF 2.0', exportVersion: 3, assessmentYear:assessmentYears.csf, exportedAt: new Date().toISOString(), uploadFolderName: localStorage.getItem(uploadFolderStorageKey) || '', ui: { view: uiState.view, function: activeFunction }, assessment: state, gaps }, null, 2);
   const blob = new Blob([fileData], { type: 'application/json' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'nist-csf-2.0-assessment.json';
+  link.download = `nist-csf-2.0-assessment-${assessmentYears.csf}.json`;
   link.click();
   URL.revokeObjectURL(link.href);
   $('saveState').textContent = 'JSON berhasil diexport';

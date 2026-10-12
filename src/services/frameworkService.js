@@ -142,7 +142,7 @@ async function deleteInformationSecurityObjective(id) {
   if (!result.rowCount) throw Object.assign(new Error('Objective not found'), { status: 404 });
 }
 
-async function resetIso27001Assessment() {
+async function resetIso27001Assessment(year) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -153,7 +153,8 @@ async function resetIso27001Assessment() {
         AND jsonb_typeof(evidence) = 'array'
     `);
     await client.query("UPDATE controls SET evidence = '[]'::jsonb, updated_at = NOW() WHERE framework_id IN ('iso27001', 'iso27001-soa')");
-    await client.query('DELETE FROM information_security_objectives');
+    if(year)await client.query('DELETE FROM information_security_objectives WHERE objective_year=$1',[Number(year)]);
+    else await client.query('DELETE FROM information_security_objectives');
     await client.query('COMMIT');
 
     const paths = evidenceResult.rows.map(row => row.path).filter(Boolean);
@@ -210,4 +211,4 @@ async function initializeFrameworks() {
   await listCategoryTargets('privacy');
 }
 
-module.exports = { listFrameworks, createFramework, getControls, createControl, updateControl, updateControlEvidence, deleteControl, listCategoryTargets, updateCategoryTarget, listInformationSecurityObjectives, createInformationSecurityObjective, updateInformationSecurityObjective, deleteInformationSecurityObjective, resetIso27001Assessment, initializeFrameworks };
+module.exports = { normalizeObjective, listFrameworks, createFramework, getControls, createControl, updateControl, updateControlEvidence, deleteControl, listCategoryTargets, updateCategoryTarget, listInformationSecurityObjectives, createInformationSecurityObjective, updateInformationSecurityObjective, deleteInformationSecurityObjective, resetIso27001Assessment, initializeFrameworks };

@@ -31,6 +31,7 @@ async function provisionDatabase() {
   await client.connect();
 
   await client.query(fs.readFileSync('database/schema.sql', 'utf8'));
+  await client.query(fs.readFileSync('database/assessment-periods.sql', 'utf8'));
   await client.query(fs.readFileSync('database/users.sql', 'utf8'));
   await client.query("ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check");
   await client.query("ALTER TABLE app_users ADD CONSTRAINT app_users_role_check CHECK (role IN ('admin', 'approver', 'editor', 'viewer', 'user'))");

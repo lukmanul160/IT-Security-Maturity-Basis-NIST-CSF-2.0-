@@ -50,7 +50,7 @@ const moduleTransfer = (() => {
   async function collect(key) {
     const data = {};
     for (const item of modules[key].sections) data[item.key] = await request(item.url);
-    return { format: 'nist-basis-module', version: 1, module: key, exportedAt: new Date().toISOString(), data };
+    return { format: 'nist-basis-module', version: 1, module: key, ...(typeof assessmentYears!=='undefined'&&assessmentYears[key]?{assessmentYear:assessmentYears[key]}:{}), exportedAt: new Date().toISOString(), data };
   }
   function template(key) {
     const config = modules[key];
@@ -131,7 +131,7 @@ const moduleTransfer = (() => {
       const summary = statusField ? Object.entries(records.reduce((out, row) => { const value = row[statusField] || 'Belum diisi'; out[value] = (out[value] || 0) + 1; return out; }, {})).map(([name, count]) => `${escape(name)}: ${count}`).join(' · ') : '';
       return `<h2>${escape(item.title)}</h2><p>Total: ${records.length}${summary ? ` · ${summary}` : ''}</p>${records.length ? `<table><thead><tr>${item.columns.map(column => `<th>${escape(label(column))}</th>`).join('')}</tr></thead><tbody>${records.map(row => `<tr>${item.columns.map(column => `<td>${escape(typeof row[column] === 'object' && row[column] !== null ? JSON.stringify(row[column], null, 2) : row[column])}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<p>Belum ada data.</p>'}`;
     }).join('');
-    return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Report ${escape(config.title)}</title><style>body{font:12px Arial;margin:24px;color:#172335}h1{font-size:24px}h2{margin-top:28px}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #ccd3dc;padding:6px;overflow-wrap:anywhere;white-space:pre-wrap;vertical-align:top}th{background:#edf2f7}thead{display:table-header-group}@page{size:A4 landscape;margin:12mm}@media print{button{display:none}body{margin:0}}</style></head><body><button onclick="window.print()">Cetak / Simpan PDF</button><h1>${escape(config.title)}</h1><p>Dibuat: ${escape(payload.exportedAt)} · Seluruh data modul</p>${content}</body></html>`;
+    return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Report ${escape(config.title)}</title><style>body{font:12px Arial;margin:24px;color:#172335}h1{font-size:24px}h2{margin-top:28px}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #ccd3dc;padding:6px;overflow-wrap:anywhere;white-space:pre-wrap;vertical-align:top}th{background:#edf2f7}thead{display:table-header-group}@page{size:A4 landscape;margin:12mm}@media print{button{display:none}body{margin:0}}</style></head><body><button onclick="window.print()">Cetak / Simpan PDF</button><h1>${escape(config.title)}${payload.assessmentYear?` / ${escape(payload.assessmentYear)}`:''}</h1><p>Dibuat: ${escape(payload.exportedAt)} · Seluruh data modul</p>${content}</body></html>`;
   }
   function download(name, content, type) {
     const url = URL.createObjectURL(new Blob([content], { type }));
@@ -180,7 +180,7 @@ const moduleTransfer = (() => {
   function preview(key, payload, status, filename, fileSize = 0) {
     const dialog = document.createElement('dialog');
     const count = modules[key].sections.map(item => `${item.title}: ${item.assessment ? 1 : (payload.data[item.key] || []).length}`).join(' · ');
-    dialog.innerHTML = `<h2>Import ${escape(modules[key].title)}</h2><p>${escape(count)}</p><p>ID yang sama diperbarui, data baru ditambahkan. Assessment diganti dengan isi file. File evidence tidak disertakan; referensinya memerlukan file yang sudah tersedia di server. Gunakan file dari instalasi yang sama agar ID tetap cocok.</p><p>Jika ada kegagalan, data yang sudah tersimpan tetap tersimpan. Detail hasil akan ditampilkan.</p><button type="button" data-confirm>Import sekarang</button> <button type="button" data-cancel>Batal</button><p role="status"></p>`;
+    dialog.innerHTML = `<h2>Import ${escape(modules[key].title)}</h2><p>${escape(count)}</p><p>${typeof assessmentYears!=='undefined'&&assessmentYears[key]?`Tujuan import: assessment ${assessmentYears[key]}. `:''}ID yang sama diperbarui, data baru ditambahkan. Assessment diganti dengan isi file. File evidence tidak disertakan; referensinya memerlukan file yang sudah tersedia di server. Gunakan file dari instalasi yang sama agar ID tetap cocok.</p><p>Jika ada kegagalan, data yang sudah tersimpan tetap tersimpan. Detail hasil akan ditampilkan.</p><button type="button" data-confirm>Import sekarang</button> <button type="button" data-cancel>Batal</button><p role="status"></p>`;
     document.body.append(dialog);
     dialog.querySelector('[data-cancel]').onclick = () => dialog.close();
     dialog.addEventListener('close', () => dialog.remove());
@@ -236,7 +236,7 @@ const moduleTransfer = (() => {
       };
       for (const action of ['export', 'report']) toolbar.querySelector(`[data-${action}]`).onclick = async event => {
         const button = event.currentTarget; button.disabled = true; status.textContent = 'Mengambil data…';
-        const filename = `${key}-${new Date().toISOString().slice(0, 10)}.${action === 'export' ? 'json' : 'html'}`;
+        const filename = `${key}-${typeof assessmentYears!=='undefined'&&assessmentYears[key]?assessmentYears[key]+'-':''}${new Date().toISOString().slice(0, 10)}.${action === 'export' ? 'json' : 'html'}`;
         try {
           await runAuditedTransfer(action, key, filename, async () => {
             const payload = await collect(key);

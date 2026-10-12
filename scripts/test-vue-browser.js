@@ -668,7 +668,7 @@ async function run() {
       transfer.items.add(new File(['test archive'], 'browser-check.zip', { type: 'application/zip' }));
       input.files = transfer.files;
       input.dispatchEvent(new Event('change', { bubbles: true }));
-      const selectionWorks = !button.disabled && document.querySelector('#fileBackupRestoreFileName').textContent === 'browser-check.zip';
+      const selectionWorks = !button.disabled && document.querySelector('#fileBackupRestoreFileName').title === 'browser-check.zip' && document.querySelector('#fileBackupRestoreFileName').textContent.startsWith('1 ZIP');
       const originalConfirm = window.confirm;
       window.confirm = () => false;
       button.click();
