@@ -119,6 +119,24 @@ function normalizeObjective(data) {
   const evaluationFrequency = data.evaluationFrequency || 'monthly';
   if (!objectiveFrequencies.includes(evaluationFrequency)) throw Object.assign(new Error('Invalid evaluation frequency'), { status: 400 });
   const periodTargets = data.periodTargets && typeof data.periodTargets === 'object' && !Array.isArray(data.periodTargets) ? data.periodTargets : {};
+  const measurement = periodTargets._measurement;
+  if (measurement) {
+    const fail = message => { throw Object.assign(new Error(message), { status: 400 }); };
+    if (!['percentage', 'quantity'].includes(measurement.method)) fail('Metode target tidak valid.');
+    const parse = value => { const text = String(value ?? '').trim().replace(/%$/, '').trim().replace(',', '.'); return text ? Number(text) : NaN; };
+    const check = (value, target = false) => {
+      const number = parse(value);
+      if (!Number.isFinite(number) || number < 0 || (measurement.method === 'percentage' && number > 100) || (measurement.method === 'quantity' && (String(value).includes('%') || (target && number <= 0)))) fail('Target/realisasi harus angka: persentase 0-100; target jumlah harus lebih dari 0.');
+      return number;
+    };
+    check(data.targetValue, true);
+    for (const [key, period] of Object.entries(periodTargets)) {
+      if (key === '_measurement') continue;
+      if (period.target != null && period.target !== '') check(period.target, true);
+      if (period.actual != null && period.actual !== '') check(period.actual);
+    }
+    periodTargets._measurement = { method: measurement.method, unit: String(measurement.unit || '').trim().slice(0, 80) };
+  }
   return { year, objective: String(data.objective).trim(), indicator: String(data.indicator || '').trim(), baseline: String(data.baseline || '').trim(), targetValue: String(data.targetValue || '').trim(), owner: String(data.owner || '').trim(), evaluationFrequency, periodTargets, monthlyStatus: data.monthlyStatus || 'Not started', quarterlyStatus: data.quarterlyStatus || 'Not started', semesterStatus: data.semesterStatus || 'Not started', annualStatus: data.annualStatus || 'Not started', notes: String(data.notes || '').trim() };
 }
 
