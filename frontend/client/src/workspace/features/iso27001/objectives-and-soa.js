@@ -87,7 +87,7 @@ function objectiveEvidenceList(item, key) {
   return (item.periodTargets?.[key]?.evidence || []).map((file, index) => {
     const attrs = `data-objective-evidence-id="${item.id}" data-evidence-period="${escapeHtml(key)}" data-evidence-index="${index}"`;
     const url = '/api/files/open/' + String(file.path).replace(/^uploads?\//, '').split('/').map(encodeURIComponent).join('/');
-    return `<div class="objective-evidence-file"><a href="${url}" target="_blank" rel="noopener">${escapeHtml(file.name || file.path)}</a><div class="attachment-buttons"><label class="attachment-button">Ganti dokumen<input type="file" data-objective-evidence-replace ${attrs} hidden></label><button type="button" class="attachment-action-button danger" data-objective-evidence-remove ${attrs}>Hapus bukti</button></div></div>`;
+    return `<div class="objective-evidence-file"><a href="${url}" target="_blank" rel="noopener">${escapeHtml(file.name || file.path)}</a><div class="attachment-buttons"><label class="attachment-button" title="Ganti dokumen bukti">Ganti<input type="file" data-objective-evidence-replace ${attrs} hidden></label><button type="button" class="attachment-action-button danger" data-objective-evidence-remove ${attrs} title="Hapus bukti dari periode ini" aria-label="Hapus bukti">Hapus</button></div></div>`;
   }).join('');
 }
 async function changeObjectiveEvidence(control, replace = false) {
