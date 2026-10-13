@@ -23,7 +23,7 @@ function parse(book,selected){
     if(domains.includes(domain.name))throw fail('Sheet domain duplikat: '+domain.name);domains.push(domain.name);
     const sheet=book.Sheets[name],range=XLSX.utils.decode_range(sheet['!ref']||'A1');if(range.e.r>5000)throw fail('Domain Excel terlalu besar.');
     const rows=XLSX.utils.sheet_to_json(sheet,{header:1,range:{s:{r:0,c:0},e:{r:range.e.r,c:Math.max(range.e.c,10)}},defval:''});
-    let category,subcategory,subcategoryId,scoreColumn=3,notesColumn=10,scopeColumn=2,rubricColumns=[4,5,6,7,8,9];
+    let category,subcategory,subcategoryId,previousHeader,scoreColumn=3,notesColumn=10,scopeColumn=2,rubricColumns=[4,5,6,7,8,9];
     rows.forEach((row,index)=>{
       const label=clean(row[0]);
       if(/^kategori\s+\d+/i.test(label)){category=label.match(/\d+\.\d+/)?.[0]+': '+clean(row[1]);return;}
@@ -36,7 +36,11 @@ function parse(book,selected){
           const candidate=rubricColumns[value+1]>=0?rubricColumns[value+1]-1:rubricColumns[value-1]>=0?rubricColumns[value-1]+1:-1;
           return candidate>=0&&clean(row[candidate])===''?candidate:-1;
         });
-        if(!subcategoryId||scoreColumn<0||notesColumn<0||scopeColumn<0||rubricColumns.some(value=>value<0))throw fail('Header indeks, validasi, atau rubrik tidak lengkap pada '+name+' baris '+(index+1));return;
+        // Some completed workbooks omit a repeated validation header (for example K82).
+        // Recover only a blank cell in an otherwise identical, previously verified layout.
+        if(notesColumn<0&&previousHeader&&scoreColumn===previousHeader.scoreColumn&&scopeColumn===previousHeader.scopeColumn&&rubricColumns.every((column,value)=>column===previousHeader.rubricColumns[value])&&clean(row[previousHeader.notesColumn])==='')notesColumn=previousHeader.notesColumn;
+        if(!subcategoryId||scoreColumn<0||notesColumn<0||scopeColumn<0||rubricColumns.some(value=>value<0))throw fail('Header indeks, validasi, atau rubrik tidak lengkap pada '+name+' baris '+(index+1));
+        previousHeader={scoreColumn,notesColumn,scopeColumn,rubricColumns:[...rubricColumns]};return;
       }
       if(!/^[a-z]{1,3}$/i.test(label)||!row[1])return;
       if(!category||!subcategoryId)throw fail('Struktur subkategori tidak tersedia pada '+name+' baris '+(index+1));

@@ -8,6 +8,24 @@ const {seed,validateControlMetadata}=require('../src/services/ikasService');
 const scoring=require('../src/shared/ikasScoring');
 const workbook=require('../src/services/ikasWorkbookService');
 const source=()=>XLSX.readFile(path.join(__dirname,'../data/ikas-template.xlsx'));
+test('completed IKAS workbook recovers a blank repeated validation header and preserves inputs',()=>{
+  const book=source(),sheet=book.Sheets['II Proteksi'];
+  delete sheet.K82;
+  sheet.D83={t:'n',v:4};sheet.K83={t:'s',v:'Bukti pelaksanaan tetap tersimpan'};
+  const buffer=XLSX.write(book,{type:'buffer',bookType:'xlsx'});
+  const imported=workbook.read(buffer);
+  assert.equal(imported.controls.length,181);
+  assert.equal(imported.scores['IKAS-2.5.7-a'],4);
+  assert.equal(imported.notes['IKAS-2.5.7-a'],'Bukti pelaksanaan tetap tersimpan');
+  const exported=workbook.write({controls:{ikas:imported.controls},assessment:{scores:imported.scores,notes:imported.notes},ikasWorkbookTemplate:imported.template});
+  const roundTrip=workbook.read(exported);
+  assert.equal(roundTrip.scores['IKAS-2.5.7-a'],4);
+  assert.equal(roundTrip.notes['IKAS-2.5.7-a'],'Bukti pelaksanaan tetap tersimpan');
+  sheet.K82={t:'s',v:'Kolom lain'};
+  assert.throws(()=>workbook.parse(book),/Header indeks/);
+  delete sheet.K82;delete sheet.C82;
+  assert.throws(()=>workbook.parse(book),/Header indeks/);
+});
 test('IKAS single index preserves historical scores, notes and evidence references',()=>{
   const id='IKAS-1.1.1-a',file={path:'upload/test.pdf',name:'test.pdf'};
   const normalized=scoring.normalize({scores:{[id]:0},practiceScores:{[id]:3},policyScores:{[id]:5},notes:{['practice-'+id]:'Keterangan utama',['policy-'+id]:'Catatan tambahan'},attachments:{['policy-'+id]:[file],['practice-'+id]:[file]},respondent:{D4:'Organisasi'}});
