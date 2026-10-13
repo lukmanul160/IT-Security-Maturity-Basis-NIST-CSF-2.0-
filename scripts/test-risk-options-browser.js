@@ -9,14 +9,19 @@ const { createSession } = require('../src/config/auth');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function run() {
   const schema = `risk_options_test_${process.pid}_${Date.now()}`;
-  const query = pool.query.bind(pool);
+  const query = pool.query.bind(pool), connect = pool.connect.bind(pool);
   const profile = path.join(os.tmpdir(), `nist-risk-options-browser-${process.pid}-${Date.now()}`);
   let server, chrome, client;
   try {
     await query(`CREATE SCHEMA "${schema}"`);
     await query(`CREATE TABLE "${schema}".risk_register (LIKE public.risk_register INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES)`);
     await query(`CREATE TABLE "${schema}".risk_dropdown_options (id BIGSERIAL PRIMARY KEY, field_name TEXT NOT NULL, option_value TEXT NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE(field_name,option_value))`);
-    pool.query = (sql, ...args) => query(sql.replace(/\b(risk_register|risk_dropdown_options)\b/g, `"${schema}".$1`), ...args);
+    const scoped = sql => sql.replace(/\b(risk_register|risk_dropdown_options|risk_workflows|risk_workflow_events)\b/g, `"${schema}".$1`);
+    pool.query = (sql, ...args) => query(scoped(sql), ...args);
+    pool.connect = callback => typeof callback === 'function' ? connect(callback) : connect().then(db => ({ query: (sql, ...args) => db.query(scoped(sql), ...args), release: () => db.release() }));
+    await pool.query('ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS scenario_impact BOOLEAN NOT NULL DEFAULT FALSE');
+    await pool.query('ALTER TABLE risk_register ALTER COLUMN likelihood DROP NOT NULL, ALTER COLUMN impact DROP NOT NULL');
+    await require('../src/services/riskWorkflowService').ensureStore();
     const admin = (await query("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];
     const token = createSession({ username: admin.username, role: 'admin' });
     server = require('../src/app').listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
@@ -72,7 +77,7 @@ async function run() {
     console.log(JSON.stringify({ status: 'passed', dedicatedTab: true, createFields: 3, edit: true, delete: true, usedOptionProtection: true, persistedIds: true, liveFormOptions: true, filter: true }));
   } finally {
     client?.socket.close(); chrome?.kill(); if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
-    pool.query = query; await query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`); await pool.end();
+    pool.query = query; pool.connect = connect; await query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`); await pool.end();
     if (path.dirname(path.resolve(profile)) === path.resolve(os.tmpdir()) && path.basename(profile).startsWith('nist-risk-options-browser-')) { await delay(1000); await fs.rm(profile, { recursive: true, force: true }).catch(() => {}); }
   }
 }

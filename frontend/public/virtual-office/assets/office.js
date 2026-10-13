@@ -5,6 +5,7 @@ import { applyStandingPose, applySeatedPose, applyWorkingPose } from './avatar-p
 import { chooseActivity, createPlaceReservations, createCrowdGrid, canTraverseOffice, toiletAccess, shuffledDeskSlots } from './office-activities.js';
 import { drawGameDisplay } from './game-display.js';
 const $ = id => document.getElementById(id);
+const uiText = value => window.NistI18n?.t(value) || value;
 const colors = { admin: '#596dad', approver: '#ab825c', editor: '#5c9d91', viewer: '#a081a8', user: '#708a5c' };
 let renderer, controls, camera, scene, room, navigation, ambient, sun, desks = [], avatars = new Map(), users = [], filter = 'all', selected = null, paused = matchMedia('(prefers-reduced-motion: reduce)').matches, capacity = 0, lastTime = 0, simTime = 0;
 const host = $('scene');
@@ -20,26 +21,27 @@ const boxGeometry = new THREE.BoxGeometry(1, 1, 1), sphereGeometry = new THREE.S
 const shadowGeometry=new THREE.CircleGeometry(1,16),shadowMaterial=new THREE.MeshBasicMaterial({color:'#152b20',transparent:true,opacity:.12,depthWrite:false});
 function box(parent, x, y, z, w, h, d, color) { const mesh = new THREE.Mesh(boxGeometry, mat(color)); mesh.position.set(x,y,z); mesh.scale.set(w,h,d); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh; }
 function ball(parent,x,y,z,r,color) { const mesh = new THREE.Mesh(sphereGeometry, mat(color)); mesh.position.set(x,y,z); mesh.scale.setScalar(r); mesh.castShadow=true; parent.add(mesh); return mesh; }
-function label(parent, text, x, y, z, width = 4, color = '#4a6757') {
+function label(parent, text, x, y, z, width = 4, color = '#4a6757', translateText = true) {
   const canvas = document.createElement('canvas'); canvas.width=768; canvas.height=128;
-  const ctx = canvas.getContext('2d'); const dark=document.documentElement.dataset.theme==='dark'; ctx.fillStyle = dark?'#253c34ee':'#ffffffee'; ctx.beginPath(); ctx.roundRect(0,0,768,128,28); ctx.fill(); ctx.fillStyle=dark?'#d4e5dc':color; ctx.font='600 45px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text,384,64,730);
+  const ctx = canvas.getContext('2d'); const dark=document.documentElement.dataset.theme==='dark'; ctx.fillStyle = dark?'#253c34ee':'#eef2f6ee'; ctx.beginPath(); ctx.roundRect(0,0,768,128,28); ctx.fill(); ctx.fillStyle=dark?'#d4e5dc':color; ctx.font='600 45px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(translateText?uiText(text):text,384,64,730);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace=THREE.SRGBColorSpace;
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map:texture, depthTest:false })); sprite.userData.label={text,width,color}; sprite.position.set(x,y,z); sprite.scale.set(width,width/6,1); parent.add(sprite); return sprite;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map:texture, depthTest:false })); sprite.userData.label={text,width,color,translateText}; sprite.position.set(x,y,z); sprite.scale.set(width,width/6,1); parent.add(sprite); return sprite;
 }
 function updateLabel(sprite,text,force=false) {
   const info=sprite.userData.label;
   if(!info||(!force&&info.text===text))return;
   info.text=text;
+  text=info.translateText===false?text:uiText(text);
   const canvas=sprite.material.map.image,ctx=canvas.getContext('2d'),dark=document.documentElement.dataset.theme==='dark';
   if(info.kind==='activity') {
-    ctx.clearRect(0,0,768,256);ctx.fillStyle=dark?'#253c34f5':'#fffffff5';ctx.beginPath();ctx.roundRect(0,0,768,225,28);ctx.fill();
+    ctx.clearRect(0,0,768,256);ctx.fillStyle=dark?'#253c34f5':'#eef2f6f5';ctx.beginPath();ctx.roundRect(0,0,768,225,28);ctx.fill();
     ctx.beginPath();ctx.moveTo(360,224);ctx.lineTo(384,250);ctx.lineTo(408,224);ctx.fill();
-    ctx.fillStyle=dark?'#accdbb':'#60766b';ctx.font='600 24px system-ui';ctx.textAlign='center';ctx.fillText('LATEST RECORDED ACTIVITY',384,38);
+    ctx.fillStyle=dark?'#accdbb':'#60766b';ctx.font='600 24px system-ui';ctx.textAlign='center';ctx.fillText(uiText('LATEST RECORDED ACTIVITY'),384,38);
     ctx.fillStyle=dark?'#eef7f1':'#263d31';ctx.font='500 34px system-ui';
     const lines=[];let line='';for(const word of text.split(' ')){const next=line?line+' '+word:word;if(ctx.measureText(next).width>690&&line){lines.push(line);line=word;}else line=next;}if(line)lines.push(line);
     lines.slice(0,3).forEach((value,index)=>ctx.fillText(value,384,88+index*43));sprite.material.map.needsUpdate=true;return;
   }
-  ctx.clearRect(0,0,768,128);ctx.fillStyle=dark?'#253c34ee':'#ffffffee';ctx.beginPath();ctx.roundRect(0,0,768,128,28);ctx.fill();ctx.fillStyle=dark?'#d4e5dc':info.color;ctx.font='600 45px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,384,64,730);sprite.material.map.needsUpdate=true;
+  ctx.clearRect(0,0,768,128);ctx.fillStyle=dark?'#253c34ee':'#eef2f6ee';ctx.beginPath();ctx.roundRect(0,0,768,128,28);ctx.fill();ctx.fillStyle=dark?'#d4e5dc':info.color;ctx.font='600 45px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,384,64,730);sprite.material.map.needsUpdate=true;
 }
 function plant(parent,x,z) { box(parent,x,.3,z,.55,.6,.55,'#c6b59e'); box(parent,x,.95,z,.12,1,.12,'#6b7860'); for (let i=0;i<5;i++) ball(parent,x+Math.sin(i*2)*.25,1.4+(i%2)*.25,z+Math.cos(i*2)*.25,.38,'#749471'); }
 function chair(parent,x,z,color='#718379') { box(parent,x,.67,z,.83,.16,.8,color); box(parent,x,1.13,z+.35,.83,.95,.16,color); box(parent,x,.3,z,.13,.6,.13,'#425449'); box(parent,x,.08,z,.8,.08,.6,'#425449'); }
@@ -187,7 +189,7 @@ function makeAvatar(user,index) {
   const chatter=label(group,'',0,3,0,2.7);chatter.visible=false;
   group.traverse(object=>{if(object.isMesh)object.castShadow=false;});
   const shadow=new THREE.Mesh(shadowGeometry,shadowMaterial);shadow.rotation.x=-Math.PI/2;shadow.position.y=.065;shadow.scale.set(.55,.4,1);group.add(shadow);
-  const name=label(group,user.name,0,2.4,0,2,colors[user.role]);
+  const name=label(group,user.name,0,2.4,0,2,colors[user.role],false);
   let spawn=waitingPosition(index);
   for(let offset=0;offset<capacity+18;offset++) {
     const candidate=waitingPosition((index+offset)%(capacity+18));
@@ -196,7 +198,7 @@ function makeAvatar(user,index) {
   crowd.update(user.id,spawn);
   return {group,upper,body,arms,legs,eyes,skirtMesh,cup,snack,book,phone,bottle,controller,paddle,chatter,name,index,user,seed,state:'',pos:new THREE.Vector3(spawn.x,0,spawn.z),points:[],route:0,phase:-1,waiting:false};
 }
-function activity(a) { return a.user.online ? a.user.activity : `${a.waiting?'Menunggu tempat kosong':a.activityDefinition?.name||'Keliling kantor'} · simulasi`; }
+function activity(a) { return a.user.online ? uiText(a.user.activity) : `${uiText(a.waiting?'Menunggu tempat kosong':a.activityDefinition?.name||'Keliling kantor')} · ${uiText('simulasi')}`; }
 function setRoute(a,phase) {
   a.arrivedAt=null;a.phase=phase;a.activityDefinition=chooseActivity(a.seed,phase);
   const pingPlayers=[...avatars.values()].filter(other=>other!==a&&!other.user.online&&other.place?.area==='pingpong');
@@ -304,13 +306,13 @@ function renderPeople() {
     if(!`${user.name} ${user.role}`.toLowerCase().includes(query)||filter==='online'&&!user.online||filter==='offline'&&user.online)continue;
     const a=avatars.get(user.id), button=document.createElement('button');button.className='person';button.setAttribute('aria-label',`${user.name}: ${activity(a)}`);
     const icon=document.createElement('span');icon.className='avatar';icon.style.background=colors[user.role];icon.textContent=user.role.slice(0,2).toUpperCase();
-    const content=document.createElement('span'),name=document.createElement('strong'),desc=document.createElement('small');name.textContent=user.name;desc.textContent=`${user.role.toUpperCase()} · ${activity(a)}`;content.append(name,desc);
+    const content=document.createElement('span'),name=document.createElement('strong'),desc=document.createElement('small');name.setAttribute('data-no-translate','');name.textContent=user.name;desc.textContent=`${uiText(user.role).toUpperCase()} · ${activity(a)}`;content.append(name,desc);
     const dot=document.createElement('i');dot.className=`dot ${user.online?'green':'amber'}`;button.append(icon,content,dot);button.onclick=()=>focusUser(user.id);$('people').append(button);
   }
   if(!users.length)$('people').textContent='Belum ada akun terdaftar.';
   if(selected!==null)showDetail();
 }
-function showDetail() {const a=avatars.get(selected);if(!a){selected=null;$('detail').textContent='Pilih anggota untuk melihat aktivitasnya.';return;}$('detail').textContent=`${a.user.name} · ${a.user.online?'Sesi aktif':'Tanpa sesi'}\n${activity(a)}`;}
+function showDetail() {const a=avatars.get(selected);if(!a){selected=null;$('detail').textContent='Pilih anggota untuk melihat aktivitasnya.';return;}$('detail').setAttribute('data-no-translate','');$('detail').textContent=`${a.user.name} · ${uiText(a.user.online?'Sesi aktif':'Tanpa sesi')}\n${activity(a)}`;}
 function focusUser(id) {selected=id;const a=avatars.get(id);if(!a)return;showDetail();controls.target.set(a.pos.x,0,a.pos.z);camera.position.set(a.pos.x+8,11,a.pos.z+10);controls.update();}
 function view(key='all') {
   const front=camera.userData.front||13;
@@ -324,11 +326,12 @@ function applyOfficeTheme() {
   scene.background.set(dark?'#19272b':'#e9efea');
   if(ambient){ambient.color.set(dark?'#c6dbef':'#ffffff');ambient.groundColor.set(dark?'#536565':'#bcc8af');ambient.intensity=dark?1.5:2.8;}
   if(sun){sun.color.set(dark?'#c1d3eb':'#fff9e8');sun.intensity=dark?1.7:3;}
-  if(renderer)renderer.toneMappingExposure=dark?.8:1;
+  if(renderer)renderer.toneMappingExposure=dark?.8:.88;
   scene.traverse(object=>{if(object.isSprite&&object.userData.label)updateLabel(object,object.userData.label.text,true);});
   dirty=true;
 }
 window.addEventListener('nist:theme-change',applyOfficeTheme);
+window.addEventListener('nist:language-change',()=>{peopleSignature='';renderPeople();if(scene)scene.traverse(object=>{if(object.isSprite&&object.userData.label)updateLabel(object,object.userData.label.text,true);});dirty=true;});
 async function sync() {
   try {const response=await fetch('/api/public/virtual-office',{cache:'no-store'});if(!response.ok)throw new Error();const data=await response.json();
     users=data.users;const old=capacity;if(capacity!==data.capacity){buildRoom(data.capacity);if(!old)view();}
@@ -338,7 +341,7 @@ async function sync() {
       if(a.popup){a.popup.visible=u.online;if(u.online)updateLabel(a.popup,u.activity);}
       tickAvatar(a,0,simTime);});updateGameDisplay(simTime);
     $('online').textContent=users.filter(u=>u.online).length;$('members').textContent=users.length;$('total').textContent=users.length;$('capacity').textContent=data.capacity;
-    $('connection').textContent='● Live · '+new Date(data.updatedAt).toLocaleTimeString('id-ID');$('notice').style.display='none';renderPeople();
+    $('connection').textContent='● Live · '+new Date(data.updatedAt).toLocaleTimeString(window.NistI18n?.locale||'id-ID',{timeZone:'Asia/Bangkok'});$('notice').style.display='none';renderPeople();
     dirty=true;
   }catch(_){$('connection').textContent='Koneksi terputus';$('notice').textContent='Data pengguna belum dapat diperbarui. Mencoba kembali otomatis; tampilan terakhir dipertahankan.';$('notice').style.display='block';}
 }

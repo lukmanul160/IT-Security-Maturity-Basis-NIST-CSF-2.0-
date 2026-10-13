@@ -1,2 +1,83 @@
 [app] Mounting /api routes with requireAuth
 [audit-finding-reminder] Scheduler failed
+[50372065-ac32-4f81-89ed-1754deec6662] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.snapshot (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\virtualOfficeService.js:7:20)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\app.js:61:50 {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[c0b7e6f5-6c92-49e2-98b5-a31b558eea35] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.snapshot (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\virtualOfficeService.js:7:20)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\app.js:61:50 {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[audit-finding-reminder] Scheduler failed
+[policy-reminder] Scheduler failed
+[asset-reminder] Connection terminated due to connection timeout
+[audit-retention] Connection terminated due to connection timeout
+[0eca80e4-39c2-463c-88c4-d275742ce776] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.snapshot (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\virtualOfficeService.js:7:20)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\app.js:61:50 {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[b0d425a2-f4b5-4b6b-9af0-744b715493d5] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.snapshot (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\virtualOfficeService.js:7:20)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\app.js:61:50 {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[d742e90b-9e8a-471e-aeba-6fa26913cf8a] Error: Connection terminated due to connection timeout
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.snapshot (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\virtualOfficeService.js:7:20)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\app.js:61:50 {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\client.js:204:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\pg\lib\connection.js:64:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:355:12)
+}
+[audit-recovery] Database write failed; retaining event on disk: Connection terminated due to connection timeout
+[audit-recovery] Database write failed; retaining event on disk: Connection terminated due to connection timeout
+[audit-recovery] Retry failed; pending event retained: Connection terminated due to connection timeout
+[audit-recovery] Retry failed; pending event retained: Connection terminated due to connection timeout
+[audit-recovery] Retry failed; pending event retained: Connection terminated due to connection timeout
+[audit-finding-reminder] Scheduler failed
+[policy-reminder] Scheduler failed
+[asset-reminder] Connection terminated due to connection timeout
+[audit-retention] Connection terminated due to connection timeout
+[asset-reminder] Connection terminated due to connection timeout
+[audit-finding-reminder] Scheduler failed
+[policy-reminder] Scheduler failed

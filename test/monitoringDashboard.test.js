@@ -65,7 +65,7 @@ test('acceptance monitoring requires all sign-off stages and distinguishes rejec
 
 test('closed risks do not contribute high or overdue monitoring indicators',async t=>{
   t.mock.method(permissions,'getRoleActions',async()=>({'risk-management':{read:true}}));
-  t.mock.method(pool,'query',async()=>({rows:[{risk_rating:'High',treatment_action:'Closed',deadline:'2026-01-01'},{risk_rating:'High',treatment_action:'Mitigate',deadline:'2026-10-11',risk_owner:'Owner',residual_likelihood:2,residual_impact:2}]}));
+  t.mock.method(pool,'query',async()=>({rows:[{risk_rating:'High',treatment_action:'Closed',deadline:'2026-01-01'},{risk_rating:'High',treatment_action:'Mitigation',workflow_stage:'Closed',deadline:'2026-01-01'},{risk_rating:'High',treatment_action:'Mitigate',deadline:'2026-10-11',risk_owner:'Owner',residual_likelihood:2,residual_impact:2}]}));
   const row=(await service.snapshot({role:'viewer'},new Date('2026-10-10T00:00:00Z'))).modules[0];
   assert.equal(row.overdue,0);assert.equal(row.upcoming,1);assert.equal(row.issues.critical,1);assert.equal(row.issues.incomplete,0);
 });

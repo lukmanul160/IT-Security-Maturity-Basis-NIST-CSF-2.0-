@@ -20,6 +20,7 @@ data/*
 !data/risk-indicators.json
 !data/ikas-data.json
 !data/ikas-template.xlsx
+!data/maturity-template.xlsx
 frontend/client/src/workspace/generated
 frontend/public/vue
 .vscode

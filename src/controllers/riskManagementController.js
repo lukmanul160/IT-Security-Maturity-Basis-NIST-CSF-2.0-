@@ -18,7 +18,11 @@ module.exports = {
   removeIndicator: wrap(async (req, res) => { await service.removeIndicator(req.params.id); res.status(204).end(); }),
   list: wrap(async (req, res) => res.json(await service.listRegister())),
   create: wrap(async (req, res) => res.status(201).json(await service.create(req.body))),
-  update: wrap(async (req, res) => res.json(await service.update(req.params.id, req.body))),
+  update: wrap(async (req, res) => res.json(await service.update(req.params.id, req.body, req.user))),
+  workflowUsers: wrap(async (req, res) => res.json(await require('../services/riskWorkflowService').users())),
+  workflow: wrap(async (req, res) => res.json(await require('../services/riskWorkflowService').get(req.params.id))),
+  saveWorkflow: wrap(async (req, res) => res.json(await require('../services/riskWorkflowService').mutate(req.params.id, req.body, req.user, 'save'))),
+  transitionWorkflow: wrap(async (req, res) => res.json(await require('../services/riskWorkflowService').mutate(req.params.id, req.body, req.user, req.body.action))),
   remove: wrap(async (req, res) => { await service.remove(req.params.id); res.status(204).end(); }),
   reset: wrap(async (req, res) => { await service.resetRegister(); res.status(204).end(); })
 };

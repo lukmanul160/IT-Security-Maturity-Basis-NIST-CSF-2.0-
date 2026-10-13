@@ -98,6 +98,25 @@ CREATE TABLE IF NOT EXISTS risk_register (
 );
 
 ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS third_party TEXT NOT NULL DEFAULT '';
+ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS scenario_impact BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE risk_register ALTER COLUMN likelihood DROP NOT NULL, ALTER COLUMN impact DROP NOT NULL;
+
+CREATE TABLE IF NOT EXISTS risk_workflows (
+  risk_id TEXT PRIMARY KEY REFERENCES risk_register(risk_id) ON DELETE CASCADE,
+  data JSONB NOT NULL DEFAULT '{}',
+  version INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS risk_workflow_events (
+  id BIGSERIAL PRIMARY KEY,
+  risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE,
+  actor TEXT NOT NULL,
+  action TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  snapshot JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS risk_workflow_events_risk_idx ON risk_workflow_events (risk_id, id DESC);
 
 CREATE INDEX IF NOT EXISTS risk_register_rating_idx ON risk_register (risk_rating);
 CREATE INDEX IF NOT EXISTS risk_register_owner_idx ON risk_register (risk_owner);

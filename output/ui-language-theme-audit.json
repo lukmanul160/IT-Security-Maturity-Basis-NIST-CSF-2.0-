@@ -1,0 +1,521 @@
+{
+  "views": [
+    {
+      "view": "monitoring-dashboard",
+      "root": "monitoringDashboardView",
+      "languages": {
+        "id": [],
+        "en": []
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "framework",
+      "root": "frameworkView",
+      "languages": {
+        "id": {
+          "title": "Gambaran lebih jelas tentangkematangan keamanan Anda.",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "A clearer view of yoursecurity maturity.",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "risk-acceptance",
+      "root": "riskAcceptanceView",
+      "languages": {
+        "id": {
+          "title": "Penerimaan Risiko",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Risk Acceptance",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "risk-management",
+      "root": "riskManagementView",
+      "languages": {
+        "id": {
+          "title": "Manajemen Risiko",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Risk Management",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "audit-finding-tracker",
+      "root": "auditFindingView",
+      "languages": {
+        "id": {
+          "title": "Pelacakan Temuan Audit",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Audit Finding Tracker",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "policy-register",
+      "root": "policyRegisterView",
+      "languages": {
+        "id": {
+          "title": "Register Kebijakan",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Policy Register",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "personnel-certification",
+      "root": "personnelCertificationView",
+      "languages": {
+        "id": {
+          "title": "Struktur Organisasi",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Organization Structure",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "threat-modelling",
+      "root": "threatModellingView",
+      "languages": {
+        "id": {
+          "title": "Pemodelan Ancaman",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Threat Modelling",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "asset-dashboard",
+      "root": "assetManagementView",
+      "languages": {
+        "id": {
+          "title": "Dasbor Aset",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Asset Dashboard",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "asset-register",
+      "root": "assetManagementView",
+      "languages": {
+        "id": {
+          "title": "Register Aset",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Asset Register",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "server-racks",
+      "root": "assetManagementView",
+      "languages": {
+        "id": {
+          "title": "Rak Server",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Server Racks",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "asset-modelling",
+      "root": "assetManagementView",
+      "languages": {
+        "id": {
+          "title": "Pemodelan Register Aset",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Modelling Asset Register",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "tprm",
+      "root": "tprmView",
+      "languages": {
+        "id": {
+          "title": "Manajemen Risiko Pihak Ketiga (TPRM) Sektor Keuangan",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Financial Sector Third-Party Risk Management (TPRM)",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "tprm-tiering",
+      "root": "tprmTieringView",
+      "languages": {
+        "id": {
+          "title": "Matriks Tingkat Risiko Vendor",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Vendor Risk Tiering Matrix",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "tprm-questionnaire",
+      "root": "tprmQuestionnaireView",
+      "languages": {
+        "id": {
+          "title": "Kuesioner Uji Tuntas Vendor",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Vendor Due Diligence Questionnaire",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "tprm-register",
+      "root": "tprmRegisterView",
+      "languages": {
+        "id": {
+          "title": "Register Risiko TPRM",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "TPRM Risk Register",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "questionnaire-templates",
+      "root": "questionnaireTemplateView",
+      "languages": {
+        "id": {
+          "title": "Templat Kuesioner",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Questionnaire Templates",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "ikas",
+      "root": "ikasView",
+      "languages": {
+        "id": {
+          "title": "IKAS BSSN",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "IKAS BSSN",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "ikas-manage",
+      "root": "ikasManageView",
+      "languages": {
+        "id": {
+          "title": "Kelola IKAS BSSN",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Manage IKAS BSSN",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "csf",
+      "root": "csfView",
+      "languages": {
+        "id": {
+          "title": "Daftar gap assessment",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Daftar gap assessment",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "privacy",
+      "root": "privacyView",
+      "languages": {
+        "id": {
+          "title": "Daftar gap assessment",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Daftar gap assessment",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "iso27001",
+      "root": "iso27001View",
+      "languages": {
+        "id": {
+          "title": "Daftar gap assessment",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Daftar gap assessment",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "iso27001-soa",
+      "root": "iso27001View",
+      "languages": {
+        "id": {
+          "title": "Daftar gap assessment",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Daftar gap assessment",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "privacy-manage",
+      "root": "privacyManageView",
+      "languages": {
+        "id": {
+          "title": "Kelola Kerangka Privasi",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Manage Privacy Framework",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "csf-manage",
+      "root": "csfManageView",
+      "languages": {
+        "id": {
+          "title": "Kelola CSF 2.0",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Manage CSF 2.0",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "backups",
+      "root": "backupsView",
+      "languages": {
+        "id": {
+          "title": "Cadangan Database",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Database Backup",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "file-backups",
+      "root": "fileBackupsView",
+      "languages": {
+        "id": {
+          "title": "Cadangan File",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "File Backup",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "knowledge-notes",
+      "root": "knowledgeNotesView",
+      "languages": {
+        "id": {
+          "title": "Catatan Pengetahuan Pustaka Pengetahuan",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Knowledge Notes Knowledge Vault",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    },
+    {
+      "view": "files",
+      "root": "filesView",
+      "languages": {
+        "id": {
+          "title": "File yang diunggah",
+          "locale": "id-ID"
+        },
+        "en": {
+          "title": "Uploaded files",
+          "locale": "en-US"
+        }
+      },
+      "brightSurfaces": {
+        "dark": [],
+        "light": []
+      }
+    }
+  ],
+  "errors": []
+}

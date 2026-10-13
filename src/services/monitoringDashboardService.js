@@ -108,8 +108,8 @@ async function snapshot(user, now = new Date()) {
     return summarize(rows, 'annual_status', { unit: 'Sasaran tahun berjalan', issues:issues(atRisk,pending),metrics:[metric('Belum tercapai',pending),metric('Sasaran At risk',atRisk)] });
   }, can('iso27001'));
   add('risk-management', 'Risk Management', 'risk', 'risk-management', async () => {
-    const rows = await query('SELECT risk_rating,residual_rating,residual_likelihood,residual_impact,risk_owner,treatment_action,deadline::text AS deadline,created_at FROM risk_register');
-    const active=rows.filter(r=>r.treatment_action!=='Closed'), high=active.filter(r=>['High','Very High'].includes(r.risk_rating)).length, missing=active.filter(r=>!validDay(r.deadline)).length;
+    const rows = await query("SELECT r.risk_rating,r.residual_rating,r.residual_likelihood,r.residual_impact,r.risk_owner,r.treatment_action,r.deadline::text AS deadline,r.created_at,w.data->>'stage' AS workflow_stage FROM risk_register r LEFT JOIN risk_workflows w ON w.risk_id=r.risk_id");
+    const active=rows.filter(r=>r.treatment_action!=='Closed' && r.workflow_stage!=='Closed'), high=active.filter(r=>['High','Very High'].includes(r.risk_rating)).length, missing=active.filter(r=>!validDay(r.deadline)).length;
     const residualMissing=active.filter(r=>![r.residual_likelihood,r.residual_impact].every(v=>Number.isInteger(v)&&v>=1&&v<=5)).length;
     return summarize(rows, 'risk_rating', { unit: 'Risiko', ...deadlines(active, 'deadline', today),issues:issues(high,0,active.filter(r=>!validDay(r.deadline)||!r.risk_owner?.trim()||![r.residual_likelihood,r.residual_impact].every(v=>Number.isInteger(v)&&v>=1&&v<=5)).length), metrics: [metric('Risiko aktif',active.length),metric('High / Very High aktif',high),metric('Residual High aktif',active.filter(r=>['High','Very High'].includes(r.residual_rating)).length),metric('Aktif belum dinilai residual',residualMissing),metric('Closed',rows.length-active.length),metric('Aktif tanpa tenggat',missing)] });
   });

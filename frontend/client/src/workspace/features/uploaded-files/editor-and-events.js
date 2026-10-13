@@ -9,8 +9,8 @@ function editUploadedFile(recordId) {
   $('uploadedFileEditSource').textContent = uploadedFileSourceLabel(record);
   $('uploadedFileEditCurrentName').textContent = record.name || '-';
   $('uploadedFileEditCurrentPath').textContent = record.path || '-';
-  $('uploadedFileEditLocation').textContent = `${record.item.fn.name} Â· ${categoryLabel(record.item.category || 'CSF Core')}`;
-  $('uploadedFileEditControl').textContent = `${record.item.fn.id} Â· ${record.item.name || record.item.subcategory || '-'}`;
+  $('uploadedFileEditLocation').textContent = `${record.item.fn.name} · ${categoryLabel(record.item.category || 'CSF Core')}`;
+  $('uploadedFileEditControl').textContent = `${record.item.fn.id} · ${record.item.name || record.item.subcategory || '-'}`;
   $('uploadedFileEditInput').accept = extension || '.pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp';
   const isPdf = extension === '.pdf' || record.type === 'application/pdf';
   $('uploadedPdfOpenPageField').hidden = !isPdf;

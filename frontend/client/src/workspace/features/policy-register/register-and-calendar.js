@@ -38,7 +38,7 @@ function renderPolicyReviewCalendar() {
   if (monthFilter) {
     const selected = monthFilter.value;
     const options = ['<option value="all">All months</option>']
-      .concat(monthOptions.map(month => `<option value="${month}">${new Date(`${month}-01T00:00:00Z`).toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</option>`));
+      .concat(monthOptions.map(month => `<option value="${month}">${new Date(`${month}-01T00:00:00Z`).toLocaleString((globalThis.NistI18n?.locale || 'id-ID'), { month: 'long', year: 'numeric' })}</option>`));
     monthFilter.innerHTML = options.join('');
     const currentMonth = policyReviewCalendarDate.toISOString().slice(0, 7);
     monthFilter.value = monthOptions.includes(selected) ? selected : monthOptions.includes(currentMonth) ? currentMonth : 'all';
@@ -97,7 +97,7 @@ function renderPolicyReviewCalendar() {
       cells.push(`<div class="policy-calendar-day is-outside"><span class="policy-calendar-date">${date}</span></div>`);
     }
     grid.innerHTML = cells.join('') || '<div class="policy-calendar-empty">No calendar dates available.</div>';
-    if (title) title.textContent = policyReviewCalendarDate.toLocaleString('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    if (title) title.textContent = policyReviewCalendarDate.toLocaleString((globalThis.NistI18n?.locale || 'id-ID'), { month: 'long', year: 'numeric', timeZone: 'UTC' });
   }
 
   body.innerHTML = items.map(item => {
@@ -107,8 +107,8 @@ function renderPolicyReviewCalendar() {
         <td>${escapeHtml(item.title || '-')}</td>
         <td>${escapeHtml(item.owner || '-')}</td>
         <td>${escapeHtml(item.reviewCycle || '-')}</td>
-        <td>${item.lastReview ? new Date(`${item.lastReview}T00:00:00Z`).toLocaleDateString('id-ID') : '-'}</td>
-        <td>${new Date(`${item.nextReviewDate}T00:00:00Z`).toLocaleDateString('id-ID')}</td>
+        <td>${item.lastReview ? new Date(`${item.lastReview}T00:00:00Z`).toLocaleDateString((globalThis.NistI18n?.locale || 'id-ID')) : '-'}</td>
+        <td>${new Date(`${item.nextReviewDate}T00:00:00Z`).toLocaleDateString((globalThis.NistI18n?.locale || 'id-ID'))}</td>
         <td><span class="status-chip ${status === 'Due soon' ? 'warning' : status === 'Overdue' ? 'danger' : 'ok'}">${status}</span></td>
       </tr>
     `;
@@ -130,7 +130,7 @@ function renderPolicyRegisterRows() {
       <td>${escapeHtml(row.owner || '-')}</td>
       <td>${escapeHtml(row.reviewCycle || '-')}</td>
       <td>${escapeHtml(row.approvalStatus || '-')}</td>
-      <td>${row.lastReview ? new Date(row.lastReview).toLocaleDateString('id-ID') : '-'}</td>
+      <td>${row.lastReview ? new Date(row.lastReview).toLocaleDateString((globalThis.NistI18n?.locale || 'id-ID')) : '-'}</td>
       <td>${row.attachmentName ? `<a href="/api/files/${encodeURIComponent(String(row.attachmentPath || '').replace(/^upload\//, ''))}" target="_blank" rel="noreferrer">${escapeHtml(row.attachmentName)}</a>` : '-'}</td>
       <td class="policy-related-cell">${policyRelatedMarkup(row)}</td>
       <td class="policy-register-actions">${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>

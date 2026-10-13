@@ -36,7 +36,7 @@ const moduleTransfer = (() => {
     privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('privacy')] },
     iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'year objective indicator baseline targetValue owner evaluationFrequency periodTargets notes'),gapSection('iso27001'),gapSection('iso27001-soa')] },
     'risk-acceptance': { title: 'Risk Acceptance', views: ['riskAcceptanceView'], sections: [section('register', 'Acceptance register', '/api/risk-acceptance', 'id requestorName assetName department riskDescription benefitJustification mitigationPlan businessOwnerDecision remediationDate cisDecision cisConditions')] },
-    'risk-management': { title: 'Risk Management', views: ['riskManagementView'], sections: [section('register', 'Risk register', '/api/risk-management', 'riskId thirdParty riskCategory effectedAsset deviceName identificationRisk riskControl riskCause riskAnalysis assetConfidentiality assetIntegrity assetAvailability assetValue riskOwner note ref likelihood impact riskRating treatmentAction acceptanceFormNo riskTreatmentDescription ownerOfAction deadline residualRiskDescription residualLikelihood residualImpact residualRating comment', { id: 'riskId' })] },
+    'risk-management': { title: 'Risk Management', views: ['riskManagementView'], sections: [section('register', 'Risk register', '/api/risk-management', 'riskId thirdParty riskCategory effectedAsset deviceName identificationRisk riskControl riskCause riskAnalysis assetConfidentiality assetIntegrity assetAvailability assetValue riskOwner note ref likelihood impact riskRating treatmentAction acceptanceFormNo riskTreatmentDescription ownerOfAction deadline residualRiskDescription residualLikelihood residualImpact residualRating comment scenarioImpact workflowStatus', { id: 'riskId' })] },
     'policy-register': { title: 'Policy Register', views: ['policyRegisterView'], sections: [section('register', 'Policy register', '/api/policy-register', 'id title category owner reviewCycle approvalStatus lastReview notes items')] },
     personnel: { title: 'Personnel Certification', views: ['personnelCertificationView'], sections: [section('personnel', 'Organization personnel', '/api/personnel-certifications/organization-personnel', 'id employeeId personnelName personnelRole supervisorName'), section('certifications', 'Certifications', '/api/personnel-certifications', 'personnelName employeeId certificationName issuer certificationLevel status issueDate expiryDate notes')] }
   };
@@ -165,6 +165,7 @@ const moduleTransfer = (() => {
         const existing = await request(item.url);
         for (const original of payload.data[item.key]) {
           const row = { ...original };
+          if (key === 'risk-management') { row.workflowDraft = true; if (row.treatmentAction === 'Closed') row.treatmentAction = ''; }
           for (const field of Object.keys(row)) if (/Date$|^deadline$|^lastReview$|^nextReview$/.test(field) && typeof row[field] === 'string') row[field] = row[field].slice(0, 10);
           if (item.control) row.minimum_evidence = row.minimumEvidence;
           if (key === 'personnel' && item.key === 'certifications') {
@@ -214,6 +215,7 @@ const moduleTransfer = (() => {
       toolbar.className = 'module-transfer-toolbar';
       toolbar.innerHTML = '<button type="button" data-import>Import JSON</button><button type="button" data-export>Export JSON</button><button type="button" data-report>Report / PDF</button><input name="module-transfer-input-1" type="file" accept=".json,application/json" hidden><span role="status" aria-live="polite"></span>';
       const status = toolbar.querySelector('[role="status"]');
+      if (['csf','privacy'].includes(key)) mountMaturityExcel(toolbar,key,status);
       const templateButton = document.createElement('button');
       templateButton.type = 'button'; templateButton.textContent = 'Template Import';
       templateButton.onclick = async () => {
@@ -258,6 +260,62 @@ const moduleTransfer = (() => {
   }
   return { modules, validate, rows, report, collect, template, importPayload, mount };
 })();
+function mountMaturityExcel(toolbar,key,status) {
+  const permission=key==='csf'?'assessment':'privacy-assessment';
+  const ready=async()=>{await Promise.all([...assessmentPendingWrites]);if(assessmentWriteErrors.has(key))throw Error('Penyimpanan assessment belum berhasil. Simpan ulang sebelum transfer Excel.');};
+  const exportButton=document.createElement('button');exportButton.type='button';exportButton.textContent='Export Excel';
+  const importButton=document.createElement('button');importButton.type='button';importButton.textContent='Import Excel';
+  exportButton.dataset.maturityExport=key;importButton.dataset.maturityImport=key;
+  const input=document.createElement('input');input.type='file';input.accept='.xlsx';input.hidden=true;input.name=`${key}-maturity-excel`;
+  toolbar.insertBefore(exportButton,status);toolbar.insertBefore(importButton,status);toolbar.append(input);
+  exportButton.onclick=async()=>{
+    exportButton.disabled=true;status.textContent='Menyiapkan Excel maturity...';
+    const year=assessmentYears[key] || 2026;
+    try {
+      await ready();
+      await runAuditedTransfer('export',key,`NIST-${key}-Maturity-${year}.xlsx`,async()=>{
+        const response=await fetch(`/api/maturity-workbook/${key}?assessmentYear=${year}`,{cache:'no-store'});
+        if(!response.ok)throw Error((await response.json().catch(()=>({}))).error || `Export Excel gagal (HTTP ${response.status}).`);
+        const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a');
+        link.href=url;link.download=`NIST-${key==='csf'?'CSF-2.0':'Privacy'}-Maturity-${year}.xlsx`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      },'Export Excel maturity selesai.');status.textContent='Excel maturity berhasil diexport.';
+    }catch(error){status.textContent=error.message;}finally{exportButton.disabled=false;}
+  };
+  importButton.onclick=()=>{
+    if(!canPerform(permission,'update')){status.textContent='Izin Edit assessment diperlukan untuk import Excel.';return;}
+    input.value='';input.click();
+  };
+  input.onchange=async()=>{
+    const file=input.files[0];if(!file)return;
+    const year=assessmentYears[key] || 2026;
+    importButton.disabled=true;status.textContent='Memvalidasi Excel maturity...';
+    try {
+      if(file.size>10*1024*1024)throw Error('Ukuran file maksimal 10 MB.');
+      await ready();
+      const body=new FormData();body.append('file',file);
+      const response=await fetch(`/api/maturity-workbook/${key}/preview?assessmentYear=${year}`,{method:'POST',body});
+      const result=await response.json();if(!response.ok)throw Error(result.error||'Import Excel gagal.');
+      const dialog=document.createElement('dialog');dialog.className='module-import-dialog';
+      dialog.innerHTML=`<h2>Import Excel maturity</h2><p>${year} · ${result.controls} <span>Kontrol</span> · ${result.added} <span>Baru</span> · ${result.updated} <span>Diperbarui</span></p><p>Sheet: ${key==='csf'?'CSF 2.0':'Privacy Framework Core'}</p><p>Import memperbarui function, category, subcategory, nilai maturity, dan reasoning dari sheet yang dipilih. Kode baru ditambahkan. Kolom maturity kosong menghapus skor pada kontrol tersebut. Kontrol di luar file, evidence, dan gap tetap tersimpan.</p><button type="button" data-confirm>Import sekarang</button><button type="button" data-cancel>Batal</button><p role="status"></p>`;
+      document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();
+      dialog.querySelector('[data-confirm]').onclick=async event=>{
+        const button=event.currentTarget,message=dialog.querySelector('[role=status]'),cancel=dialog.querySelector('[data-cancel]'),block=event=>event.preventDefault();
+        button.disabled=true;cancel.disabled=true;dialog.addEventListener('cancel',block);
+        try {
+          await ready();
+          await runAuditedTransfer('import',key,file.name,async()=>{
+            const form=new FormData();form.append('file',file);
+            const saved=await fetch(`/api/maturity-workbook/${key}?assessmentYear=${year}`,{method:'POST',body:form}),detail=await saved.json();
+            if(!saved.ok)throw Error(detail.error||'Import Excel gagal.');return detail.controls;
+          },'Import Excel maturity selesai.');window.location.reload();
+        }catch(error){message.textContent=error.message;button.disabled=false;}
+        finally{cancel.disabled=false;dialog.removeEventListener('cancel',block);}
+      };dialog.showModal();
+      status.textContent='Excel siap ditinjau.';
+    }catch(error){status.textContent=error.message;}finally{importButton.disabled=false;}
+  };
+  const guide=document.createElement('details');guide.innerHTML='<summary>Panduan Excel maturity</summary><p>Export menggunakan template NIST asli. Hanya sheet framework yang dipilih diisi; nilai contoh pada sheet lainnya dikosongkan. Tambahkan kontrol pada baris baru dengan Function, Category, dan Subcategory berformat kode: uraian. CSF memakai kolom A, B, C dan G–J; Privacy memakai B, D, F dan L–O. Gunakan kode unik, skor 0–5 atau kosong, dan reasoning beberapa baris. Import berlaku pada tahun yang dipilih.</p>';toolbar.append(guide);
+}
 moduleTransfer.mount();
 // Personnel's section is created lazily by its navigation handler.
 document.querySelector('[data-view="personnel-certification"]')?.addEventListener('click', () => moduleTransfer.mount());

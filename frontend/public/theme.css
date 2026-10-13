@@ -1,5 +1,32 @@
 /* Shared theme overrides: high-specificity rules cover legacy and Vue modules. */
 :root { color-scheme:light; }
+/* Soft light surfaces reduce glare without dimming images or reducing text contrast. */
+html:not([data-theme=dark]),html:not([data-theme=dark]) body{--white:#eef2f6;--paper:#e6ecf2;--panel:#eef2f6;--bg:#e6ecf2;--muted:#53657d;--line:#c9d3df}
+html:not([data-theme=dark]) body.workspace-ui{background:#e6ecf2;color:#243447}
+html:not([data-theme=dark]) body.workspace-ui :is(.topbar,.sidebar,dialog,.tw-surface,.stat-panel,.insight-panel,.legend-panel,.panel,.framework-card,.summary-card,.certification-card,.smtp-card,.function-card,.assessment-table,.excel-wrap,.monitor-panel,.monitor-kpis article,.monitor-kpis .monitor-kpi-card,.monitor-filters,.asset-filter-bar,.asset-relation-guide-grid article,.knowledge-text-editor .tiptap,.wiki-suggestions,.tm-palette,.tm-inspector,.tm-threat-card,.tm-register,.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-status,.tm-fullscreen,.backup-restore-panel,.file-backup-options,.file-backup-field,.attachment-item){background:#eef2f6!important;border-color:#c9d3df!important}
+html:not([data-theme=dark]) body.workspace-ui :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=hidden]),select,textarea){background:#f3f5f8!important;color:#243447;border-color:#bdcad9}
+html:not([data-theme=dark]) body.workspace-ui :is(.excel-table,.asset-table,.monitor-table,.permission-matrix) :is(th,td){background-color:#eef2f6}
+html:not([data-theme=dark]) body.workspace-ui .view :is(td:not([class]),th:not([class])){background:#eef2f6!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.framework-chooser-heading,.framework-choice,.organization-person,.toolbar,.layout,.vault-row:not(.selected),.uploaded-files-wrap,.nr-table-container,.search-box){background:#eef2f6!important;border-color:#c9d3df!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.button-quiet,.attachment-button,.attachment-action-button,.module-transfer-toolbar button,.knowledge-text-editor .toolbar button:not([aria-pressed=true])){background:#e6ecf2!important;border-color:#bdcad9!important;color:#334963!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.button-quiet:hover,.attachment-action-button:hover,.framework-choice:hover){background:#dce5ef!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.radar-panel,.iso-chart-panel,.tm-editor,.tm-viewport,.rack-photo-name){background:#eef2f6!important;border-color:#c9d3df!important}
+html:not([data-theme=dark]) body.workspace-ui .rack-slot:not(.drop-invalid):not(.drop-valid) .rack-slot-space{background:#eef2f6!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.button-danger,.attachment-action-button.danger,.button-quiet.danger,.tm-danger){background:#f0dfe4!important;color:#843245!important;border-color:#c68692!important}
+html[data-theme=dark] body.workspace-ui :is(.button-quiet.danger,.tm-danger){background:#492839!important;color:#ffb7c0!important;border-color:#7d4355!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.muted,.lede,.eyebrow,.editor-help,.monitor-empty){color:#53657d}
+html:not([data-theme=dark]) body:is(.landing-page,.login-page){--white:#eef2f6;--paper:#e6ecf2;--panel:#eef2f6;background-color:#e6ecf2!important}
+html:not([data-theme=dark]) body.landing-page :is(nav,.gallery-card,.gallery-image,.screenshot-dialog,.screenshot-header,.screenshot-footer,.concept-detail,.catalog-item){background-color:#eef2f6!important;border-color:#c9d3df}
+html:not([data-theme=dark]) body.login-page :is(.login-form-panel,.login-card){background-color:#eef2f6!important}
+html:not([data-theme=dark]) :is([data-language-select],[data-theme-toggle]){background:#eef2f6!important;color:#334963!important;border-color:#bdcad9!important}
+html:not([data-theme=dark]) body.virtual-office-page{background:#e6ecf2!important}
+html:not([data-theme=dark]) body.virtual-office-page :is(header,.scene-panel,aside,.camera-pad,button:not(.selected)){background:#eef2f6!important;border-color:#c9d3df}
+html:not([data-theme=dark]) body.virtual-office-page input{background:#f3f5f8;border-color:#bdcad9;color:#243447}
+html:not([data-theme=dark]) body.virtual-office-page :is(.hint,.legend,footer,.intro p){color:#53657d}
+@media print{html:not([data-theme=dark]) body,html:not([data-theme=dark]) body.workspace-ui :is(.stat-panel,.insight-panel,.excel-wrap){background:#fff!important}}
+.rw-steps{display:flex;flex-wrap:wrap;gap:12px;list-style:none;padding:0;counter-reset:workflow}.rw-steps li{counter-increment:workflow;padding:10px 14px;background:#e8f0fa;color:#183453;border-radius:8px}.rw-steps li:before{content:counter(workflow) '. ';font-weight:700}.rw-decisions,.rw-history{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.rw-decisions textarea{display:block;width:100%;margin:8px 0 14px}.rw-warning{background:#fff3d7;color:#795400;padding:12px;border-radius:8px}.rw-event{padding:12px 0;border-bottom:1px solid var(--line)}.rw-event p{white-space:pre-wrap}.rw-event pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;max-height:300px;overflow:auto}.rw-event small{color:var(--muted)}
+html[data-theme=dark] body.workspace-ui .rw-steps li{background:#24344b;color:#d6e5fa}html[data-theme=dark] body.workspace-ui .rw-warning{background:#493c1d;color:#ffe5a1}html[data-theme=dark] body.workspace-ui :is(.rw-event,.rw-decisions,.rw-history){border-color:#35455c}html[data-theme=dark] body.workspace-ui .rw-event small{color:#a2b4cc}
+html[data-theme=dark] #riskWorkflowModal legend{color:#d6e5fa!important}
 [data-risk-level]{border-radius:6px;padding:8px 10px}
 :is([data-risk-level=low],.risk-rating.rendah,.risk-rating.sangat-rendah){background:#e5f4ec!important;color:#21734f!important}
 :is([data-risk-level=medium],.risk-rating.sedang){background:#fff3d7!important;color:#9a6b00!important}
@@ -10,12 +37,17 @@ html[data-theme=dark] #riskManagementView :is(.rm-cia-matrix-section summary,#rm
 html[data-theme=dark] body.workspace-ui :is([data-risk-level=low],.risk-rating.rendah,.risk-rating.sangat-rendah,.rm-cia-low){background:#164536!important;color:#b7f4d9!important}
 html[data-theme=dark] body.workspace-ui :is([data-risk-level=medium],.risk-rating.sedang,.rm-cia-medium){background:#493c1d!important;color:#ffe5a1!important}
 html[data-theme=dark] body.workspace-ui :is([data-risk-level=high],.risk-rating.tinggi,.risk-rating.sangat-tinggi,.rm-cia-high){background:#4e2631!important;color:#ffc4cd!important}
+html[data-theme=dark] body.workspace-ui .rd-cell.rd-low{background:#164536!important;color:#b7f4d9!important}
+html[data-theme=dark] body.workspace-ui .rd-cell.rd-medium{background:#493c1d!important;color:#ffe5a1!important}
+html[data-theme=dark] body.workspace-ui .rd-cell.rd-high{background:#4e2631!important;color:#ffc4cd!important}
 html[data-theme=dark] #rmResidualRating[data-risk-level=low]{background:#164536!important;color:#b7f4d9!important}
 html[data-theme=dark] #rmResidualRating[data-risk-level=medium]{background:#493c1d!important;color:#ffe5a1!important}
 html[data-theme=dark] #rmResidualRating[data-risk-level=high]{background:#4e2631!important;color:#ffc4cd!important}
 html[data-theme=dark] body.workspace-ui :is(.coverage-score,.coverage-scores .coverage-score,.indicator-sheet-title>span,.existing-file-picker-label,.assessment-score-group,.risk-option-card){background:#202f45!important;color:#b4c5dc!important;border-color:#35455c!important}
 html[data-theme=dark] body.workspace-ui :is(.coverage-score strong,.card-score,.card-score-averages strong){color:#a9caff!important}
 html[data-theme=dark] body.workspace-ui .coverage-score small{color:#a2b4cc!important}
+html[data-theme=dark] body.workspace-ui .attachment-item{background:#202f45!important;color:#c4d3e8!important;border-color:#35455c!important;box-shadow:none!important}
+html[data-theme=dark] body.workspace-ui .attachment-item :is(.attachment-name,a:not(.attachment-action-button)){color:#a9caff!important}
 html[data-theme=dark] body.workspace-ui :is(.user-session,.sidebar-heading-mark){background:#202f45!important;color:#c4d3e8!important;border-color:#35455c!important}
 html[data-theme=dark] body.workspace-ui :is(.button-quiet:hover,.attachment-action-button:hover,.existing-file-option:hover,.function-card:hover,.framework-choice:hover,.certification-reference-item:hover){background:#24344b!important;color:#d6e5fa!important;border-color:#435673!important;box-shadow:0 4px 12px #0002!important}
 html[data-theme=dark] body.workspace-ui .score-button.selected{background:#255bc2!important;color:#fff!important;border-color:#a8ccff!important;box-shadow:0 0 0 2px #a8ccff66!important;font-weight:700}
@@ -301,3 +333,11 @@ html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-optio
 html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:hover,
 html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:focus-visible{background:#24344b!important;border-color:#82b5ff!important}
 html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:focus-visible{outline:2px solid #82b5ff;outline-offset:2px}
+/* Keep secondary controls and lifecycle cards soft in both themes. */
+html[data-theme=light] body.workspace-ui .rm-cia-assessment{background:#eef2f6!important;border-color:#c9d3df!important}
+html[data-theme=light] body.workspace-ui .button.button-quiet:not(.danger){background:#e6ecf2!important;color:#243447!important;border-color:#bdcad9!important}
+html[data-theme=light] body.workspace-ui :is(.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-palette,.tm-stencil-group,.tm-palette-help,.assessment-pagination,.toolbar,.folder-create,.note-link-items) :is(button,a:not(.primary)){background:#e6ecf2!important}
+html[data-theme=light] body.workspace-ui .tprm-lifecycle>article{background:#eef2f6!important}
+html[data-theme=light] body.workspace-ui input[type=range]{background:#e6ecf2!important}
+html[data-theme=dark] body.workspace-ui input[type=range]{background:#142033!important}
+html[data-theme=dark] body.workspace-ui .soa-applicability-toggle.applicable{background:#164536!important;color:#b4e5c9!important;border-color:#337456!important}

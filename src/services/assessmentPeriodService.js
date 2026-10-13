@@ -326,4 +326,58 @@ async function importIkas(year,payload,user){
     return {domains:payload.domains,questions:payload.controls.length};
   });
 }
-module.exports = {ensureStore,permissions,validateYear,list,period,create,remove,execute,prepareSnapshot,references,fileReferenceCount,detachFile,importIkas};
+async function workbookSnapshot(framework,year,client=pool,lock='') {
+  const row=await period(framework,year,client,lock);
+  if(row.legacy && lock) {
+    await client.query('SELECT id FROM assessment_state WHERE id=$1 FOR UPDATE',[framework==='csf'?'default':'privacy']);
+    await client.query('SELECT code FROM controls WHERE framework_id=$1 ORDER BY code FOR UPDATE',[framework]);
+    await client.query('SELECT category FROM framework_category_targets WHERE framework_id=$1 ORDER BY category FOR UPDATE',[framework]);
+  }
+  return {row,data:row.legacy?await legacySnapshot(framework,client):row.data};
+}
+function mergeMaturityWorkbook(data,framework,payload) {
+  const previous=new Map(data.controls[framework].map(row=>[row.id,row]));
+  const added=payload.controls.filter(row=>!previous.has(row.id)).length;
+  for(const incoming of payload.controls) {
+    const {sourceRow,...fields}=incoming,old=previous.get(fields.id);
+    const value={evidence:[],notes:'',minimumEvidence:'',implementation:'',references:'',applicability:'Applicable',...old,...fields};
+    if(old)data.controls[framework][data.controls[framework].findIndex(row=>row.id===fields.id)]=value;
+    else data.controls[framework].push(value);
+    for(const key of ['policyScores','practiceScores']) {
+      data.assessment[key] ||= {}; delete data.assessment[key][fields.id];
+      if(payload[key][fields.id]!==undefined)data.assessment[key][fields.id]=payload[key][fields.id];
+    }
+    // A blank imported maturity explicitly clears that score, including its legacy fallback.
+    data.assessment.scores ||= {};delete data.assessment.scores[fields.id];
+    data.assessment.notes ||= {};
+    for(const prefix of ['policy-','practice-'])data.assessment.notes[prefix+fields.id]=payload.notes[prefix+fields.id];
+  }
+  data.targets[framework] ||= [];
+  for(const category of new Set(data.controls[framework].map(row=>row.category)))if(!data.targets[framework].some(row=>row.category===category))data.targets[framework].push({category,targetScore:3});
+  return {controls:payload.controls.length,added,updated:payload.controls.length-added};
+}
+async function importMaturityWorkbook(framework,year,payload,user) {
+  await ensureStore();await gaps.ensureStore();
+  const client=await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const {row,data}=await workbookSnapshot(framework,year,client,'FOR UPDATE');
+    const permission=require('./permissionService'),previous=new Set(data.controls[framework].map(row=>row.id));
+    if(payload.controls.some(row=>!previous.has(row.id))&&!await permission.has(user?.role,framework,'create'))throw fail('Izin Add kontrol diperlukan untuk kode baru.',403);
+    if(payload.controls.some(row=>previous.has(row.id))&&!await permission.has(user?.role,framework,'update'))throw fail('Izin Edit kontrol diperlukan untuk import.',403);
+    const result=mergeMaturityWorkbook(data,framework,payload);
+    if(row.legacy) {
+      for(const control of payload.controls) {
+        const value=data.controls[framework].find(row=>row.id===control.id);
+        await client.query(`INSERT INTO controls(framework_id,code,function,category,subcategory,implementation,"references",minimum_evidence,notes,evidence,applicability)
+          VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11)
+          ON CONFLICT(framework_id,code) DO UPDATE SET function=EXCLUDED.function,category=EXCLUDED.category,subcategory=EXCLUDED.subcategory,implementation=EXCLUDED.implementation,"references"=EXCLUDED."references",updated_at=NOW()`,
+        [framework,value.id,value.function,value.category,value.subcategory,value.implementation,value.references,value.minimumEvidence,value.notes,JSON.stringify(value.evidence),value.applicability]);
+      }
+      await client.query('INSERT INTO assessment_state(id,data,updated_at) VALUES($1,$2::jsonb,NOW()) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data,updated_at=NOW()',[framework==='csf'?'default':'privacy',JSON.stringify(data.assessment)]);
+      for(const target of data.targets[framework])await client.query('INSERT INTO framework_category_targets(framework_id,category,target_score) VALUES($1,$2,$3) ON CONFLICT(framework_id,category) DO NOTHING',[framework,target.category,target.targetScore]);
+    } else await persist(client,framework,year,data);
+    await client.query('COMMIT');return result;
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
+}
+module.exports = {ensureStore,permissions,validateYear,list,period,create,remove,execute,prepareSnapshot,references,fileReferenceCount,detachFile,importIkas,workbookSnapshot,mergeMaturityWorkbook,importMaturityWorkbook};

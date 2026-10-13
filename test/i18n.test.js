@@ -16,6 +16,32 @@ function load(saved, storageUnavailable = false) {
   return { i18n: context.NistI18n, values };
 }
 
+test('numbered pages, workflow stages and default vendor questions translate without changing identifiers', () => {
+  const { i18n } = load('id');
+  assert.equal(i18n.t('3. Setting SMTP'), '3. Pengaturan SMTP');
+  assert.equal(i18n.t('Pending Approval'), 'Menunggu Persetujuan');
+  assert.equal(i18n.t('2.10 Do you use Sub-Processors?'), '2.10 Apakah Anda menggunakan subpemroses?');
+  assert.equal(i18n.t('Workflow CSR - 004'), 'Alur kerja CSR - 004');
+  i18n.setLanguage('en');
+  assert.equal(i18n.t('Alur kerja CSR - 004'), 'Workflow CSR - 004');
+  assert.equal(i18n.t('Draf · Versi 17'), 'Draft · Version 17');
+  assert.equal(i18n.t('Peninjauan berikutnya'), 'Next review');
+  assert.equal(i18n.t('Data tersimpan. Perubahan assessment/rencana memerlukan approval ulang.'), 'Data saved. Assessment/plan changes require renewed approval.');
+});
+
+test('localized dates use Bangkok day boundaries and preserve the ISO value for later language changes', () => {
+  const { i18n } = load('id');
+  const value = '2026-10-12T20:00:00Z', options = { year: 'numeric', month: 'long', day: 'numeric' };
+  assert.equal(i18n.locale, 'id-ID');
+  assert.equal(i18n.dateText(value, options), '13 Oktober 2026');
+  assert.ok(i18n.dateHtml(value, options).includes('data-i18n-date="2026-10-12T20:00:00.000Z"'));
+  i18n.setLanguage('en');
+  assert.equal(i18n.locale, 'en-US');
+  assert.equal(i18n.dateText(value, options), 'October 13, 2026');
+  assert.equal(i18n.dateText('invalid', options), '');
+  assert.equal(i18n.dateHtml(null, options), '');
+});
+
 test('language persists and translates both original languages while preserving unknown content', () => {
   const { i18n, values } = load('en');
   assert.equal(i18n.t('Masukkan username'), 'Enter your username');

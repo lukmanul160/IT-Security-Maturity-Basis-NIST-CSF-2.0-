@@ -172,6 +172,38 @@ test('yearly assessments copy all results, start empty, isolate mutations, and p
     }
     assert.equal((await request('/frameworks/iso27001-soa/controls?assessmentYear=2027')).status,404);
     assert.equal((await request('/frameworks/iso27001-soa/controls?assessmentYear=2026')).body[0].notes,'Original note');
+    // Excel import is atomic and supports both yearly snapshots and the legacy store.
+    await scoped.query('ALTER TABLE controls ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW()');
+    const maturity=require('../src/services/maturityWorkbookService');
+    const template=maturity.write({},2027),excelBook=XLSX.read(template,{type:'buffer'});
+    excelBook.Sheets['CSF 2.0'].G5={t:'n',v:0};excelBook.Sheets['CSF 2.0'].I5={t:'n',v:4};
+    excelBook.Sheets['CSF 2.0'].H5={t:'s',v:'Policy\nAlasan'};excelBook.Sheets['CSF 2.0'].J5={t:'s',v:'Practice reasoning'};
+    excelBook.Sheets['Privacy Framework Core'].L4={t:'n',v:2};excelBook.Sheets['Privacy Framework Core'].N4={t:'n',v:5};
+    excelBook.Sheets['Privacy Framework Core'].M4={t:'s',v:'Privacy policy'};excelBook.Sheets['Privacy Framework Core'].O4={t:'s',v:'Privacy practice'};
+    const excelBuffer=XLSX.write(excelBook,{type:'buffer',bookType:'xlsx'});
+    const excelRequest=async(framework,year,preview=false,session=token,buffer=excelBuffer)=>{
+      const form=new FormData();form.append('file',new Blob([buffer]),'maturity.xlsx');
+      const response=await fetch(`${base}/maturity-workbook/${framework}${preview?'/preview':''}?assessmentYear=${year}`,{method:'POST',headers:{cookie:auth.sessionCookie+'='+session},body:form});
+      return {status:response.status,body:await response.json()};
+    };
+    assert.equal((await excelRequest('csf',2027,true)).body.added,106);
+    assert.equal((await request('/csf?assessmentYear=2027')).body.length,1,'Preview must not mutate');
+    assert.equal((await excelRequest('csf',2027,false,viewer)).status,403);
+    assert.equal((await excelRequest('csf',2027,false,token,Buffer.from('bad'))).status,400);
+    assert.equal((await request('/csf?assessmentYear=2027')).body.length,1);
+    const importedCsf=await excelRequest('csf',2027);assert.equal(importedCsf.status,200,JSON.stringify(importedCsf.body));assert.equal(importedCsf.body.added,106);
+    const csfState=(await request('/assessment?assessmentYear=2027')).body;
+    assert.equal(csfState.policyScores['GV-OC-01'],0);assert.equal(csfState.practiceScores['GV-OC-01'],4);assert.equal(csfState.notes['policy-GV-OC-01'],'Policy\nAlasan');assert.equal(csfState.notes.one,'2027 reasoning');
+    assert.equal((await request('/privacy/assessment?assessmentYear=2026')).body.policyScores['ID.IM-P1'],undefined);
+    const importedPrivacy=await excelRequest('privacy',2026);assert.equal(importedPrivacy.status,200,JSON.stringify(importedPrivacy.body));
+    const privacyState=(await request('/privacy/assessment?assessmentYear=2026')).body;
+    assert.equal(privacyState.policyScores['ID.IM-P1'],2);assert.equal(privacyState.practiceScores['ID.IM-P1'],5);assert.equal(privacyState.notes['practice-ID.IM-P1'],'Privacy practice');assert.deepEqual(privacyState.attachments.one,state.attachments.one);
+    assert.equal((await request('/privacy/assessment?assessmentYear=2028')).body.policyScores['ID.IM-P1'],undefined);
+    assert.equal((await excelRequest('privacy',2026)).body.added,0,'Reimport must update matching IDs');
+    const exportedMaturity=await fetch(base+'/maturity-workbook/csf?assessmentYear=2027',{headers:{cookie:auth.sessionCookie+'='+token}});
+    assert.equal(exportedMaturity.status,200);assert.match(exportedMaturity.headers.get('content-disposition'),/2027.xlsx/);
+    const roundTrip=maturity.read(Buffer.from(await exportedMaturity.arrayBuffer()),'csf');assert.equal(roundTrip.practiceScores['GV-OC-01'],4);assert.equal(roundTrip.policyScores['GV-OC-01'],0);
+    assert.equal((await fetch(base+'/maturity-workbook/csf?assessmentYear=2099',{headers:{cookie:auth.sessionCookie+'='+token}})).status,404);
   } finally {
     tokens.forEach(token=>auth.destroySession(token));
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}

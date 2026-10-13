@@ -2,7 +2,7 @@
 const rdState = { drill: null };
 function rdToday() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
 function rdDate(value) { if (!value) return ''; const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date); }
-function rdActive(row) { return row.treatmentAction !== 'Closed'; }
+function rdActive(row) { return row.workflowStatus !== 'Closed' && row.workflowStatus !== 'Legacy Closed' && row.treatmentAction !== 'Closed'; }
 function rdScore(row, mode = 'inherent') { const l = Number(row[mode === 'residual' ? 'residualLikelihood' : 'likelihood']); const i = Number(row[mode === 'residual' ? 'residualImpact' : 'impact']); return [l, i].every(n => Number.isInteger(n) && n >= 1 && n <= 5) ? l * i : null; }
 function rdHigh(row, mode = 'inherent') { return rdScore(row, mode) >= 15; }
 function rdOverdue(row) { return rdActive(row) && row.deadline && String(row.deadline).slice(0, 10) < rdToday(); }
@@ -41,15 +41,18 @@ function rdVisibleRows() {
   const category = $('riskRegisterCategoryFilter').value;
   const rating = $('riskRegisterRatingFilter').value;
   const treatment = $('riskRegisterTreatmentFilter').value;
+  const status = $('riskRegisterWorkflowFilter')?.value || 'all';
   return rdBaseRows().filter(row => rdMatchesDrill(row) &&
     (category === 'all' || row.riskCategory === category) &&
     (rating === 'all' || row.riskRating === rating) &&
     (treatment === 'all' || row.treatmentAction === treatment) &&
+    (status === 'all' || row.workflowStatus === status) &&
     (!query || Object.values(row).join(' ').toLowerCase().includes(query)));
 }
 function rdClearRegisterFilters() {
   $('riskRegisterSearch').value = '';
   ['riskRegisterCategoryFilter', 'riskRegisterRatingFilter', 'riskRegisterTreatmentFilter'].forEach(id => { $(id).value = 'all'; });
+  if ($('riskRegisterWorkflowFilter')) $('riskRegisterWorkflowFilter').value = 'all';
   riskRegisterPage = 1;
 }
 function rdResetFilters() {
@@ -122,14 +125,14 @@ function renderRiskDashboard() {
     $('rdTrend').innerHTML = `<svg class="rd-trend" viewBox="0 0 500 165" role="group" aria-label="Jumlah risiko High saat ini menurut bulan pendaftaran"><path d="M30 130H470" class="rd-axis"/><polyline points="${points.map(p => p.join(',')).join(' ')}" class="rd-line"/>${points.map(([x, y], n) => `<circle cx="${x}" cy="${y}" r="6" data-rd-month="${months[n]}" tabindex="0" role="button" aria-label="${months[n]}, ${monthCounts.get(months[n]) || 0} risiko High"/><text x="${x}" y="${y - 10}" text-anchor="middle">${monthCounts.get(months[n]) || 0}</text>`).join('')}</svg><div class="rd-months">${months.map(key => `<button type="button" class="button button-quiet" data-rd-month="${key}">${key}: ${monthCounts.get(key) || 0}</button>`).join('')}</div>`;
   } else $('rdTrend').innerHTML = '<p class="muted">Tanggal pendaftaran belum tersedia pada data dalam cakupan.</p>';
   $('rdIndicators').innerHTML = [['High aktif', active.filter(r => rdHigh(r)).length, active.length, 'high'], ['Treatment overdue', active.filter(rdOverdue).length, active.length, 'overdue'], ['Residual high aktif', active.filter(r => rdHigh(r, 'residual')).length, active.length, 'residual']].map(([label, n, total, key]) => `<div class="dashboard-help-wrap"><button type="button" class="rd-indicator" data-rd-kpi="${key}"><span>${label}</span><strong>${total ? Math.round(n / total * 100) : 0}%</strong><progress max="${Math.max(1, total)}" value="${n}" aria-label="${label}"></progress><small>${n} / ${total} risiko aktif</small></button><button type="button" class="dashboard-help-button" data-dashboard-help aria-label="Penjelasan ${label}">?</button></div>`).join('');
-  const alerts = rows.filter(r => rdOverdue(r) || rdActive(r) && rdHigh(r, 'residual'));
+  const alerts = rows.filter(r => rdOverdue(r) || rdActive(r) && (rdHigh(r, 'residual') || r.workflow?.reviewRequired || r.workflow?.expired || r.workflowStatus === 'Review Required'));
   $('rdAlertCount').textContent = alerts.length;
-  $('rdAlerts').innerHTML = '<h3>Risiko yang memerlukan perhatian</h3>' + (alerts.map(r => `<button type="button" class="rd-alert" data-rd-view="${escapeHtml(r.riskId)}"><strong>${escapeHtml(r.riskId)}</strong> · ${escapeHtml(r.identificationRisk)}<small>${rdOverdue(r) ? 'Treatment terlambat: ' + escapeHtml(String(r.deadline).slice(0, 10)) : 'Residual masih High'}</small></button>`).join('') || '<p class="muted">Tidak ada treatment overdue atau residual High aktif.</p>');
+  $('rdAlerts').innerHTML = '<h3>Risiko yang memerlukan perhatian</h3>' + (alerts.map(r => `<button type="button" class="rd-alert" data-rd-view="${escapeHtml(r.riskId)}"><strong>${escapeHtml(r.riskId)}</strong> · ${escapeHtml(r.identificationRisk)}<small>${r.workflow?.expired ? 'Acceptance kedaluwarsa' : r.workflowStatus === 'Review Required' ? 'Assessment atau approval perlu diulang' : r.workflow?.reviewRequired ? 'Review jatuh tempo' : rdOverdue(r) ? 'Treatment terlambat: ' + escapeHtml(String(r.deadline).slice(0, 10)) : 'Residual masih High'}</small></button>`).join('') || '<p class="muted">Tidak ada risiko yang memerlukan perhatian.</p>');
   renderRiskRegister();
 }
 function rdOpenDetail(row) {
   $('rdDetailTitle').textContent = `${row.riskId} · Detail risiko`;
-  $('rdDetailBody').innerHTML = `<dl class="rd-details">${[['Identifikasi', row.identificationRisk], ['Kategori', row.riskCategory], ['Aset / perangkat', `${row.effectedAsset || '—'} / ${row.deviceName || '—'}`], ['Risk owner', row.riskOwner], ['Inherent score', rdScore(row)], ['Residual score', rdScore(row, 'residual')], ['Treatment', row.treatmentAction], ['Rencana treatment', row.riskTreatmentDescription], ['Owner of action', row.ownerOfAction], ['Deadline', row.deadline ? String(row.deadline).slice(0, 10) : ''], ['Risk control', row.riskControl], ['Risk cause', row.riskCause], ['Risk analysis', row.riskAnalysis], ['Residual description', row.residualRiskDescription], ['Komentar', row.comment], ['Catatan', row.note], ['Dibuat', rdDate(row.createdAt)], ['Diperbarui', rdDate(row.updatedAt)]].map(([label, value]) => `<dt>${label}</dt><dd>${escapeHtml(value ?? '—') || '—'}</dd>`).join('')}</dl><p class="muted">Komentar dapat diperbarui melalui Quick edit. Riwayat aktivitas tersedia pada modul Audit Trail sesuai hak akses akun; histori skor dan komentar multi-user per risiko belum tersedia.</p>`;
+  $('rdDetailBody').innerHTML = `<dl class="rd-details">${[['Identifikasi', row.identificationRisk], ['Kategori', row.riskCategory], ['Aset / perangkat', `${row.effectedAsset || '—'} / ${row.deviceName || '—'}`], ['Risk owner', row.riskOwner], ['Inherent score', rdScore(row)], ['Residual score', rdScore(row, 'residual')], ['Treatment', row.treatmentAction], ['Rencana treatment', row.riskTreatmentDescription], ['Owner of action', row.ownerOfAction], ['Deadline', row.deadline ? String(row.deadline).slice(0, 10) : ''], ['Risk control', row.riskControl], ['Risk cause', row.riskCause], ['Risk analysis', row.riskAnalysis], ['Residual description', row.residualRiskDescription], ['Komentar', row.comment], ['Catatan', row.note], ['Dibuat', rdDate(row.createdAt)], ['Diperbarui', rdDate(row.updatedAt)]].map(([label, value]) => `<dt>${label}</dt><dd>${escapeHtml(value ?? '—') || '—'}</dd>`).join('')}</dl><p class="muted">Komentar dapat diperbarui melalui Quick edit. Riwayat aktivitas tersedia pada modul Audit Trail sesuai hak akses akun; histori assessment dan keputusan tersedia melalui Workflow.</p>`;
   $('rdDetail').showModal();
 }
 async function rdExportReport(format) {

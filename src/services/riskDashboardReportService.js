@@ -8,7 +8,10 @@ const columns = [
   ['Likelihood', 'likelihood'], ['Impact', 'impact'], ['Inherent rating', 'riskRating'],
   ['Residual likelihood', 'residualLikelihood'], ['Residual impact', 'residualImpact'], ['Residual rating', 'residualRating'],
   ['Treatment', 'treatmentAction'], ['Treatment description', 'riskTreatmentDescription'],
-  ['Action owner', 'ownerOfAction'], ['Deadline', 'deadline'], ['Comment', 'comment'], ['Updated at', 'updatedAt']
+  ['Action owner', 'ownerOfAction'], ['Deadline', 'deadline'], ['Comment', 'comment'], ['Updated at', 'updatedAt'],
+  ['Workflow status', 'workflowStatus'], ['Current likelihood', 'workflow.currentLikelihood'], ['Current impact', 'workflow.currentImpact'],
+  ['Target likelihood', 'workflow.targetLikelihood'], ['Target impact', 'workflow.targetImpact'], ['Tolerance score', 'workflow.toleranceScore'],
+  ['Verified by', 'workflow.verifiedBy'], ['Acceptance expiry', 'workflow.acceptanceExpiry'], ['Next review', 'workflow.reviewDate']
 ];
 function score(row, residual = false) {
   const l = Number(row[residual ? 'residualLikelihood' : 'likelihood']), i = Number(row[residual ? 'residualImpact' : 'impact']);
@@ -22,7 +25,7 @@ async function createReport(input) {
   const ids = new Set(input.riskIds), rows = (await register.listRegister()).filter(row => ids.has(row.riskId));
   if (input.format === 'xlsx') {
     const table = [columns.map(([label]) => label).concat(['Inherent score', 'Residual score']), ...rows.map(row => columns.map(([, field]) => {
-      const value = row[field]; return value instanceof Date ? value.toISOString() : value ?? '';
+      const value = field.split('.').reduce((data, key) => data?.[key], row); return value instanceof Date ? value.toISOString() : value ?? '';
     }).concat([score(row), score(row, true)]))];
     const workbook = XLSX.utils.book_new(), sheet = XLSX.utils.aoa_to_sheet(table);
     sheet['!autofilter'] = { ref: sheet['!ref'] };
@@ -55,6 +58,7 @@ async function createReport(input) {
     draw(`${row.riskId} | ${row.identificationRisk}`, true);
     draw(`Category: ${row.riskCategory || '-'} | Owner: ${row.riskOwner || '-'} | Asset: ${row.effectedAsset || '-'} | Device: ${row.deviceName || '-'}`);
     draw(`Inherent: ${score(row) || 'Unrated'} | Residual: ${score(row, true) || 'Unrated'} | Treatment: ${row.treatmentAction || 'Unassigned'} | Deadline: ${row.deadline ? String(row.deadline).slice(0, 10) : '-'}`);
+    draw(`Workflow: ${row.workflowStatus || 'Draft'} | Current: ${score({ likelihood: row.workflow?.currentLikelihood, impact: row.workflow?.currentImpact }) || 'Unrated'} | Target residual: ${score({ likelihood: row.workflow?.targetLikelihood, impact: row.workflow?.targetImpact }) || 'Unrated'} | Verified by: ${row.workflow?.verifiedBy || 'Not verified'}`);
     if (row.riskTreatmentDescription) draw(`Treatment plan: ${row.riskTreatmentDescription}`);
     if (row.comment) draw(`Comment: ${row.comment}`);
     y -= 12;

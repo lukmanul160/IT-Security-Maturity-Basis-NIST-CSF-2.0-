@@ -215,6 +215,10 @@ const radarResizeObserver = new ResizeObserver(entries => {
 window.addEventListener('nist:language-change', () => {
   renderRadar();
   renderPrivacyRadar();
+  // Repaint cached date summaries only; unsaved forms are left intact.
+  if ($('riskManagementView')?.classList.contains('active-view')) renderRiskDashboard();
+  if ($('riskAcceptanceView')?.classList.contains('active-view')) renderRiskAcceptanceDashboard();
+  if ($('policyRegisterView')?.classList.contains('active-view')) renderPolicyRegisterRows();
   $('radarTooltip').style.display = 'none';
   $('privacyRadarTooltip').style.display = 'none';
 });

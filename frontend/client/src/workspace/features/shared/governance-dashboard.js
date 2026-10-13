@@ -22,7 +22,7 @@ function gdBars(id, rows, field, attribute, fallback = 'Belum diisi') {
 function gdTimeline(id, rows, dateOf, attribute) {
   const counts = new Map();
   rows.forEach(row => { const month = gdDate(dateOf(row)).slice(0, 7); if (month) counts.set(month, (counts.get(month) || 0) + 1); });
-  $(id).innerHTML = [...counts].sort((a, b) => a[0].localeCompare(b[0])).map(([month, count]) => `<button class="rd-bar" type="button" data-${attribute}="${month}"><span>${escapeHtml(new Date(month + '-01T00:00:00Z').toLocaleDateString('id-ID', { month: 'short', year: 'numeric', timeZone: 'UTC' }))}</span><strong>${count}</strong><i><b style="width:${count / Math.max(...counts.values()) * 100}%"></b></i></button>`).join('') || '<p class="muted">Belum ada jadwal pada data yang dipilih.</p>';
+  $(id).innerHTML = [...counts].sort((a, b) => a[0].localeCompare(b[0])).map(([month, count]) => `<button class="rd-bar" type="button" data-${attribute}="${month}"><span>${(globalThis.NistI18n?.dateHtml?.(month + '-01T00:00:00Z', { month: 'short', year: 'numeric', timeZone: 'UTC' }) ?? escapeHtml(new Date(month + '-01T00:00:00Z').toLocaleString(globalThis.NistI18n?.locale || 'id-ID', { month: 'short', year: 'numeric', timeZone: 'UTC' })))}</span><strong>${count}</strong><i><b style="width:${count / Math.max(...counts.values()) * 100}%"></b></i></button>`).join('') || '<p class="muted">Belum ada jadwal pada data yang dipilih.</p>';
 }
 function gdCalendar(id, monthId, rows, dateOf, attribute) {
   const input = $(monthId); if (!input.value) input.value = gdToday().slice(0, 7);

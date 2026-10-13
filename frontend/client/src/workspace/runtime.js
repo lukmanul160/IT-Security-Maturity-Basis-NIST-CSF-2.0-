@@ -26,6 +26,7 @@ import tprmQuestionnaireExcel from './features/tprm/questionnaire-excel.js?raw';
 import part10 from './features/risk-management/register.js?raw';
 import riskDashboard from './features/risk-management/dashboard.js?raw';
 import riskOptions from './features/risk-management/options.js?raw';
+import riskWorkflow from './features/risk-management/workflow.js?raw';
 import personnelForms from './features/personnel/organization-and-forms.js?raw';
 import part11 from './features/personnel/certifications.js?raw';
 import part12 from './features/assessment/overview-and-csf.js?raw';
@@ -77,6 +78,7 @@ export default [
   part10,
   riskDashboard,
   riskOptions,
+  riskWorkflow,
   personnelForms,
   part11,
   assessmentGaps,
