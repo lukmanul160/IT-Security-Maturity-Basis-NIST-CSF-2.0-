@@ -29,7 +29,7 @@ function renderIsoObjectiveCalendarTab() {
    if(!activeMonths.includes(index))return '<td class="is-disabled"><span class="objective-no-evaluation" aria-label="Tidak ada evaluasi">&mdash;</span></td>';
    const key=objectivePeriodKey(frequency,index), period=periods[key]||{}, target=period.target??item.targetValue??'', status=objectiveAutoStatus(target,period.actual,period.status);
    const attrs=field=>`name="objective-id-${item.id}-${key}-${field}" data-objective-id="${item.id}" data-objective-period="${key}" data-period-field="${field}"`;
-   return `<td><div class="objective-calendar-fields"><label><span>Target ${objectiveMeasurement(item).method === 'percentage' ? '(%)' : escapeHtml(objectiveMeasurement(item).unit || 'jumlah')}</span><input ${attrs('target')} aria-label="Target ${escapeHtml(month)} ${escapeHtml(item.objective)}" placeholder="Target" value="${escapeHtml(target)}"></label><label><span>Realisasi ${objectiveMeasurement(item).method === 'percentage' ? '(%)' : escapeHtml(objectiveMeasurement(item).unit || 'jumlah')}</span><input ${attrs('actual')} aria-label="Realisasi ${escapeHtml(month)} ${escapeHtml(item.objective)}" placeholder="Realisasi" value="${escapeHtml(period.actual??'')}"></label><small data-objective-progress>${escapeHtml(objectiveProgress(item,target,period.actual))}</small><label><span>Status</span><select ${attrs('status')} aria-label="Status ${escapeHtml(month)} ${escapeHtml(item.objective)}">${objectiveStatuses.map(option=>`<option value="${escapeHtml(option)}" ${option===status?'selected':''}>${escapeHtml(option)}</option>`).join('')}</select></label><div class="objective-evidence"><label class="attachment-button">Upload bukti<input type="file" multiple data-objective-evidence-upload="${item.id}" data-evidence-period="${key}" hidden></label><small data-objective-evidence-status role="status"></small>${(period.evidence || []).map(file => `<a href="/api/files/open/${String(file.path).replace(/^uploads?\//, '').split('/').map(encodeURIComponent).join('/')}" target="_blank" rel="noopener">${escapeHtml(file.name || file.path)}</a>`).join('<br>')}</div></div></td>`;
+   return `<td><div class="objective-calendar-fields"><label><span>Target ${objectiveMeasurement(item).method === 'percentage' ? '(%)' : escapeHtml(objectiveMeasurement(item).unit || 'jumlah')}</span><input ${attrs('target')} aria-label="Target ${escapeHtml(month)} ${escapeHtml(item.objective)}" placeholder="Target" value="${escapeHtml(target)}"></label><label><span>Realisasi ${objectiveMeasurement(item).method === 'percentage' ? '(%)' : escapeHtml(objectiveMeasurement(item).unit || 'jumlah')}</span><input ${attrs('actual')} aria-label="Realisasi ${escapeHtml(month)} ${escapeHtml(item.objective)}" placeholder="Realisasi" value="${escapeHtml(period.actual??'')}"></label><small data-objective-progress>${escapeHtml(objectiveProgress(item,target,period.actual))}</small><label><span>Status</span><select ${attrs('status')} aria-label="Status ${escapeHtml(month)} ${escapeHtml(item.objective)}">${objectiveStatuses.map(option=>`<option value="${escapeHtml(option)}" ${option===status?'selected':''}>${escapeHtml(option)}</option>`).join('')}</select></label><div class="objective-evidence"><label class="attachment-button">Upload bukti<input type="file" multiple data-objective-evidence-upload="${item.id}" data-evidence-period="${key}" hidden></label><small data-objective-evidence-status role="status"></small><div data-objective-evidence-list>${objectiveEvidenceList(item,key)}</div></div></div></td>`;
   }).join('')}</tr>`;
  }).join('')}</tbody></table>`;
 }
@@ -61,6 +61,9 @@ async function uploadObjectiveEvidence(input) {
   const key = input.dataset.evidencePeriod;
   if (!item || !input.files.length) return;
   const status = input.closest('td').querySelector('[data-objective-evidence-status]');
+  const container = input.closest('.objective-evidence');
+  if (container.dataset.busy === 'true') return;
+  container.dataset.busy = 'true';
   input.disabled = true;
   status.textContent = 'Mengunggah bukti...';
   try {
@@ -73,16 +76,49 @@ async function uploadObjectiveEvidence(input) {
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Bukti gagal ditautkan. File tersedia di Uploaded files.');
     const saved = await response.json();
     Object.assign(item, saved);
-    const links = document.createElement('div');
-    for (const file of uploaded) {
-      const link = document.createElement('a');
-      link.href = '/api/files/open/' + file.path.replace(/^uploads?\//, '').split('/').map(encodeURIComponent).join('/');
-      link.target = '_blank'; link.rel = 'noopener'; link.textContent = file.name || file.path;
-      links.append(link, document.createElement('br'));
-    }
-    input.closest('.objective-evidence').append(links);
+    input.closest('.objective-evidence').querySelector('[data-objective-evidence-list]').innerHTML = objectiveEvidenceList(item,key);
     status.textContent = 'Bukti tersimpan.';
   } catch (error) { status.textContent = error.message; }
-  finally { input.disabled = false; input.value = ''; }
+  finally { input.disabled = false; input.value = ''; container.dataset.busy = 'false'; }
 }
 $('isoObjectiveCalendarForm').addEventListener('change', event => { if (event.target.matches('[data-objective-evidence-upload]')) void uploadObjectiveEvidence(event.target); });
+
+function objectiveEvidenceList(item, key) {
+  return (item.periodTargets?.[key]?.evidence || []).map((file, index) => {
+    const attrs = `data-objective-evidence-id="${item.id}" data-evidence-period="${escapeHtml(key)}" data-evidence-index="${index}"`;
+    const url = '/api/files/open/' + String(file.path).replace(/^uploads?\//, '').split('/').map(encodeURIComponent).join('/');
+    return `<div class="objective-evidence-file"><a href="${url}" target="_blank" rel="noopener">${escapeHtml(file.name || file.path)}</a><div class="attachment-buttons"><label class="attachment-button">Ganti dokumen<input type="file" data-objective-evidence-replace ${attrs} hidden></label><button type="button" class="attachment-action-button danger" data-objective-evidence-remove ${attrs}>Hapus bukti</button></div></div>`;
+  }).join('');
+}
+async function changeObjectiveEvidence(control, replace = false) {
+  const item = isoObjectives.find(row => String(row.id) === control.dataset.objectiveEvidenceId);
+  const key = control.dataset.evidencePeriod, index = Number(control.dataset.evidenceIndex);
+  const file = item?.periodTargets?.[key]?.evidence?.[index];
+  if (!file || (replace && !control.files.length)) return;
+  if (!replace && !confirm(`Hapus bukti ${file.name || file.path} dari periode ini? File asli tetap tersedia di Uploaded files.`)) return;
+  const container = control.closest('.objective-evidence');
+  if (container.dataset.busy === 'true') return;
+  container.dataset.busy = 'true';
+  const status = container.querySelector('[data-objective-evidence-status]');
+  control.disabled = true;
+  status.textContent = replace ? 'Mengganti dokumen...' : 'Menghapus bukti...';
+  try {
+    const drafts = collectObjectivePeriods($('isoObjectiveCalendarForm'), String(item.id));
+    const periods = { ...item.periodTargets };
+    for (const [periodKey, draft] of Object.entries(drafts)) periods[periodKey] = { ...periods[periodKey], ...draft };
+    const evidence = [...periods[key].evidence];
+    if (replace) {
+      const uploaded = await saveFilesToServer('ISO 27001', 'policy', [control.files[0]]);
+      evidence[index] = evidenceReference(uploaded[0]);
+    } else evidence.splice(index, 1);
+    periods[key] = { ...periods[key], evidence };
+    const response = await fetch(`/api/frameworks/iso27001/objectives/${item.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, periodTargets: periods }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Perubahan bukti gagal disimpan.');
+    Object.assign(item, await response.json());
+    container.querySelector('[data-objective-evidence-list]').innerHTML = objectiveEvidenceList(item,key);
+    status.textContent = replace ? 'Dokumen berhasil diganti.' : 'Bukti berhasil dihapus dari periode ini.';
+  } catch (error) { status.textContent = error.message; }
+  finally { control.disabled = false; if (replace) control.value = ''; container.dataset.busy = 'false'; }
+}
+$('isoObjectiveCalendarForm').addEventListener('change', event => { if (event.target.matches('[data-objective-evidence-replace]')) void changeObjectiveEvidence(event.target, true); });
+$('isoObjectiveCalendarForm').addEventListener('click', event => { const button = event.target.closest('[data-objective-evidence-remove]'); if (button) void changeObjectiveEvidence(button); });
