@@ -17,9 +17,18 @@ async function deleteControl(req, res) { await frameworkService.deleteControl(re
 async function listCategoryTargets(req, res) { res.json(await frameworkService.listCategoryTargets(req.params.frameworkId)); }
 async function updateCategoryTarget(req, res) { res.json(await frameworkService.updateCategoryTarget(req.params.frameworkId, req.params.category, req.body.targetScore)); }
 async function listInformationSecurityObjectives(req, res) { res.json(await frameworkService.listInformationSecurityObjectives(req.query.year || req.query.assessmentYear)); }
-async function createInformationSecurityObjective(req, res) { res.status(201).json(await frameworkService.createInformationSecurityObjective(req.body)); }
-async function updateInformationSecurityObjective(req, res) { res.json(await frameworkService.updateInformationSecurityObjective(req.params.id, req.body)); }
+async function createInformationSecurityObjective(req, res) { await authorizeObjectiveEvidence(req); res.status(201).json(await frameworkService.createInformationSecurityObjective(req.body)); }
+async function updateInformationSecurityObjective(req, res) { await authorizeObjectiveEvidence(req); res.json(await frameworkService.updateInformationSecurityObjective(req.params.id, req.body)); }
 async function deleteInformationSecurityObjective(req, res) { await frameworkService.deleteInformationSecurityObjective(req.params.id); res.status(204).end(); }
 async function resetIso27001Assessment(req, res) { await frameworkService.resetIso27001Assessment(req.query.assessmentYear); res.status(204).end(); }
 
 module.exports = { list, create, listControls, createControl, updateControl, updateControlEvidence, deleteControl, listCategoryTargets, updateCategoryTarget, listInformationSecurityObjectives, createInformationSecurityObjective, updateInformationSecurityObjective, deleteInformationSecurityObjective, resetIso27001Assessment };
+
+async function authorizeObjectiveEvidence(req) {
+  const previous = req.params.id ? (await frameworkService.listInformationSecurityObjectives()).find(item => String(item.id) === String(req.params.id)) : null;
+  const flatten = periods => Object.entries(periods || {}).filter(([key]) => key !== '_measurement').flatMap(([, period]) => {
+    if (period?.evidence !== undefined && !Array.isArray(period.evidence)) throw Object.assign(new Error('Daftar bukti tidak valid.'), { status: 400 });
+    return period?.evidence || [];
+  });
+  await evidenceAccess.assertReferences(flatten(req.body.periodTargets), flatten(previous?.periodTargets), req.user);
+}
