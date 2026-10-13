@@ -21,6 +21,8 @@ import part07 from './features/tprm/navigation-and-questionnaires.js?raw';
 import part08 from './features/tprm/questionnaire-templates.js?raw';
 import part09 from './features/tprm/vendor-register.js?raw';
 import tprmDashboard from './features/tprm/dashboard.js?raw';
+import tprmLifecycle from './features/tprm/lifecycle.js?raw';
+import tprmQuestionnaireExcel from './features/tprm/questionnaire-excel.js?raw';
 import part10 from './features/risk-management/register.js?raw';
 import riskDashboard from './features/risk-management/dashboard.js?raw';
 import riskOptions from './features/risk-management/options.js?raw';
@@ -70,6 +72,8 @@ export default [
   part08,
   part09,
   tprmDashboard,
+  tprmLifecycle,
+  tprmQuestionnaireExcel,
   part10,
   riskDashboard,
   riskOptions,

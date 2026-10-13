@@ -15,7 +15,7 @@ function tdScope(row) {
   const query = $('tdSearch').value.trim().toLowerCase();
   return (!query || [row.thirdParty, row.serviceDependency].some(v => String(v || '').toLowerCase().includes(query))) && (!$('tdRisk').value || row.riskLevel === $('tdRisk').value) && (!$('tdRelationship').value || normalizeTprmRelationshipStatus(row.relationshipStatus) === $('tdRelationship').value) && gdReviewMatches(row.nextReview, $('tdReview').value, normalizeTprmRelationshipStatus(row.relationshipStatus) === 'Active');
 }
-function tdIsHigh(row) { return /high|tier 1/i.test(row.riskLevel || row.dueDiligenceAssessment?.riskTier || '') || /high|tier 1/i.test(tdData.questionnaires.find(q => String(q.id) === String(row.questionnaireId))?.responses?.riskTier || ''); }
+function tdIsHigh(row) { if(row.riskSummary)return row.riskSummary.level === 'High Risk'; return /high|tier 1/i.test(row.riskLevel || row.dueDiligenceAssessment?.riskTier || '') || /high|tier 1/i.test(tdData.questionnaires.find(q => String(q.id) === String(row.questionnaireId))?.responses?.riskTier || ''); }
 function tdDue(row) { const days = gdDays(row.nextReview); return normalizeTprmRelationshipStatus(row.relationshipStatus) === 'Active' && days !== null && days <= 30; }
 function tdVendorMatches(row) {
   if (!tdDrill) return true;
@@ -23,7 +23,7 @@ function tdVendorMatches(row) {
   return true;
 }
 function tdOpenVendor(kind, value) {
-  const rows = tdData.vendors.filter(tdScope).filter(row => kind === 'all' || kind === 'high' && tdIsHigh(row) || kind === 'complete' && (row.assessmentStatus === 'Complete' || !!row.dueDiligenceAssessment?.riskTier) || kind === 'due' && tdDue(row) || kind === 'date' && gdDate(row.nextReview) === value || kind === 'risk' && (row.riskLevel || '') === value || kind === 'assessment' && (row.assessmentStatus || '') === value || kind === 'review' && tdReviewLabel(row) === value);
+  const rows = tdData.vendors.filter(tdScope).filter(row => kind === 'all' || kind === 'high' && tdIsHigh(row) || kind === 'complete' && (row.assessmentStatus === 'Complete' || !!row.dueDiligenceAssessment?.riskTier) || kind === 'due' && tdDue(row) || kind === 'date' && gdDate(row.nextReview) === value || kind === 'risk' && (row.riskLevel || '') === value || kind === 'assessment' && (row.workflowStage || row.assessmentStatus || '') === value || kind === 'review' && tdReviewLabel(row) === value);
   tdDrill = { ids: new Set(rows.map(row => String(row.id))) }; tprmPage = 1;
   $('tdListContext').hidden = false; $('tdListLabel').textContent = `${rows.length} vendor dari dashboard. Filter daftar tetap berlaku.`;
   document.querySelector('[data-tprm-register-tab="register"]').click(); renderTprmRows();
@@ -36,14 +36,14 @@ function renderTprmDashboard() {
   const available = source => tdSources[source] === 'ready';
   gdKpis('tdKpis', [
     ['all','Total vendor',available('vendors') ? rows.length : 'Belum tersedia','TPRM Risk Register','tprmDashboardTotal'],
-    ['high','High risk',available('vendors') ? rows.filter(tdIsHigh).length : 'Belum tersedia','CIA / due diligence yang sudah dinilai','tprmDashboardHigh'],
+    ['high','High risk',available('vendors') ? rows.filter(tdIsHigh).length : 'Belum tersedia','Residual risk setelah kontrol','tprmDashboardHigh'],
     ['complete','CIA assessment selesai',available('vendors') ? rows.filter(r => r.assessmentStatus === 'Complete' || r.dueDiligenceAssessment?.riskTier).length : 'Belum tersedia','Assessment tersimpan','tprmDashboardComplete'],
     ['due','Review perlu perhatian',available('vendors') ? rows.filter(tdDue).length : 'Belum tersedia','Aktif, terlambat atau dalam 30 hari','tprmDashboardDue'],
     ['questionnaires','Due diligence',available('questionnaires') ? qs.length : 'Belum tersedia','Pengajuan sesuai cakupan vendor'],
     ['templates','Questionnaire templates',available('templates') ? tdData.templates.length : 'Belum tersedia','Template yang tersedia; tidak mengikuti filter vendor']
   ], 'td-kpi');
   gdBars('tprmDashboardChart',rows,r=>r.riskLevel,'td-risk','Belum dinilai');
-  gdBars('tprmAssessmentChart',rows,r=>r.assessmentStatus,'td-assessment');
+  gdBars('tprmAssessmentChart',rows,r=>r.workflowStage || r.assessmentStatus,'td-assessment');
   gdBars('tprmReviewChart',rows,tdReviewLabel,'td-review');
   gdBars('tdQuestionnaireChart',qs,r=>r.status,'td-questionnaire');
   gdBars('tdTierChart',qs,r=>r.responses?.riskTier,'td-tier','Belum dinilai');

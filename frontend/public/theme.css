@@ -277,3 +277,27 @@ body.landing-page nav>.button{flex-shrink:0;padding:10px 16px;white-space:nowrap
 .list-pagination{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-block:12px}
 
 .owner-smtp-link{display:block;width:fit-content;padding:5px 0;border:0;background:transparent;color:#3478ef;font:inherit;font-size:12px;text-align:left;text-decoration:underline;cursor:pointer}.owner-smtp-link:disabled{opacity:.6;cursor:default}.owner-smtp-dialog{box-sizing:border-box;width:min(660px,calc(100% - 32px));max-height:85vh;overflow:auto;border:1px solid var(--line,#dce5f2);border-radius:16px;padding:24px;background:var(--paper,#fff);color:var(--ink,#182338)}.owner-smtp-dialog::backdrop{background:#10203866}.owner-smtp-dialog label{display:grid;gap:7px;margin-block:12px}.owner-smtp-dialog input,.owner-smtp-dialog select{max-width:100%;box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--line,#dce5f2);border-radius:8px}.owner-smtp-dialog h3{overflow-wrap:anywhere}
+/* Questionnaire template picker follows the active workspace theme. */
+html[data-theme=dark] body.workspace-ui #templateSelectionList{background:var(--white,#1a2638)!important}
+html[data-theme=dark] body.workspace-ui #templateSelectionModal .template-selection-card{background:transparent!important;color:var(--ink,#e4ecf8)!important;border-bottom-color:var(--line,#35455c)!important}
+html[data-theme=dark] body.workspace-ui #templateSelectionModal .template-selection-copy strong{color:var(--ink,#e4ecf8)!important}
+html[data-theme=dark] body.workspace-ui #templateSelectionModal .template-selection-copy small{color:var(--muted,#a2b4cc)!important}
+html[data-theme=dark] body.workspace-ui #templateSelectionModal .template-selection-card:hover,
+html[data-theme=dark] body.workspace-ui #templateSelectionModal .template-selection-card:focus-visible{background:#24344b!important;border-left-color:#82b5ff!important}
+html[data-theme=dark] body.workspace-ui #templateSelectionModal .template-selection-card:focus-visible{outline:2px solid #82b5ff;outline-offset:-2px}
+/* CIA vendor/device assessment and scope picker use dark surfaces throughout. */
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal .questionnaire-section{background:var(--white,#1a2638)!important;border-color:var(--line,#35455c)!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal .cia-assessment-grid section{background:#202f45!important;border-color:#35455c!important;border-top-color:#82b5ff!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal .cia-assessment-grid section:nth-child(2){border-top-color:#62cbb5!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal .cia-assessment-grid section:nth-child(3){border-top-color:#efa16d!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal :is(legend,.cia-assessment-grid h4){color:var(--ink,#e4ecf8)!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal input[readonly]{background:#263e60!important;color:#b8d6ff!important;border-color:#435673!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal .tprm-tier-table td{border-color:var(--line,#35455c)!important;color:var(--ink,#e4ecf8)!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentModal .tprm-tier-table td:first-child{color:#a9caff!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option{background:#202f45!important;border-color:#35455c!important;border-top-color:#82b5ff!important;color:var(--ink,#e4ecf8)!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:nth-child(2){border-top-color:#efa16d!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option strong{color:#b8d6ff!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option span{color:var(--muted,#a2b4cc)!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:hover,
+html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:focus-visible{background:#24344b!important;border-color:#82b5ff!important}
+html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:focus-visible{outline:2px solid #82b5ff;outline-offset:2px}

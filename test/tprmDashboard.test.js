@@ -9,6 +9,27 @@ function context() {
   vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/tprm/dashboard.js','utf8').split("document.querySelector('[data-view=\"tprm-register\"]')")[0],ctx);
   return {ctx,fields};
 }
+function riskPickerContext() {
+  let finish, renders=0;
+  const dialog={open:false,_tprmRow:null};
+  const source=fs.readFileSync('frontend/client/src/workspace/features/tprm/vendor-register.js','utf8');
+  const functionSource=source.slice(source.indexOf('function openRiskRegisterForTprm('),source.indexOf('\nfunction ensureTprmRelatedRiskModal('));
+  const ctx=vm.createContext({ $:()=>dialog, renderTprmRiskPicker:row=>{renders++;dialog.open=true;dialog._tprmRow=row;},loadRiskManagement:()=>new Promise(resolve=>{finish=resolve;}) });
+  vm.runInContext(functionSource,ctx);
+  return {ctx,dialog,finish:()=>finish(),renders:()=>renders};
+}
+test('late risk data cannot reopen a cancelled picker',async()=>{
+  const {ctx,dialog,finish,renders}=riskPickerContext();
+  const pending=vm.runInContext('openRiskRegisterForTprm({id:1})',ctx);
+  dialog.open=false;finish();await pending;
+  assert.equal(dialog.open,false);assert.equal(renders(),1);
+});
+test('late risk data cannot replace another vendor picker',async()=>{
+  const {ctx,dialog,finish,renders}=riskPickerContext();
+  const pending=vm.runInContext('openRiskRegisterForTprm({id:1})',ctx);
+  dialog._tprmRow={id:2};finish();await pending;
+  assert.equal(dialog._tprmRow.id,2);assert.equal(renders(),1);
+});
 test('TPRM global filters intersect vendor, level and relationship',()=>{
   const {ctx,fields}=context();fields.tdSearch.value='cloud';fields.tdRisk.value='High';fields.tdRelationship.value='Active';
   assert.equal(vm.runInContext("tdScope({thirdParty:'Cloud provider',riskLevel:'High',relationshipStatus:'Active'})",ctx),true);

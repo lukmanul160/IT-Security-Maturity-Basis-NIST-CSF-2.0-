@@ -1,0 +1,48 @@
+// Exercise the built workspace and real read-only APIs; no asset/rack records are created.
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+const {spawn}=require('node:child_process');
+const {pool}=require('../src/config/database');
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+(async()=>{
+ let server,chrome,ws;const profile=path.join(os.tmpdir(),'nist-table-resize-'+Date.now());
+ try{
+ const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
+ const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
+ const port=9800+Math.floor(Math.random()*100);
+ chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
+ for(let i=0;i<60;i++){try{const tabs=await(await fetch('http://127.0.0.1:'+port+'/json')).json();ws=new WebSocket(tabs.find(t=>t.type==='page').webSocketDebuggerUrl);break;}catch{await delay(100);}}
+ assert.ok(ws,'Chrome available');await new Promise(r=>ws.addEventListener('open',r,{once:true}));let id=0;const waiting=new Map(),errors=[];
+ ws.addEventListener('message',event=>{const m=JSON.parse(event.data);if(m.id){waiting.get(m.id)(m);waiting.delete(m.id);}if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails.exception?.description||m.params.exceptionDetails.text);});
+ const call=(method,params={})=>new Promise((resolve,reject)=>{waiting.set(++id,m=>m.error?reject(Error(m.error.message)):resolve(m.result));ws.send(JSON.stringify({id,method,params}));});
+ const evaluate=async expression=>{let r;try{r=await call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});}catch(error){if(/Inspected target navigated|Execution context was destroyed|Cannot find context/.test(error.message))return undefined;throw error;}if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result.value;};
+ const wait=async expression=>{for(let i=0;i<150;i++){if(await evaluate(expression))return;await delay(100);}throw Error('Wait failed: '+expression+'; errors: '+JSON.stringify(errors)+'; asset status: '+await evaluate("document.querySelector('#assetManagementView').innerText.slice(0,1200)"));};
+ await call('Runtime.enable');await call('Page.enable');await call('Network.enable');await call('Network.setCookie',{name:auth.sessionCookie,value:token,url:base,httpOnly:true});
+
+ await call('Page.addScriptToEvaluateOnNewDocument',{source:"{const native=window.fetch.bind(window),jobs=[];let active=0;function pump(){while(active<3&&jobs.length){const job=jobs.shift();active++;native(...job.args).then(job.resolve,job.reject).finally(()=>{active--;pump();});}}window.fetch=(...args)=>new Promise((resolve,reject)=>{jobs.push({args,resolve,reject});pump();});localStorage.setItem('nist-maturity-ui',JSON.stringify({view:'policy-register',function:'GV'}));}"});
+ await call('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:base+'/app'});
+ await wait("document.querySelector('#sidebarGreeting')?.textContent.startsWith('Halo ')");await wait("window.__NIST_TABLE_RESIZE__===true");
+ const showPolicy=async()=>{await wait("!!document.querySelector('[data-view=\"policy-register\"]') && !!document.querySelector('[data-policy-tab=\"register\"]')");await evaluate("document.querySelector('[data-view=\"policy-register\"]').click();document.querySelector('[data-policy-tab=\"register\"]').click()");await wait("document.querySelector('#policyRegisterBody').closest('table').querySelectorAll('.nr-column-handle').length===9");};
+ const width=()=>evaluate("document.querySelector('#policyRegisterBody').closest('table').tHead.rows[0].cells[0].getBoundingClientRect().width");
+ await showPolicy();assert.ok(Math.abs(await width()-340)<=3,'Policy title has a readable default width');
+ const drag=await evaluate("(()=>{const h=document.querySelector('#policyRegisterBody').closest('table').querySelector('[data-column-index=\"0\"]');const r=h.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};})()");
+ await call('Input.dispatchMouseEvent',{type:'mousePressed',x:drag.x,y:drag.y,button:'left',clickCount:1});await call('Input.dispatchMouseEvent',{type:'mouseMoved',x:drag.x+160,y:drag.y,button:'left'});await call('Input.dispatchMouseEvent',{type:'mouseReleased',x:drag.x+160,y:drag.y,button:'left',clickCount:1});
+ assert.ok(Math.abs(await width()-500)<=3,'Drag widens the title independently');assert.equal(await evaluate("JSON.parse(localStorage.getItem('nist-table-widths:v1:body:policyRegisterBody')).widths[0]"),500);
+ await evaluate("document.querySelector('#policyRegisterSearch').value='Governance';document.querySelector('#policyRegisterSearch').dispatchEvent(new Event('input',{bubbles:true}))");assert.ok(Math.abs(await width()-500)<=3,'Filtering preserves widths');
+ await call('Page.reload');await delay(300);await wait("window.__NIST_TABLE_RESIZE__===true");await showPolicy();assert.ok(Math.abs(await width()-500)<=3,'Reload restores saved widths');
+ await evaluate("document.querySelector('#policyRegisterBody').closest('table').querySelector('[data-column-index=\"0\"]').focus()");await call('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});await call('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});assert.ok(Math.abs(await width()-510)<=3,'Keyboard resizing works');
+ await evaluate("document.querySelector('#policyRegisterBody').closest('table').querySelector('[data-column-index=\"0\"]').dispatchEvent(new MouseEvent('dblclick',{bubbles:true}))");assert.ok(await width()>=64&&await width()<=903,'Auto-fit clamps long content');
+ await evaluate("document.querySelector('#policyRegisterBody').closest('table').parentElement.previousElementSibling.querySelector('.nr-table-reset').click()");assert.ok(Math.abs(await width()-340)<=3);assert.equal(await evaluate("localStorage.getItem('nist-table-widths:v1:body:policyRegisterBody')"),null);
+ const shot=await call('Page.captureScreenshot',{format:'png'});fs.writeFileSync('output/policy-resizable-columns.png',Buffer.from(shot.data,'base64'));
+ await evaluate("const d=document.createElement('dialog');d.id='qaResizeDialog';d.className='certification-modal';d.innerHTML='<table id=qaResizeTable><thead><tr><th colspan=2>Assessment</th><th rowspan=2>Actions</th></tr><tr><th>Policy</th><th>Practice</th></tr></thead><tbody><tr><td>Long policy description</td><td>Long practice description</td><td>View</td></tr></tbody></table>';document.body.appendChild(d);d.showModal();");await wait("document.querySelectorAll('#qaResizeTable .nr-column-handle').length===3");assert.equal(await evaluate("document.querySelectorAll('#qaResizeTable col').length"),3);await evaluate("document.querySelector('#qaResizeDialog').close();document.querySelector('#qaResizeDialog').remove()");
+ await evaluate("document.querySelector('[data-view=\"tprm-register\"]').click();document.querySelector('[data-tprm-register-tab=\"register\"]').click()");await wait("document.querySelector('#tprmBody').closest('table').querySelectorAll('.nr-column-handle').length===10");
+ for(const [view,tab,body] of [['risk-management','data-risk-tab','riskRegisterBody'],['csf','data-csf-tab','csfTableBody'],['files',null,'uploadedFilesBody']]){
+   await evaluate(`document.querySelector('[data-view="${view}"]').click()`);
+   if(tab)await evaluate(`document.querySelector('[${tab}="${view==='csf'?'core':'register'}"]').click()`);
+   await wait(`document.getElementById('${body}').closest('table').classList.contains('nr-resizable-table') && document.getElementById('${body}').closest('table').querySelectorAll('.nr-column-handle').length>0`);
+ }
+ await call('Emulation.setDeviceMetricsOverride',{width:390,height:900,deviceScaleFactor:1,mobile:true});await showPolicy();await delay(100);const mobile=await evaluate("({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth,table:document.querySelector('#policyRegisterBody').closest('table').getBoundingClientRect().width})");assert.ok(mobile.scroll<=mobile.client+2,JSON.stringify(mobile));assert.ok(mobile.table>mobile.client,'Table scrolls within its container');
+ await evaluate("document.documentElement.dataset.theme='dark'");const color=await evaluate("getComputedStyle(document.querySelector('#policyRegisterBody').closest('table').querySelector('.nr-column-handle'),'::after').backgroundColor");assert.equal(color,'rgb(100, 125, 158)');assert.deepEqual(errors,[]);
+ console.log('PASS: all visible list tables get resize handles; Policy defaults, drag, keyboard, auto-fit, reset, reload persistence, merged/dynamic headers, TPRM, mobile scrolling and dark theme');auth.destroySession(token);
+ }finally{ws?.close();chrome?.kill();if(server)await new Promise(r=>server.close(r));await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-table-resize-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
+})().catch(e=>{console.error(e);process.exitCode=1;});

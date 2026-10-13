@@ -3,6 +3,8 @@ import './styles/assessment-gaps.css';
 import './styles/upload-progress.css';
 import { installUploadProgress } from './services/uploadProgress';
 import { installMutationGuard } from './services/mutationGuard';
+import { installTableResize } from './services/tableResize';
+import './styles/table-resize.css';
 /* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 import { createApp, nextTick } from 'vue';
 import App from './App.vue';
@@ -24,6 +26,7 @@ async function bootstrap() {
   await nextTick();
   window.NistI18n?.mount();
   await bootstrapWorkspaceRuntime({ app: workspaceRuntime, enhancements: workspaceEnhancements });
+  installTableResize();
   document.documentElement.dataset.frontend = 'vue';
   window.NistI18n?.refresh();
   window.dispatchEvent(new CustomEvent('vue:workspace-ready'));

@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { list, create, update, remove } = require('../services/questionnaireTemplateService');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
+router.get('/:id/excel',requirePermission('questionnaire-templates','read'),async(req,res,next)=>{
+  try{const result=await require('../services/tprmQuestionnaireExcelService').exportTemplate(req.params.id);res.set('Cache-Control','no-store').type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').attachment(result.filename).send(result.buffer);}catch(error){next(error);}
+});
 
 router.get('/', requirePermission('questionnaire-templates', 'read'), async (req, res) => {
   try {

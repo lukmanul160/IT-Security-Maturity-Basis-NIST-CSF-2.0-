@@ -2,6 +2,8 @@ const express = require('express');
 const controller = require('../controllers/tprmController');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
 const router = express.Router();
+router.get('/:id/workflow', requirePermission('tprm-register', 'read'), controller.workflow);
+router.post('/:id/workflow', requirePageAccess('tprm-register', 'update'), controller.transition);
 router.get('/', requirePermission('tprm-register', 'read'), controller.list);
 router.post('/', requirePageAccess('tprm-register', 'create'), controller.create);
 router.put('/:id', requirePageAccess('tprm-register', 'update'), controller.update);

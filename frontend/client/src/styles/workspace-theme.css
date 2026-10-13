@@ -107,3 +107,28 @@ body.workspace-ui #policyRegisterListStatus:empty{display:none}
 .policy-related-links summary { cursor: pointer; white-space: nowrap; }
 .policy-related-link-list { max-height: 220px; max-width: 320px; overflow: auto; margin-top: 8px; }
 .policy-related-link-list > div { margin-bottom: 7px; overflow-wrap: anywhere; }
+/* TPRM lifecycle uses the same panels, form grid, buttons and theme tokens as the workspace. */
+body.workspace-ui .tprm-workflow-modal{width:min(1120px,calc(100vw - 32px));max-height:calc(100dvh - 40px)}
+body.workspace-ui .tprm-workflow-modal .risk-register-form{gap:20px}
+body.workspace-ui .tprm-workflow-steps{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+body.workspace-ui .tprm-workflow-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px}
+body.workspace-ui .tprm-workflow-metrics .insight-panel{padding:20px}
+body.workspace-ui .tprm-workflow-metrics h3{font-size:20px;margin:8px 0}
+body.workspace-ui .tprm-workflow-alert{padding:12px 16px;border:1px solid var(--line);border-left:4px solid #d97706;border-radius:12px;margin:12px 0;color:var(--ink);background:var(--panel,#fff)}
+body.workspace-ui .tprm-workflow-alert p{margin:6px 0;line-height:1.6}
+body.workspace-ui .tprm-workflow-tabs{flex-wrap:wrap;gap:8px;margin:16px 0}
+body.workspace-ui #tprmWorkflowFields{display:grid;gap:20px}
+body.workspace-ui #tprmWorkflowFields label{display:flex;flex-direction:column;gap:8px;font-weight:600;color:var(--ink);font-size:13px}
+body.workspace-ui #tprmWorkflowFields input:not([type=checkbox]),body.workspace-ui #tprmWorkflowFields select,body.workspace-ui #tprmWorkflowFields textarea{width:100%;box-sizing:border-box;min-height:42px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel,#fff);color:var(--ink);font:inherit;font-weight:400}
+body.workspace-ui #tprmWorkflowFields input:focus,body.workspace-ui #tprmWorkflowFields select:focus,body.workspace-ui #tprmWorkflowFields textarea:focus{outline:2px solid #2563eb;outline-offset:2px}
+body.workspace-ui .tprm-workflow-checks{display:grid;gap:12px;margin:16px 0}
+body.workspace-ui #tprmWorkflowFields .tprm-workflow-checks label{flex-direction:row;align-items:flex-start;gap:10px;line-height:1.6}
+body.workspace-ui .tprm-workflow-checks input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin:2px 0;accent-color:#2563eb}
+body.workspace-ui #twConditions{display:grid;gap:16px;margin-bottom:16px}
+body.workspace-ui .tprm-mitigation{padding:20px}
+body.workspace-ui .tprm-history-entry{margin:12px 0;padding:16px}
+body.workspace-ui .tprm-history-entry summary{cursor:pointer;font-weight:600;line-height:1.6}
+body.workspace-ui .tprm-history-entry pre{max-height:360px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+body.workspace-ui #tprmBody td>small{display:block;margin:6px 0}
+html[data-theme=dark] body.workspace-ui .tprm-workflow-alert,html[data-theme=dark] body.workspace-ui #tprmWorkflowFields input:not([type=checkbox]),html[data-theme=dark] body.workspace-ui #tprmWorkflowFields select,html[data-theme=dark] body.workspace-ui #tprmWorkflowFields textarea{background:#182338;color:#e2e8f0;border-color:#334155}
+@media(max-width:700px){body.workspace-ui .tprm-workflow-metrics{grid-template-columns:1fr}body.workspace-ui .tprm-workflow-modal{width:calc(100vw - 20px)}body.workspace-ui .tprm-workflow-tabs .button{flex:1 1 140px}}

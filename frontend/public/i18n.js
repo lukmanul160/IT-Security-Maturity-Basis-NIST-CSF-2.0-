@@ -1718,6 +1718,9 @@
     ['Belum ada file yang diupload.', 'No files uploaded yet.'],
     ['Edit kontrol', 'Edit control'], ['Edit persyaratan', 'Edit requirement'],
     ['Risiko lain', 'Other risk'], ['Jatuh tempo / terlambat', 'Due / overdue'],
+    ['Geser batas kolom untuk mengatur lebar. Klik dua kali untuk menyesuaikan isi.', 'Drag column boundaries to resize. Double-click to fit the content.'],
+    ['Reset lebar', 'Reset widths'], ['Lebar kolom', 'Column width'],
+    ['Geser untuk mengubah lebar; klik dua kali untuk menyesuaikan isi', 'Drag to resize; double-click to fit the content'],
     ['Sesuai jadwal', 'On schedule'], ['Jumlah per halaman', 'Items per page']
   );
   pairs.forEach(pair => pair.forEach(value => {
