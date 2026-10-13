@@ -13,7 +13,7 @@
     "seed:ikas": "node scripts/generate-ikas-seed.js",
     "test:ikas": "node --test test/ikasAssessment.test.js test/assessmentPeriods.test.js",
     "test:ikas-browser": "node scripts/test-ikas-browser.js",
-    "test:docker-config": "node --test test/sessionCookieConfig.test.js",
+    "test:docker-config": "node --test test/sessionCookieConfig.test.js test/dockerDataInitialization.test.js",
     "prepare:client": "node scripts/prepare-vue-client.js",
     "build:client": "npm run prepare:client && vite build --config frontend/client/vite.config.js",
     "build": "npm run build:css && npm run build:client",

@@ -23,9 +23,11 @@ COPY database ./database
 COPY data/csf-data.json data/privacy-data.json data/iso-27001-data.json \
      data/iso-27001-soa-data.json data/personnel-certifications-seed.json \
      data/risk-indicators.json data/ikas-data.json data/ikas-template.xlsx ./data/
-RUN mkdir -p upload backup data/audit-pending && chown -R node:node /app
+# Keep defaults outside the persistent /app/data mount for upgrades.
+RUN cp -a data bundled-data \
+    && mkdir -p upload backup data/audit-pending && chown -R node:node /app
 USER node
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
     CMD node -e "fetch('http://127.0.0.1:8000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "src/server.js"]
+CMD ["node", "scripts/docker-start.js"]
