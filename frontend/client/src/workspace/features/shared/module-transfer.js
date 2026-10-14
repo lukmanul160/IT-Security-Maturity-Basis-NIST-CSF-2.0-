@@ -28,17 +28,20 @@ const moduleTransfer = (() => {
   const gapSection=framework=>section(framework==='iso27001-soa'?'soaGaps':'gaps','Assessment gaps'+(framework==='iso27001-soa'?' / SOA':''),`/api/assessment-gaps/${framework}`,'id framework controlCode description status evidence createdBy updatedBy createdAt updatedAt',{gap:true,optional:true,framework});
   const controls = 'id function category subcategory implementation minimumEvidence applicability evidence';
   const modules = {
+    'threat-modelling': { title: 'Threat Modelling', views: ['threatModellingView'], sections: [section('models','Diagram dan mitigasi STRIDE','/api/threat-modelling','id name diagram version')] },
+    'knowledge-notes': { title: 'Knowledge Notes', views: ['knowledgeNotesView'], sections: [section('notes','Catatan pengetahuan','/api/knowledge-notes','id title folder content version')] },
+    'audit-finding-tracker': { title: 'Audit Finding Tracker', views: ['auditFindingView'], sections: [section('records','Audit, finding, follow-up dan evidence','/api/audit-finding-tracker','id kind parentId title reference owner ownerEmail description status severity dueDate attachments',{audit:true})] },
     'tprm-questionnaire': { title: 'Vendor Due Diligence Questionnaire', views: ['tprmQuestionnaireView'], sections: [section('questionnaires', 'Vendor assessments', '/api/tprm-questionnaires', 'id vendorName status reviewDate result reviewer notes responses')] },
     'questionnaire-templates': { title: 'Questionnaire Templates', views: ['questionnaireTemplateView'], sections: [section('templates', 'Questionnaire templates', '/api/questionnaire-templates', 'id template_name description sections is_default')] },
     'tprm-register': { title: 'Third-Party Risk Register', views: ['tprmRegisterView'], sections: [section('register', 'Third-party risk register', '/api/tprm', 'id thirdParty questionnaireId serviceDependency riskLevel assessmentStatus relationshipStatus nextReview notes riskRegisterIds dueDiligenceAssessment')] },
-    csf: { title: 'NIST CSF Assessment', views: ['assessmentView', 'csfView'], sections: [section('assessment', 'Maturity assessment', '/api/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('csf')] },
+    csf: { title: 'NIST CSF Assessment', views: ['assessmentView', 'csfView', 'csfManageView'], sections: [section('assessment', 'Maturity assessment', '/api/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('csf')] },
     ikas: {title:'IKAS BSSN v1.2.1',views:['ikasView','ikasAssessmentView','ikasManageView'],sections:[section('controls','Kontrol dan rubrik IKAS','/api/ikas','id function category subcategory implementation references minimumEvidence notes applicability ikas',{control:true}),section('assessment','Assessment IKAS','/api/ikas/assessment','id score notes attachments',{assessment:true}),gapSection('ikas')]},
-    privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('privacy')] },
-    iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'year objective indicator baseline targetValue owner evaluationFrequency periodTargets notes'),gapSection('iso27001'),gapSection('iso27001-soa')] },
+    privacy: { title: 'NIST Privacy Assessment', views: ['privacyAssessmentView', 'privacyView', 'privacyManageView'], sections: [section('assessment', 'Privacy assessment', '/api/privacy/assessment', 'id policyScore practiceScore score notes attachments', { assessment: true }),gapSection('privacy')] },
+    iso27001: { title: 'ISO 27001', views: ['iso27001View'], sections: [section('requirements', 'Requirements', '/api/frameworks/iso27001/controls', controls, { control: true }), section('soa', 'Statement of Applicability', '/api/frameworks/iso27001-soa/controls', controls, { control: true }), section('objectives', 'Information security objectives', '/api/frameworks/iso27001/objectives', 'id year objective indicator baseline targetValue owner evaluationFrequency periodTargets monthlyStatus quarterlyStatus semesterStatus annualStatus notes'),gapSection('iso27001'),gapSection('iso27001-soa')] },
     'risk-acceptance': { title: 'Risk Acceptance', views: ['riskAcceptanceView'], sections: [section('register', 'Acceptance register', '/api/risk-acceptance', 'id requestorName assetName department riskDescription benefitJustification mitigationPlan businessOwnerDecision remediationDate cisDecision cisConditions')] },
     'risk-management': { title: 'Risk Management', views: ['riskManagementView'], sections: [section('register', 'Risk register', '/api/risk-management', 'riskId thirdParty riskCategory effectedAsset deviceName identificationRisk riskControl riskCause riskAnalysis assetConfidentiality assetIntegrity assetAvailability assetValue riskOwner note ref likelihood impact riskRating treatmentAction acceptanceFormNo riskTreatmentDescription ownerOfAction deadline residualRiskDescription residualLikelihood residualImpact residualRating comment scenarioImpact workflowStatus', { id: 'riskId' })] },
     'policy-register': { title: 'Policy Register', views: ['policyRegisterView'], sections: [section('register', 'Policy register', '/api/policy-register', 'id title category owner reviewCycle approvalStatus lastReview notes items')] },
-    personnel: { title: 'Personnel Certification', views: ['personnelCertificationView'], sections: [section('personnel', 'Organization personnel', '/api/personnel-certifications/organization-personnel', 'id employeeId personnelName personnelRole supervisorName'), section('certifications', 'Certifications', '/api/personnel-certifications', 'personnelName employeeId certificationName issuer certificationLevel status issueDate expiryDate notes')] }
+    personnel: { title: 'Personnel Certification', views: ['personnelCertificationView'], sections: [section('personnel', 'Organization personnel', '/api/personnel-certifications/organization-personnel', 'id employeeId personnelName personnelRole supervisorName'), section('certifications', 'Certifications', '/api/personnel-certifications', 'id personnelId personnelName employeeId certificationName issuer certificationLevel status issueDate expiryDate notes certificatePath layout')] }
   };
   const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -50,7 +53,10 @@ const moduleTransfer = (() => {
   }
   async function collect(key) {
     const data = {};
-    for (const item of modules[key].sections) data[item.key] = await request(item.url);
+    for (const item of modules[key].sections) {
+      const value=await request(item.url);
+      data[item.key]=item.audit?value.map(row=>({id:row.id,kind:row.kind,parentId:row.parentId,...row.data,attachments:row.attachments || row.data?.attachments || []})):value;
+    }
     return { format: 'nist-basis-module', version: 1, module: key, ...(typeof assessmentYears!=='undefined'&&assessmentYears[key]?{assessmentYear:assessmentYears[key]}:{}), exportedAt: new Date().toISOString(), data };
   }
   function template(key) {
@@ -105,6 +111,15 @@ const moduleTransfer = (() => {
         const ids = value.map(row => row[item.id || 'id']).filter(id => id !== undefined && id !== null);
         if (new Set(ids.map(String)).size !== ids.length) throw new Error(`${item.title}: ID duplikat.`);
         if (item.control && value.some(row => !row.id)) throw new Error(`${item.title}: ID kontrol wajib diisi.`);
+      }
+    }
+    if(key==='audit-finding-tracker') {
+      const records=payload.data.records,kinds=['audit','finding','followup','evidence'];
+      for(const row of records) {
+        if(!row.id || !kinds.includes(row.kind) || !String(row.title || '').trim())throw Error('Audit: ID, jenis dan judul wajib diisi.');
+        if(row.kind!=='audit' && !records.some(parent=>String(parent.id)===String(row.parentId)&&parent.kind===kinds[kinds.indexOf(row.kind)-1]))throw Error('Relasi Audit → Finding → Follow-up → Evidence tidak valid.');
+        if(row.kind==='finding'&&!['Open','In progress','Closed'].includes(row.status))throw Error('Status finding tidak valid.');
+        if(row.attachments!==undefined&&(!Array.isArray(row.attachments)||row.attachments.some(file=>!object(file)||typeof file.path!=='string')))throw Error('Referensi evidence audit tidak valid.');
       }
     }
     if (key === 'personnel') {
@@ -163,7 +178,9 @@ const moduleTransfer = (() => {
         if(item.gap){const permission=({csf:'assessment',privacy:'privacy-assessment',ikas:'ikas-assessment'})[item.framework]||item.framework;if(!canPerform(permission,'update'))throw new Error('Izin Edit diperlukan untuk import gap.');const result=await request(item.url+'/import','POST',{gaps:payload.data[item.key]});completed+=result.imported;progress?.(completed);continue;}
         if (item.assessment) { if(!canPerform(key==='csf' ? 'assessment' : key+'-assessment','update')) throw new Error('Izin Edit diperlukan untuk impor assessment.'); await request(item.url, 'PUT', payload.data[item.key]); completed++; progress?.(completed); continue; }
         const existing = await request(item.url);
-        for (const original of payload.data[item.key]) {
+        const auditIds=new Map(),kinds=['audit','finding','followup','evidence'];
+        const importedRows=item.audit?[...payload.data[item.key]].sort((a,b)=>kinds.indexOf(a.kind)-kinds.indexOf(b.kind)):payload.data[item.key];
+        for (const original of importedRows) {
           const row = { ...original };
           if (key === 'risk-management') { row.workflowDraft = true; if (row.treatmentAction === 'Closed') row.treatmentAction = ''; }
           for (const field of Object.keys(row)) if (/Date$|^deadline$|^lastReview$|^nextReview$/.test(field) && typeof row[field] === 'string') row[field] = row[field].slice(0, 10);
@@ -174,9 +191,11 @@ const moduleTransfer = (() => {
           }
           const idField = item.id || 'id';
           const match = existing.find(record => row[idField] != null && String(record[idField]) === String(row[idField]));
+          if(item.audit){row.parentId=row.kind==='audit'?null:auditIds.get(String(original.parentId));if(match&&(match.kind!==row.kind||String(match.parentId)!==String(row.parentId)))throw Error('Jenis atau induk audit yang sudah ada tidak dapat diubah.');if(!match&&row.kind==='evidence')row.existingAttachments=JSON.stringify((row.attachments||[]).map(file=>file.path));}
           const permission=key==='personnel' ? 'personnel-certification' : item.key==='soa' ? 'iso27001-soa' : key;
           if(!canPerform(permission,match ? 'update' : 'create')) throw new Error(`Izin ${match ? 'Edit' : 'Add'} diperlukan untuk ${item.title}.`);
           const saved = await request(match ? `${item.url}/${encodeURIComponent(match[idField])}` : item.url, match ? 'PUT' : 'POST', row);
+          if(item.audit)auditIds.set(String(original.id),saved.id);
           if (key === 'personnel' && item.key === 'personnel') personnelIds.set(String(original.id), saved.id);
           completed++; progress?.(completed);
         }
@@ -216,6 +235,8 @@ const moduleTransfer = (() => {
       toolbar.innerHTML = '<button type="button" data-import>Import JSON</button><button type="button" data-export>Export JSON</button><button type="button" data-report>Report / PDF</button><input name="module-transfer-input-1" type="file" accept=".json,application/json" hidden><span role="status" aria-live="polite"></span>';
       const status = toolbar.querySelector('[role="status"]');
       if (['csf','privacy'].includes(key)) mountMaturityExcel(toolbar,key,status);
+      else if (key === 'ikas') mountIkasProgressExcel(toolbar,status);
+      else mountProgressExcel(toolbar,key,status);
       const templateButton = document.createElement('button');
       templateButton.type = 'button'; templateButton.textContent = 'Template Import';
       templateButton.onclick = async () => {
@@ -258,8 +279,47 @@ const moduleTransfer = (() => {
       view.prepend(toolbar);
     }
   }
-  return { modules, validate, rows, report, collect, template, importPayload, mount };
+  return { modules, validate, rows, report, collect, template, importPayload, preview, mount };
 })();
+function mountProgressExcel(toolbar,key,status) {
+  const input=document.createElement('input');input.type='file';input.accept='.xlsx';input.hidden=true;input.name=`${key}-progress-excel`;
+  toolbar.append(input);
+  for(const action of ['import','export','template']) {
+    const button=document.createElement('button');button.type='button';button.textContent=action==='import'?'Import Excel':action==='export'?'Export Excel':'Template Excel';
+    button.dataset[action==='template'?'excelTemplate':action==='import'?'excelImport':'excelExport']=key;
+    toolbar.insertBefore(button,status);
+    button.onclick=async()=>{
+      if(action==='import'){input.value='';input.click();return;}
+      button.disabled=true;
+      const filename=`${key}-${action==='template'?'template':'progress'}.xlsx`;
+      try {
+        const codec=await window.NistProgressExcel();
+        await runAuditedTransfer(action==='template'?'download':'export',key,filename,async()=>{
+          const payload=action==='template'?moduleTransfer.template(key):await moduleTransfer.collect(key);
+          const bytes=codec.writeProgressWorkbook(payload,moduleTransfer.template(key).headers);
+          const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+        },'Excel progres berhasil dibuat.');status.textContent='Excel berhasil dibuat; unduhan dimulai.';
+      }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+    };
+  }
+  input.onchange=async()=>{
+    const file=input.files[0];if(!file)return;
+    try {
+      if(file.size>10*1024*1024)throw Error('Ukuran file maksimal 10 MB.');
+      const codec=await window.NistProgressExcel();
+      const payload=moduleTransfer.validate(key,codec.readProgressWorkbook(await file.arrayBuffer(),key));
+      moduleTransfer.preview(key,payload,status,file.name,file.size);
+    }catch(error){status.textContent=error.message;await recordTransferActivity('import',key,file.name,0,'failed','Excel ditolak sebelum penyimpanan.',error.message).catch(auditError=>{status.textContent+=' '+auditError.message;});}
+  };
+  const guide=document.createElement('p');guide.textContent='Excel mencakup seluruh progres tersimpan. Edit sheet data dari Export Excel atau Template Excel; pertahankan header dan ID. Kolom object/array memakai @json:. Lampiran berkas memakai referensi server. Maksimal 10 MB; pratinjau ditampilkan sebelum import.';toolbar.append(guide);
+}
+function mountIkasProgressExcel(toolbar,status) {
+  for(const [label,selector] of [['Export Excel','[data-ikas-excel]'],['Import Excel','[data-ikas-import-excel]']]) {
+    const button=document.createElement('button');button.type='button';button.textContent=label;
+    button.dataset[label==='Import Excel'?'excelImport':'excelExport']='ikas';
+    button.onclick=()=>{const target=document.querySelector(selector);if(target)target.click();else status.textContent='Buka Assessment IKAS untuk transfer template Excel BSSN.';};toolbar.insertBefore(button,status);
+  }
+}
 function mountMaturityExcel(toolbar,key,status) {
   const permission=key==='csf'?'assessment':'privacy-assessment';
   const ready=async()=>{await Promise.all([...assessmentPendingWrites]);if(assessmentWriteErrors.has(key))throw Error('Penyimpanan assessment belum berhasil. Simpan ulang sebelum transfer Excel.');};

@@ -49,8 +49,8 @@ function applyActionControls() {
   for(const toolbar of document.querySelectorAll('[data-module-transfer]')) {
     const module=toolbar.dataset.moduleTransfer;
     const keys=module==='csf' ? ['assessment'] : module==='ikas'?['ikas-assessment']:module==='privacy' ? ['privacy-assessment'] : module==='personnel' ? ['personnel-certification'] : module==='iso27001' ? ['iso27001','iso27001-soa'] : [module];
-    toolbar.querySelectorAll('[data-import],input[type="file"]').forEach(element=>controls.set(element,!keys.every(key=>canPerform(key,'create') || canPerform(key,'update'))));
-    toolbar.querySelectorAll('[data-export],[data-report]').forEach(element=>controls.set(element,!keys.every(key=>canPerform(key,'read'))));
+    toolbar.querySelectorAll('[data-import],[data-excel-import],[data-maturity-import],input[type="file"]').forEach(element=>controls.set(element,!keys.every(key=>canPerform(key,'create') || canPerform(key,'update'))));
+    toolbar.querySelectorAll('[data-export],[data-report],[data-excel-export],[data-excel-template],[data-maturity-export]').forEach(element=>controls.set(element,!keys.every(key=>canPerform(key,'read'))));
   }
   for(const [element,denied] of controls) {
     const field=element.matches('textarea,input:not([type="file"]):not([type="button"]):not([type="submit"]),select');

@@ -34,6 +34,7 @@ async function start() {
   await ensurePersonnelCertificationStore();
   await ensureCertificationRoadmapCatalogStore();
   await ensurePermissionStore();
+  await require('./services/budgetService').ensureStore();
   await require('./services/assetManagementService').ensureStore();
   await require('./services/assetReminderSettingsService').ensureStore();
   await require('./services/reminderRecipientService').ensureStore();

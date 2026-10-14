@@ -7,3 +7,13 @@ function showThreatModelling() {
 }
 document.querySelector('[data-view="threat-modelling"]')?.addEventListener('click', showThreatModelling);
 if (uiState.view === 'threat-modelling') showThreatModelling();
+
+function showBudget() {
+  document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view'));
+  $('budgetView').classList.add('active-view');
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'budget'));
+  saveUiState('budget');
+  window.dispatchEvent(new Event('budget-open'));
+}
+document.querySelector('[data-view="budget"]')?.addEventListener('click', showBudget);
+if (loadUiState().view === 'budget') showBudget();

@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 
 const permissions = [
+  ['budget', 'Anggaran CAPEX & OPEX'],
   ['monitoring-dashboard','Monitoring Dashboard'],
   ['asset-register','Asset Register'], ['server-racks','Rak Server'], ['asset-modelling','Modelling Asset Register'],
   ['knowledge-notes', 'Knowledge Notes'],
@@ -13,6 +14,7 @@ const permissions = [
 ];
 const validRoles = ['admin', 'approver', 'editor', 'viewer', 'user'];
 const pageActionMatrix = {
+  budget: {read: validRoles, create: ['admin','approver','editor','user'], update: ['admin','approver','editor','user'], delete: []},
   'monitoring-dashboard': {read: validRoles, create: [], update: [], delete: []},
   'knowledge-notes': { read: ['admin','approver','editor','viewer','user'], create: ['admin','approver','editor','user'], update: ['admin','approver','editor','user'], delete: ['admin','approver'] },
   'threat-modelling': { read: ['admin', 'approver', 'editor', 'viewer', 'user'], create: ['admin', 'approver', 'editor', 'user'], update: ['admin', 'approver', 'editor', 'user'], delete: ['admin', 'approver'] },
@@ -46,7 +48,7 @@ const defaults = {
 
 for (const role of validRoles) if (!defaults[role].includes('threat-modelling')) defaults[role].push('threat-modelling');
 
-for (const role of validRoles) defaults[role].push('knowledge-notes','monitoring-dashboard');
+for (const role of validRoles) defaults[role].push('knowledge-notes','monitoring-dashboard','budget');
 
 for (const key of ['asset-register','server-racks','asset-modelling']) {
   pageActionMatrix[key] = pageActionMatrix['threat-modelling'];

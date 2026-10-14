@@ -8,9 +8,29 @@ function load(fetch = async () => { throw new Error('Unexpected request'); }, ca
   return context.api;
 }
 function payload(module, data) { return { format: 'nist-basis-module', version: 1, module, exportedAt: '2026-09-14', data }; }
-test('every requested module exposes a transfer definition', () => { const modules=load().modules;assert.equal(Object.keys(modules).length,11);assert.deepEqual(Array.from(modules.ikas.sections,row=>row.key),['controls','assessment','gaps']); });
+test('every requested module exposes a transfer definition', () => { const modules=load().modules;assert.equal(Object.keys(modules).length,14);assert.deepEqual(Array.from(modules.ikas.sections,row=>row.key),['controls','assessment','gaps']);for(const key of ['threat-modelling','knowledge-notes','audit-finding-tracker'])assert.ok(modules[key]); });
 test('IKAS transfer template describes respondent fields and all six maturity rubrics',()=>{
   const template=load().template('ikas');assert.equal(template.headers.controls.ikas.rubric.length,6);assert.ok(template.headers.assessment.respondent.includes('D13'));assert.deepEqual(Object.keys(template.data.assessment.respondent),[]);
+});
+
+test('audit Excel payload imports parents before children and remaps newly created IDs',async()=>{
+  const writes=[];const api=load(async(url,options)=>({ok:true,json:async()=>{
+    if(options.method==='GET')return [];
+    const row=JSON.parse(options.body);writes.push(row);return {id:'saved-'+writes.length};
+  }}));
+  const records=[{id:'followup',kind:'followup',parentId:'finding',title:'Tindak lanjut'}, {id:'finding',kind:'finding',parentId:'audit',title:'Temuan',status:'Closed'}, {id:'audit',kind:'audit',parentId:null,title:'Audit'}];
+  assert.equal(await api.importPayload('audit-finding-tracker',payload('audit-finding-tracker',{records})),3);
+  assert.deepEqual(writes.map(row=>row.kind),['audit','finding','followup']);
+  assert.equal(writes[1].parentId,'saved-1');assert.equal(writes[2].parentId,'saved-2');assert.equal(writes[1].status,'Closed');
+});
+
+test('audit imports reject broken parents before creating any record',async()=>{
+  await assert.rejects(load().importPayload('audit-finding-tracker',payload('audit-finding-tracker',{records:[{id:'finding',kind:'finding',parentId:'missing',title:'Temuan',status:'Open'}]})),/Relasi/);
+});
+
+test('audit exports expose editable progress columns instead of hiding status inside data',async()=>{
+  const api=load(async()=>({ok:true,json:async()=>[{id:'finding',kind:'finding',parentId:'audit',data:{title:'Temuan',status:'Closed',description:'Selesai'},attachments:[{path:'Evidence/file.pdf'}]}]}));
+  const file=await api.collect('audit-finding-tracker');assert.equal(file.data.records[0].status,'Closed');assert.equal(file.data.records[0].description,'Selesai');assert.equal(file.data.records[0].attachments[0].path,'Evidence/file.pdf');
 });
 
 test('assessment exports and reports include gap status, evidence and framework relationships',async()=>{

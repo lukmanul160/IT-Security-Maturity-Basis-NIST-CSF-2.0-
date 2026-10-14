@@ -1,5 +1,44 @@
 # Import, export, dan report modul
 
+## Excel progres
+
+**Import Excel**, **Export Excel**, dan **Template Excel** tersedia pada toolbar
+ISO 27001/SOA/objectives, Risk Acceptance, Risk Management, Policy Register,
+Personnel Certification, Vendor Questionnaire, Questionnaire Templates, TPRM,
+Threat Modelling, Knowledge Notes, dan Audit Finding Tracker.
+Asset Register, Server Racks, dan Asset Modelling menggunakan tombol Excel pada
+header Asset Management. Anggaran menggunakan template Anggaran yang tersedia.
+
+Export mengambil seluruh data tersimpan, termasuk status, catatan, nilai,
+relasi, dan field tambahan, tanpa mengikuti filter tabel. Setiap bagian mempunyai
+sheet tersendiri. Gunakan hasil Export Excel untuk melanjutkan progres, atau
+Template Excel untuk mengisi data baru. Pertahankan nama sheet, header, ID,
+dan sheet `_Progress`. Object/array dalam sel memakai awalan `@json:`;
+teks literal yang diawali `@` disimpan dengan `@text:`. Nilai nol dan boolean
+dipertahankan. Formula, header berubah, modul berbeda, dan sheet hilang ditolak.
+Batas 10 MB, 5.000 baris per sheet, dan 32.767 karakter per sel. Data lebih panjang
+memakai JSON atau backup. Impor Excel memakai validasi, pratinjau, izin API,
+dan pencatatan audit yang sama dengan impor JSON.
+
+Audit diimpor sesuai urutan Audit → Finding → Follow-up → Evidence, dengan
+pemetaan ID induk baru. File evidence tetap berupa referensi berkas yang dapat
+diakses pengguna. Excel aset mencakup register, rak, penempatan, relasi, kanvas,
+dan pengaturan reminder; foto dipindahkan menggunakan JSON atau backup file.
+Catatan pengetahuan mencakup teks dan folder catatan; gambar memakai ZIP/backup.
+
+Assessment CSF dan Privacy **selalu menggunakan template asli**
+`data/maturity-template.xlsx`; IKAS memakai `data/ikas-template.xlsx` atau
+template IKAS yang sudah tersimpan. Tombol Excel assessment memakai layanan
+template tersebut, termasuk pada halaman pengelolaan kontrol. Lihat
+[panduan maturity Excel](maturity-excel.md).
+
+Persetujuan workflow tetap mengikuti aturan modul. Risk Management mengimpor
+field register melalui API biasa; perubahan dapat meminta review ulang, dan
+status Closed tidak dapat ditetapkan melalui spreadsheet. Anggaran mengimpor
+pengajuan sebagai draft baru; status persetujuan dan realisasi pada ekspor
+merupakan informasi progres dan tidak diimpor untuk melewati proses approval.
+Untuk pemulihan lengkap riwayat workflow antarinstalasi, gunakan Database Backup.
+
 Toolbar tersedia pada NIST CSF Assessment, NIST Privacy Assessment, ISO 27001,
 Risk Acceptance, Risk Management, Policy Register, Personnel Certification,
 Vendor Due Diligence Questionnaire, Questionnaire Templates, dan TPRM Risk Register.

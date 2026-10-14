@@ -24,6 +24,7 @@ import './styles/risk-dashboard.css';
 import './styles/risk-acceptance-dashboard.css';
 import './styles/governance-dashboard.css';
 import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';
+window.NistProgressExcel = () => import('./services/moduleProgressWorkbook.mjs');
 
 async function bootstrap() {
   const runtimeReady=Promise.all([import('./workspace/runtime.js'),import('./workspace/generated/enhancements.js?raw')]);

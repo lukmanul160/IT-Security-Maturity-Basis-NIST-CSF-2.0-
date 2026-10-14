@@ -1,0 +1,14 @@
+const router = require('express').Router();
+const service = require('../services/budgetService');
+const { requirePermission } = require('../middleware/permission');
+const handle = fn => async (req, res, next) => { try { res.set('Cache-Control', 'no-store').json(await fn(req)); } catch (error) { next(error); } };
+const admin=(req,res,next)=>req.user.role==='admin'?next():res.status(403).json({error:'Pengaturan approver hanya dapat dikelola admin.'});
+router.get('/settings',requirePermission('budget','read'),admin,handle(()=>service.settings()));
+router.put('/settings',requirePermission('budget','update'),admin,handle(req=>service.saveApprover(req.body,req.user)));
+router.get('/excel',requirePermission('budget','read'),async(req,res,next)=>{try{const template=req.query.template==='1';const records=template?[]:(await service.list(req.query.year)).requests;res.set({'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':`attachment; filename="${template?'template-anggaran':'anggaran-'+service.year(req.query.year)}.xlsx"`,'Cache-Control':'no-store'}).send(require('../services/budgetWorkbook').workbook(records,template));}catch(e){next(e);}});
+router.post('/import',requirePermission('budget','create'),require('multer')({storage:require('multer').memoryStorage(),limits:{fileSize:2*1024*1024,files:1}}).single('file'),handle(req=>{if(!req.file)throw Object.assign(new Error('Pilih file Excel.'),{status:400});return require('../services/budgetWorkbook').importWorkbook(req.file.buffer,req.body.year,req.user);}));
+router.get('/', requirePermission('budget', 'read'), handle(req => service.list(req.query.year)));
+router.post('/years', requirePermission('budget', 'create'), handle(req => service.createYear(req.body.year)));
+router.post('/requests', requirePermission('budget', 'create'), handle(req => service.create(req.body, req.user)));
+router.put('/requests/:id', requirePermission('budget', 'update'), handle(req => service.update(req.params.id, req.body, req.user)));
+module.exports = router;
