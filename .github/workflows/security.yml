@@ -1,0 +1,47 @@
+name: Security checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 2 * * 1'
+permissions:
+  contents: read
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run audit:security
+      - run: npm run build:client
+      - run: npm run test:security
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: docker build --pull -t nist-basis:security-check .
+      - name: Block known critical vulnerabilities in the runtime image
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          image-ref: nist-basis:security-check
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+          ignore-unfixed: false
+          vuln-type: os,library
+      - name: Block known critical vulnerabilities in the PostgreSQL image
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          image-ref: postgres:17-bookworm
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+          ignore-unfixed: false
+          vuln-type: os,library

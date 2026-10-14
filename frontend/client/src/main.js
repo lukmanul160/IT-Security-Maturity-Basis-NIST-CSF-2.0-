@@ -4,6 +4,7 @@ import './styles/upload-progress.css';
 import { installUploadProgress } from './services/uploadProgress';
 import { installMutationGuard } from './services/mutationGuard';
 import { installTableResize } from './services/tableResize';
+import { renderWorkspaceError } from './services/workspaceError';
 import './styles/table-resize.css';
 /* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 import { createApp, nextTick } from 'vue';
@@ -37,5 +38,5 @@ bootstrap().catch(error => {
   console.error('[vue] Workspace bootstrap failed', error);
   document.getElementById('governanceLoading')?.remove();
   const root = document.getElementById('app');
-  if (root) root.innerHTML = `<main class="vue-bootstrap-error"><h1>Workspace gagal dimuat</h1><p>${String(error?.message || error)}</p><button type="button" onclick="location.reload()">Muat ulang</button></main>`;
+  if (root) renderWorkspaceError(root,error);
 });

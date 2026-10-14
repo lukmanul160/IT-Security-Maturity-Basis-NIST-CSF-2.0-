@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-14",
+  "node": "v24.19.0",
+  "platform": "win32",
+  "scenario": "Three original-template workbook exports while a separate process probes GET /login every 10 ms; no production load target or SLO is asserted.",
+  "beforeSynchronous": {
+    "workloadMs": 2137,
+    "requests": 7,
+    "statuses": [
+      200
+    ],
+    "httpP50Ms": 20.6,
+    "httpP95Ms": 772.6,
+    "httpMaxMs": 772.6,
+    "eventLoopMaxMs": 770.2,
+    "peakRssMb": 358.2
+  },
+  "afterWorker": {
+    "workloadMs": 2341,
+    "requests": 74,
+    "statuses": [
+      200
+    ],
+    "httpP50Ms": 18.8,
+    "httpP95Ms": 23.4,
+    "httpMaxMs": 35.4,
+    "eventLoopMaxMs": 32.6,
+    "peakRssMb": 622.3
+  },
+  "workerLimits": {
+    "active": 0,
+    "pending": 0,
+    "maxActive": 2,
+    "maxPending": 4
+  },
+  "frontendBundle": {
+    "path": "/vue/assets/index-CCFCX7dz.js",
+    "bytes": 1321857,
+    "gzipBytes": 329333,
+    "phase": "Final build after remediation; load measurement above remains the recorded run."
+  }
+}

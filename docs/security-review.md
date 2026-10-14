@@ -1,5 +1,7 @@
 # Laporan pemeriksaan keamanan
 
+Pemeriksaan terbaru: [audit keamanan dan performa 14 Oktober 2026](security-performance-2026-10-14.md), termasuk perbaikan sink DOM XSS, worker Excel, pengukuran respons, dan workflow pemeriksaan CVE berbasis acuan OWASP. Laporan di bawah mempertahankan hasil pemeriksaan sebelumnya.
+
 Tanggal: 3 Oktober 2026. Pemeriksaan dilakukan pada workspace saat ini, yang sudah berisi perubahan sebelum audit. Ini adalah review kode dan dependensi, bukan sertifikasi bahwa aplikasi bebas dari semua kerentanan.
 
 ## Temuan yang diperbaiki
