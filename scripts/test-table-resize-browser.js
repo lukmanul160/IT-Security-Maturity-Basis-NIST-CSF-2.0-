@@ -41,6 +41,24 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
    if(tab)await evaluate(`document.querySelector('[${tab}="${view==='csf'?'core':'register'}"]').click()`);
    await wait(`document.getElementById('${body}').closest('table').classList.contains('nr-resizable-table') && document.getElementById('${body}').closest('table').querySelectorAll('.nr-column-handle').length>0`);
  }
+ // Reproduce the audit layout: two hidden columns and a nested finding table.
+ await evaluate(`{const d=document.createElement('dialog');d.id='qaAuditResizeDialog';d.className='certification-modal';d.style.width='1100px';d.innerHTML='<table id="qaAuditTable"><thead><tr><th>Title / Reference</th><th>Owner</th><th hidden>Status</th><th hidden>Due</th><th>Details</th><th>Action</th></tr></thead><tbody><tr><td>Audit ISO 22301:2019</td><td>IT Network and Security</td><td hidden>Open</td><td hidden>2026-10-30</td><td><details open><summary>Finding details</summary><table id="qaFindingTable"><thead><tr><th>Finding</th><th>PIC</th><th>Status</th></tr></thead><tbody><tr><td>Business continuity review</td><td>IT</td><td>Open</td></tr></tbody></table></details></td><td>Finding (1)</td></tr></tbody></table>';document.body.appendChild(d);d.showModal();}`);
+ await wait("document.querySelectorAll('#qaAuditTable > thead .nr-column-handle').length===4 && document.querySelectorAll('#qaFindingTable .nr-column-handle').length===3");
+ assert.equal(await evaluate("document.querySelector('#qaAuditTable').querySelector(':scope > colgroup').children.length"),4);
+ const auditWidth=()=>evaluate("document.querySelector('#qaAuditTable').tBodies[0].rows[0].cells[4].getBoundingClientRect().width");
+ const startAuditWidth=await auditWidth();
+ await evaluate("document.querySelector('#qaAuditTable > thead [data-column-index=\"2\"]').scrollIntoView({block:'center',inline:'center'})");
+ const auditDrag=await evaluate("(()=>{const r=document.querySelector('#qaAuditTable > thead [data-column-index=\"2\"]').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};})()");
+ await call('Input.dispatchMouseEvent',{type:'mousePressed',x:auditDrag.x,y:auditDrag.y,button:'left',clickCount:1});await call('Input.dispatchMouseEvent',{type:'mouseMoved',x:auditDrag.x+100,y:auditDrag.y,button:'left'});await call('Input.dispatchMouseEvent',{type:'mouseReleased',x:auditDrag.x+100,y:auditDrag.y,button:'left',clickCount:1});
+ assert.ok(Math.abs(await auditWidth()-startAuditWidth-100)<=3,'The visible Details body column must follow its own handle');
+ await evaluate("document.querySelector('#qaAuditTable').tHead.rows[0].cells[2].hidden=false;document.querySelector('#qaAuditTable').tBodies[0].rows[0].cells[2].hidden=false");
+ await wait("document.querySelectorAll('#qaAuditTable > thead .nr-column-handle').length===5 && document.querySelectorAll('#qaFindingTable .nr-column-handle').length===3");
+ assert.equal(await evaluate("document.querySelector('#qaFindingTable .nr-column-handle').isConnected"),true,'Rebuilding parent handles must preserve nested table handles');
+ await evaluate("document.querySelector('#qaFindingTable .nr-column-handle').focus()");
+ const nestedWidth=await evaluate("document.querySelector('#qaFindingTable').tHead.rows[0].cells[0].getBoundingClientRect().width");
+ await call('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});await call('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
+ assert.ok(Math.abs(await evaluate("document.querySelector('#qaFindingTable').tHead.rows[0].cells[0].getBoundingClientRect().width")-nestedWidth-10)<=3,'Nested columns remain resizable');
+ await evaluate("document.querySelector('#qaAuditResizeDialog').close();document.querySelector('#qaAuditResizeDialog').remove()");
  await call('Emulation.setDeviceMetricsOverride',{width:390,height:900,deviceScaleFactor:1,mobile:true});await showPolicy();await delay(100);const mobile=await evaluate("({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth,table:document.querySelector('#policyRegisterBody').closest('table').getBoundingClientRect().width})");assert.ok(mobile.scroll<=mobile.client+2,JSON.stringify(mobile));assert.ok(mobile.table>mobile.client,'Table scrolls within its container');
  await evaluate("document.documentElement.dataset.theme='dark'");const color=await evaluate("getComputedStyle(document.querySelector('#policyRegisterBody').closest('table').querySelector('.nr-column-handle'),'::after').backgroundColor");assert.equal(color,'rgb(100, 125, 158)');assert.deepEqual(errors,[]);
  console.log('PASS: all visible list tables get resize handles; Policy defaults, drag, keyboard, auto-fit, reset, reload persistence, merged/dynamic headers, TPRM, mobile scrolling and dark theme');auth.destroySession(token);

@@ -1,6 +1,7 @@
 const MIN_WIDTH = 64, MAX_WIDTH = 2000;
 const STORAGE_PREFIX = 'nist-table-widths:v1:';
 const clamp = width => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(width)));
+const visibleCell = cell => !cell.hidden && cell.style?.display !== 'none' && cell.ownerDocument?.defaultView?.getComputedStyle(cell).display !== 'none';
 
 // Resolve leaf columns, including headers with rowspan/colspan.
 export function tableHeaderLayout(table) {
@@ -8,6 +9,7 @@ export function tableHeaderLayout(table) {
   for (const [rowIndex, row] of [...(table.tHead?.rows || [])].entries()) {
     grid[rowIndex] ||= []; let column = 0;
     for (const cell of row.cells) {
+      if (!visibleCell(cell)) continue;
       while (grid[rowIndex][column]) column++;
       const span = Math.max(1, cell.colSpan || 1), height = Math.max(1, cell.rowSpan || 1);
       for (let y = rowIndex; y < rowIndex + height; y++) {
@@ -57,6 +59,7 @@ export function installTableResize() {
     for (const row of [...state.table.rows].slice(0, 201)) {
       let position = 0;
       for (const cell of row.cells) {
+        if (!visibleCell(cell)) continue;
         const span = Math.max(1, cell.colSpan || 1);
         if (position === index && span === 1) {
           const style = getComputedStyle(cell);
@@ -90,7 +93,7 @@ export function installTableResize() {
   window.addEventListener('blur', () => finish());
   function handles(state, layout) {
     state.handles = new Map();
-    state.table.querySelectorAll('.nr-column-handle').forEach(handle => handle.remove());
+    state.table.querySelectorAll('.nr-column-handle').forEach(handle => { if (handle.closest('table') === state.table) handle.remove(); });
     for (const [index, header] of layout.boundaries) {
       const handle = document.createElement('span');
       handle.className = 'nr-column-handle'; handle.tabIndex = 0;
@@ -134,6 +137,11 @@ export function installTableResize() {
       return clamp((leaf?.getBoundingClientRect().width || 140) / Math.max(1,leaf?.colSpan || 1));
     });
     if (table.querySelector('#policyRegisterBody') && layout.count === 9) widths.splice(0,9,340,180,220,150,180,140,280,280,160);
+    if ([...table.tBodies].some(body => body.id === 'aftBody')) {
+      const defaults = [420,220,150,150,680,240];
+      const allHeaders = [...table.tHead.rows[0].cells];
+      widths.splice(0,widths.length,...allHeaders.map((header,index)=>({header,width:defaults[index]||180})).filter(item=>visibleCell(item.header)).map(item=>item.width));
+    }
     let wrapper = table.parentElement;
     if (wrapper.querySelectorAll(':scope > table').length > 1 || (!wrapper.matches('.excel-wrap,.nr-table-scroll') && !['auto','scroll'].includes(getComputedStyle(wrapper).overflowX))) {
       const scroll = document.createElement('div'); scroll.className = 'nr-table-scroll'; wrapper.insertBefore(scroll,table); scroll.appendChild(table); wrapper = scroll;
