@@ -1,19 +1,15 @@
 <!doctype html>
 <html lang="id">
   <head>
-<script src="/theme.js"></script>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('nist-basis-theme')==='dark'?'dark':'light';}catch{document.documentElement.dataset.theme='light';}</script>
+<script src="/theme.js" defer></script>
     <script src="/i18n.js" defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="NIST CSF maturity and governance workspace">
     <title>Black Owl Governance</title>
     <link rel="icon" href="/favicon.ico">
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="stylesheet" href="/modern.css">
-    <link rel="stylesheet" href="/legacy-before-tailwind.css">
-    <link rel="stylesheet" href="/tailwind.css">
-    <link rel="stylesheet" href="/legacy-after-tailwind.css">
-  <link rel="stylesheet" href="/theme.css">
+    <link rel="preload" href="/fonts/dm-sans-9fea608a947e.woff2" as="font" type="font/woff2" crossorigin>
 <script src="/branding.js" defer></script>
 </head>
   <body class="workspace-ui">

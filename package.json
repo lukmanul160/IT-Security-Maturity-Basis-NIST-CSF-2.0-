@@ -64,7 +64,8 @@
     "test:maturity-excel-browser": "node scripts/test-maturity-excel-browser.js",
     "audit:security": "npm audit --audit-level=high",
     "test:security-browser": "node scripts/test-workspace-error-browser.js",
-    "assess:performance": "node scripts/assess-security-performance.js"
+    "assess:performance": "node scripts/assess-security-performance.js",
+    "test:lcp": "node scripts/measure-lcp-browser.js current"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

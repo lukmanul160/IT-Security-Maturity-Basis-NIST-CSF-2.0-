@@ -1,0 +1,158 @@
+{
+  "phase": "after",
+  "date": "2026-10-14",
+  "profile": {
+    "width": 1440,
+    "height": 1000,
+    "cpuSlowdown": 4,
+    "latencyMs": 150,
+    "downloadBytesPerSecond": 200000,
+    "coldCache": true
+  },
+  "rows": [
+    {
+      "requested": "/",
+      "sample": 1,
+      "lcp": {
+        "ms": 3484,
+        "tag": "H1",
+        "id": "",
+        "text": "Tata kelola terpadu.Keputusan terarah.Keamanan terukur.",
+        "url": "",
+        "size": 144584
+      },
+      "shifts": 0.0003918122345337027,
+      "longTasks": 596,
+      "page": "/",
+      "ready": false,
+      "loadingVisible": false,
+      "fcp": 3484,
+      "ttfb": 76.30000001192093,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 179,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 790,
+          "bytes": 103659
+        },
+        {
+          "url": "/theme.css",
+          "ms": 281,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 350,
+          "bytes": 1837
+        }
+      ]
+    },
+    {
+      "requested": "/login",
+      "sample": 1,
+      "lcp": {
+        "ms": 1344,
+        "tag": "H2",
+        "id": "",
+        "text": "Clarity for yoursecurity journey.",
+        "url": "",
+        "size": 23436
+      },
+      "shifts": 0.11046661603009261,
+      "longTasks": 174,
+      "page": "/login",
+      "ready": false,
+      "loadingVisible": false,
+      "fcp": 1344,
+      "ttfb": 98.89999997615814,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 455,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 2965,
+          "bytes": 103659
+        },
+        {
+          "url": "/tailwind.css",
+          "ms": 635,
+          "bytes": 8712
+        },
+        {
+          "url": "/theme.css",
+          "ms": 734,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 880,
+          "bytes": 1837
+        }
+      ]
+    },
+    {
+      "requested": "/app",
+      "sample": 1,
+      "lcp": {
+        "ms": 5284,
+        "tag": "P",
+        "id": "",
+        "text": "Ringkasan tata kelola TI: penilaian, kepatuhan, risiko, audit, kebijakan, aset, vendor, personel, pe",
+        "url": "",
+        "size": 12712
+      },
+      "shifts": 0.07120072033125577,
+      "longTasks": 19958,
+      "page": "/app",
+      "ready": true,
+      "loadingVisible": false,
+      "fcp": 2912,
+      "ttfb": 75.80000001192093,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 299,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 2922,
+          "bytes": 103659
+        },
+        {
+          "url": "/branding.js",
+          "ms": 2037,
+          "bytes": 1837
+        },
+        {
+          "url": "/vue/assets/index-ZTaDdc2F.js",
+          "ms": 2913,
+          "bytes": 147668
+        },
+        {
+          "url": "/vue/assets/index-kJK9835F.css",
+          "ms": 1880,
+          "bytes": 55081
+        },
+        {
+          "url": "/vue/assets/runtime-BklSMzGP.js",
+          "ms": 2178,
+          "bytes": 158701
+        },
+        {
+          "url": "/vue/assets/enhancements-BYGmAedn.js",
+          "ms": 175,
+          "bytes": 1205
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

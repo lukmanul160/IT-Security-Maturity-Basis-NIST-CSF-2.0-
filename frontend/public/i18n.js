@@ -3489,7 +3489,7 @@
     });
     [root, ...root.querySelectorAll('[data-i18n-date]')].forEach(element => {
       if (!element.hasAttribute('data-i18n-date')) return;
-      try { element.textContent = dateText(element.getAttribute('data-i18n-date'), JSON.parse(element.getAttribute('data-i18n-date-options') || '{}')); } catch (_) {}
+      try { const formatted=dateText(element.getAttribute('data-i18n-date'), JSON.parse(element.getAttribute('data-i18n-date-options') || '{}'));if(element.textContent!==formatted)element.textContent=formatted; } catch (_) {}
     });
   }
   let observer;

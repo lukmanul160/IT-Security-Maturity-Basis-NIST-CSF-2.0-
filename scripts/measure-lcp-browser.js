@@ -1,0 +1,25 @@
+// Cold-cache lab measurements of the real pages. No business records are edited.
+const fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict'),{spawn}=require('node:child_process'),{Cdp}=require('./test-threat-modelling-browser');
+const {pool}=require('../src/config/database'),auth=require('../src/config/auth');const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function run(){
+ const phase=process.argv[2]||'current',profile=await fs.mkdtemp(path.join(os.tmpdir(),'nist-lcp-'));let server,chrome,cdp,token;
+ try{
+  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];assert.ok(user);
+  require('../src/services/auditService').record=async()=>{};
+  token=auth.createSession({username:user.username,role:'admin'});server=require('../src/app').listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));const base=`http://127.0.0.1:${server.address().port}`;
+  const probe=require('node:net').createServer();probe.listen(0,'127.0.0.1');await new Promise(resolve=>probe.once('listening',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));
+  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu',`--remote-debugging-port=${port}`,`--user-data-dir=${profile}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
+  let target;for(let i=0;i<100;i++){try{target=await(await fetch(`http://127.0.0.1:${port}/json/new?about:blank`,{method:'PUT'})).json();break;}catch{await delay(100);}}assert.ok(target);cdp=new Cdp(target.webSocketDebuggerUrl,{timeoutMs:60000});await cdp.connect();await cdp.send('Runtime.enable');await cdp.send('Page.enable');await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:150,downloadThroughput:200000,uploadThroughput:100000});
+  await cdp.send('Page.addScriptToEvaluateOnNewDocument',{source:`window.lcpMetrics={lcp:null,shifts:0,longTasks:0};new PerformanceObserver(list=>{for(const e of list.getEntries())window.lcpMetrics.lcp={ms:e.startTime,tag:e.element?.tagName,id:e.element?.id,text:e.element?.textContent?.trim().slice(0,100),url:e.url,size:e.size};}).observe({type:'largest-contentful-paint',buffered:true});new PerformanceObserver(list=>{for(const e of list.getEntries())if(!e.hadRecentInput)window.lcpMetrics.shifts+=e.value;}).observe({type:'layout-shift',buffered:true});new PerformanceObserver(list=>{for(const e of list.getEntries())window.lcpMetrics.longTasks+=e.duration;}).observe({type:'longtask',buffered:true});`});
+  const rows=[];
+  for(const page of ['/','/login','/app'])for(let sample=1;sample<=(Number(process.env.LCP_SAMPLES)||2);sample++){
+   await cdp.send('Network.clearBrowserCookies');if(page==='/app')await cdp.send('Network.setCookie',{name:auth.sessionCookie,value:token,url:base,httpOnly:true});
+   await cdp.send('Page.navigate',{url:base+page});await delay(page==='/app'?20000:7000);
+   if(page==='/app')await cdp.wait('document.documentElement.dataset.frontend==="vue"');
+   const metrics=await cdp.evaluate(`({...window.lcpMetrics,page:location.pathname,ready:document.documentElement.dataset.frontend==='vue',loadingVisible:Boolean(document.querySelector('#governanceLoading')?.checkVisibility()),fcp:performance.getEntriesByName('first-contentful-paint')[0]?.startTime,ttfb:performance.getEntriesByType('navigation')[0]?.responseStart,resources:performance.getEntriesByType('resource').filter(r=>r.initiatorType==='css'||/\.css|\.js/.test(r.name)).map(r=>({url:r.name.replace(location.origin,''),ms:Math.round(r.duration),bytes:r.transferSize}))})`);
+   rows.push({requested:page,sample,...metrics});console.log(JSON.stringify({phase,page,sample,lcp:metrics.lcp,fcp:metrics.fcp,ready:metrics.ready}));
+  }
+  const report={phase,date:'2026-10-14',profile:{width:1440,height:1000,cpuSlowdown:4,latencyMs:150,downloadBytesPerSecond:200000,coldCache:true},rows,errors:cdp.errors};await fs.writeFile(`output/lcp-${phase}-2026-10-14.json`,JSON.stringify(report,null,2));assert.ok(rows.every(r=>r.page===r.requested&&r.lcp),'All requested pages must paint content');assert.ok(rows.filter(r=>r.page==='/app').every(r=>r.ready&&!r.loadingVisible));assert.deepEqual(cdp.errors,[]);
+ }finally{cdp?.socket.close();chrome?.kill();if(token)auth.destroySession(token);if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-lcp-')){await delay(1000);await fs.rm(resolved,{recursive:true,force:true}).catch(()=>{});}}
+}
+run().catch(error=>{console.error(error.stack);process.exitCode=1;});

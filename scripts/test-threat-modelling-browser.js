@@ -8,7 +8,7 @@ const { pool } = require('../src/config/database');
 const { createSession } = require('../src/config/auth');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 class Cdp {
-  constructor(url) { this.socket = new WebSocket(url); this.pending = new Map(); this.id = 0; this.errors = []; }
+  constructor(url, { timeoutMs = 15000 } = {}) { this.socket = new WebSocket(url); this.pending = new Map(); this.id = 0; this.errors = []; this.timeoutMs = timeoutMs; }
   async connect() {
     await new Promise((resolve, reject) => { this.socket.addEventListener('open', resolve); this.socket.addEventListener('error', reject); });
     this.socket.addEventListener('message', event => {
@@ -17,7 +17,7 @@ class Cdp {
       if (message.method === 'Runtime.exceptionThrown') this.errors.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
     });
   }
-  send(method, params = {}) { const id = ++this.id; return new Promise((resolve, reject) => { const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, 15000); this.pending.set(id, { resolve: result => { clearTimeout(timer); resolve(result); }, reject: error => { clearTimeout(timer); reject(error); } }); this.socket.send(JSON.stringify({ id, method, params })); }); }
+  send(method, params = {}) { const id = ++this.id; return new Promise((resolve, reject) => { const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, this.timeoutMs); this.pending.set(id, { resolve: result => { clearTimeout(timer); resolve(result); }, reject: error => { clearTimeout(timer); reject(error); } }); this.socket.send(JSON.stringify({ id, method, params })); }); }
   async evaluate(expression) { const output = await this.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }); if (output.exceptionDetails) throw new Error(output.exceptionDetails.exception?.description || output.exceptionDetails.text); return output.result.value; }
   async wait(expression) { for (let i = 0; i < 150; i++) { if (await this.evaluate(`Boolean(${expression})`)) return; await delay(100); } throw new Error(`Timed out: ${expression}`); }
 }

@@ -39,6 +39,7 @@ test('landing screenshots load publicly with caching while workspace remains pro
   const base = `http://127.0.0.1:${server.address().port}`;
   const landing = await fetch(base);
   assert.equal(landing.status, 200);
+  assert.equal(landing.headers.get('content-encoding'),'gzip');
   const html = await landing.text();
   assert.ok(Buffer.byteLength(html) < 120000, 'landing HTML should stay below 120 KB');
   assert.ok(!html.includes('data:image/webp;base64,'));
@@ -68,4 +69,13 @@ test('landing screenshots load publicly with caching while workspace remains pro
     assert.equal(response.headers.get('location'), '/login');
   }
   assert.equal((await fetch(base + '/api/auth/me')).status, 401);
+  const workspaceHtml=await fs.readFile(path.join(__dirname,'../frontend/public/vue/index.html'),'utf8');
+  const cssLinks=[...workspaceHtml.matchAll(/<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"/g)];
+  assert.equal(cssLinks.length,1,'Workspace critical styles should be bundled into one stylesheet');
+  assert.match(workspaceHtml,/rel="preload"[^>]*\/fonts\/dm-sans/);
+  const fontCss=await fs.readFile(path.join(__dirname,'../frontend/client/src/styles/local-fonts.css'),'utf8');
+  for(const [,font] of fontCss.matchAll(/url\((\/fonts\/[^)]+)\)/g)){
+    const response=await fetch(base+font);assert.equal(response.status,200);assert.match(response.headers.get('cache-control'),/public.*max-age=31536000.*immutable/);
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()),await fs.readFile(path.join(__dirname,'../frontend/public',font)));
+  }
 });

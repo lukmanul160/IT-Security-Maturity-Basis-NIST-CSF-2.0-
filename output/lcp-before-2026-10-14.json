@@ -1,0 +1,371 @@
+{
+  "phase": "before",
+  "date": "2026-10-14",
+  "profile": {
+    "width": 1440,
+    "height": 1000,
+    "cpuSlowdown": 4,
+    "latencyMs": 150,
+    "downloadBytesPerSecond": 200000,
+    "coldCache": true
+  },
+  "rows": [
+    {
+      "requested": "/",
+      "sample": 1,
+      "lcp": {
+        "ms": 4852,
+        "tag": "H1",
+        "id": "",
+        "text": "Tata kelola terpadu.Keputusan terarah.Keamanan terukur.",
+        "url": "",
+        "size": 53110
+      },
+      "shifts": 0.0313956634810711,
+      "longTasks": 2593,
+      "page": "/",
+      "ready": false,
+      "loadingVisible": false,
+      "fcp": 2568,
+      "ttfb": 74,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 188,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 785,
+          "bytes": 103629
+        },
+        {
+          "url": "/theme.css",
+          "ms": 287,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 555,
+          "bytes": 1791
+        }
+      ]
+    },
+    {
+      "requested": "/",
+      "sample": 2,
+      "lcp": {
+        "ms": 3396,
+        "tag": "H1",
+        "id": "",
+        "text": "Tata kelola terpadu.Keputusan terarah.Keamanan terukur.",
+        "url": "",
+        "size": 53110
+      },
+      "shifts": 0.0003918122345337027,
+      "longTasks": 1175,
+      "page": "/",
+      "ready": false,
+      "loadingVisible": false,
+      "fcp": 2976,
+      "ttfb": 147.79999995231628,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 457,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 2670,
+          "bytes": 103629
+        },
+        {
+          "url": "/theme.css",
+          "ms": 708,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 593,
+          "bytes": 1791
+        }
+      ]
+    },
+    {
+      "requested": "/login",
+      "sample": 1,
+      "lcp": {
+        "ms": 3528,
+        "tag": "H2",
+        "id": "",
+        "text": "Kejelasan untuk perjalanankeamanan Anda.",
+        "url": "",
+        "size": 35880
+      },
+      "shifts": 0.025883391203703705,
+      "longTasks": 145,
+      "page": "/login",
+      "ready": false,
+      "loadingVisible": false,
+      "fcp": 2172,
+      "ttfb": 80.09999996423721,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 359,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 2807,
+          "bytes": 103629
+        },
+        {
+          "url": "/tailwind.css",
+          "ms": 622,
+          "bytes": 8712
+        },
+        {
+          "url": "/theme.css",
+          "ms": 728,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 852,
+          "bytes": 1791
+        }
+      ]
+    },
+    {
+      "requested": "/login",
+      "sample": 2,
+      "lcp": {
+        "ms": 3336,
+        "tag": "H2",
+        "id": "",
+        "text": "Kejelasan untuk perjalanankeamanan Anda.",
+        "url": "",
+        "size": 35880
+      },
+      "shifts": 0.025883391203703705,
+      "longTasks": 238,
+      "page": "/login",
+      "ready": false,
+      "loadingVisible": false,
+      "fcp": 1972,
+      "ttfb": 53.90000003576279,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 285,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 2629,
+          "bytes": 103629
+        },
+        {
+          "url": "/tailwind.css",
+          "ms": 433,
+          "bytes": 8712
+        },
+        {
+          "url": "/theme.css",
+          "ms": 545,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 683,
+          "bytes": 1791
+        }
+      ]
+    },
+    {
+      "requested": "/app",
+      "sample": 1,
+      "lcp": {
+        "ms": 8372,
+        "tag": "P",
+        "id": "",
+        "text": "Ringkasan tata kelola TI: penilaian, kepatuhan, risiko, audit, kebijakan, aset, vendor, personel, pe",
+        "url": "",
+        "size": 12712
+      },
+      "shifts": 0.002884818115234375,
+      "longTasks": 8004,
+      "page": "/app",
+      "ready": true,
+      "loadingVisible": false,
+      "fcp": 1920,
+      "ttfb": 86.89999997615814,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 714,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 2756,
+          "bytes": 103629
+        },
+        {
+          "url": "/styles.css",
+          "ms": 850,
+          "bytes": 5465
+        },
+        {
+          "url": "/modern.css",
+          "ms": 980,
+          "bytes": 12201
+        },
+        {
+          "url": "/legacy-before-tailwind.css",
+          "ms": 877,
+          "bytes": 5040
+        },
+        {
+          "url": "/tailwind.css",
+          "ms": 1111,
+          "bytes": 8712
+        },
+        {
+          "url": "/legacy-after-tailwind.css",
+          "ms": 835,
+          "bytes": 1321
+        },
+        {
+          "url": "/theme.css",
+          "ms": 1172,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 1801,
+          "bytes": 1791
+        },
+        {
+          "url": "/vue/assets/index-CCFCX7dz.js",
+          "ms": 4059,
+          "bytes": 303817
+        },
+        {
+          "url": "/vue/assets/index-CfiVpnUK.css",
+          "ms": 1475,
+          "bytes": 20726
+        },
+        {
+          "url": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
+          "ms": 588,
+          "bytes": 931
+        },
+        {
+          "url": "/vue/assets/KnowledgeTextEditor-DOCRN_k9.js",
+          "ms": 5189,
+          "bytes": 177903
+        },
+        {
+          "url": "/vue/assets/KnowledgeTextEditor-S57g6cqp.css",
+          "ms": 233,
+          "bytes": 1500
+        }
+      ]
+    },
+    {
+      "requested": "/app",
+      "sample": 2,
+      "lcp": {
+        "ms": 8988,
+        "tag": "P",
+        "id": "",
+        "text": "Ringkasan tata kelola TI: penilaian, kepatuhan, risiko, audit, kebijakan, aset, vendor, personel, pe",
+        "url": "",
+        "size": 12712
+      },
+      "shifts": 0.003415085335917662,
+      "longTasks": 10593,
+      "page": "/app",
+      "ready": true,
+      "loadingVisible": false,
+      "fcp": 3960,
+      "ttfb": 957.1000000238419,
+      "resources": [
+        {
+          "url": "/theme.js",
+          "ms": 386,
+          "bytes": 1335
+        },
+        {
+          "url": "/i18n.js",
+          "ms": 2032,
+          "bytes": 103629
+        },
+        {
+          "url": "/styles.css",
+          "ms": 545,
+          "bytes": 5465
+        },
+        {
+          "url": "/modern.css",
+          "ms": 653,
+          "bytes": 12201
+        },
+        {
+          "url": "/legacy-before-tailwind.css",
+          "ms": 559,
+          "bytes": 5040
+        },
+        {
+          "url": "/tailwind.css",
+          "ms": 705,
+          "bytes": 8712
+        },
+        {
+          "url": "/legacy-after-tailwind.css",
+          "ms": 598,
+          "bytes": 1321
+        },
+        {
+          "url": "/theme.css",
+          "ms": 934,
+          "bytes": 10688
+        },
+        {
+          "url": "/branding.js",
+          "ms": 968,
+          "bytes": 1791
+        },
+        {
+          "url": "/vue/assets/index-CCFCX7dz.js",
+          "ms": 3297,
+          "bytes": 303817
+        },
+        {
+          "url": "/vue/assets/index-CfiVpnUK.css",
+          "ms": 1122,
+          "bytes": 20726
+        },
+        {
+          "url": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
+          "ms": 248,
+          "bytes": 931
+        },
+        {
+          "url": "/vue/assets/KnowledgeTextEditor-DOCRN_k9.js",
+          "ms": 3190,
+          "bytes": 177903
+        },
+        {
+          "url": "/vue/assets/KnowledgeTextEditor-S57g6cqp.css",
+          "ms": 205,
+          "bytes": 1500
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

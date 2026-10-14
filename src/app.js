@@ -12,11 +12,11 @@ const { sessionCookieSecure } = require('./config/env');
 
 const app = express();
 app.disable('x-powered-by');
-// Compress application code/styles only; API data, downloads and images retain
+// Compress code/styles and static page HTML; API data, downloads and images retain
 // their original response behavior. Keep compression CPU cost moderate.
 app.use(compression({
 	level: 4,
-	filter: (req, res) => /\.(?:js|css)$/.test(req.path) && compression.filter(req, res),
+	filter: (req, res) => (/\.(?:js|css)$/.test(req.path) || ['/', '/index.html', '/login', '/app', '/virtual-office', '/virtual-office/'].includes(req.path)) && compression.filter(req, res),
 }));
 const vueWorkspaceIndex = path.join(publicRoot, 'vue', 'index.html');
 
@@ -77,6 +77,7 @@ app.use('/virtual-office/assets', express.static(path.join(publicRoot, 'virtual-
 app.get('/api/public/website-settings',async(req,res,next)=>{try{res.set('Cache-Control','no-store').json(require('./services/websiteSettingsService').publicSettings(await require('./services/websiteSettingsService').read()));}catch(error){next(error);}});
 app.get('/website-assets/:kind',async(req,res,next)=>{try{if(!['logo','favicon'].includes(req.params.kind))return res.sendStatus(404);const data=await require('./services/websiteSettingsService').read();const asset=data[req.params.kind];res.set('Cache-Control','no-cache');if(!asset)return res.sendFile(path.join(publicRoot,'brand-logo.png'));res.type(asset.mime).send(Buffer.from(asset.base64,'base64'));}catch(error){next(error);}});
 app.get('/branding.js',(req,res)=>res.sendFile(path.join(publicRoot,'branding.js')));
+app.use('/fonts', express.static(path.join(publicRoot,'fonts'), {index:false,fallthrough:false,maxAge:'365d',immutable:true}));
 app.get('/brand-logo.jpeg', (req, res) => {
 	res.sendFile(path.join(publicRoot, 'brand-logo.jpeg'), error => {
 		if (error && !res.headersSent) res.sendStatus(error.statusCode || 500);

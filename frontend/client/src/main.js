@@ -1,3 +1,10 @@
+import './styles/local-fonts.css';
+import '../../public/styles.css';
+import '../../public/modern.css';
+import '../../public/legacy-before-tailwind.css';
+import '../../public/tailwind.css';
+import '../../public/legacy-after-tailwind.css';
+import '../../public/theme.css';
 import './styles/personnel-certificate.css';
 import './styles/assessment-gaps.css';
 import './styles/upload-progress.css';
@@ -16,22 +23,26 @@ import './styles/module-transfer.css';
 import './styles/risk-dashboard.css';
 import './styles/risk-acceptance-dashboard.css';
 import './styles/governance-dashboard.css';
-import workspaceEnhancements from './workspace/generated/enhancements.js?raw';
-import workspaceRuntime from './workspace/runtime.js';
 import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';
 
 async function bootstrap() {
+  const runtimeReady=Promise.all([import('./workspace/runtime.js'),import('./workspace/generated/enhancements.js?raw')]);
   installUploadProgress();
   installMutationGuard();
   createApp(App).mount('#app');
   await nextTick();
   window.NistI18n?.mount();
+  document.getElementById('governanceLoading')?.remove();
+  const root=document.getElementById('app');root.inert=true;root.setAttribute('aria-busy','true');
+  // Let the localized page paint before the legacy feature setup occupies the main thread.
+  await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+  const [{default:workspaceRuntime},{default:workspaceEnhancements}]=await runtimeReady;
   await bootstrapWorkspaceRuntime({ app: workspaceRuntime, enhancements: workspaceEnhancements });
   installTableResize();
   document.documentElement.dataset.frontend = 'vue';
   window.NistI18n?.refresh();
   window.dispatchEvent(new CustomEvent('vue:workspace-ready'));
-  document.getElementById('governanceLoading')?.remove();
+  root.inert=false;root.removeAttribute('aria-busy');
 }
 
 bootstrap().catch(error => {

@@ -12,6 +12,16 @@ class Cdp {
   async connect(){await new Promise((resolve,reject)=>{this.socket.addEventListener('open',resolve);this.socket.addEventListener('error',reject);});this.socket.addEventListener('message',event=>{const message=JSON.parse(event.data);if(message.id){const handler=this.pending.get(message.id);this.pending.delete(message.id);if(handler)message.error?handler.reject(new Error(message.error.message)):handler.resolve(message.result);}if(message.method==='Runtime.exceptionThrown')this.errors.push(message.params.exceptionDetails.exception?.description||message.params.exceptionDetails.text);});}
   send(method,params={}){return new Promise((resolve,reject)=>{const id=++this.id,timer=setTimeout(()=>{this.pending.delete(id);reject(new Error('CDP timeout: '+method));},60000);this.pending.set(id,{resolve:value=>{clearTimeout(timer);resolve(value);},reject:error=>{clearTimeout(timer);reject(error);}});this.socket.send(JSON.stringify({id,method,params}));});}
   async evaluate(expression){const result=await this.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(result.exceptionDetails)throw new Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result.value;}
+  async reload(){
+    let listener,timer;
+    const loaded=new Promise((resolve,reject)=>{
+      listener=event=>{if(JSON.parse(event.data).method==='Page.loadEventFired')resolve();};
+      this.socket.addEventListener('message',listener);
+      timer=setTimeout(()=>reject(new Error('Timed out waiting for reload')),60000);
+    });
+    try{await this.send('Page.reload');await loaded;}
+    finally{clearTimeout(timer);this.socket.removeEventListener('message',listener);}
+  }
   async wait(expression){for(let i=0;i<400;i++){try{if(await this.evaluate(`Boolean(${expression})`))return;}catch(error){if(!/Inspected target navigated|Cannot find context|Execution context.*destroyed/i.test(error.message))throw error;}await delay(100);}throw new Error('Timed out: '+expression);}
 }
 async function run(){
@@ -129,7 +139,7 @@ async function run(){
     assert.ok((await service.folders()).includes('Archive/Renamed/Policies/Drafts'));
     console.log('Browser: folder create, note drag, subtree drag and rename persist');
     // Reload confirms expanded state and saved folder paths survive.
-    await client.send('Page.reload');await client.wait('document.documentElement.dataset.frontend === "vue"');await client.wait(`document.querySelector('[data-folder="Archive/Renamed"]')`);
+    await client.reload();await client.wait('document.documentElement.dataset.frontend === "vue"');await client.wait(`document.querySelector('[data-folder="Archive/Renamed"]')`);
     assert.equal(await client.evaluate('document.querySelector("[name=note-area-height]").value'),'620');
     await client.evaluate(`document.querySelector('[data-note="${policy.id}"]').click()`);
     await client.wait('document.querySelector(".tiptap strong")?.textContent==="important"');
@@ -153,7 +163,7 @@ async function run(){
     await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Catatan disimpan")');
     const savedEditor=(await service.list()).find(n=>n.id===policy.id).content;
     assert.match(savedEditor,/1\. First item/);assert.match(savedEditor,/2\. Second item/);assert.match(savedEditor,/\[\[Home\]\]/);assert.match(savedEditor,/\*\*important\*\*/);
-    await client.send('Page.reload');await client.wait('document.documentElement.dataset.frontend === "vue"');await client.wait(`document.querySelector('[data-note="${policy.id}"]')`);await client.evaluate(`document.querySelector('[data-note="${policy.id}"]').click()`);
+    await client.reload();await client.wait('document.documentElement.dataset.frontend === "vue"');await client.wait(`document.querySelector('[data-note="${policy.id}"]')`);await client.evaluate(`document.querySelector('[data-note="${policy.id}"]').click()`);
     await client.wait('document.querySelectorAll(".tiptap ol>li").length===2');
     await client.evaluate(`(()=>{const el=document.querySelector('.tiptap'),data=new DataTransfer();data.setData('text/html','<img src=x onerror="window.editorXss=1"><script>window.editorXss=1</script><a href="javascript:window.editorXss=1">unsafe</a>');el.focus();el.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));})()`);
     assert.equal(await client.evaluate('Boolean(window.editorXss || document.querySelector(".tiptap img[onerror],.tiptap script,.tiptap a[href^=javascript]"))'),false);
@@ -217,8 +227,9 @@ async function run(){
       const importStarted=performance.now();
       const title=nested?'Imported nested':'Imported mixed';
       const selector=nested?'input[webkitdirectory]':'input[accept^=".md"]';
+      await client.wait('!Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Muat ulang daftar").disabled');
       await client.evaluate(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(png.toString('base64'))}),c=>c.charCodeAt(0));const data=new DataTransfer();const note=new File(['# Imported\\n\\n![[demo.png]]'],'${title}.md',{type:'text/markdown'});const image=new File([bytes],'demo.png',{type:'image/png'});if(${nested}){Object.defineProperty(note,'webkitRelativePath',{value:'DemoFolder/Subfolder/'+note.name});Object.defineProperty(image,'webkitRelativePath',{value:'DemoFolder/Subfolder/demo.png'});}data.items.add(note);data.items.add(image);const input=document.querySelector(${JSON.stringify(selector)});input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
-      await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("gambar berhasil diimpor")');
+      try{await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("gambar berhasil diimpor")');}catch(error){console.log('Import failure state:',await client.evaluate('({status:document.querySelector("#knowledgeNotesView [role=status]").textContent,buttons:Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).map(b=>({label:b.textContent,disabled:b.disabled}))})'));throw error;}
       console.log(`Import timing (${nested?'nested folder':'Markdown + image'}): ${Math.round(performance.now()-importStarted)} ms`);
       const imported=(await service.list()).find(note=>note.title===title);assert.ok(imported);
       assert.equal(imported.folder,nested?'DemoFolder/Subfolder':'');
@@ -270,7 +281,7 @@ async function run(){
     await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
     await client.evaluate('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").click()');
     await client.wait('Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Simpan").disabled && !Array.from(document.querySelectorAll("#knowledgeNotesView>.toolbar button")).find(b=>b.textContent==="Muat ulang daftar").disabled');
-    await client.send('Page.reload');
+    await client.reload();
     await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
     await client.wait(`document.querySelector('[data-image="DemoFolder/Subfolder/demo.png"]')`);
     console.log('Browser: typed image reference renders immediately and survives save/reload with folder files');
@@ -284,7 +295,7 @@ async function run(){
     await client.wait(`document.querySelector('[data-image="Archive/demo.png"]')`);
     assert.ok((await service.list()).find(note=>note.title==='Imported nested').content.includes('![[Archive/demo.png]]'));
     await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
-    await client.send('Page.reload');
+    await client.reload();
     await client.wait(`document.querySelector('[data-image="Archive/demo.png"]')`);
     await client.wait('document.querySelectorAll(".tiptap img").length===3 && [...document.querySelectorAll(".tiptap img")].every(img=>img.naturalWidth>0)');
     await client.evaluate(`(()=>{window.confirm=()=>false;document.querySelector('[data-image="Archive/demo.png"]').closest('.tree-row').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));})()`);
@@ -295,7 +306,7 @@ async function run(){
     await client.wait('document.querySelector("#knowledgeNotesView [role=status]").textContent.includes("Gambar dihapus")');
     assert.equal(await client.evaluate(`document.querySelector('[data-image="Archive/demo.png"]')===null`),true);
     assert.equal((await fetch(base+'/api/knowledge-notes/images/'+movedImage.id)).status,404);
-    await client.send('Page.reload');
+    await client.reload();
     await client.wait('document.querySelector(".tiptap")');
     assert.equal(await client.evaluate(`document.querySelector('[data-image="Archive/demo.png"]')===null`),true);
     console.log('Browser: image drag preserves references after reload, duplicate destination rolls back, delete cancellation and confirmed deletion persist');

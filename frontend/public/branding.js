@@ -2,7 +2,8 @@
  let settings=null;
  const select=(selector)=>document.querySelector(selector);
  function apply(){if(!settings)return;document.title=settings.name;document.querySelector('title')?.setAttribute('data-no-translate','');for(const node of document.querySelectorAll('[data-brand-name],.brand-title')){node.setAttribute('data-no-translate','');if(node.textContent!==settings.name)node.textContent=settings.name;}
- for(const node of document.querySelectorAll('[data-brand-tagline]'))if(node.textContent!==settings.tagline)node.textContent=settings.tagline;
+ const tagline=window.NistI18n?.t(settings.tagline)||settings.tagline;
+ for(const node of document.querySelectorAll('[data-brand-tagline]')){node.setAttribute('data-no-translate','');if(node.textContent!==tagline)node.textContent=tagline;}
  for(const img of document.querySelectorAll('img[src*="brand-logo.png"],img[data-brand-logo]')){img.setAttribute('data-brand-logo','');if(img.getAttribute('src')!==settings.logoUrl)img.src=settings.logoUrl;img.alt='Logo '+settings.name;}
  let icon=select('link[rel="icon"]');if(!icon){icon=document.createElement('link');icon.rel='icon';document.head.append(icon);}icon.removeAttribute('type');if(icon.getAttribute('href')!==settings.faviconUrl)icon.href=settings.faviconUrl;
  }
@@ -14,5 +15,6 @@
  document.addEventListener('submit',async event=>{const form=event.target;if(form.id!=='websiteSettingsForm')return;event.preventDefault();const button=form.querySelector('[type=submit]');if(button.disabled)return;button.disabled=true;const status=form.querySelector('[data-website-status]');status.textContent='Menyimpan pengaturan website...';try{const body={name:form.elements.websiteName.value,tagline:form.elements.websiteTagline.value};for(const kind of ['logo','favicon']){if(form.elements[kind==='logo'?'resetLogo':'resetFavicon'].checked)body[kind]=null;else{const file=form.elements[kind==='logo'?'websiteLogo':'websiteFavicon'].files[0];if(file)body[kind]=await readFile(file);}}
  settings=await request('/api/website-settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});apply();for(const kind of ['logo','favicon']){form.querySelector('[data-website-preview="'+kind+'"]').src=settings[kind+'Url'];form.elements[kind==='logo'?'websiteLogo':'websiteFavicon'].value='';form.elements[kind==='logo'?'resetLogo':'resetFavicon'].checked=false;}status.textContent='Pengaturan website tersimpan.';}catch(error){status.textContent=error.message;}finally{button.disabled=false;}});
  new MutationObserver(apply).observe(document.body,{childList:true,subtree:true});
+ window.addEventListener('nist:language-change',apply);
  request('/api/public/website-settings',{cache:'no-store'}).then(data=>{settings=data;apply();}).catch(()=>{});
 })();

@@ -36,6 +36,7 @@ export default defineConfig({
       '/styles.css': 'http://localhost:8000',
       '/modern.css': 'http://localhost:8000',
       '/tailwind.css': 'http://localhost:8000',
+      '/fonts': 'http://localhost:8000',
     },
   },
 });

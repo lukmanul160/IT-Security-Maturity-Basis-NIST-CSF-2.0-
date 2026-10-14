@@ -10,12 +10,16 @@ test('browser translates dynamic UI, preserves form values and user data, and re
   const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   try { await fs.access(chromePath); } catch { t.skip('Chrome is unavailable'); return; }
   const script = await fs.readFile('frontend/public/i18n.js', 'utf8');
+  const branding = await fs.readFile('frontend/public/branding.js', 'utf8');
   const dashboard = (await fs.readFile('frontend/client/src/workspace/components/CsfView.vue', 'utf8'))
     .split('<template>')[1].split('<div class="page-heading"><div><p class="eyebrow">NIST CYBERSECURITY FRAMEWORK')[0];
   const server = http.createServer((req, res) => {
     if (req.url === '/i18n.js') { res.setHeader('Content-Type', 'application/javascript'); res.end(script); return; }
+    if (req.url === '/branding.js') { res.setHeader('Content-Type', 'application/javascript'); res.end(branding); return; }
+    if (req.url === '/api/public/website-settings') { res.setHeader('Content-Type','application/json');res.end(JSON.stringify({name:'Brand fixture',tagline:'Align Your IT With Business need',logoUrl:'/brand.png',faviconUrl:'/favicon.ico'}));return; }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.end(`<!doctype html><html><head><script src="/i18n.js" defer></script></head><body>
+    res.end(`<!doctype html><html><head><script src="/i18n.js" defer></script><script src="/branding.js" defer></script></head><body>
+      <span data-brand-tagline>Align Your IT With Business need</span>
       <div class="top-actions"></div><button id="save">Save</button>
       <select id="status"><option>Active</option><option value="closed">Closed</option></select>
       <input id="name" value="Save" placeholder="Masukkan username">
@@ -83,6 +87,13 @@ test('browser translates dynamic UI, preserves form values and user data, and re
           check(added.textContent === 'Hapus', 'new item translated in large list');
           check(!scanned.includes(large) && !scanned.includes(document.body), 'list updates do not rescan unchanged siblings');
           document.createTreeWalker = createWalker;
+          const dates=document.createElement('div');dates.innerHTML=NistI18n.dateHtml('2026-10-13T18:30:00Z',{dateStyle:'long'});document.body.append(dates);
+          await tick();const mutations=[];const dateObserver=new MutationObserver(records=>mutations.push(...records));dateObserver.observe(dates,{childList:true,subtree:true,characterData:true});
+          NistI18n.refresh();await tick();await tick();check(mutations.length===0,'unchanged dates do not cause observer mutation loops');
+          NistI18n.setLanguage('en');await tick();check(dates.textContent.includes('October 14, 2026'),'dates update on language change');
+          const changed=mutations.length;await tick();await tick();check(mutations.length===changed,'date translation settles after language change');dateObserver.disconnect();
+          NistI18n.setLanguage('id');await tick();await tick();check(document.querySelector('[data-brand-tagline]').textContent==='Selaraskan TI dengan kebutuhan bisnis','branding and translation agree on Indonesian tagline');
+          NistI18n.setLanguage('en');await tick();await tick();check(document.querySelector('[data-brand-tagline]').textContent==='Align Your IT With Business need','branding follows English without a mutation loop');
           result.textContent = 'BROWSER_I18N_PASS';
         } catch (error) { result.textContent = 'BROWSER_I18N_FAIL: ' + error.message; }
       });</script></body></html>`);
