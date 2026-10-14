@@ -47,4 +47,9 @@ test('relation filters search both endpoints and notes and combine type with rel
  vm.runInContext("relationAssetFilter.value='c'",c);assert.equal(count(c,'filteredRelations'),0);assert.equal(count(c,'relations'),2);
  vm.runInContext('resetRelationFilters()',c);assert.equal(count(c,'filteredRelations'),2);
  vm.runInContext("diagramTypeFilter.value='Firewall';placementTypeFilter.value='Server'",c);assert.equal(count(c,'diagramPalette'),1);assert.equal(count(c,'placementAssets'),2);
+ vm.runInContext("diagramAssetSearch.value='  RACK JAKARTA  '",c);assert.equal(count(c,'diagramPalette'),1);
+ vm.runInContext("diagramAssetSearch.value='Rack Bandung'",c);assert.equal(count(c,'diagramPalette'),0);
+ vm.runInContext("assets.value[1].rackName='Rack Bandung';placements.value=[]",c);assert.equal(count(c,'diagramPalette'),1);
+ assert.equal(vm.runInContext('assetRackName(assets.value[1])',c),'Rack Bandung');
+ vm.runInContext("diagramTypeFilter.value='Server'",c);assert.equal(count(c,'diagramPalette'),0);
 });

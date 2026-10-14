@@ -2,6 +2,8 @@
 
 Menu Asset Management menyediakan Asset Register, Rak Server, dan Modelling Asset Register. Semua data tersimpan di PostgreSQL; tabel dibuat otomatis saat startup. Restart backend dan jalankan `npm run build` setelah memperbarui kode.
 
+Katalog aset pada Modelling Asset Register dapat dicari berdasarkan nama rak tempat aset dipasang, selain nama aset, tag, dan jenis perangkat. Kartu katalog menampilkan nama rak atau status Belum dipasang. Pencarian nama rak mengikuti filter jenis perangkat dan kembali ke halaman katalog pertama.
+
 ## Asset Register
 
 Daftar aset menampilkan maksimal 20 data per halaman, dengan tombol Sebelumnya/Berikutnya, rentang data, dan nomor halaman. Pencarian serta perubahan filter kembali ke halaman pertama. Jumlah total dan hasil filter tetap menghitung seluruh aset dalam register.

@@ -3222,6 +3222,7 @@
     ["Jadwal:","Jadwal:","Schedule:"],
     ["Halaman katalog aset","Halaman katalog aset","Asset catalogue page"],
     ["Halaman daftar aset","Halaman daftar aset","Asset register pages"],
+    ["Rak:","Rak:","Rack:"],
     ["20 aset per halaman","20 aset per halaman","20 assets per page"],
     ["Katalog aset: halaman sebelumnya","Katalog aset: halaman sebelumnya","Asset catalogue: previous page"],
     ["Katalog aset: halaman berikutnya","Katalog aset: halaman berikutnya","Asset catalogue: next page"],
