@@ -3221,6 +3221,8 @@
     ["Pilih penerima terdaftar pada formulir aset untuk mengisi Owner email.","Pilih penerima terdaftar pada formulir aset untuk mengisi email pemilik.","Select a registered recipient in the asset form to fill the owner email."],
     ["Jadwal:","Jadwal:","Schedule:"],
     ["Halaman katalog aset","Halaman katalog aset","Asset catalogue page"],
+    ["Halaman daftar aset","Halaman daftar aset","Asset register pages"],
+    ["20 aset per halaman","20 aset per halaman","20 assets per page"],
     ["Katalog aset: halaman sebelumnya","Katalog aset: halaman sebelumnya","Asset catalogue: previous page"],
     ["Katalog aset: halaman berikutnya","Katalog aset: halaman berikutnya","Asset catalogue: next page"],
     ["Filter rating risiko","Filter tingkat risiko","Risk rating filter"],

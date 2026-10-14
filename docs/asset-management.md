@@ -4,6 +4,8 @@ Menu Asset Management menyediakan Asset Register, Rak Server, dan Modelling Asse
 
 ## Asset Register
 
+Daftar aset menampilkan maksimal 20 data per halaman, dengan tombol Sebelumnya/Berikutnya, rentang data, dan nomor halaman. Pencarian serta perubahan filter kembali ke halaman pertama. Jumlah total dan hasil filter tetap menghitung seluruh aset dalam register.
+
 Daftarkan asset tag unik, nama, jenis, serial, vendor/model, pemilik, layanan bisnis, lokasi, kritikalitas, tanggal pembelian, renewal, dan akhir garansi. Gunakan siklus hidup planned, in-stock, in-use, maintenance, retired, disposed. Referensi change/tiket ITSM bersifat opsional, termasuk perubahan status. Lepaskan posisi rak dan relasi sebelum retirement. Aset operasional harus retired sebelum dihapus; planned dapat dihapus untuk memperbaiki pencatatan.
 
 Untuk reminder, isi email pemilik dan tanggal renewal, pilih H- (0–365 hari), lalu aktifkan reminder email. Konfigurasikan SMTP terpusat melalui menu administrasi. Scheduler memeriksa saat startup dan setiap jam dengan tanggal Asia/Bangkok. Pengiriman maksimal sekali per aset/tanggal renewal/penerima/hari; reminder berlanjut setiap hari untuk renewal terlambat sampai tanggal diperbarui atau reminder dinonaktifkan. Retired/disposed tidak menerima reminder. Kegagalan SMTP dicatat di log dan dicoba kembali pada pemeriksaan berikutnya. SMTP tidak dapat menjamin exactly-once jika proses berhenti setelah email diterima SMTP sebelum delivery tersimpan. Log pengiriman disimpan pada asset_renewal_deliveries.

@@ -8,6 +8,11 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
  const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const paginationOnly=process.argv.includes('--pagination-only');
+ if(paginationOnly){
+   const service=require('../src/services/assetManagementService'),originalList=service.list;
+   service.list=kind=>kind==='assets'?Promise.resolve(Array.from({length:45},(_,i)=>({id:'pagination-'+i,tag:'PAGE-'+String(i+1).padStart(2,'0'),name:'Pagination asset '+(i+1),type:i<25?'Server':'Firewall',status:'in-use',owner:'Test owner'}))):originalList(kind);
+ }
  server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
  const port=9800+Math.floor(Math.random()*100);
  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -21,11 +26,40 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await call('Page.addScriptToEvaluateOnNewDocument',{source:"localStorage.setItem('nist-maturity-ui',JSON.stringify({view:'server-racks',function:'GV'}));"});
  await call('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:base+'/app'});
  await wait("document.documentElement.dataset.frontend==='vue'");await wait("document.querySelector('#assetManagementView.active-view .page-heading h2')?.textContent==='Rak Server'");
+ if(paginationOnly){
+   await evaluate("document.querySelector('[data-view=asset-register]').click()");
+   await wait("document.querySelector('.asset-pagination-summary')?.textContent.includes('/ 45')");
+   const rows=()=>evaluate("document.querySelectorAll('.asset-register-table tbody tr').length");
+   const next=()=>evaluate("document.querySelector('.asset-pagination-controls button:last-child').click()");
+   assert.equal(await rows(),20);
+   assert.equal(await evaluate("document.querySelector('.asset-register-table tbody tr strong').textContent"),'PAGE-01');
+   await next();assert.equal(await rows(),20);
+   assert.equal(await evaluate("document.querySelector('.asset-register-table tbody tr strong').textContent"),'PAGE-21');
+   await next();assert.equal(await rows(),5);
+   assert.equal(await evaluate("document.querySelector('.asset-pagination-controls button:last-child').disabled"),true);
+   await evaluate("(()=>{const input=document.querySelector('input[aria-label=\"Cari aset\"]');input.value='PAGE-45';input.dispatchEvent(new Event('input',{bubbles:true}));})()");
+   assert.equal(await rows(),1);
+   assert.equal(await evaluate("document.querySelector('.asset-pagination-controls button:first-child').disabled"),true);
+   await evaluate("(()=>{const input=document.querySelector('input[aria-label=\"Cari aset\"]');input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));})()");
+   await next();
+   await evaluate("(()=>{const select=document.querySelector('[aria-label=\"Filter daftar aset\"] select');select.value='Firewall';select.dispatchEvent(new Event('change',{bubbles:true}));})()");
+   assert.equal(await rows(),20);
+   assert.equal(await evaluate("document.querySelector('.asset-register-table tbody tr strong').textContent"),'PAGE-26');
+   assert.equal(await evaluate("document.querySelector('.asset-pagination-controls button:first-child').disabled"),true);
+   await evaluate("window.NistI18n.setLanguage('en')");
+   await wait("document.querySelector('.asset-pagination').textContent.includes('20 assets per page')");
+   assert.equal(await evaluate("document.querySelector('.asset-pagination-controls button:last-child').textContent"),'Next');
+   await evaluate("window.NistI18n.setLanguage('id')");
+   await wait("document.querySelector('.asset-pagination').textContent.includes('20 aset per halaman')");
+   assert.deepEqual(errors,[]);
+   console.log('PASS: compiled Asset Register renders 20/20/5 rows, paginates without overlap, and resets pagination after search and filtering. Fixture records stay in memory.');
+   auth.destroySession(token);return;
+ }
  await wait("!document.querySelector('#assetManagementView [role=status]').textContent.includes('Memuat')");
  const status=await evaluate("document.querySelector('#assetManagementView [role=status]').textContent");assert.equal(status,'');
  const result=await evaluate("(async()=>{const r=await fetch('/api/asset-management/racks');const rows=await r.json();const photos=await fetch('/api/asset-management/photos');return {rackCount:rows.length,frames:document.querySelectorAll('#assetManagementView .rack-frame').length,photos:photos.status,hasToolbar:!!document.querySelector('#assetManagementView .toolbar .button-accent')};})()");
  assert.equal(result.frames,result.rackCount?2:0);assert.equal(result.photos,200);assert.equal(result.hasToolbar,true);
- for(const [key,title] of [['asset-register','Asset Register'],['server-racks','Rak Server'],['asset-modelling','Modelling Asset Register']]){await evaluate(`document.querySelector('[data-view="${key}"]').click()`);await wait(`document.querySelector('#assetManagementView.active-view .page-heading h2')?.textContent===${JSON.stringify(title)}`);await wait("!document.querySelector('#assetManagementView [role=status]').textContent.includes('Memuat')");}
+ for(const [key,title] of [['asset-register','Register Aset'],['server-racks','Rak Server'],['asset-modelling','Pemodelan Register Aset']]){await evaluate(`document.querySelector('[data-view="${key}"]').click()`);await wait(`document.querySelector('#assetManagementView.active-view .page-heading h2')?.textContent===${JSON.stringify(title)}`);await wait("!document.querySelector('#assetManagementView [role=status]').textContent.includes('Memuat')");}
  assert.equal(await evaluate("fetch('/api/asset-management/diagram').then(r=>r.status)"),200);assert.ok(await evaluate("!!document.querySelector('#assetManagementView .asset-modelling-workbench svg')"));
  await evaluate("document.querySelector('[data-view=\"asset-register\"]').click()");await wait("!document.querySelector('#assetManagementView [role=status]').textContent.includes('Memuat')");await wait("Array.from(document.querySelectorAll('#assetManagementView .asset-table th')).some(e=>['related risk','risiko terkait'].includes(e.textContent.trim().toLowerCase()))");assert.equal(await evaluate("fetch('/api/asset-management/risk-catalog').then(r=>r.status)"),200);await evaluate("Array.from(document.querySelectorAll('#assetManagementView [role=tab]')).find(b=>b.textContent.includes('SMTP')).click()");await wait("!!document.querySelector('#assetManagementView .asset-email-preview')");assert.equal(await evaluate("fetch('/api/asset-management/reminder-settings').then(r=>r.status)"),200);
  await evaluate("document.querySelector('[data-view=\"server-racks\"]').click()");await wait("document.querySelector('#assetManagementView.active-view .page-heading h2')?.textContent==='Rak Server'");await delay(400);const shot=await call('Page.captureScreenshot',{format:'png'});fs.writeFileSync('output/asset-rack-workspace-check.png',Buffer.from(shot.data,'base64'));

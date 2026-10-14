@@ -7,6 +7,30 @@ function setup(){
  return c;
 }
 const count=(c,expression)=>vm.runInContext(expression+'.value.length',c);
+
+test('asset pagination caps rows at 20 and handles filtering, deletion and empty results',()=>{
+ const c=setup();
+ vm.runInContext("assets.value=Array.from({length:45},(_,i)=>({id:String(i),tag:'A-'+i,name:'Asset '+i,type:i<25?'Server':'Firewall',status:'in-use'}))",c);
+ assert.equal(count(c,'pagedAssets'),20);
+ assert.equal(vm.runInContext('assetPageCount.value',c),3);
+ vm.runInContext('assetPage.value=2',c);
+ assert.equal(count(c,'pagedAssets'),20);
+ assert.equal(vm.runInContext('pagedAssets.value[0].id',c),'20');
+ vm.runInContext('assetPage.value=3',c);
+ assert.equal(count(c,'pagedAssets'),5);
+ vm.runInContext("assetFilters.value.type='Server'",c);
+ assert.equal(vm.runInContext('currentAssetPage.value',c),2);
+ assert.equal(count(c,'pagedAssets'),5);
+ vm.runInContext('assets.value=assets.value.slice(0,20)',c);
+ assert.equal(vm.runInContext('currentAssetPage.value',c),1);
+ assert.equal(count(c,'pagedAssets'),20);
+ vm.runInContext("search.value='missing asset'",c);
+ assert.equal(count(c,'pagedAssets'),0);
+ assert.equal(vm.runInContext('assetPageCount.value',c),1);
+ vm.runInContext('resetAssetFilters()',c);
+ assert.equal(vm.runInContext('assetPage.value',c),1);
+ assert.equal(count(c,'pagedAssets'),20);
+});
 test('asset filters combine CIA, owner, vendor, renewal and search and reset without changing source order',()=>{
  const c=setup();assert.equal(count(c,'visibleAssets'),3);
  vm.runInContext("assetFilters.value={type:'Firewall',status:'in-use',risk:'high',owner:'Bob',vendor:'10',renewal:'overdue'};search.value='Vendor IT';",c);assert.equal(count(c,'visibleAssets'),1);
