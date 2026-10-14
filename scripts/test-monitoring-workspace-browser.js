@@ -32,7 +32,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await evaluate("document.querySelector('[data-view=asset-register]').click()");await wait("!!document.querySelector('#assetManagementView.active-view')");await evaluate("document.querySelector('[data-view=monitoring-dashboard]').click()");await wait("!!document.querySelector('#monitoringDashboardView.active-view .monitor-module-grid')");
  await delay(1500);await call('Page.reload');await delay(500);await wait("!!document.querySelector('#monitoringDashboardView.active-view .monitor-module-grid')");assert.equal(await evaluate("document.querySelectorAll('.active-view').length"),1);
 
- assert.equal(await evaluate("document.querySelectorAll('.monitor-kpis > button').length"),8);
+ assert.equal(await evaluate("document.querySelectorAll('.monitor-kpis .monitor-kpi-card').length"),8);
  assert.equal(await evaluate("document.querySelectorAll('#monitoringDashboardView table').length"),0);
  await evaluate("document.querySelector('.monitor-filters select').value='assets';document.querySelector('.monitor-filters select').dispatchEvent(new Event('change',{bubbles:true}))");
  await wait("document.querySelectorAll('[data-monitor-module]').length===3");
@@ -44,7 +44,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<600});await delay(300);
  assert.equal(await evaluate('document.documentElement.scrollWidth>document.documentElement.clientWidth+1'),false,'monitor overflow at '+width);
  await evaluate("NistTheme.set('dark')");await delay(300);
- assert.equal(await evaluate("getComputedStyle(document.querySelector('.monitor-kpis > button')).backgroundColor"),'rgb(26, 38, 56)');
+ assert.equal(await evaluate("getComputedStyle(document.querySelector('.monitor-kpis .monitor-kpi-card')).backgroundColor"),'rgb(26, 38, 56)');
  await evaluate("NistTheme.set('light')");await delay(300);
  }
  assert.deepEqual(errors,[]);console.log('PASS: built workspace restores Monitoring Dashboard, sidebar sits above Assessment map, real read-only API data renders all permitted modules, navigation and reload preserve the active view, no browser exceptions.');
