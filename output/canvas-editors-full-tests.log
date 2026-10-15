@@ -1,0 +1,616 @@
+
+> nist-csf-maturity-tool@1.0.0 test
+> node --test test/canvasInteraction.test.js test/moduleLoading.test.js test/budgetService.test.js test/ikasAssessment.test.js test/assessmentPeriods.test.js test/maturityWorkbook.test.js test/workbookJobs.test.js test/websiteSettings.test.js test/assessmentGaps.test.js test/submissionGuard.test.js test/mutationGuard.test.js test/reminderRecipientService.test.js test/auditRetentionExport.test.js test/auditTrail.test.js test/publicPagePerformance.test.js test/roleActionPermissions.test.js test/fileService.test.js test/fileReferenceDeletion.test.js test/personnelCertificateFiles.test.js test/personnelCertificationService.test.js test/personnelAuthorization.test.js test/userModuleAccess.test.js test/policyRegisterService.test.js test/policyKnowledgeRelations.test.js test/questionnaireTemplateService.test.js test/policyReminderService.test.js test/moduleTransfer.test.js test/moduleProgressWorkbook.test.js test/smtpService.test.js test/auditFindingService.test.js test/auditFindingFrontend.test.js test/compliance.test.js test/complianceEvidence.test.js test/complianceReminderLink.test.js test/officeDesign.test.js test/auditFindingReminderService.test.js test/evidenceAccessService.test.js test/evidenceKnowledgeSearch.test.js test/backupService.test.js test/fileBackupService.test.js test/threatModelService.test.js test/threatModelLoading.test.js test/riskDropdownService.test.js test/riskWorkflow.test.js test/storageService.test.js test/securityHardening.test.js test/owaspRemediation.test.js test/assetManagementService.test.js test/assetSidebar.test.js test/assetModals.test.js test/assetRackDrag.test.js test/assetRackPhotos.test.js test/assetRackLoading.test.js test/assetRegistrationPhotos.test.js test/assetPlacementAvailability.test.js test/assetReminderSettings.test.js test/assetDiagram.test.js test/assetDiagramRelations.test.js test/assetRiskAssessment.test.js test/assetRelatedRisks.test.js test/assetManagedVendor.test.js test/riskCiaAssessment.test.js test/assetTransfer.test.js test/assetFilters.test.js test/databaseIntegrityHardening.test.js test/monitoringDashboard.test.js test/theme.test.js test/riskDashboard.test.js test/riskAcceptanceDashboard.test.js test/governanceDashboards.test.js test/tprmDashboard.test.js test/tprmWorkflow.test.js test/uploadProgress.test.js test/tprmQuestionnaireWorkbook.test.js test/tableResize.test.js
+
+✔ gap validation requires description and Open/Closed, allowing evidence to be added later (2.7112ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+✔ gap saves create distinct IDs for multiple findings on the same assessment (6.0884ms)
+✔ gap update rejects stale edits and cross-control IDs before linking evidence (2.4577ms)
+✔ evidence ownership rejection rolls back gap writes (0.5633ms)
+✔ gap endpoints enforce assessment read/update/delete permissions and reject unknown frameworks (3379.4945ms)
+✔ assessment year validation and route scopes reject invalid years and preserve permission boundaries (1.8642ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[] Error: Assessment untuk tahun tersebut sudah tersedia. Pilih tahun yang ada.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.create (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:103:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:19:64 {
+  status: 409
+}
+[] Error: Assessment untuk tahun tersebut sudah tersedia. Pilih tahun yang ada.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.create (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:103:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:19:64 {
+  status: 409
+}
+[] Error: Assessment untuk tahun tersebut sudah tersedia. Pilih tahun yang ada.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.create (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:103:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:19:64 {
+  status: 409
+}
+[] Error: Assessment untuk tahun tersebut sudah tersedia. Pilih tahun yang ada.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.create (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:103:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:19:64 {
+  status: 409
+}
+[] Error: Indeks IKAS harus bilangan bulat antara 0 dan 5.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:246:153
+    at mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:138:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:61:16) {
+  status: 400
+}
+[] Error: Target Nilai IKAS harus antara 0 dan 5.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:249:106
+    at mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:138:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:61:16) {
+  status: 400
+}
+[] Error: Gap telah diperbarui pengguna lain. Muat ulang sebelum menyimpan.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at gapMutation (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:222:65)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:258:44
+    at mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:138:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:61:16) {
+  status: 409
+}
+[] Error: Evidence tidak tersedia atau bukan file yang Anda upload.
+    at invalid (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:3:58)
+    at assertAccess (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:31:110)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.assertReferences (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\evidenceAccessService.js:79:66)
+    at async validateAssessment (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:153:116)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:254:23
+    at async mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:138:20)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:61:16) {
+  status: 403
+}
+[] Error: Tahun assessment harus antara 2000 dan 2100.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.validateYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:19:140)
+    at assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:48:22)
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:342:13)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:297:9
+    at processParams (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:582:12)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:291:5)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:688:15
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:276:14) {
+  status: 400
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:53:16) {
+  status: 404
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.create (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:96:20)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:19:64 {
+  status: 404
+}
+[] Error: Pilih New atau Duplicate.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.create (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:90:57)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:19:78
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:295:15
+    at param (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:600:14) {
+  status: 400
+}
+[] Error: Tahun assessment harus antara 2000 dan 2100.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at validateYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:19:140)
+    at Object.remove (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:108:40)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:20:66
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:295:15 {
+  status: 400
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.remove (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:115:17)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:20:52 {
+  status: 404
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:53:16) {
+  status: 404
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:43:25) {
+  status: 404
+}
+[] Error: Assessment terakhir tidak dapat dihapus. Buat tahun lain terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.remove (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:117:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:20:52 {
+  status: 409
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.remove (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:115:17)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:20:52 {
+  status: 404
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.remove (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:115:17)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assessmentPeriodRoutes.js:20:52 {
+  status: 404
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at Object.period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async assessmentYear (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\assessmentYear.js:53:16) {
+  status: 404
+}
+[] Error: File Excel tidak valid: Workbook ZIP tidak valid.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\workbookJobService.js:3:44)
+    at Worker.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\workbookJobService.js:19:86)
+    at Object.onceWrapper (node:events:631:26)
+    at Worker.emit (node:events:509:28)
+    at MessagePort.<anonymous> (node:internal/worker:350:14)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:856:20)
+    at MessagePort.<anonymous> (node:internal/per_context/messageport:23:28) {
+  status: 400
+}
+[] Error: Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:7:55)
+    at period (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:34:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.workbookSnapshot (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\assessmentPeriodService.js:330:13)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\maturityWorkbookRoutes.js:20:16 {
+  status: 404
+}
+✔ yearly assessments copy all results, start empty, isolate mutations, and preserve evidence references (54453.3891ms)
+✔ resized and hidden diagram nodes round-trip while old layouts remain compatible (3.1969ms)
+✔ diagram validates asset IDs, duplicate nodes, bounded coordinates and required versions (0.7255ms)
+✔ diagram save verifies registered assets and prevents overwriting a newer version (1.3019ms)
+✔ diagram API allows readers and denies edits without modelling update permission (621.5887ms)
+✔ canvas names are required and reserved names cannot shadow the existing diagram (0.7678ms)
+✔ multiple canvas API requires independent read/create/update permissions and valid UUIDs (98.6482ms)
+✔ reciprocal and parallel relationships have distinct routes and label positions (25.9346ms)
+✔ routes follow moved nodes and reciprocal directions remain distinct for vertical layouts (3.7522ms)
+✔ asset pagination caps rows at 20 and handles filtering, deletion and empty results (12.8048ms)
+✔ asset filters combine CIA, owner, vendor, renewal and search and reset without changing source order (31.4592ms)
+✔ rack/device filters preserve selection, occupancy and diagram data (3.1786ms)
+✔ relation filters search both endpoints and notes and combine type with related asset (2.9766ms)
+✔ managed TPRM vendor is optional and validates the reference format (2.3674ms)
+✔ selected managed vendor must exist; missing references roll back before creating an asset (7.0962ms)
+✔ renewal validation requires valid recipient and date (4.5902ms)
+✔ rack capacity and collisions are checked including exact boundaries (0.5047ms)
+✔ reminders include overdue renewals and exclude retired assets (0.2387ms)
+✔ asset permissions allow read-only viewers and deny mutations (2.3809ms)
+✔ all add/edit flows open a native modal and edit copies preserve the original record (69.7313ms)
+✔ failed saves preserve modal values and successful saves close it (4.6671ms)
+✔ busy modal blocks cancel/Escape and repeated submissions (2.7506ms)
+✔ mutation forms are inside dialog; relation editing sends PUT and deletion has confirmation (21.9364ms)
+✔ placement rejects duplicate installs, accepts explicit moves and empty change references (15.7319ms)
+✔ asset status and relation changes accept missing change references (2.0802ms)
+✔ selection remarks identify occupied racks, block new installs and allow explicit move dialogs (6.7179ms)
+✔ dragging a multi-U device preserves grab offset and opens modal without changing saved position (12.3349ms)
+✔ drop rejects overlaps and positions outside rack capacity (2.4759ms)
+✔ cross-rack card selects first contiguous free space and full racks reject drop (22.459ms)
+✔ viewer/busy/foreign drags cannot move devices; dropping same position is a no-op (19.7437ms)
+✔ photo API failure does not hide racks or their placements (8.5828ms)
+✔ reloading selects first available rack and prevents concurrent requests (2.3126ms)
+✔ saved rack page is restored after workspace initialization (9.5402ms)
+✔ photo validation rejects active content, disguised MIME types and oversized images (2.0383ms)
+✔ front and rear shallow devices share U while same-side and full-depth collisions are rejected (0.7384ms)
+✔ rack drawings span exact U height and map front/rear photos according to orientation (6.7846ms)
+✔ dragging between front/rear views respects side occupancy and keeps full depth (2.9601ms)
+✔ photo API enforces access, handles multipart data and serves images without MIME sniffing (485.5904ms)
+✔ front/rear photo updates commit together and roll back if a second write fails (17.9922ms)
+✔ asset and front/rear photos commit atomically; invalid photos never create an asset (13.8295ms)
+✔ registration accepts photos under Asset Register create/update permissions and restricts rack photo access (554.5092ms)
+✔ related risk links validate IDs, preserve asset data and roll back stale selections (9.6964ms)
+✔ risk catalog and link API require Risk Register read plus asset permissions (542.6037ms)
+✔ H-30 every five days has matching slots in assets, policy and audit (9.1865ms)
+✔ asset delivery history prevents hourly duplicates, honors five-day intervals and maximum count (40.033ms)
+✔ custom asset renewal templates render fields and reject malformed subjects or SMTP selections (0.7356ms)
+✔ selected SMTP and custom messages persist without storing account credentials (0.7982ms)
+✔ asset renewal scheduler uses selected SMTP and the custom message (13.2333ms)
+✔ CIA assessment uses the highest impact and a 5 by 5 likelihood matrix, consistent in browser and server (20.3738ms)
+✔ invalid and incomplete assessment is rejected and client-supplied scores cannot override the result (1.9739ms)
+✔ Asset Management opens and closes through the shared sidebar handler (2.672ms)
+✔ asset transfer rejects foreign formats, dangling references and duplicate assets before writes (2.8323ms)
+✔ export requires Read and import requires Read/Add/Edit on all asset modules (502.0936ms)
+✔ snapshot index preserves hierarchy, child ordering and fresh records after reload (2.6041ms)
+✔ missing parents and cyclic hierarchy terminate without including the record itself (0.4076ms)
+✔ detail rendering keeps closed findings in totals, sorts overdue first and escapes text (0.9658ms)
+[audit-finding-reminder] Delivery failed for finding finding-1
+✔ settings validate recipients and refuse module SMTP credentials (4.6264ms)
+✔ reminders include audit title and finding, skip closed/undated/future and stop after due date (3.4555ms)
+✔ test email uses central SMTP and closes transport (1.222ms)
+✔ saved templates survive reloading settings and schedule-only updates (1.1595ms)
+✔ custom content validates templates and renders plain text without recursive substitution (0.6534ms)
+✔ scheduler retries failed delivery and deduplicates successful delivery (9.2627ms)
+✔ calendar intervals clamp month ends, support leap years and catch up only the latest slot (0.5262ms)
+✔ settings endpoints reject non-admin before service access (481.5709ms)
+✔ finding recipients follow owner and only Open findings (0.6071ms)
+✔ registered PIC email takes priority over stale finding email (0.4162ms)
+✔ validates required fields, statuses, severity and calendar dates (5.6324ms)
+✔ tracker permission preserves role boundaries (2.3533ms)
+﹣ PostgreSQL hierarchy, binary evidence, update and protected deletion (0.2362ms) # SKIP
+✔ only findings accept status deadlines and owner email (145.7652ms)
+✔ retention validates explicit activation and duration; client detection is derived from user agent (3.8914ms)
+✔ retention deletes only expired records when enabled; exports honor filters with client metadata (667.4081ms)
+✔ retention and log export remain admin-only (345.1842ms)
+✔ audit removes nested credentials and binary content (1.528ms)
+✔ audit distinguishes transfers, mutations and login (0.6423ms)
+✔ failed requests retain attempted action and safe details exactly once (4.1985ms)
+✔ date filters are parameterized and invalid dates rejected (1.4091ms)
+✔ transfer endpoint persists result and exposes database failure (395.2236ms)
+[audit] Transfer persistence failed: connection unavailable
+✔ backup dumps the whole configured database without table or schema exclusions (7.403ms)
+✔ missing pg_dump fails clearly rather than reporting a partial JSON backup as complete (3.7528ms)
+✔ dump errors never return success and remove the incomplete archive (2.0225ms)
+✔ dump restore uses one transaction for all database objects (6.3692ms)
+✔ failed restore releases authentication lock and removes the uploaded archive (3.3607ms)
+✔ cross-installation restore does not depend on source owners or granted roles (4.6446ms)
+✔ budget follows approval and realization workflow without changing its year (3.9723ms)
+✔ budget rejects skipped approval, self approval and unauthorized reviewers (1.1359ms)
+✔ rejection requires a reason and resubmission starts at draft (0.3237ms)
+✔ years and amounts are validated; realization cannot exceed approval (0.4951ms)
+✔ annual lists are partitioned and duplicate years are rejected (1.7274ms)
+✔ only the assigned user may approve, including users without global approver role (0.3572ms)
+✔ Excel round trip accepts draft fields and rejects bad headers, rows and formulas (218.3706ms)
+✔ submission captures configured approver and rejects missing configuration (3.6026ms)
+✔ Excel import validates every row before writing and rolls back write failures (5.9148ms)
+✔ canvas keyboard supports Windows and Mac undo, redo, save and movement (4.5451ms)
+✔ typing, composition, dialogs handled by callers, and consumed events keep native editing (0.5727ms)
+✔ compliance validates reports, real calendar dates, reminders, and contact data (5.6122ms)
+✔ reminder uses UTC+7, stops at deadline/completion, and distinguishes once from daily (0.6961ms)
+✔ continuous reminders continue after deadline without a delivery count limit until stopped (0.4556ms)
+✔ global reminder settings support monthly schedules, templates and recipient modes (2.3737ms)
+✔ PostgreSQL compliance CRUD, reminder deduplication, retries and cascade cleanup (527.8718ms)
+[compliance-reminder] Delivery failed for report dd0e97fe-26f8-4e3b-8ca6-5c87d2414129
+✔ evidence validates completion, file size/type and multipart JSON (2.8641ms)
+✔ PostgreSQL evidence is atomic, downloadable, retained on edits and removed with report (586.3286ms)
+✔ reports resolve the same SMTP schedule and owner email used by shared reminders (4.6982ms)
+✔ report status, missing mappings and custom schedules remain distinguishable (0.7745ms)
+✔ shared setting changes update existing reports without editing the report (3.8852ms)
+✔ risk reset uses one checked-out connection and rolls back all related writes on failure (1.856ms)
+✔ TPRM deletion reports an asset foreign-key conflict instead of an internal server error (0.4258ms)
+✔ legacy certification status cannot escape an HTML class attribute to inject an event handler (1.99ms)
+✔ TPRM vendor and related risks save atomically and roll back the vendor when link writes fail (1.1462ms)
+✔ evidence path validation rejects traversal and absolute paths (1.2726ms)
+﹣ uploader isolation across upload, file routes, assessment and framework references (0.1406ms) # SKIP
+✔ central library identifies uploads across TPRM, Knowledge, ISO, policy, audit and assets (1.2898ms)
+✔ searchable evidence receives only linked Vault content with read permission (3.4546ms)
+✔ shared picker search matches filenames, policy notes/content and linked Vault with escaped previews (3.0749ms)
+✔ ZIP preserves uploaded paths, binary contents and metadata, and supports list/download/delete (108.7464ms)
+✔ unreadable storage fails without leaving a partial or published backup (4.8638ms)
+✔ legacy database file contents are included when disk copy is missing (24.1874ms)
+✔ archive paths reject traversal, and empty libraries produce a valid archive (19.8572ms)
+✔ file backup routes reject non-admin roles for every archive action (359.776ms)
+✔ restore round trip preserves content, paths, owner and PDF page through active storage (46.203ms)
+✔ folder backup includes descendants and excludes folders with similar names (32.063ms)
+✔ folder restore changes only descendants and rejects missing folders without writes (92.6947ms)
+✔ restore rejects missing files and incorrect sizes before writing any live files (51.1194ms)
+✔ restore rejects manifest traversal without modifying storage (20.7731ms)
+✔ restore reports partial progress when storage fails and cleans uploaded archive (42.2658ms)
+✔ restore rejects corrupt CRC before changing live storage (35.4197ms)
+✔ batch backup streams a large single file across parts and restores in arbitrary order (325.0855ms)
+✔ incomplete, duplicate and mixed backup parts fail before any storage write (345.7202ms)
+✔ batch restore folder selection restores only selected descendants (211.1491ms)
+✔ stream failure removes every staged or published batch part (10.8849ms)
+✔ administrator batch restore route receives multiple staged ZIPs and folder selection (65.454ms)
+✔ missing physical files without database bytes are reported explicitly in backup and restore (102.0239ms)
+✔ main file deletion detaches every source, preserves other files and rolls back on storage failure (535.3251ms)
+✔ original-file deletion requires explicit confirmation before deleting all references (2.1435ms)
+✔ ISO reference deletion preserves the original file and other references and respects cancellation (1.6987ms)
+✔ failed evidence refresh keeps known files and exposes the actual HTTP error (1.8385ms)
+✔ refresh after deletion waits for an earlier list request and fetches fresh data (1.4493ms)
+✔ replaceFile keeps the evidence path and updates its content and metadata (868.7316ms)
+✔ standalone library upload keeps successful files when a later upload fails and enforces Add (31.9403ms)
+✔ review windows use calendar days, include H-30 and today, and exclude closed overdue findings (26.9341ms)
+✔ policy review dates clamp month ends, validate dates, and do not invent deadlines for ad hoc cycles (2.1104ms)
+✔ policy dashboard scope, drill-down, and original register search filters intersect (4.7449ms)
+✔ audit finding filters preserve only matching findings and their audit, follow-ups, and evidence (9.1264ms)
+✔ completed IKAS workbook recovers a blank repeated validation header and preserves inputs (415.2759ms)
+✔ IKAS single index preserves historical scores, notes and evidence references (1.365ms)
+✔ IKAS seed preserves every source question, scope, rubric and respondent field (127.7688ms)
+✔ IKAS uses subcategory and category averages with domain weights, zero scores and incomplete status (8.2798ms)
+✔ Excel export preserves all package parts and only changes maturity index and validation cells (1036.3437ms)
+✔ domain import follows identifiers and accepts a future template with added questions (8990.5385ms)
+✔ original template is preserved and the four columns contain independent current assessment values (22889.4798ms)
+✔ new control/category/subcategory export and import preserve scores, multiline reasoning and existing evidence (12966.5419ms)
+✔ invalid scores, duplicate control codes, missing hierarchy and wrong headers are rejected before import (4065.732ms)
+✔ blank imported scores clear legacy fallback only for imported controls and preserve controls outside the file (0.9111ms)
+✔ unrelated modules do not fetch assessment data; concurrent assessment entry shares a load (4.2848ms)
+✔ failed initial data can be retried when reopening a module (2.1454ms)
+✔ the file library loads its cross-framework sources only when requested (2.7434ms)
+✔ Excel preserves progress, relationships, zero, booleans, multiline notes and empty sections (43.9361ms)
+✔ import reads edited cells rather than an embedded original snapshot (40.83ms)
+✔ wrong module, missing sheet, changed headers and formulas are rejected before writes (44.3042ms)
+✔ templates produce usable empty sheets with complete fields (8.6061ms)
+✔ asset envelope and reminder configuration survive Excel round trip (9.0139ms)
+✔ oversized cell data fails explicitly instead of silently truncating progress (0.5343ms)
+✔ every requested module exposes a transfer definition (9.9437ms)
+✔ IKAS transfer template describes respondent fields and all six maturity rubrics (4.0207ms)
+✔ audit Excel payload imports parents before children and remaps newly created IDs (4.5674ms)
+✔ audit imports reject broken parents before creating any record (2.8727ms)
+✔ audit exports expose editable progress columns instead of hiding status inside data (4.3479ms)
+✔ assessment exports and reports include gap status, evidence and framework relationships (5.3588ms)
+✔ gap import uses the batch endpoint, validates before writes, and retains compatibility with old exports (5.4364ms)
+✔ TPRM exports include questionnaires, template sections, and CIA assessments in reports (3.2184ms)
+✔ TPRM checks vendor and risk references before writes and normalizes nextReview (3.4801ms)
+✔ invalid questionnaires and template sections are rejected before requests (4.6939ms)
+✔ each module template has matching headers and passes its import format validation (5.2612ms)
+✔ risk report includes complete register fields and collect exports only the risk register (2.6056ms)
+✔ reject wrong modules, missing sections, duplicate IDs and invalid scores before writing (3.1933ms)
+✔ reports escape imported content and include module-specific columns and empty state (1.9638ms)
+✔ assessment failures are surfaced without claiming success (2.0997ms)
+✔ assessment report groups policy/practice notes and evidence under one control (2.1902ms)
+✔ broken personnel references are rejected before any request (2.3179ms)
+✔ upsert uses encoded risk ID and normalizes exported dates (2.8083ms)
+✔ personnel imports remap certifications to newly created employee IDs (2.3923ms)
+✔ partial import reports persisted count and stops subsequent writes (2.6814ms)
+✔ transfer records initiated and success with actual filename and count (4.8483ms)
+✔ partial import records failure with error and persisted count (2.1276ms)
+✔ missing audit endpoint exposes HTTP and restart hint before transfer (7.0712ms)
+✔ audit failure after completion reports that operation already succeeded (2.9893ms)
+✔ import uses Add for new records and Edit for existing records (5.129ms)
+✔ assessment monitoring includes explicit gaps without treating maturity shortfalls as findings (42.8558ms)
+✔ monitoring queries no business module without its read permission (1.612ms)
+✔ file monitoring uses the existing owner-scoped evidence reader (3.0045ms)
+✔ dashboard deadlines use Bangkok day boundaries and include today through 30 days (1.0708ms)
+✔ new-record trends group actual timestamps into Bangkok months and preserve empty months (2.787ms)
+✔ monitoring validates calendar dates and derives CIA from actual assessment indicators (0.5152ms)
+✔ acceptance monitoring requires all sign-off stages and distinguishes rejected decisions (0.4612ms)
+✔ closed risks do not contribute high or overdue monitoring indicators (2.5833ms)
+✔ failure of one readable module does not invent zero values or suppress other modules (2.3352ms)
+✔ monitoring endpoint enforces dashboard read permission and prevents caching (419.3564ms)
+✔ identical pending browser mutations use one request and independently readable responses (102.7768ms)
+✔ different payloads remain independent and failed requests can be retried (8.224ms)
+✔ multipart repeats share one upload and GET requests remain independent (8.0747ms)
+✔ update and delete on the same record are locked across users (254.1769ms)
+✔ database lock prevents duplicate pending creates across server instances, retaining lock after disconnect (4332.7779ms)
+✔ security objects and calibrated CCTV coverage persist and reject invalid settings (4.9156ms)
+✔ editable office example validates and rejects duplicate IDs, unknown shapes and out-of-bounds positions (2.7935ms)
+✔ new modules honor normal role actions (0.5076ms)
+✔ PostgreSQL office save preserves layout and rejects stale updates/deletes (2151.5235ms)
+✔ upload capacity rejects excess requests and releases slots exactly once (3.6941ms)
+✔ streamed multipart aggregate limit rejects excess and removes all staged files (487.817ms)
+✔ audit survives database outage and process recreation, then retries successfully (59.9632ms)
+✔ replacement denies non-owner before multipart storage receives file bytes (224.4047ms)
+✔ password limiter shares account budget across both routes without limiting name updates (2822.9669ms)
+✔ personnel actions follow Access Settings for employees and certificates (530.4168ms)
+✔ certificate uploads validate formats, size and signatures (240.0516ms)
+✔ certificate registration saves original bytes and server-owned attachment metadata (3.9916ms)
+✔ failed certification save cleans the newly staged file (1.5993ms)
+✔ ordinary edits preserve certificates and explicit removal clears the link (0.7794ms)
+✔ certifications require a registered personnel ID, not a free-text name (2.823ms)
+✔ personnel may have no supervisor but cannot supervise themselves (0.3689ms)
+﹣ registered personnel workflow and legacy migration in isolated PostgreSQL TEMP tables (0.1405ms) # SKIP
+✔ policy relations survive create, partial update, reload and explicit removal (6.6376ms)
+✔ policy search includes only linked note content and combines with category filters (7.5529ms)
+✔ folder selection includes descendants and hidden search results, excluding similarly named folders (3.3427ms)
+✔ policy register service supports CRUD and attachment metadata (6.8786ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[policyRegisterRoutes] DELETE /1
+[policyRegisterRoutes] DELETE /1
+[policyRegisterController.remove] Handler called
+[policyRegisterRoutes] DELETE /2
+[policyRegisterController.remove] Handler called
+✔ policy deletion handles missing and other-owner attachments while enforcing Delete (1668.0353ms)
+✔ failed policy deletion shows the server error and keeps the dialog open (3.1359ms)
+✔ policy deletion completes even when refreshing files fails, and reports network errors (2.8837ms)
+[policy-reminder] Delivery failed for policy 1
+✔ review dates clamp month ends and handle leap years (5.4889ms)
+✔ unscheduled and missing dates are skipped (0.3966ms)
+✔ scheduler skips unassigned policies, records success, deduplicates, and retries failures (10.6914ms)
+✔ reminder settings validate recipients and schedule independently of SMTP (3.4573ms)
+✔ custom email content renders placeholders without recursive replacement (0.9378ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+✔ workspace bundles are compressed and cached without bypassing authentication (207.6749ms)
+[app] Mounting /api routes with requireAuth
+[] [Error: ENOENT: no such file or directory, stat 'C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\frontend\public\landing-media\missing.webp'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'stat',
+  path: 'C:\\Users\\25992005\\Documents\\Rahasia Negara\\NIST Basis\\frontend\\public\\landing-media\\missing.webp',
+  expose: false,
+  statusCode: 404,
+  status: 404
+}
+✔ landing screenshots load publicly with caching while workspace remains protected (1996.9016ms)
+✔ ensureStore falls back when template markdown files are missing (3.5234ms)
+✔ creating an imported template preserves its default flag and sections (2.4975ms)
+✔ recipient register validates names and email addresses (4.671ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+✔ register persists recipients and updates same name without duplicates (18066.6148ms)
+✔ default Approved selection without signatures is Pending; rejected decisions override complete signatures (7.6147ms)
+✔ review windows include today and H-30, exclude H-31, and never invent expiry from one_year (44.3394ms)
+✔ global status, asset and department filters combine with calendar drill and search (7.2617ms)
+✔ audit query matches exact request paths and creation response IDs, with bound pagination (3.7361ms)
+✔ per-request audit API remains Admin-only and rejects non-admin roles before reading logs (984.948ms)
+✔ guarded acceptance save sends a request even when submission guard already disabled the button (5.5184ms)
+✔ Risk Management browser assessment matches Asset Management for all 25 matrix cells (6.5452ms)
+✔ server derives impact from CIA and rejects partial assessment instead of trusting supplied scores (3.5974ms)
+✔ dashboard filters combine scope, category, owner and custom dates without mutating the register (38.141ms)
+✔ overdue excludes Closed, missing residual stays unrated and matrix drill-down uses the selected assessment (4.5007ms)
+✔ category drill-down handles risks without a category (2.2528ms)
+✔ single register combines dashboard drill-down with local category, rating, treatment and search (3.4723ms)
+✔ drill-down clears stale local filters and opens the single Risk Register tab (3.3051ms)
+✔ editing a risk preserves an ISO deadline in the native date input (2.2821ms)
+✔ Excel report fetches authoritative rows, keeps strings literal, and only includes requested IDs (48.2188ms)
+✔ PDF report paginates long content and rejects unsupported formats (229.8553ms)
+✔ report route allows read-only users and denies users without Risk Register read access (599.0509ms)
+✔ dropdown synchronization preserves persisted IDs for referenced register values (5.2621ms)
+✔ dropdown listing keeps real IDs instead of zero from register references (4.9281ms)
+✔ invalid fields, empty labels and invalid ordering are rejected before writes (3.8577ms)
+✔ duplicate dropdown values return a useful conflict error (2.7093ms)
+✔ referenced options cannot be renamed or deleted; ordering can still change (3.2489ms)
+✔ full mitigation lifecycle requires independent approval, verification and closure (3.9268ms)
+✔ draft cannot skip assessment or fabricate a completed control (0.5241ms)
+✔ residual above tolerance returns to evaluation instead of monitoring (0.3598ms)
+✔ acceptance requires a form, conditions, future expiry and independent approval (0.7369ms)
+✔ safe parsing rejects impossible dates, invalid scores and forged workflow state (0.6782ms)
+✔ closure requires evidence and cannot be self-approved (0.7345ms)
+✔ expired acceptance cannot be extended through a review action (0.6374ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+✔ configured actions override role defaults but require read access (4.5911ms)
+✔ permission payload validates all entries before starting a transaction (3.1894ms)
+﹣ action settings persist and are enforced by real routes (0.2359ms) # SKIP
+✔ every feature applies Read, Add, Edit and Delete independently (20.9453ms)
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] POST /
+[policyRegisterRoutes] PUT /1
+[policyRegisterRoutes] DELETE /1
+✔ real feature APIs reject each disabled action before handling data (8548.2839ms)
+✔ policy option rename uses Edit and rejected saves never become local changes (54.1191ms)
+✔ database restore revokes old sessions and prevents authentication until completed (5.8312ms)
+✔ password verification rejects oversized current password before bcrypt (2.8794ms)
+✔ new login replaces same account session without affecting other accounts (0.6417ms)
+✔ failed login does not revoke active device (32.0197ms)
+✔ role changes and deletion revoke every session for the affected account (2.4766ms)
+✔ password change revokes existing sessions (668.7376ms)
+✔ bcrypt passwords exceeding 72 UTF-8 bytes are rejected before database writes (0.875ms)
+✔ login limit cannot be bypassed by rotating usernames and expires (0.7624ms)
+✔ login limiter bounds peer storage without evicting active limits (0.3961ms)
+✔ uploaded content is sandboxed even when stored MIME type claims HTML (75.3356ms)
+✔ invalid upload metadata removes staged files (100.052ms)
+✔ registering an SMTP account creates a separate record and validates its name (5.137ms)
+✔ registered accounts are listed without exposing encrypted secrets (0.6034ms)
+✔ editing one registered SMTP account preserves its secret and leaves the default untouched (0.7262ms)
+✔ policy and audit test emails use their own saved SMTP selection (2.2281ms)
+✔ unknown SMTP accounts cannot be saved even for a disabled reminder (2.0269ms)
+✔ SMTP validates TLS, port, sender and header injection (0.5215ms)
+✔ SMTP updates preserve encrypted password and never change reminder settings (0.6818ms)
+✔ reminder API hides legacy credentials and saves only module settings (1.0455ms)
+✔ enabling a reminder requires central SMTP but disabled drafts may be saved (0.9673ms)
+✔ policy test messages use central connection and local template (1.0045ms)
+✔ SMTP routes reject non-admin roles before reading or writing settings (522.0541ms)
+﹣ legacy SMTP migration preserves settings and ciphertext, is idempotent, and keeps reminder schedule (0.232ms) # SKIP
+✔ s3: settings probe, upload, read, replacement and delete retain original bucket (78.9663ms)
+✔ gcs: settings probe, upload, read, replacement and delete retain original bucket (5.8452ms)
+✔ local storage remains readable when new uploads switch to cloud (70.849ms)
+✔ cloud failure preserves settings and never falls back to local (7.3292ms)
+✔ database rollback removes the new object and retains the prior file (3.5735ms)
+✔ rejects invalid bucket, missing S3 region and unsafe prefix (4.457ms)
+✔ explicit deletion removes the managed object and the original legacy upload only (44.2372ms)
+✔ asset and note photos retain original database bytes after storage restore/replacement (49.4191ms)
+✔ local: streaming backup and staged restore preserve bytes (37.7491ms)
+✔ s3: streaming backup and staged restore preserve bytes (9.6815ms)
+✔ gcs: streaming backup and staged restore preserve bytes (9.3468ms)
+✔ rapid submits send once and stay locked through follow-up writes (4.1665ms)
+✔ separate handlers on one form share the same lock (1.1804ms)
+✔ failure releases the lock so the user can retry (2.5136ms)
+✔ different forms can save independently (1.7117ms)
+✔ flat list headers map each resize boundary to its own column (2.4184ms)
+✔ merged headers preserve separate leaf column boundaries and rowspan columns (0.9634ms)
+✔ leading rowspans do not shift subsequent column identities (0.6486ms)
+✔ hidden columns do not offset the visible resize boundaries (0.6041ms)
+✔ saved theme applies synchronously before the UI is mounted and toggles persist (3.6899ms)
+✔ invalid values and unavailable storage safely use light mode without preventing toggles (6.6641ms)
+✔ theme preferences synchronize across tabs without affecting unrelated settings (4.6337ms)
+✔ fit uses visible viewport measurements and ignores a hidden viewport (2.0962ms)
+✔ reloading selects saved data after an empty initial load and preserves unsaved edits (5.9832ms)
+✔ validates diagrams and STRIDE threats before database writes (11.5438ms)
+✔ rejects duplicate IDs, dangling edges, non-finite coordinates and invalid shapes (11.6921ms)
+✔ saves complete diagrams as parameterized JSONB, retaining threat annotations (3.9203ms)
+✔ optimistic version check prevents overwriting another editor (3.9585ms)
+✔ empty diagrams are valid and missing versions cannot update stored records (2.0398ms)
+✔ unbounded diagrams support negative coordinates and content beyond legacy canvas dimensions (4.6057ms)
+✔ stencil properties persist and invalid types or values are rejected (89.3832ms)
+✔ late risk data cannot reopen a cancelled picker (3.4964ms)
+✔ late risk data cannot replace another vendor picker (1.7557ms)
+✔ TPRM global filters intersect vendor, level and relationship (7.4611ms)
+✔ TPRM review ignores inactive relationships and unassigned dates (40.7518ms)
+✔ TPRM drill filters preserve exact IDs and unassessed records are not high (3.8037ms)
+✔ vendor workbook has editable answer columns, dropdown, protected structure and no private evidence paths or scores (59.9125ms)
+✔ offline answers and evidence references import while blank rows, scores and uploaded documents remain intact (24.6074ms)
+✔ questionnaire supports N/A and partially completed rows for later review (29.2552ms)
+✔ import rejects another vendor, stale assessment and changed template version (20.2657ms)
+✔ internal score and document updates while the vendor fills Excel do not invalidate unchanged offline answers (10.1217ms)
+✔ invalid answers, duplicate IDs, missing rows, altered questions and formulas are rejected (48.7243ms)
+✔ rows can be reordered using their original question IDs (13.8077ms)
+✔ generic template can be filled for a selected vendor without importing approval or file paths (12.3482ms)
+✔ Excel date values and ordinary ISO text are both accepted for respondent dates (17.0438ms)
+✔ missing assessment stays incomplete instead of Low Risk (2.754ms)
+✔ server recalculates CIA and rejects missing, fractional or out-of-range indicators (2.2997ms)
+✔ due diligence requires every decision, explanation, scores and evidence, including N/A reasons (0.9367ms)
+✔ criticality uses highest impact and does not dilute critical access (0.443ms)
+✔ residual risk is distinct from inherent risk and missing residual is unknown (0.8588ms)
+✔ review fingerprint changes when answers, service scope, CIA or residual risks change (2.5865ms)
+✔ critical failures and unsupported N/A claims cannot pass the gate (0.518ms)
+✔ dates reject impossible dates and require a future expiry (5.9604ms)
+✔ multipart progress measures bytes, distinguishes server processing and completes only after response (61.9561ms)
+✔ HTTP errors preserve fetch response and show server error without claiming completion (2.1808ms)
+✔ abort signal cancels upload and late responses cannot turn failure into success (2.6893ms)
+✔ network failure is actionable and observer failures do not break the request (1.2327ms)
+✔ parallel uploads keep independent byte progress and completion (1.4714ms)
+✔ shared interceptor handles API multipart while preserving JSON, foreign and Request fetch calls (7.0119ms)
+✔ users can enter data in operational modules without administrative or shared-delete privileges (10.8503ms)
+✔ website settings validate text and image content (2.9123ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+✔ website identity persists and retains images when editing text (1151.9422ms)
+✔ branding is publicly readable but only administrators may change it (6484.522ms)
+✔ Excel workers bound concurrency and queue size and reject saturation before creating another worker (5.6808ms)
+✔ worker timeout retains capacity until termination completes and then resumes queued work (42.9985ms)
+✔ worker crashes do not leak internal errors or leave the queue blocked (1.9447ms)
+✔ real worker preserves independent maturity values and reasoning; invalid input keeps its validation status (2355.5671ms)
+ℹ tests 368
+ℹ suites 0
+ℹ pass 363
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 5
+ℹ todo 0
+ℹ duration_ms 63769.1741

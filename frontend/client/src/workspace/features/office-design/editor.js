@@ -28,8 +28,9 @@
     canvas.setAttribute('width', width * scale);
     canvas.setAttribute('height', height * scale);
     canvas.innerHTML = `<defs><pattern id="odGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="#d8d0c3" stroke-width=".5"/></pattern></defs><rect width="${width}" height="${height}" fill="#f4efe6"/><rect width="${width}" height="${height}" fill="url(#odGrid)"/>` + nodes.map(node => `<g data-od-node="${html(node.id)}">${officeShapeSvg(node, html)}</g>`).join('');
+    canvas.insertAdjacentHTML('beforeend', nodes.map(node => officeCctvCoverageSvg(node, design.layout.unitsPerMeter ?? 100)).join(''));
     const node = activeNode();
-    if (node) canvas.insertAdjacentHTML('beforeend', `<rect data-od-selection x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" transform="rotate(${node.rotation} ${node.x + node.width / 2} ${node.y + node.height / 2})" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="6 3" pointer-events="none"/>`);
+    if (node) canvas.insertAdjacentHTML('beforeend', `<rect data-od-selection x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" transform="rotate(${node.rotation} ${node.x + node.width / 2} ${node.y + node.height / 2})" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="6 3" pointer-events="none"/><rect data-od-resize x="${node.x + node.width - 5}" y="${node.y + node.height - 5}" width="10" height="10" transform="rotate(${node.rotation} ${node.x + node.width / 2} ${node.y + node.height / 2})" fill="#2563eb" stroke="white" style="cursor:nwse-resize"/>`);
     $('odName').textContent = design.name + (dirty ? ' • Belum disimpan' : '');
     $('odDimensions').textContent = `${width} × ${height} satuan · ${nodes.length} objek · ${selected ? officeDesignShapes[node?.type]?.label || '' : 'Pilih objek untuk mengedit'}`;
   }
@@ -39,6 +40,12 @@
     $('odSelectionHint').hidden = Boolean(node);
     for (const field of properties.elements) field.disabled = !canEdit;
     if (node) for (const field of ['label', 'x', 'y', 'width', 'height', 'rotation']) properties.elements[field].value = node[field];
+    $('odCctvProperties').hidden = node?.type !== 'cctv';
+    if (node?.type === 'cctv') {
+      properties.elements.coverageRange.value = node.coverageRange ?? 5;
+      properties.elements.coverageAngle.value = node.coverageAngle ?? 90;
+      properties.elements.showCoverage.checked = node.showCoverage !== false;
+    }
     $('odSave').disabled = !canEdit || !dirty;
     $('odSettings').disabled = !canEdit;
     $('odTemplate').disabled = !canEdit;
@@ -101,7 +108,14 @@
     if (!mayDiscard()) return;
     try { await refreshList(); await load(design.id); } catch (error) { status(error.message); }
   });
-  $('odNew').addEventListener('click', () => { if (canPerform(key, 'create') && mayDiscard()) { void load(null); } });
+  $('odNew').addEventListener('click', async () => {
+    if (busy || loading || !canPerform(key, 'create')) return;
+    if (dirty && !await saveCurrentDesign()) return;
+    await load(null);
+    // A blank canvas is a saveable document too; never replace it on re-entry.
+    dirty = true; render();
+    status('Kanvas baru siap. Kanvas lama tetap tersimpan. Atur Nama & ukuran, lalu Simpan kanvas.');
+  });
   $('odPalette').innerHTML = Object.entries(officeDesignShapes).map(([type, spec]) => `<button class="button button-quiet" type="button" data-od-add="${type}">${html(spec.label)}</button>`).join('');
   $('odPalette').addEventListener('click', event => {
     const button = event.target.closest('[data-od-add]');
@@ -111,6 +125,7 @@
     const width = Math.min(spec.width, design.layout.width), height = Math.min(spec.height, design.layout.height);
     checkpoint();
     const node = { id: crypto.randomUUID(), type, x: snap((design.layout.width - width) / 2), y: snap((design.layout.height - height) / 2), width, height, rotation: 0, label: ['room', 'label'].includes(type) ? spec.label : '' };
+    if (type === 'cctv') Object.assign(node, { coverageRange: 5, coverageAngle: 90, showCoverage: true });
     node.x = clamp(node.x, design.layout.width - width); node.y = clamp(node.y, design.layout.height - height);
     design.layout.nodes.push(node); selected = node.id; render();
   });
@@ -124,12 +139,13 @@
   };
   canvas.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
+    const resizing = event.target.closest('[data-od-resize]');
     const target = event.target.closest('[data-od-node]');
-    selected = target?.dataset.odNode || null;
+    if (!resizing) selected = target?.dataset.odNode || null;
     const node = activeNode();
     if (node && editable()) {
       const start = point(event);
-      drag = { id: event.pointerId, start, x: node.x, y: node.y, moved: false };
+      drag = { id: event.pointerId, start, x: node.x, y: node.y, width: node.width, height: node.height, resize: Boolean(resizing), moved: false };
       canvas.setPointerCapture(event.pointerId);
     }
     canvas.focus(); render();
@@ -138,6 +154,17 @@
     if (!drag || event.pointerId !== drag.id || !editable()) return;
     const node = activeNode(), current = point(event);
     if (!node) return;
+    if (drag.resize) {
+      const angle = node.rotation * Math.PI / 180, c = Math.cos(angle), sn = Math.sin(angle);
+      const dx = current.x - drag.start.x, dy = current.y - drag.start.y;
+      const width = Math.min(design.layout.width, Math.max(5, snap(drag.width + c * dx + sn * dy)));
+      const height = Math.min(design.layout.height, Math.max(5, snap(drag.height - sn * dx + c * dy)));
+      const x = clamp(drag.x + (c - 1) * (width - drag.width) / 2 - sn * (height - drag.height) / 2, design.layout.width - width);
+      const y = clamp(drag.y + sn * (width - drag.width) / 2 + (c - 1) * (height - drag.height) / 2, design.layout.height - height);
+      if (node.width === width && node.height === height && node.x === x && node.y === y) return;
+      if (!drag.moved) { checkpoint(); drag.moved = true; }
+      Object.assign(node, { x, y, width, height }); render(); return;
+    }
     const x = clamp(snap(drag.x + current.x - drag.start.x), design.layout.width - node.width);
     const y = clamp(snap(drag.y + current.y - drag.start.y), design.layout.height - node.height);
     if (x === node.x && y === node.y) return;
@@ -157,6 +184,7 @@
     const change = { label: properties.elements.label.value };
     for (const field of ['x', 'y', 'width', 'height', 'rotation']) change[field] = Number(properties.elements[field].value);
     if (![change.x, change.y, change.width, change.height, change.rotation].every(Number.isFinite) || change.x < 0 || change.y < 0 || change.width < 5 || change.height < 5 || change.x + change.width > design.layout.width || change.y + change.height > design.layout.height) return status('Ukuran / posisi harus berada di dalam kanvas.');
+    if (node.type === 'cctv') Object.assign(change, { coverageRange: Number(properties.elements.coverageRange.value), coverageAngle: Number(properties.elements.coverageAngle.value), showCoverage: properties.elements.showCoverage.checked });
     checkpoint(); Object.assign(node, change); render(); status('Properti objek diperbarui.');
   });
   function removeNode() {
@@ -164,9 +192,29 @@
     checkpoint(); design.layout.nodes = design.layout.nodes.filter(node => node.id !== selected); selected = null; render();
   }
   $('odRemove').addEventListener('click', removeNode);
-  canvas.addEventListener('keydown', event => {
-    if (['Delete', 'Backspace'].includes(event.key)) { event.preventDefault(); removeNode(); }
-    if (event.key === 'Escape') { selected = null; render(); }
+  let clipboard = null;
+  document.addEventListener('keydown', event => {
+    if (!$('officeDesignView').classList.contains('active-view') || document.querySelector('dialog[open]') || busy || loading || drag) return;
+    const action = window.NistCanvasShortcut(event); if (!action) return;
+    event.preventDefault();
+    if (action === 'escape') { selected = null; render(); return; }
+    if (action === 'copy') { if (activeNode()) clipboard = clone(activeNode()); return; }
+    if (!editable()) return;
+    if (action === 'save') { void saveCurrentDesign(); return; }
+    if (action === 'undo' || action === 'redo') { $('od' + (action === 'undo' ? 'Undo' : 'Redo')).click(); return; }
+    if (action === 'delete') { removeNode(); return; }
+    if (action === 'duplicate') { $('odDuplicate').click(); return; }
+    if (action === 'paste' && clipboard && design.layout.nodes.length < 500) {
+      const node = clone(clipboard); if (node.width > design.layout.width || node.height > design.layout.height) return;
+      checkpoint(); node.id = crypto.randomUUID(); node.x = clamp(node.x + 20, design.layout.width - node.width); node.y = clamp(node.y + 20, design.layout.height - node.height);
+      design.layout.nodes.push(node); selected = node.id; render(); return;
+    }
+    const node = activeNode(), step = event.shiftKey ? 10 : 1;
+    if (node && ['left','right','up','down'].includes(action)) {
+      const x = clamp(node.x + (action === 'right' ? step : action === 'left' ? -step : 0), design.layout.width - node.width);
+      const y = clamp(node.y + (action === 'down' ? step : action === 'up' ? -step : 0), design.layout.height - node.height);
+      if (x !== node.x || y !== node.y) { checkpoint(); Object.assign(node, {x,y}); render(); }
+    }
   });
   $('odDuplicate').addEventListener('click', () => {
     const node = activeNode(); if (!node || !editable() || design.layout.nodes.length >= 500) return;
@@ -182,7 +230,7 @@
   for (const action of ['Undo', 'Redo']) $('od' + action).addEventListener('click', () => {
     const source = action === 'Undo' ? undo : redo, target = action === 'Undo' ? redo : undo;
     if (!editable() || !source.length) return;
-    target.push(clone(design)); design = source.pop(); dirty = true; selected = null; render();
+    target.push(clone(design)); design = { ...source.pop(), id: design.id, version: design.version }; dirty = true; selected = null; render();
   });
   $('odZoom').addEventListener('change', renderCanvas);
   new ResizeObserver(() => {
@@ -192,6 +240,7 @@
     if (!editable()) return;
     const form = $('odSettingsForm');
     form.elements.name.value = design.name;
+    form.elements.unitsPerMeter.value = design.layout.unitsPerMeter ?? 100;
     form.elements.width.value = design.layout.width; form.elements.height.value = design.layout.height;
     $('odSettingsStatus').textContent = ''; $('odSettingsModal').showModal();
   });
@@ -200,19 +249,22 @@
     event.preventDefault(); if (!editable()) return;
     const form = event.target, width = Number(form.elements.width.value), height = Number(form.elements.height.value);
     if (design.layout.nodes.some(node => node.x + node.width > width || node.y + node.height > height)) { $('odSettingsStatus').textContent = 'Objek masih berada di luar ukuran baru. Geser / kecilkan objek terlebih dahulu.'; return; }
-    checkpoint(); design.name = form.elements.name.value.trim(); design.layout.width = width; design.layout.height = height;
+    checkpoint(); design.name = form.elements.name.value.trim(); design.layout.width = width; design.layout.height = height; design.layout.unitsPerMeter = Number(form.elements.unitsPerMeter.value);
     $('odSettingsModal').close(); render();
   });
-  $('odSave').addEventListener('click', async () => {
-    if (!editable() || !dirty) return;
+  async function saveCurrentDesign() {
+    if (!editable()) return false;
+    if (!dirty) return true;
     busy = true; renderControls(); status('Menyimpan denah...');
     try {
       const saved = await request(design.id ? `/${encodeURIComponent(design.id)}` : '', { method: design.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(design) });
-      setDesign(saved); status('Denah berhasil disimpan.');
+      design = clone(saved); dirty = false; status('Denah berhasil disimpan.');
       try { await refreshList(); } catch { status('Denah tersimpan. Daftar denah belum diperbarui; klik Muat ulang.'); }
-    } catch (error) { status(error.message); }
+      return true;
+    } catch (error) { status(error.message); return false; }
     finally { busy = false; render(); }
-  });
+  }
+  $('odSave').addEventListener('click', () => { void saveCurrentDesign(); });
   $('odDelete').addEventListener('click', async () => {
     if (!design.id || busy || loading || !canPerform(key, 'delete') || !confirm(`Hapus denah "${design.name}" beserta seluruh objeknya?`)) return;
     busy = true; renderControls();
@@ -225,7 +277,7 @@
   });
   $('odExport').addEventListener('click', () => {
     const { width, height, nodes } = design.layout;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><title>${html(design.name)}</title><rect width="${width}" height="${height}" fill="#f4efe6"/>${nodes.map(node => officeShapeSvg(node, html)).join('')}</svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><title>${html(design.name)}</title><rect width="${width}" height="${height}" fill="#f4efe6"/>${nodes.map(node => officeShapeSvg(node, html)).join('')}${nodes.map(node => officeCctvCoverageSvg(node, design.layout.unitsPerMeter ?? 100)).join('')}</svg>`;
     const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
     const link = document.createElement('a'); link.href = url; link.download = (design.name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'office-design') + '.svg'; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);

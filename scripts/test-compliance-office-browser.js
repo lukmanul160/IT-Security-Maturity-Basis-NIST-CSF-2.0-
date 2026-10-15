@@ -143,6 +143,24 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  const saved=await evaluate("fetch('/api/office-design/'+document.getElementById('odLayouts').value).then(r=>r.json())");
  assert.equal(saved.name,marker);assert.equal(saved.layout.nodes.find(n=>n.type==='sofa').x,movedX);
  await evaluate("document.getElementById('odReload').click()");await wait("document.getElementById('odStatus').textContent==='Denah dimuat.'");
+ // New canvas saves pending edits first; a failed save must retain the old canvas.
+ await evaluate("document.querySelector('[data-od-add=chair]').click()");
+ const pendingNodes=await evaluate("document.querySelectorAll('#odCanvas [data-od-node]').length");
+ await evaluate("window.canvasOriginalFetch=window.fetch;window.fetch=(url,options)=>String(url).startsWith('/api/office-design/')&&options?.method==='PUT'?Promise.resolve(new Response(JSON.stringify({error:'Test canvas save failure'}),{status:500,headers:{'Content-Type':'application/json'}})):window.canvasOriginalFetch(url,options);document.getElementById('odNew').click()");
+ await wait("document.getElementById('odStatus').textContent==='Test canvas save failure'&&!document.getElementById('odNew').disabled");
+ assert.equal(await evaluate("document.getElementById('odLayouts').value"),savedId);
+ assert.equal(await evaluate("document.querySelectorAll('#odCanvas [data-od-node]').length"),pendingNodes);
+ await evaluate("window.fetch=window.canvasOriginalFetch;document.getElementById('odNew').click()");
+ await wait("document.getElementById('odLayouts').value===''&&!document.getElementById('odSave').disabled");
+ assert.equal(await evaluate("document.querySelectorAll('#odCanvas [data-od-node]').length"),0);
+ assert.equal((await evaluate("fetch('/api/office-design/'+"+JSON.stringify(savedId)+").then(r=>r.json())")).layout.nodes.length,pendingNodes);
+ await evaluate("document.getElementById('odSettings').click();{const f=document.getElementById('odSettingsForm');f.elements.name.value=window.testMarker+'-new';f.requestSubmit();}document.getElementById('odSave').click()");
+ await wait("document.getElementById('odLayouts').value!==''&&!document.getElementById('odNew').disabled");
+ assert.notEqual(await evaluate("document.getElementById('odLayouts').value"),savedId);
+ await evaluate("document.getElementById('odLayouts').value="+JSON.stringify(savedId)+";document.getElementById('odLayouts').dispatchEvent(new Event('change'))");
+ await wait("document.getElementById('odStatus').textContent==='Denah dimuat.'");
+ assert.equal(await evaluate("document.querySelectorAll('#odCanvas [data-od-node]').length"),pendingNodes);
+ console.log('PASS: new blank canvas saves pending changes, preserves previous canvas, and retains edits after a failed save.');
  await evaluate("window.scrollTo(0,0)");
  const shot=await call('Page.captureScreenshot',{format:'png'});fs.mkdirSync('output',{recursive:true});fs.writeFileSync('output/office-design-preview.png',Buffer.from(shot.data,'base64'));
  await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
@@ -174,5 +192,5 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  assert.deepEqual(errors,[]);
  console.log('PASS: reminder 404 recovery re-enables recipient selection; completed reporting evidence upload/download; paged owner mappings retain all pages; global reminder form submits all mappings; reporting create/update/continuous reminder, SMTP tab create/update/secret preservation/admin access, contact create/call link, office example/drag/undo/redo/save/reload, mobile bounds, viewer authorization.');
  auth.destroySession(token);
- }finally{ws?.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.query("DELETE FROM compliance_reports WHERE data->>'title'=$1",[marker]);await pool.query("DELETE FROM compliance_contacts WHERE data->>'name'=$1",[marker]);await pool.query('DELETE FROM office_designs WHERE name=$1',[marker]);await pool.query("DELETE FROM app_smtp_accounts WHERE settings->>'name'=$1",[marker]);await pool.query('DELETE FROM app_users WHERE username=$1',[marker]);await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-compliance-office-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
+ }finally{ws?.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.query("DELETE FROM compliance_reports WHERE data->>'title'=$1",[marker]);await pool.query("DELETE FROM compliance_contacts WHERE data->>'name'=$1",[marker]);await pool.query('DELETE FROM office_designs WHERE name=ANY($1::text[])',[[marker,marker+'-new']]);await pool.query("DELETE FROM app_smtp_accounts WHERE settings->>'name'=$1",[marker]);await pool.query('DELETE FROM app_users WHERE username=$1',[marker]);await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-compliance-office-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

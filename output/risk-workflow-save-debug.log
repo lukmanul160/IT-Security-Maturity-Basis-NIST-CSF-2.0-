@@ -1,0 +1,58 @@
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+[86ceed5b-fe81-4763-a087-c3fb3e1bafed] Error: riskOwner wajib diisi sebelum melanjutkan.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:6:60)
+    at must (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:10:90)
+    at assessment (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:35:5)
+    at Object.transition (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:40:38)
+    at Object.mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowService.js:79:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:25:57 {
+  status: 400
+}
+[aa007a1f-3c4c-42ce-9692-0891838fd2d8] Error: Workflow berubah. Refresh sebelum menyimpan.
+    at Object.fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:6:60)
+    at Object.mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowService.js:62:84)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:24:51 {
+  status: 409
+}
+[3310be9f-ca92-47d1-8498-74527339f187] Error: Hanya akun approver yang ditunjuk dapat memutuskan.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:6:60)
+    at approval (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:26:88)
+    at Object.transition (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:57:36)
+    at Object.mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowService.js:79:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:25:57 {
+  status: 403
+}
+[657ec3dd-e084-4003-b3ac-f901f7448cc5] Error: Verifikasi harus dilakukan reviewer yang ditunjuk, berbeda dari pelaksana.
+    at fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:6:60)
+    at Object.transition (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:64:86)
+    at Object.mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowService.js:79:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:25:57 {
+  status: 403
+}
+[d74d3843-bd75-426f-b8f1-f54aaa66b85a] Error: Lakukan Assessment ulang sebelum mengubah data risiko Closed.
+    at Object.fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:6:60)
+    at Object.invalidateRegister (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowService.js:95:42)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Object.update (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskManagementService.js:110:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:21:45 {
+  status: 409
+}
+[0006e6f4-2e2c-48df-bd85-ed48741fce7e] Error: Risiko/form berubah atau acceptance kedaluwarsa. Lakukan reassessment.
+    at Object.fail (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowRules.js:6:60)
+    at Object.mutate (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\riskWorkflowService.js:74:171)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\controllers\riskManagementController.js:25:57 {
+  status: 409
+}
+PASS: linked acceptance, authenticated approval, changed form invalidation and expiry.
+PASS: real transactions, draft, scoring, approval, verification, closure, history, stale versions and permissions.
+Error: Timed out: document.querySelector("#riskWorkflowForm") && document.querySelector("#riskDropdownManager")
+    at Cdp.wait (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\test-threat-modelling-browser.js:22:145)
+    at async run (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\test-risk-workflow-browser.js:102:5)

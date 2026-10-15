@@ -1,5 +1,12 @@
 // Pure SVG primitives and an editable example; no DOM, network, or persistence.
 const officeDesignShapes = {
+  cctv: { label: 'CCTV', width: 45, height: 30 },
+  access: { label: 'Kontrol akses', width: 35, height: 45 },
+  alarm: { label: 'Alarm / sirene', width: 40, height: 40 },
+  extinguisher: { label: 'APAR', width: 30, height: 45 },
+  smoke: { label: 'Detektor asap', width: 35, height: 35 },
+  exit: { label: 'Pintu darurat', width: 70, height: 35 },
+  assembly: { label: 'Titik kumpul', width: 55, height: 45 },
   room: { label: 'Ruangan', width: 240, height: 180 },
   wall: { label: 'Dinding', width: 240, height: 8 },
   door: { label: 'Pintu', width: 70, height: 70 },
@@ -20,6 +27,13 @@ function officeShapeSvg(node, escape) {
   const text = (label, y = h / 2, size = 12) => `<text x="${w / 2}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,sans-serif" font-size="${size}" fill="#4b453f">${escape(label)}</text>`;
   let body = '';
   switch (node.type) {
+    case 'cctv': body = rect(0,h*.15,w*.72,h*.6,'#dbeafe',3,'#1d4ed8') + `<path d="M${w*.72} ${h*.25}L${w} 0V${h*.9}L${w*.72} ${h*.65}M${w*.2} ${h*.75}V${h}H${w*.65}" fill="#93c5fd" stroke="#1d4ed8" stroke-width="2"/>`; break;
+    case 'access': body = rect(0,0,w,h,'#334155',4) + rect(w*.15,h*.15,w*.7,h*.3,'#86efac',2) + text('ID',h*.75,Math.min(w,h)*.3); break;
+    case 'alarm': body = ellipse(w/2,h/2,w*.45,h*.45,'#fecaca') + text('!',h/2,Math.min(w,h)*.65); break;
+    case 'extinguisher': body = rect(w*.2,h*.2,w*.6,h*.75,'#ef4444',5) + `<path d="M${w*.35} ${h*.2}V${h*.08}H${w*.8}V${h*.5}" fill="none" stroke="#1f2937" stroke-width="3"/>` + text('APAR',h*.6,Math.min(w*.24,h*.2)); break;
+    case 'smoke': body = ellipse(w/2,h/2,w*.45,h*.45,'#fff') + ellipse(w/2,h/2,w*.16,h*.16,'#94a3b8'); break;
+    case 'exit': body = rect(0,0,w,h,'#bbf7d0',3,'#15803d') + text(node.label||'EXIT ?',h/2,Math.min(w*.17,h*.4)); break;
+    case 'assembly': body = rect(0,0,w,h,'#bbf7d0',3,'#15803d') + text('? ? ?',h*.38,Math.min(w*.22,h*.3)) + text(node.label||'KUMPUL',h*.75,Math.min(w*.14,h*.25)); break;
     case 'room': body = rect(0, 0, w, h, '#f1e9dc', 0, '#252525') + text(node.label, 20); break;
     case 'wall': body = rect(0, 0, w, h, '#242424', 0, '#242424'); break;
     case 'window': body = rect(0, 0, w, h, '#e6f2f7', 0, '#515151') + `<path d="M0 ${h / 2}H${w}" stroke="#919e9e"/>`; break;
@@ -71,4 +85,14 @@ function officeExampleLayout() {
   for (const [x,y] of [[145,150],[600,233],[810,290],[810,420],[80,503],[240,503],[460,503],[690,503]]) add('door', x, y, 65, 65);
   for (const [x,y,w] of [[510,30,110],[760,30,110],[80,763,100],[280,763,110],[500,763,110],[770,763,130]]) add('window', x, y, w, 7);
   return { width: 1000, height: 800, nodes };
+}
+
+// Coverage is a planning overlay; walls and lens/installation effects are not simulated.
+function officeCctvCoverageSvg(node, unitsPerMeter = 100) {
+  if(node.type !== 'cctv' || node.showCoverage === false) return '';
+  const radius = (node.coverageRange ?? 5) * unitsPerMeter;
+  const half = (node.coverageAngle ?? 90) * Math.PI / 360;
+  const x = node.width / 2, y = node.height / 2;
+  const dx = radius * Math.cos(half), dy = radius * Math.sin(half);
+  return `<g data-od-coverage="${node.id}" pointer-events="none" transform="translate(${node.x} ${node.y}) rotate(${node.rotation} ${x} ${y})"><path d="M${x} ${y}L${x+dx} ${y-dy}A${radius} ${radius} 0 0 1 ${x+dx} ${y+dy}Z" fill="#38bdf8" fill-opacity=".16" stroke="#0284c7" stroke-dasharray="6 4"/><text x="${x+radius*.6}" y="${y}" font-family="Arial,sans-serif" font-size="12" fill="#075985">${node.coverageRange ?? 5} m / ${node.coverageAngle ?? 90}?</text></g>`;
 }

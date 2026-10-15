@@ -1,0 +1,5 @@
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+PASS: compiled workspace restores Rak Server, all three asset pages navigate, actual rack/photos APIs load, visible toolbar and rack elevations, no browser exceptions.

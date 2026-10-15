@@ -1,0 +1,21 @@
+✔ renewal validation requires valid recipient and date (5.456ms)
+✔ rack capacity and collisions are checked including exact boundaries (0.9806ms)
+✔ reminders include overdue renewals and exclude retired assets (0.4516ms)
+✔ asset permissions allow read-only viewers and deny mutations (3.2787ms)
+✔ photo API failure does not hide racks or their placements (10.7135ms)
+✔ reloading selects first available rack and prevents concurrent requests (2.5113ms)
+✔ saved rack page is restored after workspace initialization (6.5618ms)
+✔ asset and front/rear photos commit atomically; invalid photos never create an asset (10.783ms)
+✔ registration accepts photos under Asset Register create/update permissions and restricts rack photo access (458.9278ms)
+✔ related risk links validate IDs, preserve asset data and roll back stale selections (7.1041ms)
+✔ risk catalog and link API require Risk Register read plus asset permissions (428.6059ms)
+✔ CIA assessment uses the highest impact and a 5 by 5 likelihood matrix, consistent in browser and server (18.7028ms)
+✔ invalid and incomplete assessment is rejected and client-supplied scores cannot override the result (2.0715ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1459.7992

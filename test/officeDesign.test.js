@@ -8,6 +8,17 @@ const { pool } = require('../src/config/database');
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/office-design/shapes.js', 'utf8'), context);
 const example = () => JSON.parse(JSON.stringify(context.officeExampleLayout()));
+test('security objects and calibrated CCTV coverage persist and reject invalid settings', () => {
+  const camera = { id:'camera-1', type:'cctv',x:20,y:20,width:45,height:30,rotation:45,label:'Lobby',coverageRange:8,coverageAngle:110,showCoverage:true };
+  const input = { name:'Security plan',version:0,layout:{width:1000,height:800,unitsPerMeter:50,nodes:[camera]} };
+  assert.deepEqual(service.validate(input).layout,input.layout);
+  for(const change of [{coverageRange:-1},{coverageRange:101},{coverageAngle:360},{showCoverage:'yes'}])assert.throws(()=>service.validate({...input,layout:{...input.layout,nodes:[{...camera,...change}]}}),{status:400});
+  assert.throws(()=>service.validate({...input,layout:{...input.layout,unitsPerMeter:0}}),{status:400});
+  for(const type of ['access','alarm','extinguisher','smoke','exit','assembly'])assert.equal(service.validate({...input,layout:{...input.layout,nodes:[{...camera,type}]}}).layout.nodes[0].type,type);
+  const svg = context.officeCctvCoverageSvg(camera,50);
+  assert.match(svg,/8 m \/ 110/); assert.match(svg,/rotate\(45/);
+  assert.equal(context.officeCctvCoverageSvg({...camera,showCoverage:false},50),'');
+});
 test('editable office example validates and rejects duplicate IDs, unknown shapes and out-of-bounds positions', () => {
   const layout = example();
   assert.ok(service.validate({ name: 'Kantor pusat', version: 0, layout }).layout.nodes.length > 30);
@@ -41,7 +52,11 @@ test('PostgreSQL office save preserves layout and rejects stale updates/deletes'
     assert.equal(updated.version, 2);
     await assert.rejects(service.save(saved.id, saved), { status: 409 });
     await assert.rejects(service.remove(saved.id, 1), { status: 409 });
-    assert.equal((await service.list()).length, 1);
+    const second = await service.save(null, { name: 'Kanvas kedua', version: 0, layout: { width: 1000, height: 800, nodes: [] } });
+    assert.notEqual(second.id, saved.id);
+    assert.deepEqual((await service.read(saved.id)).layout, input.layout);
+    assert.equal((await service.list()).length, 2);
+    await service.remove(second.id, second.version);
     await service.remove(saved.id, 2);
     assert.equal((await service.list()).length, 0);
   } finally { pool.query = query; await client.query('ROLLBACK'); client.release(); }

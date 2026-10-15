@@ -146,3 +146,35 @@ Menyimpan koneksi SMTP memilih akun itu pada form reminder, tetapi tetap memerlu
 Simpan reminder untuk menerapkan perubahan ke laporan; pengiriman tidak diaktifkan
 hanya karena sebuah koneksi baru disimpan. Data dengan mode khusus tetap memakai
 konfigurasinya sendiri sampai mode bersama dipilih.
+
+
+## Kanvas baru dan interaksi editor
+
+Tombol Kanvas baru menyimpan perubahan denah aktif terlebih dahulu. Bila simpan
+tertolak (termasuk konflik versi), denah lama beserta perubahan tetap terbuka.
+Kanvas baru kosong dapat disimpan; denah sebelumnya tetap dapat dipilih melalui
+Kanvas tersimpan. Nama dan ukuran diatur lewat Nama & ukuran.
+
+Office Design menyediakan CCTV, kontrol akses, alarm, APAR, detektor asap,
+pintu darurat, dan titik kumpul. Panel CCTV mengatur jarak 0.1?100 meter,
+sudut 10?180 derajat, visibilitas, serta arah melalui rotasi 0?359 derajat.
+Nama & ukuran menyediakan skala satuan per meter (default 100). Area CCTV
+merupakan overlay geometris untuk perencanaan, tidak menghitung penghalang,
+spesifikasi lensa, tinggi pemasangan, maupun kemampuan identifikasi kamera.
+Overlay ikut tersimpan dan diekspor SVG.
+
+Office Design, Pemodelan Register Aset, dan Pemodelan Ancaman memakai shortcut:
+Ctrl/Cmd+Z (undo), Ctrl+Y atau Ctrl/Cmd+Shift+Z (redo), Ctrl/Cmd+S (simpan),
+Delete/Backspace (hapus dari kanvas), panah (geser 1), dan Shift+panah (geser 10).
+Shortcut kanvas tidak mengambil alih input/textarea/contenteditable atau modal.
+Pilih objek lalu tarik pegangan biru di sudut kanan bawah untuk resize.
+Undo/redo disimpan selama sesi editor; pindah/muat ulang kanvas mereset riwayat.
+Office dan Threat mendukung Ctrl/Cmd+D serta salin/tempel internal Ctrl/Cmd+C/V.
+Diagram aset mempertahankan satu node per aset: Delete hanya menyembunyikan node
+di kanvas, bukan menghapus record aset atau relasi. Tambahkan lagi dari katalog
+untuk mengembalikannya. Ukuran node disimpan bersama posisi dan garis mengikuti
+batas node yang diubah. Riwayat diagram tidak membatalkan mutasi relasi pada API.
+
+Validasi tambahan: `npm run test:canvas-editors-browser` memakai editor hasil
+build dan fixture API browser tanpa menulis diagram milik pengguna; tes backend
+Office dan Asset Diagram memeriksa validasi serta penyimpanan data.

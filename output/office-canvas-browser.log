@@ -1,0 +1,10 @@
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+Startup API requests: ["/api/public/website-settings","/api/monitoring-dashboard","/api/auth/me","/api/office-presence"]
+PASS: mapping pagination retains all rows and reminder settings submit every page.
+PASS: report PIC shares the SMTP register; shared account/schedule/status are resolved on existing reports.
+PASS: new blank canvas saves pending changes, preserves previous canvas, and retains edits after a failed save.
+PASS: framework entry loads data on demand and reuses CSF data across views.
+PASS: reminder 404 recovery re-enables recipient selection; completed reporting evidence upload/download; paged owner mappings retain all pages; global reminder form submits all mappings; reporting create/update/continuous reminder, SMTP tab create/update/secret preservation/admin access, contact create/call link, office example/drag/undo/redo/save/reload, mobile bounds, viewer authorization.

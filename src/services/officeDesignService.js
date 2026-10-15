@@ -1,7 +1,7 @@
 const { randomUUID } = require('node:crypto');
 const { pool } = require('../config/database');
 const invalid = (message, status = 400) => Object.assign(new Error(message), { status });
-const types = ['room', 'wall', 'door', 'window', 'desk', 'meeting', 'chair', 'sofa', 'toilet', 'sink', 'plant', 'label'];
+const types = ['cctv', 'access', 'alarm', 'extinguisher', 'smoke', 'exit', 'assembly', 'room', 'wall', 'door', 'window', 'desk', 'meeting', 'chair', 'sofa', 'toilet', 'sink', 'plant', 'label'];
 async function ensureStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS office_designs (
     id UUID PRIMARY KEY, name TEXT NOT NULL, layout JSONB NOT NULL,
@@ -12,15 +12,22 @@ function validate(input) {
   if (!Number.isInteger(input.version) || input.version < 0) throw invalid('Versi denah tidak valid.');
   const layout = input.layout;
   if (!layout || ![layout.width, layout.height].every(value => Number.isInteger(value) && value >= 200 && value <= 4000) || !Array.isArray(layout.nodes) || layout.nodes.length > 500) throw invalid('Ukuran kanvas harus 200–4000, maksimum 500 objek.');
+  const unitsPerMeter = layout.unitsPerMeter ?? 100;
+  if (!Number.isFinite(unitsPerMeter) || unitsPerMeter < 1 || unitsPerMeter > 1000) throw invalid('Skala kanvas harus 1?1000 satuan per meter.');
   const ids = new Set();
   const nodes = layout.nodes.map(node => {
     if (!node || typeof node.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(node.id) || ids.has(node.id) || !types.includes(node.type)) throw invalid('Objek denah tidak valid.');
     ids.add(node.id);
     if (![node.x, node.y, node.width, node.height, node.rotation].every(Number.isFinite) || node.x < 0 || node.y < 0 || node.width < 5 || node.height < 5 || node.x + node.width > layout.width || node.y + node.height > layout.height || node.rotation < 0 || node.rotation >= 360) throw invalid('Posisi atau ukuran objek di luar kanvas.');
     if (typeof node.label !== 'string' || node.label.length > 120) throw invalid('Label objek maksimum 120 karakter.');
+    if (node.type === 'cctv') {
+      const range = node.coverageRange ?? 5, angle = node.coverageAngle ?? 90;
+      if (!Number.isFinite(range) || range < 0.1 || range > 100 || !Number.isFinite(angle) || angle < 10 || angle > 180 || (node.showCoverage !== undefined && typeof node.showCoverage !== 'boolean')) throw invalid('Jarak CCTV harus 0.1?100 m dan sudut 10?180 derajat.');
+      return { ...Object.fromEntries(['id', 'type', 'x', 'y', 'width', 'height', 'rotation', 'label'].map(key => [key, node[key]])), coverageRange: range, coverageAngle: angle, showCoverage: node.showCoverage !== false };
+    }
     return Object.fromEntries(['id', 'type', 'x', 'y', 'width', 'height', 'rotation', 'label'].map(key => [key, node[key]]));
   });
-  return { name: input.name.trim(), version: input.version, layout: { width: layout.width, height: layout.height, nodes } };
+  return { name: input.name.trim(), version: input.version, layout: { width: layout.width, height: layout.height, ...(layout.unitsPerMeter !== undefined ? { unitsPerMeter } : {}), nodes } };
 }
 async function list() {
   return (await pool.query('SELECT id,name,version,updated_at AS "updatedAt" FROM office_designs ORDER BY updated_at DESC,id')).rows;

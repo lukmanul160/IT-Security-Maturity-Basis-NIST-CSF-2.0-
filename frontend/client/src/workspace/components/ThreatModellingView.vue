@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import { canvasShortcut } from '../../services/canvasInteraction.mjs';
 import stencils from '../../../../../src/shared/threatStencils.json';
 
 const palette = [
@@ -88,8 +89,8 @@ const threats = computed(() => [...model.value.diagram.nodes, ...model.value.dia
 const sortedNodes = computed(() => [...model.value.diagram.nodes].sort((a, b) => Number(b.type === 'boundary') - Number(a.type === 'boundary')));
 const snapshot = () => JSON.stringify(model.value);
 function checkpoint() { history.value.push(snapshot()); if (history.value.length > 50) history.value.shift(); future.value = []; dirty.value = true; }
-function undo() { if (!editable.value || !history.value.length) return; future.value.push(snapshot()); model.value = JSON.parse(history.value.pop()); selection.value = null; dirty.value = true; }
-function redo() { if (!editable.value || !future.value.length) return; history.value.push(snapshot()); model.value = JSON.parse(future.value.pop()); selection.value = null; dirty.value = true; }
+function undo() { if (!editable.value || !history.value.length) return; future.value.push(snapshot()); model.value = { ...JSON.parse(history.value.pop()), ...(model.value.id ? {id:model.value.id,version:model.value.version} : {}) }; selection.value = null; dirty.value = true; }
+function redo() { if (!editable.value || !future.value.length) return; history.value.push(snapshot()); model.value = { ...JSON.parse(future.value.pop()), ...(model.value.id ? {id:model.value.id,version:model.value.version} : {}) }; selection.value = null; dirty.value = true; }
 async function request(url, method = 'GET', body) {
   const response = await fetch(url, { method, cache: 'no-store', ...(body ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
   if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Request gagal');
@@ -124,7 +125,7 @@ async function save() {
   if (!editable.value) return; busy.value = true; status.value = 'Menyimpan diagram…';
   try {
     const saved = await request(`/api/threat-modelling${model.value.id ? `/${model.value.id}` : ''}`, model.value.id ? 'PUT' : 'POST', model.value);
-    model.value = saved; history.value = []; future.value = []; dirty.value = false;
+    model.value = saved; dirty.value = false;
     models.value = await request('/api/threat-modelling'); status.value = 'Diagram dan ancaman tersimpan di database.';
   } catch (error) { status.value = error.message; } finally { busy.value = false; }
 }
@@ -260,14 +261,32 @@ function fit() {
   setZoom(Math.min(viewSize.value.width / width, viewSize.value.height / height, 1));
   camera.value = { x, y };
 }
+let canvasClipboard = null;
 function keyboard(event) {
-  if (!document.getElementById('threatModellingView')?.classList.contains('active-view')) return;
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); event.target.blur?.(); nextTick(save); return; }
-  if (event.target.closest('input,textarea,select,[contenteditable]')) return;
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo(); }
-  if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); deleteSelected(); }
-  if (event.key === 'Escape') { mode.value = 'select'; source.value = null; selection.value = null; }
+  if (!document.getElementById('threatModellingView')?.classList.contains('active-view') || document.querySelector('dialog[open]') || busy.value || loading.value || drag) return;
+  const action = canvasShortcut(event); if (!action) return;
+  event.preventDefault();
+  if (action === 'escape') { mode.value = 'select'; source.value = null; selection.value = null; return; }
+  const node = model.value.diagram.nodes.find(item => item.id === selection.value);
+  if (action === 'copy') { if (node) canvasClipboard = JSON.parse(JSON.stringify(node)); return; }
+  if (!editable.value) return;
+  if (action === 'save') { void save(); return; }
+  if (action === 'undo') { undo(); return; }
+  if (action === 'redo') { redo(); return; }
+  if (action === 'delete') { deleteSelected(); return; }
+  if ((action === 'duplicate' && node) || (action === 'paste' && canvasClipboard)) {
+    if (model.value.diagram.nodes.length >= 500) return;
+    const copy = JSON.parse(JSON.stringify(action === 'paste' ? canvasClipboard : node));
+    checkpoint(); copy.id = uid(); copy.x += 20; copy.y += 20; copy.threats = (copy.threats || []).map(threat => ({...threat,id:uid()}));
+    model.value.diagram.nodes.push(copy); selection.value = copy.id; return;
+  }
+  if (node && ['left','right','up','down'].includes(action)) {
+    checkpoint(); const step = event.shiftKey ? 10 : 1;
+    node.x += action === 'right' ? step : action === 'left' ? -step : 0;
+    node.y += action === 'down' ? step : action === 'up' ? -step : 0;
+  }
 }
+
 function beforeUnload(event) { if (dirty.value) { event.preventDefault(); event.returnValue = ''; } }
 function open() { load(); nextTick(() => { if (viewport.value) fit(); }); }
 onMounted(() => { viewportObserver = new ResizeObserver(([entry]) => { if (entry.contentRect.width <= 0 || entry.contentRect.height <= 0) return; const wasHidden = viewSize.value.width <= 1 || viewSize.value.height <= 1; viewSize.value = { width: entry.contentRect.width, height: entry.contentRect.height }; if (wasHidden) fit(); }); viewportObserver.observe(viewport.value); document.addEventListener('fullscreenchange', fullscreenChanged); document.addEventListener('keydown', fullscreenEscape); window.addEventListener('threat-modelling-open', open); document.addEventListener('keydown', keyboard); window.addEventListener('beforeunload', beforeUnload); });
@@ -279,7 +298,8 @@ onBeforeUnmount(() => { viewportObserver?.disconnect(); document.removeEventList
     <div class="tm-heading"><div><p class="eyebrow">SECURITY DESIGN WORKSPACE</p><h2>Threat Modelling</h2><p>Map your system. Trace data flows. Identify threats.</p></div><span class="tm-state" :class="{ unsaved: dirty }">{{ dirty ? '● Unsaved changes' : '● Saved / ready' }}</span></div>
     <div v-if="loadError" role="alert" class="tm-load-error"><span>{{ loadError }}</span><button :disabled="loading" @click="load">Coba lagi</button></div>
     <p v-else-if="loading" role="status">Memuat diagram dan izin akses…</p>
-    <div class="tm-menubar">
+    <p class="muted">Ctrl/Cmd+Z: Undo ? Ctrl+Y / Ctrl/Cmd+Shift+Z: Redo ? Ctrl/Cmd+S: Simpan ? Delete: Hapus objek ? Panah: Geser (Shift: 10 satuan). Tarik pegangan biru untuk resize.</p>
+  <div class="tm-menubar">
       <select name="saved-diagram" aria-label="Saved diagrams" :value="model.id || ''" @change="choose"><option value="">New diagram</option><option v-for="item in models" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <button :disabled="!access.create || busy" @click="newModel">＋ New</button><button :disabled="!editable" @click="save" class="tm-save">Save diagram</button>
       <button :disabled="!access.create || busy" @click="importInput.click()">Import JSON</button><input name="diagram-import" ref="importInput" type="file" accept=".json,application/json" hidden @change="importJson">

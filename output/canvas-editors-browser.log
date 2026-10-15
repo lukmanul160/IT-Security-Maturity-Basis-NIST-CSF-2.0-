@@ -1,0 +1,7 @@
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+PASS: Office security objects, resize, undo/redo, save and native text editing.
+PASS: Asset node resize and dimensions persist; undo/redo and safe canvas-only deletion.
+PASS: Threat resize, duplicate, Mac undo, redo and save; no browser exceptions.

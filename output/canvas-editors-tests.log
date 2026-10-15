@@ -1,0 +1,31 @@
+✔ resized and hidden diagram nodes round-trip while old layouts remain compatible (2.9305ms)
+✔ diagram validates asset IDs, duplicate nodes, bounded coordinates and required versions (0.5505ms)
+✔ diagram save verifies registered assets and prevents overwriting a newer version (1.2152ms)
+✔ diagram API allows readers and denies edits without modelling update permission (483.4775ms)
+✔ canvas names are required and reserved names cannot shadow the existing diagram (1.2625ms)
+✔ multiple canvas API requires independent read/create/update permissions and valid UUIDs (121.3766ms)
+✔ reciprocal and parallel relationships have distinct routes and label positions (26.1487ms)
+✔ routes follow moved nodes and reciprocal directions remain distinct for vertical layouts (5.9194ms)
+✔ asset transfer rejects foreign formats, dangling references and duplicate assets before writes (2.1653ms)
+✔ export requires Read and import requires Read/Add/Edit on all asset modules (338.702ms)
+✔ canvas keyboard supports Windows and Mac undo, redo, save and movement (4.1453ms)
+✔ typing, composition, dialogs handled by callers, and consumed events keep native editing (0.4394ms)
+✔ security objects and calibrated CCTV coverage persist and reject invalid settings (4.078ms)
+✔ editable office example validates and rejects duplicate IDs, unknown shapes and out-of-bounds positions (2.3992ms)
+✔ new modules honor normal role actions (0.4666ms)
+✔ PostgreSQL office save preserves layout and rejects stale updates/deletes (516.5832ms)
+✔ validates diagrams and STRIDE threats before database writes (7.9663ms)
+✔ rejects duplicate IDs, dangling edges, non-finite coordinates and invalid shapes (7.4495ms)
+✔ saves complete diagrams as parameterized JSONB, retaining threat annotations (2.8098ms)
+✔ optimistic version check prevents overwriting another editor (3.0462ms)
+✔ empty diagrams are valid and missing versions cannot update stored records (1.5536ms)
+✔ unbounded diagrams support negative coordinates and content beyond legacy canvas dimensions (4.0017ms)
+✔ stencil properties persist and invalid types or values are rejected (71.2823ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1392.4382

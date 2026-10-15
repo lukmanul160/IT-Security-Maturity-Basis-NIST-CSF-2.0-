@@ -1,0 +1,35 @@
+
+> nist-csf-maturity-tool@1.0.0 build:client
+> npm run prepare:client && vite build --config frontend/client/vite.config.js
+
+
+> nist-csf-maturity-tool@1.0.0 prepare:client
+> node scripts/prepare-vue-client.js
+
+Vue workspace sources prepared from frontend/client/src/workspace/source.html
+vite v7.3.6 building client environment for production...
+<script src="/theme.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/i18n.js"> in "/index.html" can't be bundled without type="module" attribute
+<script src="/branding.js"> in "/index.html" can't be bundled without type="module" attribute
+transforming...
+
+/fonts/dm-sans-9fea608a947e.woff2 referenced in /fonts/dm-sans-9fea608a947e.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/space-grotesk-0640890476fc.woff2 referenced in /fonts/space-grotesk-0640890476fc.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+✓ 218 modules transformed.
+rendering chunks...
+computing gzip size...
+../public/vue/index.html                                   1.41 kB │ gzip:   0.67 kB
+../public/vue/assets/KnowledgeTextEditor-S57g6cqp.css      4.51 kB │ gzip:   1.26 kB
+../public/vue/assets/index-Bu4CY2gS.css                  304.45 kB │ gzip:  54.74 kB
+../public/vue/assets/enhancements-BYGmAedn.js              3.29 kB │ gzip:   0.96 kB
+../public/vue/assets/moduleProgressWorkbook-CEqnM3nX.js  494.75 kB │ gzip: 161.72 kB
+../public/vue/assets/KnowledgeTextEditor-DoXcn1L4.js     550.63 kB │ gzip: 176.53 kB
+../public/vue/assets/index-ClZ6x12O.js                   684.70 kB │ gzip: 163.65 kB
+../public/vue/assets/runtime-CEiN4xnp.js                 755.31 kB │ gzip: 181.49 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.22s

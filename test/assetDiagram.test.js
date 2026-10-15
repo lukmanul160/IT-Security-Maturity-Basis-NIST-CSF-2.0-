@@ -1,6 +1,12 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const service=require('../src/services/assetDiagramService'),{pool}=require('../src/config/database');
 const id='11111111-1111-4111-8111-111111111111',node={id,x:50,y:100};
+test('resized and hidden diagram nodes round-trip while old layouts remain compatible',()=>{
+ const sized={...node,width:320,height:140,hidden:true};
+ assert.deepEqual(service.validate({nodes:[sized],version:0}),[sized]);
+ assert.deepEqual(service.validate({nodes:[node],version:0}),[node]);
+ for(const change of [{width:0},{height:39},{width:Infinity},{height:2001},{hidden:'yes'}])assert.throws(()=>service.validate({nodes:[{...node,...change}],version:0}),/tidak valid/);
+});
 test('diagram validates asset IDs, duplicate nodes, bounded coordinates and required versions',()=>{
  assert.deepEqual(service.validate({nodes:[node],version:0}),[node]);
  for(const data of [{nodes:[node,node],version:0},{nodes:[{...node,x:Infinity}],version:0},{nodes:[{...node,y:-1}],version:0},{nodes:[{...node,id:'bad'}],version:0},{nodes:[node]}, {nodes:[node],version:-1}])assert.throws(()=>service.validate(data),/tidak valid/);

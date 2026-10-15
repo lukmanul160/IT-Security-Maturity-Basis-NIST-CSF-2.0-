@@ -15,6 +15,8 @@ import { renderWorkspaceError } from './services/workspaceError';
 import './styles/table-resize.css';
 /* Copyright (c) 2026 Lukmanul Hakim (lukmanul160@gmail.com). */
 import { createApp, nextTick } from 'vue';
+import { canvasShortcut } from './services/canvasInteraction.mjs';
+window.NistCanvasShortcut = canvasShortcut;
 import App from './App.vue';
 import './vue-shell.css';
 import './styles/workspace-theme.css';
