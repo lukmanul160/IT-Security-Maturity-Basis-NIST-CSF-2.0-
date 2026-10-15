@@ -60,7 +60,9 @@ test('audit finding filters preserve only matching findings and their audit, fol
     { id: 'evidence', kind: 'evidence', parentId: 'followup', data: {} }
   ] });
   const source = read('audit-finding/tracker.js');
-  vm.runInContext(source.slice(source.indexOf('  function ancestors('), source.indexOf('  function openCard(')) + source.slice(source.indexOf('  function afFindings('), source.indexOf('  function afReset(')), ctx);
+  vm.runInContext(read('audit-finding/record-index.js'), ctx);
+  vm.runInContext('const recordIndex = createAuditRecordIndex(rows); const ancestors = row => recordIndex.ancestors(row);', ctx);
+  vm.runInContext(source.slice(source.indexOf('  function afFindings('), source.indexOf('  function afReset(')), ctx);
   inputs.afSeverity.value = 'Critical'; inputs.afReview.value = 'overdue';
   assert.deepEqual(Array.from(vm.runInContext('afScopedRows().map(row => row.id)', ctx)), ['a', 'f', 'followup', 'evidence']);
   inputs.afOwner.value = 'Bob';

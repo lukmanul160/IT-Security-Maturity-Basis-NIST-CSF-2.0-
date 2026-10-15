@@ -60,15 +60,9 @@
     'overdue-audits': { title: 'Audit lewat tenggat', matches: row => row.kind === 'audit' && isOverdue(row) },
     'overdue-findings': { title: 'Finding lewat tenggat', matches: row => row.kind === 'finding' && isOverdue(row) }
   };
-  function ancestors(row) {
-    const chain = [], visited = new Set([row.id]);
-    let parent = rows.find(item => item.id === row.parentId);
-    while (parent && !visited.has(parent.id)) {
-      chain.unshift(parent); visited.add(parent.id);
-      parent = rows.find(item => item.id === parent.parentId);
-    }
-    return chain;
-  }
+  // Rebuilt only when a fresh API snapshot arrives.
+  let recordIndex = createAuditRecordIndex(rows);
+  const ancestors = row => recordIndex.ancestors(row);
   function openCard(filter) {
     if (!ready) return;
     cardFilter = cardFilters[filter] ? filter : null; path = [];
@@ -109,14 +103,12 @@
     return record.data.status !== 'Closed' && Boolean(gdDate(record.data.dueDate)) && gdDays(record.data.dueDate) < 0;
   }
   function auditFindingDetails(audit) {
-    const findings = afFindings().filter(row => row.parentId === audit.id);
-    const pending = findings.filter(row => row.data.status !== 'Closed');
-    const overdue = pending.filter(isOverdue).length;
-    pending.sort((a, b) => Number(isOverdue(b)) - Number(isOverdue(a)) || (a.data.dueDate || '9999').localeCompare(b.data.dueDate || '9999'));
-    return `<p class="muted">${findings.length} finding · ${findings.length - pending.length} selesai · ${pending.length} belum selesai · <strong class="${overdue ? 'aft-overdue' : ''}">${overdue} lewat tenggat</strong></p><details class="insight-panel" data-aft-details="${audit.id}"><summary>Lihat ${pending.length} finding belum selesai</summary>${pending.length ? `<div class="excel-wrap"><table class="excel-table"><thead><tr><th>Finding / Severity</th><th>PIC</th><th>Status</th><th>Tenggat</th><th>Follow-up</th></tr></thead><tbody>${pending.map(finding => {
-      const actions = rows.filter(row => row.kind === 'followup' && row.parentId === finding.id);
-      return `<tr><td><strong>${escapeHtml(finding.data.title)}</strong><br>${escapeHtml(finding.data.severity)}<br><small>${escapeHtml(finding.data.description)}</small></td><td>${escapeHtml(finding.data.owner || 'Belum ditentukan')}</td><td>${escapeHtml(finding.data.status)}</td><td>${escapeHtml(finding.data.dueDate || 'Tanpa tenggat')}${isOverdue(finding) ? '<br><strong class="aft-overdue">Lewat tenggat</strong>' : ''}</td><td>${actions.length} follow-up<br><button class="button button-quiet" type="button" data-aft-finding="${finding.id}">Buka Follow-up</button></td></tr>`;
-    }).join('')}</tbody></table></div>` : `<p class="muted">${findings.length ? 'Semua finding sudah selesai.' : 'Belum ada finding pada audit ini.'}</p>`}</details>`;
+    return renderAuditFindingDetails(audit, {
+      findings: afFindings(),
+      children: id => recordIndex.children(id),
+      isOverdue,
+      escapeHtml
+    });
   }
   async function request(url = '', options = {}) {
     const response = await fetch('/api/audit-finding-tracker' + url, options);
@@ -161,7 +153,7 @@
   }
   function renderAuditDashboard() {
     gdOptions('afAudit', rows.filter(row => row.kind === 'audit').map(row => row.id), 'Semua audit');
-    Array.from($('afAudit').options).slice(1).forEach(option => { option.textContent = rows.find(row => row.id === option.value)?.data.title || option.value; });
+    Array.from($('afAudit').options).slice(1).forEach(option => { option.textContent = recordIndex.get(option.value)?.data.title || option.value; });
     gdOptions('afOwner', rows.filter(row => row.kind === 'finding').map(row => row.data.owner), 'Semua PIC');
     const findings = afFindings(), scope = afScopedRows(), closed = findings.filter(row => row.data.status === 'Closed').length;
     const overdue = findings.filter(isOverdue).length, high = findings.filter(row => row.data.status !== 'Closed' && ['High', 'Critical'].includes(row.data.severity)).length;
@@ -179,7 +171,7 @@
     gdBars('afSeverities', findings, row => row.data.severity, 'af-severity');
     gdBars('afOwners', findings, row => row.data.owner, 'af-owner');
     gdBars('afAudits', findings, row => ancestors(row).find(parent => parent.kind === 'audit')?.id, 'af-audit');
-    $('afAudits').querySelectorAll('[data-af-audit] span').forEach(span => { span.textContent = rows.find(row => row.id === span.closest('button').dataset.afAudit)?.data.title || 'Audit tidak ditemukan'; });
+    $('afAudits').querySelectorAll('[data-af-audit] span').forEach(span => { span.textContent = recordIndex.get(span.closest('button').dataset.afAudit)?.data.title || 'Audit tidak ditemukan'; });
     gdTimeline('afTimeline', findings, row => row.data.dueDate, 'af-month');
     gdCalendar('afCalendar', 'afMonth', findings.filter(row => row.data.status !== 'Closed'), row => row.data.dueDate, 'af-date');
     const alerts = findings.filter(row => isOverdue(row) || gdReviewMatches(row.data.dueDate, 'soon', row.data.status !== 'Closed'));
@@ -205,7 +197,7 @@
     if (button.dataset.afKpi) afDrill(button.dataset.afKpi, '', button.querySelector('.stat-label').textContent);
     for (const kind of ['severity', 'owner', 'status', 'month', 'date', 'audit', 'record']) {
       const value = button.dataset['af' + kind[0].toUpperCase() + kind.slice(1)];
-      if (value !== undefined) afDrill(kind, value, `${kind}: ${kind === 'audit' || kind === 'record' ? rows.find(row => row.id === value)?.data.title || value : value || 'Belum diisi'}`);
+      if (value !== undefined) afDrill(kind, value, `${kind}: ${kind === 'audit' || kind === 'record' ? recordIndex.get(value)?.data.title || value : value || 'Belum diisi'}`);
     }
   });
   function render() {
@@ -229,19 +221,26 @@
     $('afClearDrill').disabled = !cardFilter;
     $('aftDateColumn').textContent = ['followup', 'followups', 'evidence'].includes(cardFilter || kinds[level]) ? 'Tanggal dibuat' : 'Tenggat finding';
     if (scope) $('aftContext').textContent = `${scope.title} — ${visible.length} data. Pilih Semua Audit untuk kembali ke daftar audit.`;
-    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" → "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td ${findingView?'':'hidden'}>${escapeHtml(r.kind==='finding'?r.data.status:'')}</td><td ${!scope&&level===0?'hidden':''}>${escapeHtml((r.kind==='finding'?r.data.dueDate:['followup','evidence'].includes(r.kind)?new Date(r.createdAt).toLocaleDateString((globalThis.NistI18n?.locale || 'id-ID')):'') || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${rows.filter(c => c.parentId === r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
+    $('aftBody').innerHTML = visible.map(r => `<tr><td>${escapeHtml(r.data.title)}<br><small>${escapeHtml(r.data.reference)}</small>${cardFilter && r.parentId ? `<br><small>${escapeHtml(ancestors(r).map(parent => parent.data.title).join(" → "))}</small>` : ""}</td><td>${escapeHtml(r.data.owner || '—')}</td><td ${findingView?'':'hidden'}>${escapeHtml(r.kind==='finding'?r.data.status:'')}</td><td ${!scope&&level===0?'hidden':''}>${escapeHtml((r.kind==='finding'?r.data.dueDate:['followup','evidence'].includes(r.kind)?new Date(r.createdAt).toLocaleDateString((globalThis.NistI18n?.locale || 'id-ID')):'') || '—')}</td><td>${escapeHtml(r.kind === 'finding' ? r.data.severity : r.kind === 'evidence' ? evidenceFiles(r).map(file=>file.name).join(', ') : '')}<br>${escapeHtml(r.data.description)}${r.kind === 'audit' ? auditFindingDetails(r) : ''}</td><td>${r.kind !== 'evidence' ? `<button class="button button-quiet" data-aft-open="${r.id}">${labels[kinds.indexOf(r.kind) + 1]} (${recordIndex.children(r.id).length})</button>` : r.canManageFile ? `<a class="button button-quiet" href="/api/audit-finding-tracker/${r.id}/download">Unduh</a>` : '<span class="muted">File milik akun lain</span>'}${canWrite() && (r.kind !== 'evidence' || r.canManageFile) ? `<button class="button button-quiet" data-aft-edit="${r.id}">Ubah</button>` : ''}${(r.kind === 'evidence' ? r.canManageFile && (canDelete() || currentUserOwnEvidenceDelete) : canDelete()) ? `<button class="button button-danger" data-aft-delete="${r.id}">Hapus</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">Belum ada data yang sesuai.</td></tr>';
   }
   window.addEventListener('evidence-file-deleted',event=>{
     const normalized=value=>String(value || '').replace(/^uploads?\//,'');
     const matches=file=>normalized(file.path)===normalized(event.detail.path);
     for(const row of rows) { if(Array.isArray(row.data?.attachments)) row.data.attachments=row.data.attachments.filter(file=>!matches(file)); if(Array.isArray(row.attachments)) row.attachments=row.attachments.filter(file=>!matches(file)); if(normalized(row.data?.attachmentPath)===normalized(event.detail.path)) delete row.data.attachmentPath; }
     libraryFiles=libraryFiles.filter(file=>!matches(file)); selectedLibrary.delete(normalized(event.detail.path));
-    if(editing) { editing=rows.find(row=>row.id===editing.id)||editing; removedAttachments.delete(normalized(event.detail.path)); renderExistingFiles(); renderLibrary(); }
+    if(editing) { editing=recordIndex.get(editing.id)||editing; removedAttachments.delete(normalized(event.detail.path)); renderExistingFiles(); renderLibrary(); }
     render();
   });
   async function load() {
     ready = false; render(); status('Memuat data…');
-    try { rows = await request(); path = path.map(r => rows.find(item => item.id === r.id)).filter(Boolean); ready = true; render(); status('Data terbaru berhasil dimuat.'); }
+    try {
+      rows = await request();
+      recordIndex = createAuditRecordIndex(rows);
+      path = path.map(record => recordIndex.get(record.id)).filter(Boolean);
+      ready = true;
+      render();
+      status('Data terbaru berhasil dimuat.');
+    }
     catch (error) { status(error.message); }
   }
   function openForm(record) {
@@ -286,7 +285,7 @@
       return;
     }
     const id = button.dataset.aftOpen || button.dataset.aftEdit || button.dataset.aftDelete;
-    const row = rows.find(r => r.id === id); if (!row) return;
+    const row = recordIndex.get(id); if (!row) return;
     if (button.dataset.aftOpen) { cardFilter = null; path = [...ancestors(row), row]; $('aftSearch').value = ''; $('aftFilter').value = ''; render(); }
     else if (button.dataset.aftEdit) openForm(row);
     else {

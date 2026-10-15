@@ -47,6 +47,8 @@ import storageSettings from './features/administration/storage-settings.js?raw';
 import moduleTransfer from './features/shared/module-transfer.js?raw';
 import smtpSettings from './features/administration/smtp-settings.js?raw';
 
+import auditFindingRecordIndex from './features/audit-finding/record-index.js?raw';
+import auditFindingDetailView from './features/audit-finding/detail-view.js?raw';
 import auditFindingTracker from './features/audit-finding/tracker.js?raw';
 
 import evidenceLibrary from './features/uploaded-files/evidence-library.js?raw';
@@ -93,6 +95,8 @@ export default [
   part20,
   part21,
   part22,
+  auditFindingRecordIndex,
+  auditFindingDetailView,
   auditFindingTracker,
   eventBindings,
   fileBackups,
