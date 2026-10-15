@@ -60,7 +60,7 @@ function selectRiskAcceptanceTab(tab) {
     $(button.getAttribute('aria-controls')).hidden = !selected;
   });
 }
-function showRiskAcceptanceView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('riskAcceptanceView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'risk-acceptance')); renderRiskAcceptanceForms(); saveUiState('risk-acceptance'); }
+function showRiskAcceptanceView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('riskAcceptanceView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'risk-acceptance')); renderRiskAcceptanceForms(); saveUiState('risk-acceptance'); loadRiskAcceptanceForms().catch(() => { $('riskAcceptancePageStatus').textContent = 'Database unavailable'; }); }
 let policyRegisterRows = [];
 const policyDropdownDefaults = {
   categories: ['Cybersecurity', 'IT Governance', 'Privacy', 'Risk Management', 'HR & Compliance'],

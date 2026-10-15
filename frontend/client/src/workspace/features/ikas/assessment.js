@@ -166,8 +166,8 @@ $('ikasExcelImportForm').addEventListener('submit',guardFormSubmission(async eve
   try{await ikasSaveQueue;const result=await ikasRequest('/api/ikas-workbook','POST',body);$('ikasExcelImportDialog').close();await loadIkas();ikasStatus('Import berhasil: '+result.questions+' pertanyaan pada '+result.domains.length+' domain.');}catch(error){$('ikasExcelImportStatus').textContent=error.message;}
 }));
 window.addEventListener('evidence-file-deleted',event=>{const path=String(event.detail.path).replace(/^uploads?\//,'');for(const key of Object.keys(ikasState.attachments))ikasState.attachments[key]=ikasState.attachments[key].filter(file=>String(file.path).replace(/^uploads?\//,'')!==path);renderIkasList();});
-fetch('/api/auth/me',{cache:'no-store'}).then(response=>response.ok?response.json():null).then(user=>{
+workspaceUserReady.then(user=>{
   if(!user)return;currentUserRole=user.role;currentUserActions=user.actions||{};currentUserPermissions=user.permissions||[];
   for(const nav of document.querySelectorAll('[data-view="ikas"],[data-view="ikas-manage"]')){nav.hidden=!canPerform('ikas','read');nav.disabled=nav.hidden;}
-  return loadIkas().then(()=>{if(['ikas','ikas-manage','ikas-assessment'].includes(ikasInitialView)){ikasDomain=localStorage.getItem('nist-ikas-domain')||'';showIkas(ikasInitialView);}});
+  if(['ikas','ikas-manage','ikas-assessment'].includes(ikasInitialView)){ikasDomain=localStorage.getItem('nist-ikas-domain')||'';showIkas(ikasInitialView);}
 }).catch(error=>ikasStatus(error.message));

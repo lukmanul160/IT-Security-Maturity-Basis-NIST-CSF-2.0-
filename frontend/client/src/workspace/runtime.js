@@ -5,6 +5,7 @@ import assessmentYearsUi from './features/assessment/years-ui.js?raw';
 import ikasScoring from '../../../../src/shared/ikasScoring.js?raw';
 import ikasAssessment from './features/ikas/assessment.js?raw';
 import part01 from './features/shared/state-and-access.js?raw';
+import moduleLoading from './features/shared/module-loading.js?raw';
 import dashboardHelp from './features/shared/dashboard-help.js?raw';
 import reminderRecipients from './features/shared/reminder-recipients.js?raw';
 import reminderPreview from './features/shared/reminder-preview.js?raw';
@@ -49,6 +50,11 @@ import smtpSettings from './features/administration/smtp-settings.js?raw';
 
 import auditFindingRecordIndex from './features/audit-finding/record-index.js?raw';
 import auditFindingDetailView from './features/audit-finding/detail-view.js?raw';
+import complianceReminderSettings from './features/compliance/reminder-settings.js?raw';
+import complianceSmtpSettings from './features/compliance/smtp-settings.js?raw';
+import complianceRegister from './features/compliance/register.js?raw';
+import officeDesignShapes from './features/office-design/shapes.js?raw';
+import officeDesign from './features/office-design/editor.js?raw';
 import auditFindingTracker from './features/audit-finding/tracker.js?raw';
 
 import evidenceLibrary from './features/uploaded-files/evidence-library.js?raw';
@@ -62,6 +68,7 @@ export default [
   reminderRecipients,
   reminderPreview,
   part01,
+  moduleLoading,
   evidenceLibrary,
   part02,
   acceptanceDashboard,
@@ -98,6 +105,11 @@ export default [
   auditFindingRecordIndex,
   auditFindingDetailView,
   auditFindingTracker,
+  complianceRegister,
+  complianceSmtpSettings,
+  complianceReminderSettings,
+  officeDesignShapes,
+  officeDesign,
   eventBindings,
   fileBackups,
   storageSettings,

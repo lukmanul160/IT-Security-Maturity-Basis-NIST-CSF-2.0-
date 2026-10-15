@@ -19,6 +19,7 @@ import App from './App.vue';
 import './vue-shell.css';
 import './styles/workspace-theme.css';
 import './styles/workspace-sidebar.css';
+import './styles/office-design.css';
 import './styles/module-transfer.css';
 import './styles/risk-dashboard.css';
 import './styles/risk-acceptance-dashboard.css';

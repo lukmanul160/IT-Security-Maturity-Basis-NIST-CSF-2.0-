@@ -12,6 +12,7 @@ const permissions = [
   ['risk-acceptance', 'Risk Acceptance'], ['audit-finding-tracker', 'Audit Finding Tracker'], ['risk-management', 'Risk Management'], ['policy-register', 'Policy Register'], ['personnel-certification', 'Personnel Certification'], ['tprm', 'Third-Party Risk Management'], ['tprm-tiering', 'Vendor Tiering Matrix'], ['tprm-questionnaire', 'Due Diligence Questionnaire'], ['questionnaire-templates', 'Questionnaire Templates'], ['tprm-register', 'TPRM Risk Register'],
   ['files', 'Uploaded files'], ['account', 'Account Management']
 ];
+permissions.push(['reporting-regulator', 'Reporting Regulator'], ['narahubung', 'Narahubung'], ['office-design', 'Office Design']);
 const validRoles = ['admin', 'approver', 'editor', 'viewer', 'user'];
 const pageActionMatrix = {
   budget: {read: validRoles, create: ['admin','approver','editor','user'], update: ['admin','approver','editor','user'], delete: []},
@@ -45,6 +46,11 @@ const defaults = {
   viewer: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'tprm-register'],
   user: ['framework', 'csf', 'privacy', 'iso27001', 'iso27001-soa', 'assessment', 'privacy-assessment', 'risk-acceptance', 'audit-finding-tracker', 'risk-management', 'policy-register', 'personnel-certification', 'tprm', 'tprm-tiering', 'tprm-questionnaire', 'questionnaire-templates', 'tprm-register', 'files', 'account']
 };
+
+for (const key of ['reporting-regulator', 'narahubung', 'office-design']) {
+  pageActionMatrix[key] = pageActionMatrix['audit-finding-tracker'];
+  for (const role of validRoles) if (!defaults[role].includes(key)) defaults[role].push(key);
+}
 
 for (const role of validRoles) if (!defaults[role].includes('threat-modelling')) defaults[role].push('threat-modelling');
 

@@ -1,0 +1,43 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { describe, enrich } = require('../src/services/complianceReminderLinkService');
+const { defaults } = require('../src/services/complianceReminderSettingsService');
+const report = { useGlobalReminder: true, owner: 'PIC', status: 'Belum dilaporkan' };
+const accounts = [{ id: 'default', name: 'SMTP perusahaan', configured: true }];
+test('reports resolve the same SMTP schedule and owner email used by shared reminders', () => {
+  const settings = { ...defaults, enabled: true, repeatEvery: 5, owners: [{ owner: 'PIC', email: 'pic@example.com' }] };
+  const link = describe(report, settings, accounts);
+  assert.equal(link.state, 'Reminder aktif');
+  assert.equal(link.smtpAccountName, 'SMTP perusahaan');
+  assert.equal(link.repeatEvery, 5);
+  assert.deepEqual(link.recipients, ['pic@example.com']);
+  assert.deepEqual(describe(report, settings, accounts, new Map([['pic', 'updated@example.com']])).recipients, ['updated@example.com']);
+  assert.deepEqual(describe({ ...report, reminderEmail: 'override@example.com' }, settings, accounts).recipients, ['override@example.com']);
+  assert.equal(describe(report, { ...settings, enabled: false }, accounts).state, 'Nonaktif di tab SMTP');
+});
+test('report status, missing mappings and custom schedules remain distinguishable', () => {
+  assert.equal(describe({ ...report, status: 'Sudah dilaporkan' }, defaults, accounts).state, 'Selesai — reminder berhenti');
+  assert.equal(describe(report, { ...defaults, enabled: true }, accounts).state, 'Email PIC belum dipetakan');
+  assert.equal(describe(report, { ...defaults, enabled: true }, []).state, 'Akun SMTP belum siap');
+  const local = describe({ ...report, useGlobalReminder: false, smtpAccountId: 'default', reminderEnabled: true, reminderEmail: 'local@example.com', daysBefore: 2, repeatDaily: true }, { ...defaults, daysBefore: 30 }, accounts);
+  assert.equal(local.mode, 'local');
+  assert.equal(local.daysBefore, 2);
+  assert.deepEqual(local.recipients, ['local@example.com']);
+});
+test('shared setting changes update existing reports without editing the report', async t => {
+  let settings = { ...defaults, enabled: false };
+  let email = 'first@example.com';
+  t.mock.method(require('../src/services/complianceReminderSettingsService'), 'read', async () => settings);
+  t.mock.method(require('../src/services/smtpService'), 'listAccounts', async () => [...accounts, { id: 'other', name: 'SMTP kedua', configured: true, secret: 'not exposed' }]);
+  t.mock.method(require('../src/services/reminderRecipientService'), 'emailMap', async () => new Map([['pic', email]]));
+  const rows = [{ id: 'report', data: report }];
+  assert.equal((await enrich(rows))[0].reminder.state, 'Nonaktif di tab SMTP');
+  settings = { ...settings, enabled: true, smtpAccountId: 'other', repeatEvery: 3 };
+  email = 'new@example.com';
+  const updated = (await enrich(rows))[0];
+  assert.equal(updated.reminder.smtpAccountName, 'SMTP kedua');
+  assert.equal(updated.reminder.repeatEvery, 3);
+  assert.deepEqual(updated.reminder.recipients, ['new@example.com']);
+  assert.equal(Object.hasOwn(updated.reminder, 'secret'), false);
+  assert.equal(rows[0].reminder, undefined);
+});

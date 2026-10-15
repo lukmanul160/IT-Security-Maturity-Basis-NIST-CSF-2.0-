@@ -4,6 +4,19 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { initializeData } = require('../scripts/docker-start');
+test('Docker ships compliance sources, creates persisted reminder settings and starts its scheduler', () => {
+  const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+  const docker = read('Dockerfile'), startup = read('src/server.js');
+  assert.match(docker, /COPY frontend \.\/frontend/);
+  assert.match(docker, /RUN npm run build/);
+  assert.match(docker, /COPY src \.\/src/);
+  assert.match(docker, /COPY database \.\/database/);
+  assert.match(startup, /complianceService'\)\.ensureStore\(\)/);
+  assert.match(startup, /complianceReminderService'\)\.startScheduler\(\)/);
+  assert.match(read('database/compliance.sql'), /CREATE TABLE IF NOT EXISTS compliance_reminder_settings/);
+  assert.match(read('compose.yaml'), /postgres_data:\/var\/lib\/postgresql\/data/);
+  assert.match(read('compose.yaml'), /app_data:\/app\/data/);
+});
 
 test('upgrade adds IKAS and maturity templates to an old data volume without replacing existing data', t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'nist-docker-data-'));

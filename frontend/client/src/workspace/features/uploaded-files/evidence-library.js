@@ -107,9 +107,7 @@ async function refreshEvidenceLibrary({force=false}={}) {
 document.addEventListener('click', event => {
   if (event.target.closest('[data-toggle-existing], [data-toggle-privacy-existing], [data-toggle-iso-existing], [data-view="files"]')) void refreshEvidenceLibrary();
 });
-fetch('/api/auth/me').then(response => response.ok ? response.json() : null).then(user => {
-  if (user && (user.role === 'admin' || user.permissions?.includes('files'))) return refreshEvidenceLibrary();
-}).catch(() => {});
+
 
 const evidenceEditPermission = new Map();
 function attachmentPathForActions(item) {

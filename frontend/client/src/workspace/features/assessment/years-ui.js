@@ -83,7 +83,7 @@ async function installAssessmentPeriods() {
       deleteButton.onclick=()=>void openDeleteAssessmentYearDialog(group).catch(error=>{status.textContent=error.message;});
       select.onchange = () => {select.disabled=true;button.disabled=true;deleteButton.disabled=true;void selectAssessmentYear(group,select.value,status).finally(()=>{select.value=String(assessmentYears[group]);select.disabled=false;button.disabled=!canCreateAssessmentYear(group);deleteButton.disabled=!canDeleteAssessmentYear(group);});};
       button.disabled = true;
-      void assessmentPeriodsFor(group).then(periods => {
+      toolbar._loadPeriods = () => assessmentPeriodsFor(group).then(periods => {
         select.replaceChildren(...periods.map(row => {const option=document.createElement('option');option.value=row.year;option.textContent=row.year;return option;}));
         select.value = assessmentYears[group];status.textContent = `Assessment ${assessmentYears[group]}`;button.disabled = !canCreateAssessmentYear(group);
         deleteButton.disabled=periods.length<=1||!canDeleteAssessmentYear(group);
@@ -92,16 +92,32 @@ async function installAssessmentPeriods() {
   }
 }
 void installAssessmentPeriods();
+// A hidden framework's year selector must not query its database at startup.
+function loadVisibleAssessmentPeriods() {
+  for (const toolbar of document.querySelectorAll('.active-view [data-assessment-period]')) {
+    if (!toolbar._loadPeriods || toolbar.dataset.periodsRequested) continue;
+    toolbar.dataset.periodsRequested = 'true';
+    void toolbar._loadPeriods();
+  }
+}
+let assessmentPeriodCheckQueued = false;
+const assessmentPeriodVisibility = new MutationObserver(() => {
+  if (assessmentPeriodCheckQueued) return;
+  assessmentPeriodCheckQueued = true;
+  requestAnimationFrame(() => { assessmentPeriodCheckQueued = false; loadVisibleAssessmentPeriods(); });
+});
+assessmentPeriodVisibility.observe(document.body, {subtree:true, attributes:true, attributeFilter:['class']});
+loadVisibleAssessmentPeriods();
 // Permissions arrive asynchronously during workspace startup.
-fetch('/api/auth/me',{cache:'no-store'}).then(response=>response.ok?response.json():null).then(user=>{
+workspaceUserReady.then(user=>{
   if(!user)return;
   if(uiState.view==='assessment'&&(user.role==='admin'||user.permissions?.includes('assessment')))showAssessment(activeFunction);
-  else if(uiState.view==='privacy-assessment'&&(user.role==='admin'||user.permissions?.includes('privacy-assessment')))Promise.resolve(privacyDataReady).then(()=>showPrivacyAssessment(uiState.function));
+  else if(uiState.view==='privacy-assessment'&&(user.role==='admin'||user.permissions?.includes('privacy-assessment')))ensureModuleData('privacy').then(()=>showPrivacyAssessment(uiState.function)).catch(error=>{$('saveState').textContent=error.message;});
   else if(uiState.view==='iso27001'||uiState.view==='iso27001-soa')document.querySelector('[data-view=iso27001]')?.click();
   for(const toolbar of document.querySelectorAll('[data-assessment-period]')) {
     const group=toolbar.dataset.assessmentPeriod;
     const keys=group==='iso27001'?['iso27001','iso27001-soa']:[group==='csf'?'assessment':group+'-assessment'];
     toolbar.querySelector('button').disabled=!(user.role==='admin'||keys.every(key=>user.actions?.[key]?.read&&user.actions?.[key]?.create));
-    assessmentPeriodsFor(toolbar.dataset.assessmentPeriod).then(periods=>{toolbar.querySelector('[data-delete-assessment-year]').disabled=periods.length<=1||!(user.role==='admin'||keys.every(key=>user.actions?.[key]?.read&&user.actions?.[key]?.delete));}).catch(()=>{});
+    if(toolbar.dataset.periodsRequested)void toolbar._loadPeriods();
   }
 }).catch(()=>{});

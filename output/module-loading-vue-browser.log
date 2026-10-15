@@ -1,0 +1,7 @@
+
+> nist-csf-maturity-tool@1.0.0 test:browser
+> node scripts/test-vue-browser.js
+
+[browser-test] Temporary profile cleanup skipped: EBUSY: resource busy or locked, unlink 'C:\Users\25992005\AppData\Local\Temp\nist-vue-browser-33728-1792067143256\lockfile'
+Error: Timed out waiting for Vue workspace: {"path":"/login","title":"Black Owl Governance","text":"Black Owl Governance\n\nWORKSPACE TATA KELOLA TI\n\nKejelasan untuk perjalanan\nkeamanan Anda.\n\nAssessment, pengelolaan risiko, dan evidence dalam satu workspace yang terorganisir.\n\nTATA KELOLA\nRISIKO & KEPATUHAN\nJeda animasi\nNIST CSF · Privacy Framework · ISO 27001\nBahasa / Language\nIndonesia\nEnglish\nMode gelap\n← Kembali ke beranda\nSelamat datang kembali\n\nMasuk untuk melanjutkan assessment Anda.\n\nNama pengguna\nKata sandi\nMasuk ke workspace\n→"}; browser errors: []
+    at run (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\test-vue-browser.js:155:13)

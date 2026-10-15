@@ -1,0 +1,11 @@
+const router = require('express').Router();
+const service = require('../services/officeDesignService');
+const { requirePermission } = require('../middleware/permission');
+const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
+router.param('id', (req, res, next, id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? next() : res.status(400).json({ error: 'ID denah tidak valid.' }));
+router.get('/', requirePermission('office-design', 'read'), wrap(async (req, res) => res.set('Cache-Control', 'no-store').json(await service.list())));
+router.get('/:id', requirePermission('office-design', 'read'), wrap(async (req, res) => res.set('Cache-Control', 'no-store').json(await service.read(req.params.id))));
+router.post('/', requirePermission('office-design', 'create'), wrap(async (req, res) => res.status(201).json(await service.save(null, req.body))));
+router.put('/:id', requirePermission('office-design', 'update'), wrap(async (req, res) => res.json(await service.save(req.params.id, req.body))));
+router.delete('/:id', requirePermission('office-design', 'delete'), wrap(async (req, res) => { await service.remove(req.params.id, req.body?.version); res.status(204).end(); }));
+module.exports = router;

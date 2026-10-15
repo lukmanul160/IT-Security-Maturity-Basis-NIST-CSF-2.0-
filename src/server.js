@@ -52,6 +52,8 @@ async function start() {
   require('./middleware/audit').startAuditRecovery();
   await require('./services/auditFindingService').ensureStore();
   await require('./services/auditFindingReminderService').ensureStore();
+  await require('./services/complianceService').ensureStore();
+  await require('./services/officeDesignService').ensureStore();
   await ensureBackupRoot();
   await pool.query(await fs.readFile(usersFile, 'utf8'));
   await new Promise((resolve, reject) => {
@@ -65,6 +67,7 @@ async function start() {
   require('./services/assetManagementService').startScheduler();
   require('./services/policyReminderService').startScheduler();
   require('./services/auditFindingReminderService').startScheduler();
+  require('./services/complianceReminderService').startScheduler();
 }
 
 start().catch(async error => {
