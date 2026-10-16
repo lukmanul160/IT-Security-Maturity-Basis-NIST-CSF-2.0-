@@ -1,4 +1,4 @@
-.od-editor{display:grid;grid-template-columns:155px minmax(0,1fr) 210px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--white)}
+.od-editor{min-width:0;width:100%;box-sizing:border-box;display:grid;grid-template-columns:155px minmax(0,1fr) 210px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--white)}
 .od-palette,.od-inspector{padding:16px;background:var(--white);color:var(--ink)}
 .od-palette{border-right:1px solid var(--line)}.od-inspector{border-left:1px solid var(--line)}
 .od-editor h3{font-size:13px;margin:0 0 12px}.od-editor p{font-size:11px;line-height:1.6}
@@ -13,10 +13,12 @@
 #reportingRegulatorView dialog,#narahubungView dialog{width:min(760px,calc(100vw - 32px))}
 #reportingRegulatorView fieldset{border:1px solid var(--line);border-radius:8px;margin-top:16px}
 @media(max-width:1100px){.od-editor{grid-template-columns:130px minmax(0,1fr)}.od-inspector{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.od-object-actions{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:650px){.od-editor{grid-template-columns:1fr}.od-palette{border-right:0;border-bottom:1px solid var(--line)}#odPalette{grid-template-columns:repeat(3,minmax(0,1fr))}.od-viewport{height:480px}.od-object-actions{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.od-editor{grid-template-columns:1fr}.od-palette{border-right:0;border-bottom:1px solid var(--line)}#odPalette{grid-template-columns:repeat(3,minmax(0,1fr))}.od-viewport{height:480px}.od-object-actions{grid-template-columns:1fr 1fr}}
 
 #crSmtpForm{max-width:880px}#crSmtpForm input:not([type=checkbox]),#crSmtpForm select{width:100%}
 .risk-register-form label.compliance-checkbox{display:flex;flex-direction:row;align-items:center;gap:8px;margin-block:12px}
 .risk-register-form label.compliance-checkbox input[type=checkbox]{width:auto;min-height:0;margin:0;align-self:center}
 .recipient-mapping [data-mapping-list]{max-height:360px;overflow:auto}
 .recipient-mapping .recipient-register-row span{min-width:0;overflow-wrap:anywhere;flex:1}
+
+.od-editor>*{min-width:0;box-sizing:border-box}

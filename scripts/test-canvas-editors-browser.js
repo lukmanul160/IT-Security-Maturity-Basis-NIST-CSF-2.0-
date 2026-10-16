@@ -90,6 +90,29 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   await key('z',{ctrlKey:true});await key('s',{ctrlKey:true});await wait('canvasFixtures.threat[0].version===2');
   assert.equal(await run('canvasFixtures.threat[0].diagram.nodes.length'),1);
   assert.equal(await run('canvasFixtures.threat[0].id'),'threat-fixture');
+  // Check the visible viewport, not only SVG state: a narrow or displaced canvas
+  // can pass all editing assertions while still being unusable.
+  await run("document.documentElement.dataset.theme='dark'");
+  for(const width of [1500,1024,768,390]){
+   await client.send('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:false});
+   for(const [view,selector] of [['asset-modelling','.asset-graph'],['threat-modelling','.tm-viewport'],['office-design','#odViewport']]){
+    await run(`document.querySelector('[data-view=${view}]').click()`);await delay(300);
+    const bounds=await run(`(()=>{const e=document.querySelector('${selector}'),r=e.getBoundingClientRect();return {width:r.width,height:r.height,x:r.x,right:r.right};})()`);
+    assert.ok(bounds.width>=Math.min(280,width-140),`${view} at ${width}px has unusable canvas width: ${JSON.stringify(bounds)}`);
+    assert.ok(bounds.height>=250,`${view} at ${width}px has unusable canvas height`);
+    assert.ok(bounds.x>=0&&bounds.right<=width+1,`${view} canvas extends outside screen at ${width}px: ${JSON.stringify(bounds)}`);
+    if(width===1500){
+     await run(`document.querySelector('${selector}').scrollIntoView({block:'center'})`);
+     const shot=await client.send('Page.captureScreenshot',{format:'png'});
+     await fs.mkdir(path.join(__dirname,'../output'),{recursive:true});
+     await fs.writeFile(path.join(__dirname,`../output/canvas-fixed-${view}.png`),Buffer.from(shot.data,'base64'));
+    }
+    if(view==='asset-modelling'&&width===1500){
+     assert.equal(await run("(()=>{const p=document.querySelector('.asset-diagram-palette').getBoundingClientRect(),c=document.querySelector('.asset-graph').getBoundingClientRect();return Math.abs(p.top-c.top)<2&&c.left>p.left;})()"),true,'Asset canvas must sit beside catalog');
+    }
+   }
+  }
+  console.log('PASS: All three canvas viewports remain usable at desktop, tablet and mobile widths.');
   assert.deepEqual(client.errors,[]);console.log('PASS: Threat resize, duplicate, Mac undo, redo and save; no browser exceptions.');
  }finally{
   client?.socket.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}if(token)auth.destroySession(token);await pool.end();

@@ -361,3 +361,19 @@ onBeforeUnmount(() => { viewportObserver?.disconnect(); document.removeEventList
 <style scoped>
 .tm-canvas-settings{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:10px;border:1px solid #d9e0e8;border-top:0;background:#f8fafc}.tm-canvas-settings label{display:flex;align-items:center;gap:8px;font-size:12px}.tm-canvas-settings input[type=number]{width:95px}.tm-canvas-settings button{margin-left:auto}.tm-fullscreen{position:fixed!important;inset:0;z-index:10000;background:#f1f5f9;box-sizing:border-box;padding:16px!important;display:flex!important;flex-direction:column;overflow:auto}.tm-fullscreen .tm-heading{margin-bottom:10px}.tm-fullscreen .tm-editor{flex:1;min-height:0;height:auto}.tm-fullscreen .tm-viewport{min-height:0;height:auto}.tm-fullscreen .tm-register{display:none}.tm-fullscreen .tm-menubar,.tm-fullscreen .tm-tools,.tm-fullscreen .tm-canvas-settings,.tm-fullscreen .tm-status{flex-shrink:0}
 </style>
+
+<style scoped>
+/* Leave space for the canvas when the workspace sidebar is visible. */
+.tm-editor{min-width:0;grid-template-rows:minmax(0,1fr)}
+.tm-editor>*{min-width:0;min-height:0}
+@media(max-width:1200px){
+  .tm-editor{grid-template-columns:145px minmax(0,1fr);grid-template-rows:minmax(280px,1fr) 200px}
+  .tm-inspector{grid-column:1/-1;border-left:0;border-top:1px solid #d9e0e8}
+  .tm-viewport{height:auto;min-height:280px}
+}
+@media(max-width:650px){
+  .tm-editor{grid-template-columns:minmax(0,1fr);grid-template-rows:140px minmax(280px,1fr) 180px;min-height:600px}
+  .tm-palette{border-right:0;border-bottom:1px solid #d9e0e8}
+  .tm-viewport{height:auto}
+}
+</style>
