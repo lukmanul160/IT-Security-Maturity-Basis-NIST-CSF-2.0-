@@ -50,7 +50,7 @@ async function exportOrganizationPng() {
     context.drawImage(picture, 0, 0);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('Gambar tidak dapat dibuat.');
-    const url = URL.createObjectURL(blob);
+    const url = (window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `struktur-organisasi-${new Date().toISOString().slice(0, 10)}.png`;

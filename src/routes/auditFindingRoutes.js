@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const multer = require('multer');
+const multer = require('../middleware/configuredUpload');
 const service = require('../services/auditFindingService');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 10, fields: 12, fieldSize: 20000 } });

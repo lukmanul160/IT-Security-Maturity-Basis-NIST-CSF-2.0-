@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const service = require('../services/fileBackupService');
 const { requireAdmin } = require('../middleware/authorization');
-const multer = require('multer');
+const multer = require('../middleware/configuredUpload');
 const path = require('node:path');
 const os = require('node:os');
 const upload = multer({ dest: path.join(os.tmpdir(), 'nist-file-backup-restore'), limits: { fileSize: 500 * 1024 * 1024 }, fileFilter(req, file, done) { done(null, path.extname(file.originalname).toLowerCase() === '.zip'); } });

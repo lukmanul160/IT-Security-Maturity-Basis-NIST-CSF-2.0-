@@ -2,7 +2,7 @@ const express = require('express');
 const controller = require('../controllers/tprmQuestionnaireController');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
 const router = express.Router();
-const multer = require('multer');
+const multer = require('../middleware/configuredUpload');
 const upload = multer({storage:multer.memoryStorage(),limits:{fileSize:8*1024*1024,files:1,fields:2},fileFilter(req,file,done){if(!/\.xlsx$/i.test(file.originalname))return done(Object.assign(new Error('Gunakan file Excel .xlsx hasil export sistem.'),{status:400}));done(null,true);}});
 router.get('/:id/excel', requirePermission('tprm-questionnaire','read'), controller.exportExcel);
 router.post('/:id/excel/preview', requirePageAccess('tprm-questionnaire','update'), upload.single('file'), controller.previewExcel);

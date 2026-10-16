@@ -204,12 +204,13 @@ function edgePoints(edge) {
 function addThreat() { if (!editable.value || !selected.value) return; checkpoint(); selected.value.threats.push({ id: uid(), title: 'New threat', category: 'Spoofing', severity: 'Medium', status: 'Open', mitigation: '' }); }
 function threatChange(threat, field, value) { if (!editable.value) return; checkpoint(); threat[field] = value; }
 function deleteThreat(id) { if (!editable.value) return; checkpoint(); selected.value.threats = selected.value.threats.filter(item => item.id !== id); }
-function download(name, content, type) { const url = URL.createObjectURL(new Blob([content], { type })); const link = document.createElement('a'); link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+function download(name, content, type) { const url = (window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(new Blob([content], { type })); const link = document.createElement('a'); link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
 const fileName = () => model.value.name.replace(/[^a-z0-9_-]/gi, '-').slice(0, 100) || 'threat-model';
 function exportJson() { download(`${fileName()}.json`, JSON.stringify({ format: 'nist-basis-threat-model', version: 1, exportedAt: new Date().toISOString(), name: model.value.name, diagram: model.value.diagram }, null, 2), 'application/json'); }
 async function importJson(event) {
   const file = event.target.files[0]; event.target.value = ''; if (!file || !access.value.create) return;
   try {
+    window.NistFileLimits?.check(file.size,'import',10);
     if (file.size > 10 * 1024 * 1024) throw new Error('Ukuran file maksimal 10 MB.');
     const data = JSON.parse(await file.text());
     if (data.format !== 'nist-basis-threat-model' || data.version !== 1 || typeof data.name !== 'string' || !data.diagram || !Array.isArray(data.diagram.nodes) || !Array.isArray(data.diagram.edges) || data.diagram.nodes.length > 500 || data.diagram.edges.length > 1000) throw new Error('Gunakan file Export JSON Threat Modelling.');

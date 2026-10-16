@@ -41,6 +41,6 @@ function gdKpis(id, metrics, attribute) {
 function gdExport(filename, rows, columns, format) {
   const cell = value => { let text = String(value ?? ''); if (/^[\s]*[=+@-]/.test(text)) text = "'" + text; return '"' + text.replaceAll('"', '""') + '"'; };
   const content = format === 'csv' ? '\uFEFF' + [columns.map(([label]) => cell(label)).join(','), ...rows.map(row => columns.map(([, getter]) => cell(getter(row))).join(','))].join('\r\n') : JSON.stringify(rows, null, 2);
-  const url = URL.createObjectURL(new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json' }));
+  const url = (window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json' }));
   const link = document.createElement('a'); link.href = url; link.download = `${filename}-${gdToday()}.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

@@ -33,7 +33,7 @@ function openModule(module){
  const isoTab=module.id==='iso-objectives'?'objectives':integratedSoa?'soa':null;
  if(isoTab)setTimeout(()=>document.querySelector(`[data-iso-tab="${isoTab}"]`)?.click(),0);
 }
-function exportSummary(){const rows=visibleModules.value;const payload={generatedAt:dashboard.value.generatedAt,timezone:'Asia/Bangkok',filters:{category:category.value,search:search.value,priority:priority.value},totals:totals.value,modules:rows};const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='it-governance-monitoring-'+new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok'}).format(new Date())+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportSummary(){const rows=visibleModules.value;const payload={generatedAt:dashboard.value.generatedAt,timezone:'Asia/Bangkok',filters:{category:category.value,search:search.value,priority:priority.value},totals:totals.value,modules:rows};const url=(window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='it-governance-monitoring-'+new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok'}).format(new Date())+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 let controller,refreshTimer,restoreTimer;
 async function loadDashboard(){
  if(loading.value)return;loading.value=true;error.value='';controller=new AbortController();

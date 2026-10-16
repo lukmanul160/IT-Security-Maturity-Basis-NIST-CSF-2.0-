@@ -1,4 +1,4 @@
-const multer = require('multer');
+const multer = require('../middleware/configuredUpload');
 const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs');

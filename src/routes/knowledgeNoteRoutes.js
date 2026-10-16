@@ -3,7 +3,7 @@ const service = require('../services/knowledgeNoteService');
 const { requirePermission } = require('../middleware/permission');
 const images=require('../services/knowledgeImageService');
 const fs=require('node:fs/promises');
-const upload=require('multer')({
+const upload=require('../middleware/configuredUpload')({
  storage:require('../services/boundedUploadStorage').createBoundedUploadStorage(require('node:path').join(require('node:os').tmpdir(),'nist-note-images'),100*1024*1024),
  limits:{fileSize:10*1024*1024,files:300,fields:4,fieldSize:10*1024*1024},
  fileFilter:(req,file,done)=>done(/\.(png|jpe?g|gif|webp|md|txt|json)$/i.test(file.originalname)?null:Object.assign(new Error('Format gambar tidak didukung.'),{status:400}),true)
@@ -52,18 +52,31 @@ router.post('/import-with-images',requirePermission('knowledge-notes','create'),
 router.post('/folders',requirePermission('knowledge-notes','create'),async(req,res)=>res.status(201).json(await service.createFolder(req.body?.path)));
 router.put('/folders',requirePermission('knowledge-notes','update'),async(req,res)=>res.json(await service.moveFolder(req.body?.source,req.body?.destination)));
 router.delete('/folders',requirePermission('knowledge-notes','delete'),async(req,res)=>res.json(await service.removeFolder(req.body?.path,req.body?.mode)));
-router.get('/export', requirePermission('knowledge-notes','read'), async(req,res)=>{
+router.get('/export', requirePermission('knowledge-notes','read'), async(req,res,next)=>{
   const notes = await service.list();
   const folders = await service.folders();
   const archive = require('archiver')('zip');
-  archive.on('error', error=>res.destroy(error));
-  res.attachment('knowledge-notes.zip'); archive.pipe(res);
-  for (const folder of folders) archive.append('',{name:folder+'/'});
-  for (const note of notes) archive.append(note.content,{name:`${note.folder ? note.folder+'/' : ''}${note.title}.md`});
-  for(const image of await images.list())archive.append((await images.read(image.id)).content,{name:image.path});
-  // Original titles preserve wiki-link resolution when importing the JSON backup.
-  archive.append(JSON.stringify({format:'knowledge-notes-v1',notes,folders},null,2),{name:'knowledge-notes.json'});
-  await archive.finalize();
+  const path = require('node:path');
+  const directory = await fs.mkdtemp(path.join(require('node:os').tmpdir(), 'nist-note-export-'));
+  const target = path.join(directory, 'knowledge-notes.zip');
+  const cleanupExport = () => fs.rm(directory, { recursive:true, force:true });
+  let bytes = 0;
+  const limiter = new (require('node:stream').Transform)({ transform(chunk, encoding, done) {
+    bytes += chunk.length;
+    done(bytes > req.fileLimits.exportMb * 1048576 ? require('../middleware/fileLimits').tooLarge(req.fileLimits.exportMb) : null, chunk);
+  }});
+  const completed = require('node:stream/promises').pipeline(archive, limiter, require('node:fs').createWriteStream(target));
+  // Observe errors while database/image reads are still in progress.
+  completed.catch(()=>{});
+  try {
+    for (const folder of folders) archive.append('',{name:folder+'/'});
+    for (const note of notes) archive.append(note.content,{name:`${note.folder ? note.folder+'/' : ''}${note.title}.md`});
+    for(const image of await images.list())archive.append((await images.read(image.id)).content,{name:image.path});
+    // Original titles preserve wiki-link resolution when importing the JSON backup.
+    archive.append(JSON.stringify({format:'knowledge-notes-v1',notes,folders},null,2),{name:'knowledge-notes.json'});
+    await Promise.all([archive.finalize(), completed]);
+    res.download(target, 'knowledge-notes.zip', error => { void cleanupExport(); if(error)next(error); });
+  } catch(error) { archive.destroy(); await completed.catch(()=>{}); await cleanupExport(); next(error); }
 });
 router.post('/import',requirePermission('knowledge-notes','create'),async(req,res)=>res.status(201).json(await service.importNotes(req.body?.notes,req.body?.folders)));
 router.post('/',requirePermission('knowledge-notes','create'),async(req,res)=>res.status(201).json(await service.create(req.body)));

@@ -5,7 +5,7 @@ const permissions=require('../services/permissionService');
 const photos=require('../services/assetRackPhotoService');
 const reminderSettings=require('../services/assetReminderSettingsService');
 const diagram=require('../services/assetDiagramService');
-const multer=require('multer');
+const multer=require('../middleware/configuredUpload');
 const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:5*1024*1024,files:2,fields:3,fieldSize:20000}});
 const assetUpload=upload.fields([{name:'front',maxCount:1},{name:'rear',maxCount:1}]);
 const wrap=fn=>(req,res,next)=>Promise.resolve(fn(req,res)).catch(next);

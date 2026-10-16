@@ -155,7 +155,7 @@ const moduleTransfer = (() => {
     return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Report ${escape(config.title)}</title><style>body{font:12px Arial;margin:24px;color:#172335}h1{font-size:24px}h2{margin-top:28px}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #ccd3dc;padding:6px;overflow-wrap:anywhere;white-space:pre-wrap;vertical-align:top}th{background:#edf2f7}thead{display:table-header-group}@page{size:A4 landscape;margin:12mm}@media print{button{display:none}body{margin:0}}</style></head><body><button onclick="window.print()">Cetak / Simpan PDF</button><h1>${escape(config.title)}${payload.assessmentYear?` / ${escape(payload.assessmentYear)}`:''}</h1><p>Dibuat: ${escape(payload.exportedAt)} · Seluruh data modul</p>${content}</body></html>`;
   }
   function download(name, content, type) {
-    const url = URL.createObjectURL(new Blob([content], { type }));
+    const url = (window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(new Blob([content], { type }));
     const link = document.createElement('a'); link.href = url; link.download = name; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -256,7 +256,7 @@ const moduleTransfer = (() => {
       input.onchange = async () => {
         const file = input.files[0]; if (!file) return;
         const progressTask = window.NistUploadProgress.begin([file], 'Membaca dan memvalidasi JSON...');
-        try { if (file.size > 10 * 1024 * 1024) throw new Error('Ukuran file maksimal 10 MB.'); const payload = validate(key, JSON.parse(await file.text())); progressTask.update({ phase: 'success', label: 'File siap ditinjau', detail: file.name, percent: 100 }); preview(key, payload, status, file.name, file.size); }
+        try { window.NistFileLimits?.check(file.size,'import',10); if (file.size > 10 * 1024 * 1024) throw new Error('Ukuran file maksimal 10 MB.'); const payload = validate(key, JSON.parse(await file.text())); progressTask.update({ phase: 'success', label: 'File siap ditinjau', detail: file.name, percent: 100 }); preview(key, payload, status, file.name, file.size); }
         catch (error) {
           try { await recordTransferActivity('import', key, file.name, 0, 'failed', 'File import ditolak sebelum penyimpanan.', error.message); }
           catch (auditError) { error.message += ` ${auditError.message}`; }
@@ -297,7 +297,7 @@ function mountProgressExcel(toolbar,key,status) {
         await runAuditedTransfer(action==='template'?'download':'export',key,filename,async()=>{
           const payload=action==='template'?moduleTransfer.template(key):await moduleTransfer.collect(key);
           const bytes=codec.writeProgressWorkbook(payload,moduleTransfer.template(key).headers);
-          const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+          const url=(window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
         },'Excel progres berhasil dibuat.');status.textContent='Excel berhasil dibuat; unduhan dimulai.';
       }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
     };
@@ -305,7 +305,7 @@ function mountProgressExcel(toolbar,key,status) {
   input.onchange=async()=>{
     const file=input.files[0];if(!file)return;
     try {
-      if(file.size>10*1024*1024)throw Error('Ukuran file maksimal 10 MB.');
+      window.NistFileLimits?.check(file.size,'import',10); if(file.size>10*1024*1024)throw Error('Ukuran file maksimal 10 MB.');
       const codec=await window.NistProgressExcel();
       const payload=moduleTransfer.validate(key,codec.readProgressWorkbook(await file.arrayBuffer(),key));
       moduleTransfer.preview(key,payload,status,file.name,file.size);
@@ -336,7 +336,7 @@ function mountMaturityExcel(toolbar,key,status) {
       await runAuditedTransfer('export',key,`NIST-${key}-Maturity-${year}.xlsx`,async()=>{
         const response=await fetch(`/api/maturity-workbook/${key}?assessmentYear=${year}`,{cache:'no-store'});
         if(!response.ok)throw Error((await response.json().catch(()=>({}))).error || `Export Excel gagal (HTTP ${response.status}).`);
-        const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a');
+        const blob=await response.blob(),url=(window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(blob),link=document.createElement('a');
         link.href=url;link.download=`NIST-${key==='csf'?'CSF-2.0':'Privacy'}-Maturity-${year}.xlsx`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
       },'Export Excel maturity selesai.');status.textContent='Excel maturity berhasil diexport.';
     }catch(error){status.textContent=error.message;}finally{exportButton.disabled=false;}
@@ -350,7 +350,7 @@ function mountMaturityExcel(toolbar,key,status) {
     const year=assessmentYears[key] || 2026;
     importButton.disabled=true;status.textContent='Memvalidasi Excel maturity...';
     try {
-      if(file.size>10*1024*1024)throw Error('Ukuran file maksimal 10 MB.');
+      window.NistFileLimits?.check(file.size,'import',10); if(file.size>10*1024*1024)throw Error('Ukuran file maksimal 10 MB.');
       await ready();
       const body=new FormData();body.append('file',file);
       const response=await fetch(`/api/maturity-workbook/${key}/preview?assessmentYear=${year}`,{method:'POST',body});

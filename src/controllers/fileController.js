@@ -1,6 +1,6 @@
 const fileService = require('../services/fileService');
 const evidenceAccess = require('../services/evidenceAccessService');
-const multer = require('multer');
+const multer = require('../middleware/configuredUpload');
 const fs = require('fs');
 const path = require('path');
 const { uploadRoot } = require('../config/paths');

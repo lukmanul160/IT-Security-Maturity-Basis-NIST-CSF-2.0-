@@ -141,7 +141,7 @@ async function rdExportReport(format) {
   if (format === 'json') return downloadRiskJson('risk-dashboard.json', { exportedAt: new Date().toISOString(), drill: rdState.drill, riskRegister: rows });
   const response = await fetch('/api/risk-management/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ format, riskIds: rows.map(r => r.riskId) }) });
   if (!response.ok) throw new Error('Laporan gagal dibuat. Periksa hak akses dan koneksi.');
-  const url = URL.createObjectURL(await response.blob()), link = document.createElement('a'); link.href = url; link.download = `risk-dashboard.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const url = (window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(await response.blob()), link = document.createElement('a'); link.href = url; link.download = `risk-dashboard.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 const rdPanel = $('riskDashboardPanel');
 rdPanel.addEventListener('change', event => {

@@ -1,5 +1,5 @@
 const backupService = require('../services/backupService');
-const multer = require('multer');
+const multer = require('../middleware/configuredUpload');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');

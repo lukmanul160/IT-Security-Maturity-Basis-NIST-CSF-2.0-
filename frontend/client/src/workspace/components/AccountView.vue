@@ -28,6 +28,11 @@
               <div class="csf-form-grid"><label>Nama website<input name="websiteName" maxlength="120" required data-no-translate></label><label>Judul / tagline website<input name="websiteTagline" maxlength="200" data-no-translate></label>
               <label>Logo website<img data-website-preview="logo" alt="Pratinjau logo" width="64" height="64" style="object-fit:contain"><input name="websiteLogo" type="file" accept="image/png,image/jpeg,image/webp"><small>Maksimal 1 MB. PNG, JPEG, atau WebP.</small><span><input name="resetLogo" type="checkbox"> Gunakan logo bawaan</span></label>
               <label>Favicon<img data-website-preview="favicon" alt="Pratinjau favicon" width="32" height="32" style="object-fit:contain"><input name="websiteFavicon" type="file" accept="image/png,image/jpeg,image/webp,.ico"><small>Maksimal 1 MB. PNG, JPEG, WebP, atau ICO.</small><span><input name="resetFavicon" type="checkbox"> Gunakan favicon bawaan</span></label></div>
+              <fieldset><legend>Batas ukuran file</legend><div class="csf-form-grid">
+                <label>Upload per file (MB)<input name="uploadMb" type="number" min="1" max="500" step="1" required></label>
+                <label>Import / restore per file (MB)<input name="importMb" type="number" min="1" max="500" step="1" required></label>
+                <label>Export per file (MB)<input name="exportMb" type="number" min="1" max="500" step="1" required></label>
+              </div><p class="muted">Isi 1?500 MB (1 MB = 1.048.576 byte). Berlaku untuk semua pengguna setelah disimpan, tanpa restart. Batas khusus modul, format, gambar identitas (1 MB), serta total batch tetap berlaku jika lebih kecil. Export mencakup laporan dan backup; unduhan lampiran biasa tetap tersedia.</p></fieldset>
               <button type="submit" class="button button-accent" disabled>Simpan pengaturan website</button><p data-website-status role="status" aria-live="polite"></p>
             </form>
           </section>

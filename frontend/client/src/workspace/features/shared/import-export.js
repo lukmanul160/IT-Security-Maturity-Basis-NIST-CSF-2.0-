@@ -1,4 +1,5 @@
 function importData(file) {
+  try { window.NistFileLimits?.check(file.size,'import'); } catch(error) { $('saveState').textContent=error.message; return; }
   const progressTask = window.NistUploadProgress.begin([file], 'Membaca file assessment...');
   const reader = new FileReader();
   reader.onprogress = event => progressTask.update({ phase: 'reading', label: 'Membaca file assessment...', detail: file.name, percent: event.lengthComputable && event.total ? event.loaded / event.total * 100 : null });
@@ -41,7 +42,7 @@ async function exportData() {
   const fileData = JSON.stringify({ framework: 'NIST CSF 2.0', exportVersion: 3, assessmentYear:assessmentYears.csf, exportedAt: new Date().toISOString(), uploadFolderName: localStorage.getItem(uploadFolderStorageKey) || '', ui: { view: uiState.view, function: activeFunction }, assessment: state, gaps }, null, 2);
   const blob = new Blob([fileData], { type: 'application/json' });
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+  link.href = (window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(blob);
   link.download = `nist-csf-2.0-assessment-${assessmentYears.csf}.json`;
   link.click();
   URL.revokeObjectURL(link.href);

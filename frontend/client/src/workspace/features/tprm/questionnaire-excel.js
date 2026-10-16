@@ -5,7 +5,7 @@ async function downloadQuestionnaireExcel(url, fallback, status) {
     const response=await fetch(url,{cache:'no-store'});
     if(!response.ok)throw new Error((await response.json().catch(()=>({}))).error || 'Export Excel failed');
     const filename=response.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1] || fallback;
-    const blob=await response.blob(),link=document.createElement('a'),objectUrl=URL.createObjectURL(blob);
+    const blob=await response.blob(),link=document.createElement('a'),objectUrl=(window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(blob);
     link.href=objectUrl;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
     if(status)status.textContent='Excel exported';
   } catch(error) {if(status)status.textContent=error.message;else alert(error.message);}

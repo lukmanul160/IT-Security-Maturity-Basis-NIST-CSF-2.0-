@@ -288,7 +288,7 @@
   $('odExport').addEventListener('click', () => {
     const { width, height, nodes } = design.layout;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><title>${html(design.name)}</title><rect width="${width}" height="${height}" fill="#f4efe6"/>${nodes.map(node => officeShapeSvg(node, html)).join('')}${nodes.map(node => officeCctvCoverageSvg(node, design.layout.unitsPerMeter ?? 100)).join('')}</svg>`;
-    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    const url = (window.NistFileLimits?.exportUrl.bind(window.NistFileLimits) || URL.createObjectURL)(new Blob([svg], { type: 'image/svg+xml' }));
     const link = document.createElement('a'); link.href = url; link.download = (design.name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'office-design') + '.svg'; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });

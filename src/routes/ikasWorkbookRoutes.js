@@ -1,5 +1,5 @@
 const router=require('express').Router();
-const multer=require('multer');
+const multer=require('../middleware/configuredUpload');
 const periods=require('../services/assessmentPeriodService');
 const jobs=require('../services/workbookJobService');
 const permissions=require('../services/permissionService');

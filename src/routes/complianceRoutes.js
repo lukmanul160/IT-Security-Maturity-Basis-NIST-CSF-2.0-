@@ -5,7 +5,7 @@ const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res)).catch(next)
 const reminderSettings = require('../services/complianceReminderSettingsService');
 const reminderLink = require('../services/complianceReminderLinkService');
 const { requireAdmin } = require('../middleware/authorization');
-const multer = require('multer');
+const multer = require('../middleware/configuredUpload');
 const evidence = require('../services/complianceEvidenceService');
 const upload = multer({ storage: multer.memoryStorage(), limits: { files: 10, fileSize: 10 * 1024 * 1024, fields: 30, fieldSize: 20000 } });
 router.get('/reports/reminder-settings', requireAdmin, wrap(async (req, res) => res.json(await reminderSettings.getSettings())));
