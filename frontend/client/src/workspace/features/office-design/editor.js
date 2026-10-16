@@ -8,6 +8,16 @@
   const html = value => escapeHtml(String(value ?? ''));
   const editable = () => !busy && !loading && canPerform(key, design.id ? 'update' : 'create');
   const activeNode = () => design.layout.nodes.find(node => node.id === selected);
+  function newNodeId() {
+    if (typeof globalThis.crypto.randomUUID === 'function') return globalThis.crypto.randomUUID();
+    // getRandomValues also works on HTTP intranet origins.
+    const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
+
   const status = message => { $('odStatus').textContent = message; };
   const snap = value => $('odSnap').checked ? Math.round(value / 10) * 10 : Math.round(value);
   const clamp = (value, max) => Math.min(Math.max(0, value), max);
@@ -124,7 +134,7 @@
     const type = button.dataset.odAdd, spec = officeDesignShapes[type];
     const width = Math.min(spec.width, design.layout.width), height = Math.min(spec.height, design.layout.height);
     checkpoint();
-    const node = { id: crypto.randomUUID(), type, x: snap((design.layout.width - width) / 2), y: snap((design.layout.height - height) / 2), width, height, rotation: 0, label: ['room', 'label'].includes(type) ? spec.label : '' };
+    const node = { id: newNodeId(), type, x: snap((design.layout.width - width) / 2), y: snap((design.layout.height - height) / 2), width, height, rotation: 0, label: ['room', 'label'].includes(type) ? spec.label : '' };
     if (type === 'cctv') Object.assign(node, { coverageRange: 5, coverageAngle: 90, showCoverage: true });
     node.x = clamp(node.x, design.layout.width - width); node.y = clamp(node.y, design.layout.height - height);
     design.layout.nodes.push(node); selected = node.id; render();
@@ -206,7 +216,7 @@
     if (action === 'duplicate') { $('odDuplicate').click(); return; }
     if (action === 'paste' && clipboard && design.layout.nodes.length < 500) {
       const node = clone(clipboard); if (node.width > design.layout.width || node.height > design.layout.height) return;
-      checkpoint(); node.id = crypto.randomUUID(); node.x = clamp(node.x + 20, design.layout.width - node.width); node.y = clamp(node.y + 20, design.layout.height - node.height);
+      checkpoint(); node.id = newNodeId(); node.x = clamp(node.x + 20, design.layout.width - node.width); node.y = clamp(node.y + 20, design.layout.height - node.height);
       design.layout.nodes.push(node); selected = node.id; render(); return;
     }
     const node = activeNode(), step = event.shiftKey ? 10 : 1;
@@ -218,7 +228,7 @@
   });
   $('odDuplicate').addEventListener('click', () => {
     const node = activeNode(); if (!node || !editable() || design.layout.nodes.length >= 500) return;
-    checkpoint(); const copy = { ...node, id: crypto.randomUUID(), x: clamp(node.x + 20, design.layout.width - node.width), y: clamp(node.y + 20, design.layout.height - node.height) };
+    checkpoint(); const copy = { ...node, id: newNodeId(), x: clamp(node.x + 20, design.layout.width - node.width), y: clamp(node.y + 20, design.layout.height - node.height) };
     design.layout.nodes.push(copy); selected = copy.id; render();
   });
   for (const direction of ['Front', 'Back']) $('od' + direction).addEventListener('click', () => {
