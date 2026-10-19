@@ -44,18 +44,20 @@ app.use((req, res, next) => {
 });
 app.use('/api', auditRequest);
 app.use(express.json({ limit: '10mb' }));
-app.use((req, res, next) => {
-	if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
-	const origin = req.get('origin');
-	if (!origin) return next();
-	try {
-		if (new URL(origin).host !== req.get('host')) return res.status(403).json({ error: 'Invalid request origin' });
-	} catch (error) {
-		return res.status(403).json({ error: 'Invalid request origin' });
-	}
-	return next();
-});
+app.use(require('./middleware/requestOrigin').createRequestOriginGuard({ secure: sessionCookieSecure }));
 app.use('/api/auth', authRoutes);
+app.use('/surat-pernyataan',(req,res,next)=>{res.set({'Cache-Control':'no-store','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"});next();});
+app.use('/api/public/statement-access', require('./routes/statementEmployeeRoutes').publicRouter);
+app.get('/surat-pernyataan', (req,res)=>res.sendFile(path.join(publicRoot,'statements','portal.html')));
+app.use('/api/public/statements', require('./routes/statementRoutes').publicRouter);
+app.get('/surat-pernyataan/:id', (req,res) => res.sendFile(path.join(publicRoot,'statements','public.html')));
+app.get('/statement-assets/jszip.min.js',(req,res)=>res.sendFile(path.join(__dirname,'../node_modules/jszip/dist/jszip.min.js')));
+app.get('/statement-assets/docx-preview.min.js',(req,res)=>res.sendFile(path.join(__dirname,'../node_modules/docx-preview/dist/docx-preview.min.js')));
+const requireWordEditor=async(req,res,next)=>{try{const permissions=require('./services/permissionService');if(await permissions.has(req.user?.role,'surat-pernyataan','update')||await permissions.has(req.user?.role,'policy-register','update'))return next();res.status(403).json({error:'Akses editor dokumen ditolak.'});}catch(error){next(error);}};
+app.get('/statement-assets/superdoc.min.js',requireAuth,requireWordEditor,(req,res)=>res.sendFile(path.join(__dirname,'../node_modules/superdoc/dist/superdoc.min.js')));
+app.get('/statement-assets/superdoc.css',requireAuth,requireWordEditor,(req,res)=>res.sendFile(path.join(__dirname,'../node_modules/superdoc/dist/style.css')));
+app.use('/statement-assets', express.static(path.join(publicRoot,'statements','assets'), {index:false,fallthrough:false}));
+app.get('/compliance/surat-pernyataan', requireAuth, require('./middleware/permission').requirePermission('surat-pernyataan','read'), (req,res) => res.redirect('/app#surat-pernyataan'));
 // Public office exposes display names, roles and module labels, never session tokens.
 app.get('/api/public/virtual-office', async (req, res, next) => {
 	try { res.set('Cache-Control', 'no-store').json(await require('./services/virtualOfficeService').snapshot()); }
@@ -87,12 +89,8 @@ app.get('/loading-logo.png', (req, res) => res.sendFile(path.join(publicRoot, 'l
 app.get(['/brand-logo.png', '/favicon.ico'], (req, res) => {
 	res.redirect('/website-assets/'+(req.path==='/favicon.ico'?'favicon':'logo'));
 });
-// Only demonstration screenshots are public. Other workspace files require auth.
-app.use('/landing-media', express.static(path.join(publicRoot, 'landing-media'), {
-	index: false,
-	maxAge: '1d',
-	fallthrough: false,
-}));
+// Screenshots containing company information are not public assets.
+app.use('/landing-media', (req, res) => res.sendStatus(404));
 // The login page shares the compiled theme with the authenticated workspace.
 app.get('/tailwind.css', (req, res) => res.sendFile(path.join(publicRoot, 'tailwind.css')));
 app.get('/theme.js', (req, res) => res.sendFile(path.join(publicRoot, 'theme.js')));

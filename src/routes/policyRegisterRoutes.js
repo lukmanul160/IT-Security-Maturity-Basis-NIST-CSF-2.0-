@@ -23,6 +23,14 @@ router.use((req, res, next) => {
 });
 
 router.get('/dropdowns', requirePermission('policy-register', 'read'), controller.listDropdowns);
+const documentService=require('../services/policyDocumentService');
+const documentUpload=require('../middleware/configuredUpload')({storage:require('../middleware/configuredUpload').memoryStorage(),limits:{files:1,fileSize:5*1024*1024,fields:1,fieldSize:100}}).single('document');
+router.get('/:id/document',requirePermission('policy-register','read'),requirePermission('policy-register','update'),async(req,res,next)=>{
+  try{const result=await documentService.load(req.params.id,req.user);res.set({'Cache-Control':'no-store','X-Document-Revision':result.revision}).attachment(result.name).type(documentService.mime).send(result.buffer);}catch(error){next(error);}
+});
+router.put('/:id/document',requirePermission('policy-register','update'),documentUpload,async(req,res,next)=>{
+  try{res.set('Cache-Control','no-store').json(await documentService.save(req.params.id,req.user,req.file,req.body.revision));}catch(error){next(error);}
+});
 router.post('/dropdowns', requirePageAccess('policy-register', 'create'), controller.createDropdown);
 router.put('/dropdowns/:id', requirePageAccess('policy-register', 'update'), controller.updateDropdown);
 router.delete('/dropdowns/:id', requirePageAccess('policy-register', 'delete'), controller.removeDropdown);

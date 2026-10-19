@@ -161,12 +161,12 @@ test('batch backup streams a large single file across parts and restores in arbi
   const binary = require('node:crypto').randomBytes(190 * 1024);
   const rows = [{ path: 'Knowledge Notes/large.bin', name: 'large.bin', mime_type: 'application/octet-stream', uploaded_by: 7, open_page: 2 }, { path: 'Policy/empty.txt', name: 'empty.txt', mime_type: 'text/plain' }];
   const f = await batchFixture(t, rows, new Map([[rows[0].path, binary], [rows[1].path, Buffer.alloc(0)]]));
-  const result = await f.api.create();
+  const result = await f.api.create({ folder: ['Knowledge Notes', 'Policy'] });
   assert.equal(result.fileCount, 2); assert.equal(result.totalSize, binary.length);
   assert.ok(result.parts.length > 2); assert.ok(result.parts.every(part => part.size <= 64 * 1024));
   assert.equal((await f.api.list()).length, result.parts.length);
   const input = await f.uploads([...result.parts].reverse());
-  assert.equal((await f.api.restore(input)).fileCount, 2);
+  assert.equal((await f.api.restore(input, { folder: ['Knowledge Notes', 'Policy'] })).fileCount, 2);
   assert.deepEqual(f.writes.find(item => item.key === rows[0].path).content, binary);
   assert.equal(f.writes.find(item => item.key === rows[0].path).owner, 7);
   assert.equal(f.writes.find(item => item.key === rows[1].path).content.length, 0);
@@ -194,6 +194,7 @@ test('stream failure removes every staged or published batch part', async t => {
 });
 
 test('administrator batch restore route receives multiple staged ZIPs and folder selection', async t => {
+  t.mock.method(require('../src/services/websiteSettingsService'), 'read', async () => ({}));
   const service = require('../src/services/fileBackupService');
   let received;
   t.mock.method(service, 'restore', async (files, options) => {
@@ -227,4 +228,34 @@ test('missing physical files without database bytes are reported explicitly in b
  assert.equal(manifest.complete,false);assert.deepEqual(manifest.missingFiles,result.missingFiles);
  const input=path.join(root,'restore.zip');await fs.copyFile(await api.resolve(result.fileName),input);
  const restored=await api.restore({path:input,originalname:result.fileName});assert.equal(restored.fileCount,1);assert.equal(restored.missingFiles.length,1);assert.deepEqual(writes,['Policy/present.txt']);
+});
+
+
+test('inspection derives parents and children from backup, cleans uploads and never writes live storage', async t => {
+  const { api, root } = await fixture(t, async () => Buffer.from('original'), [
+    { path: 'Absent/Child/Grandchild/item.pdf', name: 'item.pdf', mime_type: 'application/pdf' },
+    { path: 'root.pdf', name: 'root.pdf', mime_type: 'application/pdf' }
+  ]);
+  const backup = await api.create();
+  const input = path.join(root, 'inspection.zip');
+  await fs.copyFile(await api.resolve(backup.fileName), input);
+  const recovery = createFileBackupService({ root, db: { query() { throw Error('No DB access during inspection'); } }, store: { normalizePath, put() { throw Error('No live writes during inspection'); } } });
+  assert.deepEqual(await recovery.inspect([{ path: input }]), { folders: ['Absent', 'Absent/Child', 'Absent/Child/Grandchild'] });
+  await assert.rejects(fs.stat(input), { code: 'ENOENT' });
+});
+
+
+test('multiple folder backup and restore select the union without duplicate files', async t => {
+  const rows = ['Policy/a.pdf', 'Policy/2026/b.pdf', 'Notes/n.pdf', 'Other/x.pdf'].map(path => ({ path, name: 'file.pdf', mime_type: 'application/pdf' }));
+  const { api, root } = await fixture(t, async key => Buffer.from(key), rows);
+  const backup = await api.create({ folder: ['Policy', 'Policy/2026', 'Notes'] });
+  assert.equal(backup.fileCount, 3);
+  const input = path.join(root, 'multi-restore.zip');
+  await fs.copyFile(await api.resolve(backup.fileName), input);
+  const written = [];
+  const recovery = createFileBackupService({ root, db: { query: async () => ({ rows: [] }) }, store: { normalizePath, put: async key => written.push(key) } });
+  assert.equal((await recovery.restore({ path: input }, { folder: ['Policy/2026', 'Notes'] })).fileCount, 2);
+  assert.deepEqual(written.sort(), ['Notes/n.pdf', 'Policy/2026/b.pdf']);
+  await assert.rejects(api.create({ folder: [] }), /Pilih setidaknya/);
+  await assert.rejects(api.create({ folder: ['Policy', '../secret'] }), /Invalid file path/);
 });

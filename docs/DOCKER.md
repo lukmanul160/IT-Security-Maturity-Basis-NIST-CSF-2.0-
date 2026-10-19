@@ -47,27 +47,16 @@ docker compose --env-file .env.docker ps
 docker compose --env-file .env.docker logs -f app
 ```
 
-Tunggu aplikasi siap. Akun awal `admin` dan `user` dibuat otomatis, termasuk pada
-mode production. **Segera ganti password keduanya setelah login pertama**:
-
-| Username | Password awal | Role |
-| --- | --- | --- |
-| `admin` | `AdminInitial123!` | admin |
-| `user` | `UserInitial123!` | user |
-
-Buka **Account → Account Management**, isi password saat ini, password baru,
-dan konfirmasi, lalu klik **Save profile**. Login kembali dengan password baru.
-Lakukan untuk kedua akun sebelum membuka akses aplikasi ke pengguna lain.
-Seed tidak mengganti password akun yang sudah ada saat restart/rebuild.
-
-Jika ingin membuat administrator tambahan, jalankan dari terminal interaktif:
+Tunggu aplikasi siap, lalu buat administrator pertama dari terminal interaktif.
+Tidak ada akun atau password bawaan. Akun instalasi lama tetap dipertahankan;
+ganti password lama yang masih memakai password awal versi sebelumnya.
 
 ```bash
 docker compose --env-file .env.docker exec app npm run admin:create
 ```
 
 Pilih username baru dan password sendiri. **Mode production menjalankan seed
-data aplikasi serta akun awal `admin`/`user`.**
+data referensi aplikasi, tanpa akun bawaan.**
 Startup memanggil provisioning database, lalu inisialisasi dan seed setiap modul:
 
 - NIST CSF dari `data/csf-data.json`.

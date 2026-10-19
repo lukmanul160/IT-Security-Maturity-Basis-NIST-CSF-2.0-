@@ -157,7 +157,7 @@ Kanvas tersimpan. Nama dan ukuran diatur lewat Nama & ukuran.
 
 Office Design menyediakan CCTV, kontrol akses, alarm, APAR, detektor asap,
 pintu darurat, dan titik kumpul. Panel CCTV mengatur jarak 0.1?100 meter,
-sudut 10?180 derajat, visibilitas, serta arah melalui rotasi 0?359 derajat.
+sudut 10?180 derajat, visibilitas, serta arah melalui rotasi 0-359 derajat.
 Nama & ukuran menyediakan skala satuan per meter (default 100). Area CCTV
 merupakan overlay geometris untuk perencanaan, tidak menghitung penghalang,
 spesifikasi lensa, tinggi pemasangan, maupun kemampuan identifikasi kamera.
@@ -178,3 +178,15 @@ batas node yang diubah. Riwayat diagram tidak membatalkan mutasi relasi pada API
 Validasi tambahan: `npm run test:canvas-editors-browser` memakai editor hasil
 build dan fixture API browser tanpa menulis diagram milik pengguna; tes backend
 Office dan Asset Diagram memeriksa validasi serta penyimpanan data.
+
+### Rotasi menggunakan kursor
+
+Pilih objek, lalu tarik pegangan lingkaran di atasnya untuk memutar terhadap
+pusat objek. Rotasi mengikuti kursor dalam derajat bulat (0-359); tahan Shift
+untuk kelipatan 15 derajat. Snap grid hanya mengatur posisi/ukuran. Satu tarikan dapat
+dibatalkan dengan satu Undo dan dipulihkan dengan Redo. Sudut pada panel properti
+diperbarui langsung, ikut disimpan, dan digunakan pada ekspor SVG serta area CCTV.
+Pegangan putar tersedia bagi pengguna yang memiliki izin mengedit.
+
+Verifikasi menggunakan fixture API browser dan build lokal; tidak menguji
+deployment Docker/cloud atau menulis denah operasional.

@@ -6,6 +6,7 @@ const router = express.Router();
 router.use(requireAdmin);
 router.get('/', controller.list);
 router.post('/', controller.create);
+router.post('/restore-batch', controller.batchUpload.array('backups'), controller.restoreBatch);
 router.post('/restore', controller.restoreUpload.single('backup'), controller.restore);
 router.delete('/:fileName', controller.remove);
 router.get('/:fileName', controller.download);

@@ -1,0 +1,3 @@
+Policy Register menyediakan tombol **Edit dokumen** pada lampiran `.docx` berstatus **Draft** bagi pengguna dengan izin update. Editor memakai toolbar Word yang sama dengan Surat Pernyataan. Dokumen `.doc` perlu dikonversi ke `.docx` terlebih dahulu.
+
+Penyimpanan memerlukan izin tambah file dan akses ke file asli. Server memvalidasi DOCX, mengunci baris policy, lalu memeriksa ulang status Draft serta versi saat editor dibuka. Perubahan status, metadata, atau lampiran oleh pengguna lain menyebabkan konflik 409 dan mengharuskan editor dibuka ulang. Dokumen hasil edit disimpan sebagai file baru dan referensi policy diperbarui; file asli tetap tersedia bagi referensi lain.

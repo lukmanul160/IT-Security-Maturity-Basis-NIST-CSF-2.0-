@@ -16,6 +16,14 @@ function load(saved, storageUnavailable = false) {
   return { i18n: context.NistI18n, values };
 }
 
+test('statement management and public completion translate UI while preserving field placeholders and identifiers',()=>{
+  const {i18n}=load('en');
+  for(const [id,en] of [['Karyawan','Employees'],['Penugasan tahunan','Annual assignments'],['Ekspor seluruh surat ZIP','Export all letters as ZIP'],['Data masuk','Incoming data'],['Rekap NIP & Tahun','Employee ID & Year Summary'],['Metode tanda tangan','Signature method'],['Unggah gambar','Upload image'],['Tambah field Departemen','Add Department field'],['Surat Pernyataan','Statements'],['+ Buat jenis surat','+ Create statement type'],['Template & field','Templates & fields'],['Dapat diisi publik','Editable by the public'],['7 field publik','7 public fields'],['3 jenis surat','3 statement types'],['2 pengisian','2 submissions'],['Kirim surat pernyataan','Submit statement']]){
+    assert.equal(i18n.t(id),en);i18n.setLanguage('id');assert.equal(i18n.t(en),id);i18n.setLanguage('en');
+  }
+  assert.equal(i18n.t('{{nama}}'),'{{nama}}');assert.equal(i18n.t('NIP 333'),'NIP 333');
+});
+
 test('numbered pages, workflow stages and default vendor questions translate without changing identifiers', () => {
   const { i18n } = load('id');
   assert.equal(i18n.t('3. Setting SMTP'), '3. Pengaturan SMTP');

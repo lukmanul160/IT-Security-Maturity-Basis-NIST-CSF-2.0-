@@ -1,0 +1,9 @@
+[app] Mounting /api routes with requireAuth
+[compliance-reminder] Scheduler failed
+[audit-finding-reminder] Scheduler failed
+[policy-reminder] Scheduler failed
+[asset-reminder] Connection terminated due to connection timeout
+[audit-retention] Connection terminated due to connection timeout
+[compliance-reminder] Scheduler failed
+[audit-finding-reminder] Scheduler failed
+[policy-reminder] Scheduler failed

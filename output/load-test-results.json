@@ -1,0 +1,435 @@
+{
+  "startedAt": "2026-10-16T03:45:21.765Z",
+  "node": "v24.19.0",
+  "host": {
+    "platform": "win32",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13620H",
+    "logicalCpus": 16,
+    "ramGB": 15.700065612792969
+  },
+  "methodology": "Separate local app and generator processes, shared host and existing PostgreSQL data; keep-alive, gzip, no think time, one in-flight request per connection. Single in-memory admin session; auth/password hashing not benchmarked. Normal API audit writes enabled. Each stage includes drain time in throughput. No production capacity or concurrent-human-user claim.",
+  "durationSeconds": 10,
+  "results": [
+    {
+      "path": "/login",
+      "concurrency": 1,
+      "requests": 5898,
+      "elapsedSeconds": 10.0000259,
+      "successfulRps": 589.7984724219564,
+      "totalRps": 589.7984724219564,
+      "errorPercent": 0,
+      "p50Ms": 1.480199999999968,
+      "p95Ms": 2.5583999999998923,
+      "p99Ms": 5.648999999999887,
+      "maxMs": 13.88459999999941,
+      "transferredMB": 30.851869583129883,
+      "statuses": {
+        "200": 5898
+      },
+      "cpuPercentOneCore": 108.43001251154756,
+      "peakRssMB": 225.3359375,
+      "eventLoopP99Ms": 20.971519,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/login",
+      "concurrency": 10,
+      "requests": 18794,
+      "elapsedSeconds": 10.015306800000001,
+      "successfulRps": 1876.5276366770909,
+      "totalRps": 1876.5276366770909,
+      "errorPercent": 0,
+      "p50Ms": 4.456299999999828,
+      "p95Ms": 9.948500000002241,
+      "p99Ms": 21.32090000000244,
+      "maxMs": 74.37709999999788,
+      "transferredMB": 98.30960273742676,
+      "statuses": {
+        "200": 18794
+      },
+      "cpuPercentOneCore": 281.2117490230809,
+      "peakRssMB": 216.62890625,
+      "eventLoopP99Ms": 25.395199,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/login",
+      "concurrency": 25,
+      "requests": 5720,
+      "elapsedSeconds": 10.023750600000003,
+      "successfulRps": 570.6446846353099,
+      "totalRps": 570.6446846353099,
+      "errorPercent": 0,
+      "p50Ms": 38.69180000000051,
+      "p95Ms": 72.88130000000092,
+      "p99Ms": 109.002199999999,
+      "maxMs": 180.49179999999978,
+      "transferredMB": 29.92076873779297,
+      "statuses": {
+        "200": 5720
+      },
+      "cpuPercentOneCore": 172.2006155621008,
+      "peakRssMB": 214.9609375,
+      "eventLoopP99Ms": 36.405247,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/login",
+      "concurrency": 50,
+      "requests": 7251,
+      "elapsedSeconds": 10.0636889,
+      "successfulRps": 720.5111437814816,
+      "totalRps": 720.5111437814816,
+      "errorPercent": 0,
+      "p50Ms": 67.70130000000063,
+      "p95Ms": 117.56910000000062,
+      "p99Ms": 132.05460000000312,
+      "maxMs": 154.57949999999983,
+      "transferredMB": 37.92928218841553,
+      "statuses": {
+        "200": 7251
+      },
+      "cpuPercentOneCore": 198.06446768947458,
+      "peakRssMB": 237.34765625,
+      "eventLoopP99Ms": 46.170111,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/login",
+      "concurrency": 100,
+      "requests": 4587,
+      "elapsedSeconds": 10.093502399999998,
+      "successfulRps": 454.45077617458145,
+      "totalRps": 454.45077617458145,
+      "errorPercent": 0,
+      "p50Ms": 163.1322,
+      "p95Ms": 490.3689000000013,
+      "p99Ms": 617.5030999999944,
+      "maxMs": 694.5777000000016,
+      "transferredMB": 23.994154930114746,
+      "statuses": {
+        "200": 4587
+      },
+      "cpuPercentOneCore": 125.03640457105514,
+      "peakRssMB": 272.0546875,
+      "eventLoopP99Ms": 133.431295,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/public/website-settings",
+      "concurrency": 1,
+      "requests": 3159,
+      "elapsedSeconds": 10.003519300000008,
+      "successfulRps": 315.7888644249427,
+      "totalRps": 315.7888644249427,
+      "errorPercent": 0,
+      "p50Ms": 2.705900000000838,
+      "p95Ms": 4.61540000000241,
+      "p99Ms": 8.648800000002666,
+      "maxMs": 307.91679999999906,
+      "transferredMB": 0.8616199493408203,
+      "statuses": {
+        "200": 3159
+      },
+      "cpuPercentOneCore": 71.20292321382412,
+      "peakRssMB": 279.7265625,
+      "eventLoopP99Ms": 32.145407,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/public/website-settings",
+      "concurrency": 10,
+      "requests": 4442,
+      "elapsedSeconds": 10.01844810000001,
+      "successfulRps": 443.38204437072403,
+      "totalRps": 443.38204437072403,
+      "errorPercent": 0,
+      "p50Ms": 19.812699999994948,
+      "p95Ms": 31.992799999992712,
+      "p99Ms": 52.10460000000603,
+      "maxMs": 1532.8862999999983,
+      "transferredMB": 1.2115592956542969,
+      "statuses": {
+        "200": 4442
+      },
+      "cpuPercentOneCore": 80.9423251600115,
+      "peakRssMB": 314.17578125,
+      "eventLoopP99Ms": 43.024383,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/public/website-settings",
+      "concurrency": 25,
+      "requests": 4373,
+      "elapsedSeconds": 10.035400999999998,
+      "successfulRps": 435.75737531564516,
+      "totalRps": 435.75737531564516,
+      "errorPercent": 0,
+      "p50Ms": 51.4094000000041,
+      "p95Ms": 99.82300000000396,
+      "p99Ms": 146.63239999998768,
+      "maxMs": 177.34459999999672,
+      "transferredMB": 1.192739486694336,
+      "statuses": {
+        "200": 4373
+      },
+      "cpuPercentOneCore": 81.5596540978063,
+      "peakRssMB": 314.47265625,
+      "eventLoopP99Ms": 54.231039,
+      "dbWaiting": 9
+    },
+    {
+      "path": "/api/public/website-settings",
+      "concurrency": 50,
+      "requests": 4995,
+      "elapsedSeconds": 10.069999800000005,
+      "successfulRps": 496.0278152140576,
+      "totalRps": 496.0278152140576,
+      "errorPercent": 0,
+      "p50Ms": 92.27740000000631,
+      "p95Ms": 154.96689999999944,
+      "p99Ms": 262.10989999999583,
+      "maxMs": 365.26669999999285,
+      "transferredMB": 1.3623905181884766,
+      "statuses": {
+        "200": 4995
+      },
+      "cpuPercentOneCore": 79.72798016384529,
+      "peakRssMB": 271.859375,
+      "eventLoopP99Ms": 51.773439,
+      "dbWaiting": 21
+    },
+    {
+      "path": "/api/public/website-settings",
+      "concurrency": 100,
+      "requests": 4187,
+      "elapsedSeconds": 10.122755099999996,
+      "successfulRps": 413.62257198141657,
+      "totalRps": 413.62257198141657,
+      "errorPercent": 0,
+      "p50Ms": 233.4828000000125,
+      "p95Ms": 354.70290000000386,
+      "p99Ms": 392.16969999999856,
+      "maxMs": 432.5040000000008,
+      "transferredMB": 1.142007827758789,
+      "statuses": {
+        "200": 4187
+      },
+      "cpuPercentOneCore": 75.46598691377717,
+      "peakRssMB": 272.359375,
+      "eventLoopP99Ms": 85.065727,
+      "dbWaiting": 78
+    },
+    {
+      "path": "/api/asset-management/assets",
+      "concurrency": 1,
+      "requests": 2122,
+      "elapsedSeconds": 10.002828399999999,
+      "successfulRps": 212.1399983228744,
+      "totalRps": 212.1399983228744,
+      "errorPercent": 0,
+      "p50Ms": 4.193699999988894,
+      "p95Ms": 6.793699999994715,
+      "p99Ms": 14.135599999994156,
+      "maxMs": 54.90720000000147,
+      "transferredMB": 2.1774978637695312,
+      "statuses": {
+        "200": 2122
+      },
+      "cpuPercentOneCore": 55.300902939187964,
+      "peakRssMB": 274.87109375,
+      "eventLoopP99Ms": 28.622847,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/asset-management/assets",
+      "concurrency": 10,
+      "requests": 3229,
+      "elapsedSeconds": 10.024328800000003,
+      "successfulRps": 322.1163296239843,
+      "totalRps": 322.1163296239843,
+      "errorPercent": 0,
+      "p50Ms": 27.834799999996903,
+      "p95Ms": 43.084499999997206,
+      "p99Ms": 88.88210000000254,
+      "maxMs": 441.60629999999946,
+      "transferredMB": 3.3134498596191406,
+      "statuses": {
+        "200": 3229
+      },
+      "cpuPercentOneCore": 79.79954991457856,
+      "peakRssMB": 276.18359375,
+      "eventLoopP99Ms": 40.337407,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/asset-management/assets",
+      "concurrency": 25,
+      "requests": 3906,
+      "elapsedSeconds": 10.045845299999986,
+      "successfulRps": 388.817454714339,
+      "totalRps": 388.817454714339,
+      "errorPercent": 0,
+      "p50Ms": 60.907299999991665,
+      "p95Ms": 90.69490000000224,
+      "p99Ms": 123.64179999998305,
+      "maxMs": 235.45809999998892,
+      "transferredMB": 4.008155822753906,
+      "statuses": {
+        "200": 3906
+      },
+      "cpuPercentOneCore": 79.63179357432627,
+      "peakRssMB": 312.65234375,
+      "eventLoopP99Ms": 48.857087,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/asset-management/assets",
+      "concurrency": 50,
+      "requests": 3544,
+      "elapsedSeconds": 10.105416399999987,
+      "successfulRps": 350.70301506823654,
+      "totalRps": 350.70301506823654,
+      "errorPercent": 0,
+      "p50Ms": 126.92380000001867,
+      "p95Ms": 231.6309000000183,
+      "p99Ms": 343.31140000000596,
+      "maxMs": 378.74890000000596,
+      "transferredMB": 3.636688232421875,
+      "statuses": {
+        "200": 3544
+      },
+      "cpuPercentOneCore": 77.75728982011668,
+      "peakRssMB": 313.9296875,
+      "eventLoopP99Ms": 78.512127,
+      "dbWaiting": 26
+    },
+    {
+      "path": "/api/asset-management/assets",
+      "concurrency": 100,
+      "requests": 4331,
+      "elapsedSeconds": 10.355546799999981,
+      "successfulRps": 418.22996734465124,
+      "totalRps": 418.22996734465124,
+      "errorPercent": 0,
+      "p50Ms": 233.94820000001346,
+      "p95Ms": 340.3784999999916,
+      "p99Ms": 394.397799999977,
+      "maxMs": 425.87959999998566,
+      "transferredMB": 4.444271087646484,
+      "statuses": {
+        "200": 4331
+      },
+      "cpuPercentOneCore": 83.39176708988322,
+      "peakRssMB": 310.65625,
+      "eventLoopP99Ms": 60.522495,
+      "dbWaiting": 44
+    },
+    {
+      "path": "/api/monitoring-dashboard",
+      "concurrency": 1,
+      "requests": 17,
+      "elapsedSeconds": 10.014990699999995,
+      "successfulRps": 1.6974553955402083,
+      "totalRps": 1.6974553955402083,
+      "errorPercent": 0,
+      "p50Ms": 556.0408999999927,
+      "p95Ms": 852.2060000000056,
+      "p99Ms": 852.2060000000056,
+      "maxMs": 852.2060000000056,
+      "transferredMB": 0.039306640625,
+      "statuses": {
+        "200": 17
+      },
+      "cpuPercentOneCore": 29.962154334607703,
+      "peakRssMB": 588.71875,
+      "eventLoopP99Ms": 121.700351,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/monitoring-dashboard",
+      "concurrency": 10,
+      "requests": 36,
+      "elapsedSeconds": 11.807150499999988,
+      "successfulRps": 3.048999841240275,
+      "totalRps": 3.048999841240275,
+      "errorPercent": 0,
+      "p50Ms": 2929.8494000000064,
+      "p95Ms": 4153.2931999999855,
+      "p99Ms": 4222.046999999991,
+      "maxMs": 4222.046999999991,
+      "transferredMB": 0.08324146270751953,
+      "statuses": {
+        "200": 36
+      },
+      "cpuPercentOneCore": 63.11753004074325,
+      "peakRssMB": 1134.51953125,
+      "eventLoopP99Ms": 514.850815,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/monitoring-dashboard",
+      "concurrency": 25,
+      "requests": 51,
+      "elapsedSeconds": 12.483833600000013,
+      "successfulRps": 4.085283546233742,
+      "totalRps": 4.085283546233742,
+      "errorPercent": 0,
+      "p50Ms": 5837.247000000003,
+      "p95Ms": 6430.883300000016,
+      "p99Ms": 6506.994100000011,
+      "maxMs": 6506.994100000011,
+      "transferredMB": 0.11792182922363281,
+      "statuses": {
+        "200": 51
+      },
+      "cpuPercentOneCore": 73.84342584090739,
+      "peakRssMB": 1890.50390625,
+      "eventLoopP99Ms": 605.552639,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/monitoring-dashboard",
+      "concurrency": 50,
+      "requests": 67,
+      "elapsedSeconds": 14.45911619999999,
+      "successfulRps": 4.633754862555158,
+      "totalRps": 4.633754862555158,
+      "errorPercent": 0,
+      "p50Ms": 10066.791299999983,
+      "p95Ms": 10481.458799999993,
+      "p99Ms": 11529.371799999994,
+      "maxMs": 11529.371799999994,
+      "transferredMB": 0.15485668182373047,
+      "statuses": {
+        "200": 67
+      },
+      "cpuPercentOneCore": 76.39719117535044,
+      "peakRssMB": 2874.80078125,
+      "eventLoopP99Ms": 574.095359,
+      "dbWaiting": 0
+    },
+    {
+      "path": "/api/monitoring-dashboard",
+      "concurrency": 100,
+      "requests": 101,
+      "elapsedSeconds": 15.916211200000019,
+      "successfulRps": 0.1884870690833756,
+      "totalRps": 6.3457313258069785,
+      "errorPercent": 97.02970297029702,
+      "p50Ms": 15310.04269999999,
+      "p95Ms": 15338.395799999998,
+      "p99Ms": 15339.752199999988,
+      "maxMs": 15364.301500000001,
+      "transferredMB": 0.006857872009277344,
+      "statuses": {
+        "200": 3,
+        "network-error": 98
+      },
+      "cpuPercentOneCore": 83.58366636255158,
+      "peakRssMB": 4155.4296875,
+      "eventLoopP99Ms": 851.443711,
+      "dbWaiting": 398
+    }
+  ]
+}

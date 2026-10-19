@@ -6,6 +6,8 @@ Catatan ini menjadi titik awal untuk memahami proyek dan menelusuri perubahan be
 
 Pembaruan: verifikasi UI dan route untuk modernisasi Tailwind sudah dilakukan setelah peninjauan awal; cakupan dan batasnya dicatat pada bagian 10.
 
+> Pembaruan 19 Oktober 2026: gunakan [AI_HANDOFF.md](AI_HANDOFF.md) untuk alur Node/Docker dan backup/restore terkini. Bagian historis di bawah dapat memuat informasi lama.
+
 ## 1. Tujuan dan cakupan
 
 Aplikasi web untuk assessment kematangan dan pengelolaan tata kelola keamanan informasi. Cakupannya sudah lebih luas daripada nama paket `nist-csf-maturity-tool` dan sebagian isi README.
@@ -38,7 +40,7 @@ Browser: frontend/client + frontend/public + Vite build
 
 | Lokasi | Peran dan petunjuk analisis |
 |---|---|
-| [package.json](../package.json) | Dependency dan perintah resmi proyek; CommonJS, Node.js >=18 |
+| [package.json](../package.json) | Dependency dan perintah resmi proyek; CommonJS, Node.js sesuai engines package.json (disarankan 24) |
 | [src/server.js](../src/server.js) | Bootstrap, provisioning, inisialisasi store dan `listen()` |
 | [src/app.js](../src/app.js) | Express 5, JSON body parser, header keamanan, pemeriksaan origin, login, API dan static frontend |
 | `src/config/` | Environment, pool PostgreSQL, path direktori dan session |
@@ -53,9 +55,9 @@ Browser: frontend/client + frontend/public + Vite build
 | `database/users.sql` | Struktur/seed akun awal |
 | `data/` | Referensi framework, indikator dan seed sertifikasi; jangan menganggap semua file sebagai data operasional |
 | `scripts/` | Provisioning, generator seed dan script pemeliharaan/debug |
-| `test/` | Test service dan script pengujian; belum ada script `npm test` di package.json |
+| `test/` | Test service dan script pengujian; jalankan script `npm test` di package.json |
 
-Frontend menggunakan JavaScript vanilla, bukan React/Vue. Dependency utama lainnya: `bcryptjs`, `multer`, `pdf-lib`, `xlsx`, `dotenv`, serta Tailwind CLI untuk build CSS.
+Frontend menggunakan Vue 3 dengan runtime DOM JavaScript kompatibilitas. Dependency utama lainnya: `bcryptjs`, `multer`, `pdf-lib`, `xlsx`, `dotenv`, serta Tailwind CLI untuk build CSS.
 
 ## 3. Alur startup
 

@@ -7,6 +7,8 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Dokumentasi
 
+- [Panduan untuk agen AI dan backup/restore Node/Docker](docs/AI_HANDOFF.md).
+
 - [Pull terbaru, rebuild Docker, dan pemulihan login](docs/UPDATE_DOCKER.md):
   langkah update server dengan data lama tetap tersimpan.
 - [Akses jaringan 192.168.130.12:5000](docs/NETWORK_ACCESS.md): pengaturan binding,
@@ -32,17 +34,12 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ### Akun dan password awal
 
-Akun berikut otomatis dibuat pada instalasi baru, termasuk mode production:
-
-| Username | Password awal | Role |
-| --- | --- | --- |
-| `admin` | `AdminInitial123!` | admin |
-| `user` | `UserInitial123!` | user |
-
-**Segera ganti password kedua akun setelah login
-pertama** melalui **Account → Account Management → Save profile**, sebelum
-memberikan akses kepada pengguna lain. Seed tidak menimpa password akun lama.
-Perintah `admin:create` di bawah opsional untuk administrator tambahan.
+Instalasi baru tidak membuat akun dengan password bawaan. Setelah database siap,
+jalankan `npm run admin:create` (Windows: `npm.cmd run admin:create`) dari terminal
+interaktif, lalu pilih username dan password administrator sendiri. Pada Docker:
+`docker compose --env-file .env.docker exec app npm run admin:create`.
+Akun dan password pada instalasi lama tetap dipertahankan. Jika pernah memakai
+password awal yang tercantum pada versi lama, segera ubah melalui Account Management.
 
 Aplikasi menyediakan dua pilihan deployment. Pilih salah satu sesuai lingkungan:
 
@@ -219,6 +216,8 @@ Jalankan `npm run test:notes` untuk pemeriksaan logika, dan `npm run test:notes-
 untuk pengujian browser/API dengan schema PostgreSQL sementara (memerlukan Chrome
 dan database aplikasi yang aktif). Data catatan pengguna tidak dipakai sebagai fixture.
 
-## Dokumentasi teknis lengkap
+## Dokumentasi
+
+- [Panduan untuk agen AI dan backup/restore Node/Docker](docs/AI_HANDOFF.md). teknis lengkap
 
 Dokumentasi terbaru mencakup infrastruktur, struktur aplikasi, seluruh API, relasi database, keamanan, dan enam diagram SVG/PNG: [Dokumentasi teknis 9 Oktober 2026](docs/technical-documentation/00-README.md).

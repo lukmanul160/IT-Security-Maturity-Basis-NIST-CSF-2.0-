@@ -303,9 +303,9 @@ function renderPeople() {
   if(signature===peopleSignature)return;
   peopleSignature=signature;$('people').replaceChildren();
   for(const user of users) {
-    if(!`${user.name} ${user.role}`.toLowerCase().includes(query)||filter==='online'&&!user.online||filter==='offline'&&user.online)continue;
+    if(!user.name.toLowerCase().includes(query)||filter==='online'&&!user.online||filter==='offline'&&user.online)continue;
     const a=avatars.get(user.id), button=document.createElement('button');button.className='person';button.setAttribute('aria-label',`${user.name}: ${activity(a)}`);
-    const icon=document.createElement('span');icon.className='avatar';icon.style.background=colors[user.role];icon.textContent=user.role.slice(0,2).toUpperCase();
+    const icon=document.createElement('span');icon.className='avatar';icon.style.background=colors[user.role];icon.setAttribute('data-no-translate','');icon.textContent=user.name.trim().split(/\s+/).slice(0,2).map(part=>Array.from(part)[0]||'').join('').toUpperCase();
     const content=document.createElement('span'),name=document.createElement('strong'),desc=document.createElement('small');name.setAttribute('data-no-translate','');name.textContent=user.name;desc.textContent=`${uiText(user.role).toUpperCase()} · ${activity(a)}`;content.append(name,desc);
     const dot=document.createElement('i');dot.className=`dot ${user.online?'green':'amber'}`;button.append(icon,content,dot);button.onclick=()=>focusUser(user.id);$('people').append(button);
   }

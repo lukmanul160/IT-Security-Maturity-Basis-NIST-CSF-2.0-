@@ -23,3 +23,12 @@ Password SMTP disimpan terenkripsi di database; kunci lokal berada di `data/smtp
 Saat startup versi baru, koneksi SMTP lama dipindahkan ke `app_smtp_settings` dalam transaksi. Ciphertext password disalin tanpa perubahan, sedangkan jadwal, penerima, template, dan riwayat pengiriman tetap di modul kebijakan. Migrasi dapat dijalankan ulang tanpa menimpa SMTP terpusat yang telah diedit. Jalankan seluruh instance dengan versi baru agar tidak ada proses lama yang masih membaca koneksi dari tabel kebijakan.
 
 API SMTP terpusat: `GET/PUT /api/smtp-settings`, `POST /api/smtp-settings/test` (admin). API reminder kebijakan tetap pada `/api/policy-register/reminder-settings`, tetapi menolak field koneksi SMTP. Reminder Policy Register dan Audit Finding menggunakan akun SMTP yang dipilih melalui layanan pengiriman bersama.
+
+## Tampilan daftar penerima
+
+Daftar penerima pada pemilih register SMTP/reminder tertutup secara default.
+Klik dropdown **Daftar penerima** untuk membuka atau menutup pencarian, pilihan,
+pagination, dan pengelolaan penerima. Tautan edit Owner/PIC dari form membuka
+dropdown secara otomatis agar penerima yang dituju langsung dapat diedit.
+Perubahan ini hanya mengatur tampilan; tidak mengubah data penerima.
+Verifikasi: build frontend lokal; koneksi SMTP dan pengiriman email tidak diuji.

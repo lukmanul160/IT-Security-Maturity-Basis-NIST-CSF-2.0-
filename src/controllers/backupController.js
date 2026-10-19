@@ -1,21 +1,28 @@
 const backupService = require('../services/backupService');
-const multer = require('../middleware/configuredUpload');
+const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
 const restoreUpload = multer({
   dest: path.join(os.tmpdir(), 'nist-basis-restore'),
-  limits: { fileSize: 500 * 1024 * 1024 },
+  // Stream database dumps directly to disk; website import limits do not apply.
+  limits: { files: 1, fields: 0, parts: 1 },
   fileFilter: (req, file, callback) => callback(null, ['.dump', '.json'].includes(path.extname(file.originalname).toLowerCase())),
 });
+
+const batchUpload = multer({
+  dest: path.join(os.tmpdir(), 'nist-basis-restore'),
+  fileFilter: (req, file, callback) => callback(null, /^nist-basis-\d{8}T\d{6}Z-[a-f0-9-]{36}(?:\.manifest\.json|\.dump\.part-\d+)$/.test(file.originalname)),
+});
+async function restoreBatch(req, res) { res.json(await backupService.restoreBackupParts(req.files)); }
 
 async function list(req, res) {
   res.json(await backupService.listBackups());
 }
 
 async function create(req, res) {
-  res.status(201).json(await backupService.createBackup());
+  res.status(201).json(await backupService.createBackup({ partSizeMb: req.body?.partSizeMb ?? 500 }));
 }
 
 async function download(req, res) {
@@ -38,4 +45,4 @@ async function restore(req, res) {
   }
 }
 
-module.exports = { list, create, download, remove, restore, restoreUpload };
+module.exports = { batchUpload, restoreBatch, list, create, download, remove, restore, restoreUpload };

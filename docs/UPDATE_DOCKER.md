@@ -66,7 +66,7 @@ git log -1 --oneline
 Sesuaikan branch/remote dengan sumber deployment sebenarnya. Jika pull gagal,
 selesaikan pesan Git sebelum melanjutkan; jangan rebuild source yang belum
 berhasil diperbarui. Pastikan commit terbaru memang sudah memuat perubahan
-seed akun awal. Perubahan yang hanya ada di komputer pengembang belum dapat
+pengamanan provisioning akun. Perubahan yang hanya ada di komputer pengembang belum dapat
 ditarik oleh server sebelum di-commit dan di-push ke repository.
 
 ## 4. Periksa akses LAN
@@ -114,16 +114,9 @@ Password database pada volume lama harus cocok dengan `.env.docker`.
 
 ## 7. Login atau buat administrator pemulihan
 
-Buka **http://192.168.130.12:5000/login**. Untuk akun baru yang dibuat seed:
-
-| Username | Password awal |
-| --- | --- |
-| `admin` | `AdminInitial123!` |
-| `user` | `UserInitial123!` |
-
-**Akun lama tidak di-reset oleh seed.** Jika username sudah ada, gunakan password
-lamanya. Pesan `Username atau password salah` dapat terjadi karena password
-lama berbeda atau akun tidak ditemukan, meskipun koneksi database berhasil.
+Buka **http://192.168.130.12:5000/login** dengan akun yang sudah ada.
+Instalasi baru tidak membuat akun/password bawaan. Akun lama tidak di-reset;
+jika masih memakai password awal versi lama, ganti melalui Account Management.
 
 Jika password lama tidak diketahui, buat administrator baru melalui terminal
 interaktif:

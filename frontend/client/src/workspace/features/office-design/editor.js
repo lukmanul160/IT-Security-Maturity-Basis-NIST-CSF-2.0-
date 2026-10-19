@@ -41,6 +41,10 @@
     canvas.insertAdjacentHTML('beforeend', nodes.map(node => officeCctvCoverageSvg(node, design.layout.unitsPerMeter ?? 100)).join(''));
     const node = activeNode();
     if (node) canvas.insertAdjacentHTML('beforeend', `<rect data-od-selection x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" transform="rotate(${node.rotation} ${node.x + node.width / 2} ${node.y + node.height / 2})" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="6 3" pointer-events="none"/><rect data-od-resize x="${node.x + node.width - 5}" y="${node.y + node.height - 5}" width="10" height="10" transform="rotate(${node.rotation} ${node.x + node.width / 2} ${node.y + node.height / 2})" fill="#2563eb" stroke="white" style="cursor:nwse-resize"/>`);
+    if (node && editable()) {
+      const radius = 9 / scale, offset = 28 / scale;
+      canvas.insertAdjacentHTML('beforeend', `<g transform="rotate(${node.rotation} ${node.x + node.width / 2} ${node.y + node.height / 2})"><line x1="${node.x + node.width / 2}" y1="${node.y}" x2="${node.x + node.width / 2}" y2="${node.y - offset}" stroke="#2563eb" stroke-width="${2 / scale}" pointer-events="none"/><circle data-od-rotate cx="${node.x + node.width / 2}" cy="${node.y - offset}" r="${radius}" fill="#fff" stroke="#2563eb" stroke-width="${2 / scale}" style="cursor:grab"><title>Tarik untuk memutar objek (Shift: kelipatan 15°)</title></circle></g>`);
+    }
     $('odName').textContent = design.name + (dirty ? ' • Belum disimpan' : '');
     $('odDimensions').textContent = `${width} × ${height} satuan · ${nodes.length} objek · ${selected ? officeDesignShapes[node?.type]?.label || '' : 'Pilih objek untuk mengedit'}`;
   }
@@ -150,12 +154,13 @@
   canvas.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
     const resizing = event.target.closest('[data-od-resize]');
+    const rotating = event.target.closest('[data-od-rotate]');
     const target = event.target.closest('[data-od-node]');
-    if (!resizing) selected = target?.dataset.odNode || null;
+    if (!resizing && !rotating) selected = target?.dataset.odNode || null;
     const node = activeNode();
     if (node && editable()) {
       const start = point(event);
-      drag = { id: event.pointerId, start, x: node.x, y: node.y, width: node.width, height: node.height, resize: Boolean(resizing), moved: false };
+      drag = { id: event.pointerId, start, x: node.x, y: node.y, width: node.width, height: node.height, rotation: node.rotation, startAngle: Math.atan2(start.y - node.y - node.height / 2, start.x - node.x - node.width / 2), rotate: Boolean(rotating), resize: Boolean(resizing), moved: false };
       canvas.setPointerCapture(event.pointerId);
     }
     canvas.focus(); render();
@@ -164,6 +169,16 @@
     if (!drag || event.pointerId !== drag.id || !editable()) return;
     const node = activeNode(), current = point(event);
     if (!node) return;
+    if (drag.rotate) {
+      const dx = current.x - drag.x - drag.width / 2, dy = current.y - drag.y - drag.height / 2;
+      if (Math.hypot(dx, dy) < 1) return;
+      const degrees = drag.rotation + (Math.atan2(dy, dx) - drag.startAngle) * 180 / Math.PI;
+      const step = event.shiftKey ? 15 : 1;
+      const rotation = ((Math.round(degrees / step) * step) % 360 + 360) % 360;
+      if (rotation === node.rotation) return;
+      if (!drag.moved) { checkpoint(); drag.moved = true; }
+      node.rotation = rotation; render(); return;
+    }
     if (drag.resize) {
       const angle = node.rotation * Math.PI / 180, c = Math.cos(angle), sn = Math.sin(angle);
       const dx = current.x - drag.start.x, dy = current.y - drag.start.y;
@@ -188,6 +203,7 @@
   };
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('lostpointercapture', endDrag);
   properties.addEventListener('submit', event => {
     event.preventDefault();
     const node = activeNode(); if (!node || !editable()) return;

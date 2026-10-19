@@ -65,6 +65,26 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   assert.equal(await run('canvasFixtures.office[0].id'),'office-fixture');
   assert.equal(await run('canvasFixtures.office[0].layout.nodes[0].width'),45);
   await resize('#odCanvas [data-od-node]',0,0);
+  // Rotate with actual mouse input, using SVG coordinates at the current fit zoom.
+  const rotationPoints=await run(`(()=>{
+   const c=document.getElementById('odCanvas'),h=c.querySelector('[data-od-rotate]'),f=document.getElementById('odProperties').elements;
+   const cx=Number(f.x.value)+Number(f.width.value)/2,cy=Number(f.y.value)+Number(f.height.value)/2;
+   const radius=cy-Number(h.getAttribute('cy')),matrix=c.getScreenCTM();
+   const screen=(x,y)=>{const p=c.createSVGPoint();p.x=x;p.y=y;const s=p.matrixTransform(matrix);return {x:s.x,y:s.y};};
+   return {start:screen(cx,cy-radius),end:screen(cx+radius,cy)};
+  })()`);
+  await client.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',buttons:1,clickCount:1,...rotationPoints.start});
+  await client.send('Input.dispatchMouseEvent',{type:'mouseMoved',button:'left',buttons:1,...rotationPoints.end});
+  await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:1,...rotationPoints.end});
+  assert.equal(await run("Number(document.getElementById('odProperties').elements.rotation.value)"),90);
+  assert.equal(await run("Number(document.getElementById('odProperties').elements.width.value)"),45,'Rotation preserves dimensions');
+  await key('z',{ctrlKey:true});
+  await resize('#odCanvas [data-od-node]',0,0);
+  assert.equal(await run("Number(document.getElementById('odProperties').elements.rotation.value)"),0,'One undo reverses the rotation gesture');
+  await key('y',{ctrlKey:true});
+  await key('s',{ctrlKey:true});await wait('canvasFixtures.office[0].version===3');
+  assert.equal(await run('canvasFixtures.office[0].layout.nodes[0].rotation'),90,'Redo rotation is saved');
+  await resize('#odCanvas [data-od-node]',0,0);
   await run("document.getElementById('odProperties').elements.label.focus();document.getElementById('odProperties').elements.label.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',bubbles:true,cancelable:true}))");
   assert.equal(await run("document.querySelectorAll('#odCanvas [data-od-node]').length"),1);
   await run("document.getElementById('odCanvas').dispatchEvent(new PointerEvent('pointerdown',{button:0,bubbles:true,clientX:0,clientY:0}))");

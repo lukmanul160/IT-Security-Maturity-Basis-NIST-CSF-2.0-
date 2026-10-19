@@ -29,7 +29,8 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
   const url=typeof input==='string'?input:input.url;
   if(url.startsWith('/api/file-backups')){
    let body=[];
-   if(url.endsWith('/folders'))body=['Policy','Knowledge Notes'];
+   if(url.endsWith('/inspect'))body={folders:['Archive/2026','Archive','Notes']};
+   else if(url.endsWith('/folders'))body=['Policy','Policy/2026','Knowledge Notes'];
    else if(options.method==='POST')body={fileCount:9,parts:[{},{}],missingFiles:[{path:'Policy/missing.pdf'}]};
    else body=[{fileName:'nist-basis-files-20261011T012902Z-00000000-0000-0000-0000-000000000000-part-0001-of-0002.zip',size:512,createdAt:'2026-10-11T01:29:02Z',part:1,partCount:2}];
    return Promise.resolve(new Response(JSON.stringify(body),{headers:{'Content-Type':'application/json'}}));
@@ -47,7 +48,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
   setRequestHeader(key,value){this.headers[key]=value;}
   getAllResponseHeaders(){return 'Content-Type: application/json';}
   abort(){this.onabort?.();}
-  send(body){this.body=body;xhrs.push(this);if(this.url.endsWith('/restore-batch'))window.__backupUploads=body.getAll('backups').map(file=>file.name);}
+  send(body){if(this.url.endsWith('/inspect')){this.status=200;this.statusText='OK';this.responseURL=location.origin+this.url;this.response=new TextEncoder().encode(JSON.stringify({folders:['Archive','Archive/2026','Notes']})).buffer;queueMicrotask(()=>this.onload());return;}this.body=body;xhrs.push(this);if(this.url.endsWith('/restore-batch'))window.__backupFolders=JSON.parse(body.get('folders'));if(this.url.endsWith('/restore-batch'))window.__backupUploads=body.getAll('backups').map(file=>file.name);}
  };
  window.__uploadBytes=(index,loaded,total=100)=>{xhrs[index].upload.onprogress({lengthComputable:true,loaded,total});};
  window.__uploadServer=index=>{xhrs[index].upload.onload();};
@@ -55,21 +56,44 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  window.confirm=()=>true;
  }`});
  await call('Page.navigate',{url:base+'/app'});
- await wait("!!document.querySelector('#csfTableBody [data-assessment-gaps]')");
+ await wait("!!document.querySelector('#fileBackupFolderTree button')");
  await evaluate("document.querySelector('[data-view=file-backups]').click()");
  await wait("document.querySelector('#fileBackupBody').textContent.includes('1 / 2')");
  assert.equal(await evaluate("document.querySelector('#fileBackupRestoreInput').multiple"),true);
+ await evaluate(`window.__chooseRestoreFiles=(id,names)=>{const input=document.getElementById(id);Object.defineProperty(input,'files',{configurable:true,value:names.map(name=>new File(['fixture'],name))});input.dispatchEvent(new Event('change',{bubbles:true}));};`);
+ for (const prefix of ['backup','fileBackup']) {
+   const names=prefix==='backup'?['batch.manifest.json','batch.dump.part-0001']:['part-1.zip','part-2.zip'];
+   assert.equal(await evaluate(`document.getElementById('${prefix}RestoreInput').multiple`),true);
+   await evaluate(`window.__chooseRestoreFiles('${prefix}RestoreInput',${JSON.stringify([names[0]])})`);
+   await evaluate(`window.__chooseRestoreFiles('${prefix}RestoreInput',${JSON.stringify([names[1]])})`);
+   await wait(`document.querySelectorAll('#${prefix}RestoreQueue li').length===2`);
+   await evaluate(`window.__chooseRestoreFiles('${prefix}RestoreInput',${JSON.stringify([names[1]])})`);
+   assert.equal(await evaluate(`document.querySelectorAll('#${prefix}RestoreQueue li').length`),2);
+   await evaluate(`document.querySelector('#${prefix}RestoreQueue button').click()`);
+   assert.equal(await evaluate(`document.querySelectorAll('#${prefix}RestoreQueue li').length`),1);
+   await evaluate(`document.getElementById('${prefix}RestoreClearButton').click()`);
+   assert.equal(await evaluate(`document.querySelectorAll('#${prefix}RestoreQueue li').length`),0);
+   assert.equal(await evaluate(`document.getElementById('${prefix}RestoreButton').disabled`),true);
+ }
+
  await evaluate(`{
  const input=document.querySelector('#fileBackupRestoreInput');
  const files=[new File(['one'],'part-1.zip'),new File(['two'],'part-2.zip')];
  files.forEach(file=>Object.defineProperty(file,'size',{value:300*1024*1024}));
  Object.defineProperty(input,'files',{configurable:true,value:files});input.dispatchEvent(new Event('change',{bubbles:true}));
  }`);
- assert.equal(await evaluate("document.querySelector('#fileBackupRestoreButton').disabled"),false);
- assert.ok((await evaluate("document.querySelector('#fileBackupRestoreFileName').textContent")).includes('600'));
+ await wait("!document.querySelector('#fileBackupRestoreButton').disabled");
+ assert.equal(await evaluate("document.querySelector('#fileBackupRestoreFolderTree').textContent.includes('2026')"),true);
+ await evaluate("document.querySelector('#fileBackupRestoreFolderTree input[data-folder=\"\"]').click()");
+ await evaluate("document.querySelector('#fileBackupRestoreFolderTree input[data-folder=Archive]').closest('.file-backup-folder-row').querySelector('button').click()");
+ assert.equal(await evaluate("document.querySelector('#fileBackupRestoreFolderTree input[data-folder=\"Archive/2026\"]').closest('.file-backup-folder-children').hidden"),false);
+ await evaluate("document.querySelector('#fileBackupRestoreFolderTree input[data-folder=\"Archive/2026\"]').click();document.querySelector('#fileBackupRestoreFolderTree input[data-folder=Notes]').click()");
+ assert.deepEqual(await evaluate("JSON.parse(document.querySelector('#fileBackupRestoreFolder').value).sort()"),['Archive/2026','Notes']);
+ assert.equal(await evaluate("document.querySelector('#fileBackupRestoreFolderTree input[data-folder=Archive]').indeterminate"),true);
  await evaluate("document.querySelector('#fileBackupRestoreButton').click()");
  await wait("window.__backupUploads?.length===2");
  assert.deepEqual(await evaluate("window.__backupUploads"),['part-1.zip','part-2.zip']);
+ assert.deepEqual(await evaluate("window.__backupFolders.sort()"),['Archive/2026','Notes']);
  assert.deepEqual(await evaluate("[...document.querySelectorAll('#fileBackupSelectedFiles strong')].map(node=>node.textContent)"),['part-1.zip','part-2.zip']);
  await evaluate("window.__uploadBytes(0,50)");
  assert.equal(await evaluate("document.querySelector('#fileBackupProgressPanel progress').value"),50);
@@ -82,7 +106,8 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await evaluate("document.querySelector('#fileBackupCreateButton').click()");
  await wait("document.querySelector('#fileBackupStatus').textContent.includes('9 file')");
  assert.ok((await evaluate("document.querySelector('#fileBackupStatus').textContent")).includes('Policy/missing.pdf'));
- assert.equal(await evaluate("document.querySelector('#fileBackupFolder').options.length"),3);
+ assert.equal(await evaluate("document.querySelectorAll('#fileBackupFolderTree button').length"),4);
+ if(process.env.BACKUP_FOLDERS_ONLY==='1'){assert.equal(errors.length,0,errors.join('\n'));console.log('PASS backup folder tree: collapse/expand, multiple checkboxes, indeterminate parents, archive folders and restore payload');return;}
  const routes=['/api/files/batch','/api/files/Policy/test.pdf','/api/policy-register','/api/audit-finding-tracker','/api/asset-management/assets','/api/asset-management/photos/assets/test','/api/asset-management/import','/api/knowledge-notes/images','/api/knowledge-notes/import-with-images'];
  for(const route of routes){
   const index=await evaluate(`{const body=new FormData();body.append('file',new File(['payload'],'${route.split('/').at(-1)}-fixture.pdf'));window.__sharedResult=fetch('${route}',{method:'POST',body}).then(response=>response.json());window.__progressXhrs.length-1;}`);

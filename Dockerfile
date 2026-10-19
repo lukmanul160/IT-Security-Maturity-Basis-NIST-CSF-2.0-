@@ -20,6 +20,7 @@ COPY package.json package-lock.json ./
 COPY src ./src
 COPY scripts ./scripts
 COPY database ./database
+COPY templates ./templates
 COPY data/csf-data.json data/privacy-data.json data/iso-27001-data.json \
      data/iso-27001-soa-data.json data/personnel-certifications-seed.json \
      data/risk-indicators.json data/ikas-data.json data/ikas-template.xlsx data/maturity-template.xlsx ./data/

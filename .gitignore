@@ -15,3 +15,9 @@ frontend/client/src/workspace/generated/
 # Operational risk data must remain local and must never be committed.
 Cybersecurity Risk Register.xlsx
 *Risk*Register*.xlsx
+
+# Local screenshots may contain confidential company information.
+/output/**/*.png
+/img/*.png
+
+/frontend/public/landing-media/

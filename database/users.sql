@@ -1,4 +1,4 @@
--- PostgreSQL users table and default accounts.
+-- PostgreSQL users table. Provision the first administrator with admin:create.
 -- Passwords are stored as bcrypt hashes, never as plaintext.
 
 CREATE TABLE IF NOT EXISTS app_users (
@@ -14,11 +14,5 @@ CREATE TABLE IF NOT EXISTS app_users (
 ALTER TABLE app_users
   ADD COLUMN IF NOT EXISTS full_name TEXT NOT NULL DEFAULT '';
 
--- Initial accounts for all environments, including production.
--- Change both initial passwords after first login (see installation guide).
--- Existing accounts and changed passwords are preserved on every startup.
-INSERT INTO app_users (username, password_hash, role)
-VALUES
-  ('admin', '$2b$12$lEwoOcAxzn78Gb2Xa1FVi.pn50XKQi3xdkV9Zzg.i1gKcKcHFgieC', 'admin'),
-  ('user', '$2b$12$H9ybtlawD2IqHPU6mH0lmuCU86aOaYVxsc3.Grl2PtfgCHRl8sHnu', 'user')
-ON CONFLICT (username) DO NOTHING;
+-- No shared passwords or automatic accounts in any environment.
+-- Existing accounts are preserved; this schema never rotates their passwords.

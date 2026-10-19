@@ -116,21 +116,16 @@ Jika startup gagal, periksa log sebelum melanjutkan.
 Database **BlackOwl_DB_Gov**, schema, dan data referensi disiapkan otomatis saat
 startup. Tidak perlu menjalankan `db:setup` secara terpisah pada metode Docker.
 **Seed tetap berjalan pada mode production**: CSF, Privacy, ISO/SOA, indikator
-risiko, katalog sertifikasi, serta akun awal `admin` dan `user`.
+risiko dan katalog sertifikasi, tanpa akun bawaan.
 Lihat [rincian seed dan perintah eksplisit](DOCKER.md#instalasi-pertama).
 Data operasional tambahan perlu import/restore atau migrasi khusus; file SQL/JSON
 tambahan tidak otomatis dijalankan.
 
 ### A4. Buat administrator
 
-Administrator awal sudah dibuat otomatis. Login dengan `admin` /
-`AdminInitial123!`; akun `user` memakai password `UserInitial123!`.
-**Segera ubah password kedua akun** melalui **Account → Account Management**:
-isi password saat ini, password baru, dan konfirmasi, lalu klik **Save profile**.
-Login kembali dengan password baru. Selesaikan sebelum memberikan akses kepada
-pengguna lain. Restart/rebuild tidak menimpa password yang sudah diganti.
-
-Perintah berikut opsional untuk membuat administrator tambahan:
+Buat administrator pertama dengan username dan password pilihan sendiri.
+Tidak ada akun bawaan. Akun lama dipertahankan; ganti password lama yang masih
+menggunakan password awal versi sebelumnya. Jalankan dari terminal interaktif:
 
 ```text
 docker compose --env-file .env.docker exec app npm run admin:create
@@ -295,9 +290,8 @@ masalah execution policy `npm.ps1`.
 
 ### B5. Siapkan database dan admin
 
-`db:setup` membuat akun awal `admin` / `AdminInitial123!` dan
-`user` / `UserInitial123!`, termasuk pada production. Perintah `admin:create`
-di bawah opsional untuk membuat administrator tambahan dengan username baru.
+`db:setup` menyiapkan schema tanpa akun bawaan. `admin:create` wajib untuk
+administrator pertama instalasi baru, dan opsional untuk administrator tambahan.
 
 Windows:
 
@@ -316,7 +310,7 @@ npm run admin:create
 Pastikan provisioning selesai dan menampilkan tabel yang siap. Masukkan username
 baru (default `nistadmin`), nama opsional, password, dan konfirmasinya.
 Password wajib 8–72 karakter dengan huruf besar, huruf kecil, dan angka.
-Gunakan akun awal atau administrator tambahan untuk login.
+Gunakan administrator yang telah dibuat untuk login.
 
 ### B6. Jalankan aplikasi
 

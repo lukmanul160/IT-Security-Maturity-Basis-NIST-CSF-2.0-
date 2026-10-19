@@ -7,7 +7,7 @@ function sanitize(value, depth = 0) {
   if (depth > 5) return '[truncated]';
   if (typeof value === 'string') return value.slice(0, 2000);
   if (Array.isArray(value)) return value.slice(0, 50).map(item => sanitize(item, depth + 1));
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).slice(0, 100).map(([key, item]) => [key, /password|secret|token|cookie|authorization|credential|private.?key|api.?key|content|buffer/i.test(key) ? '[redacted]' : sanitize(item, depth + 1)]));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).slice(0, 100).map(([key, item]) => [key, /password|secret|token|cookie|authorization|credential|private.?key|api.?key|content|buffer|signature/i.test(key) ? '[redacted]' : sanitize(item, depth + 1)]));
   return value;
 }
 function classify(req, res) {

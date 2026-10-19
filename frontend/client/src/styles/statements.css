@@ -1,0 +1,127 @@
+#statementAdminView *{box-sizing:border-box}
+#statementAdminView h1{font-size:25px;margin:0}
+#statementAdminView h2{font-size:20px}
+#statementAdminView p{line-height:1.6}
+#statementAdminView .muted,#statementAdminView small{color:#526580}
+#statementAdminView .card,#statementAdminView details{background:white;border:1px solid #dce4ef;border-radius:12px;padding:24px;margin:18px 0;box-shadow:0 4px 20px #19325005}
+#statementAdminView .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#statementAdminView .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+#statementAdminView label{display:block;font-weight:600;margin:12px 0}
+#statementAdminView input:not([type=checkbox]),#statementAdminView select,#statementAdminView textarea{display:block;width:100%;margin-top:7px;border:1px solid #b9c7d8;border-radius:7px;padding:11px;font:inherit;background:#fff;color:#182b46}
+#statementAdminView textarea{min-height:330px;line-height:1.7}
+#statementAdminView button,#statementAdminView .button{display:inline-block;cursor:pointer;border:1px solid #b9c7d8;background:white;color:#193b65;border-radius:7px;padding:10px 16px;font:inherit;text-decoration:none}
+#statementAdminView button.primary{background:#1758a0;color:white;border-color:#1758a0}
+#statementAdminView button:disabled{opacity:.55;cursor:wait}
+#statementAdminView a{color:#1758a0}
+#statementAdminView [data-statement-id="message"]{white-space:pre-wrap;padding:12px 0;font-weight:600}
+#statementAdminView [data-statement-id="message"].error{color:#ad2035}
+#statementAdminView .document{white-space:pre-wrap;font-family:Georgia,serif;font-size:16px;line-height:1.8;overflow-wrap:anywhere}
+#statementAdminView .signature{width:100%;max-width:560px;height:200px;border:1px dashed #7892b0;border-radius:8px;touch-action:none;background:white;display:block}
+#statementAdminView summary{cursor:pointer;font-weight:600}
+#statementAdminView table{border-collapse:collapse;width:100%}
+#statementAdminView .table-scroll td,#statementAdminView .table-scroll th{padding:14px 8px;border-bottom:1px solid #e0e7f0;text-align:left;vertical-align:top}
+#statementAdminView .table-scroll{overflow:auto}
+#statementAdminView .link-box{font-size:13px;overflow-wrap:anywhere}
+#statementAdminView dialog{border:1px solid #c6d3e4;border-radius:12px;width:min(900px,95vw);max-height:90vh;overflow:auto;padding:28px}
+#statementAdminView dialog::backdrop{background:#132d4b99}
+#statementAdminView .check{display:flex;gap:10px;align-items:flex-start}
+#statementAdminView .check input{margin-top:5px}
+#statementAdminView [data-statement-id="receipt"]{overflow-wrap:anywhere}
+#statementAdminView .signed-name{font-weight:600}
+#statementAdminView .signature-output{width:320px;height:130px}
+@media(max-width:650px){#statementAdminView .grid{grid-template-columns:1fr}
+#statementAdminView .card{padding:18px}
+}
+#statementAdminView [hidden]{display:none!important}
+#statementAdminView .header-kicker{color:#a3c8ed;letter-spacing:.14em;font-size:11px}
+#statementAdminView .header-note{margin-left:auto;color:#d0e1f6;font-size:13px}
+#statementAdminView .page-intro{display:flex;align-items:center;justify-content:space-between;gap:20px}
+#statementAdminView .page-intro h2{margin-bottom:4px}
+#statementAdminView .page-intro p{margin-top:0}
+#statementAdminView .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:18px 0 28px}
+#statementAdminView .stat{background:white;border:1px solid #dce4ef;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px}
+#statementAdminView .stat span{color:#526580;font-size:13px}
+#statementAdminView .stat strong{font-size:32px;font-weight:650}
+#statementAdminView .tabs{display:flex;gap:8px;flex-wrap:wrap}
+#statementAdminView .tabs button.selected{background:#153b65;color:white;border-color:#153b65}
+#statementAdminView .tabs [data-statement-id="refresh"]{margin-left:auto}
+#statementAdminView .table-scroll td{min-width:130px}
+#statementAdminView .table-scroll td:first-child{min-width:200px}
+#statementAdminView .table-scroll td p{font-size:12px;margin:8px 0;color:#526580}
+#statementAdminView .table-actions button{display:block;margin-bottom:8px}
+#statementAdminView .badge{display:inline-block;border-radius:20px;background:#edf1f7;padding:6px 10px;font-size:12px;white-space:nowrap;color:#526580}
+#statementAdminView .badge.active{color:#126e53;background:#e0f5ec}
+#statementAdminView .editor-dialog{width:min(1120px,96vw)}
+#statementAdminView .preview-dialog{width:min(1100px,96vw)}
+#statementAdminView .dialog-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}
+#statementAdminView .editor-block{padding:16px 0;border-top:1px solid #e0e7f0;margin-top:20px}
+#statementAdminView .editor-block h3{font-size:16px}
+#statementAdminView .hint{font-size:13px;line-height:1.7;color:#526580}
+#statementAdminView .field-row{display:grid;grid-template-columns:1fr 1.2fr 1fr .65fr;gap:12px;padding:18px;background:#f5f7fb;border:1px solid #dce4ef;border-radius:10px;margin:12px 0;align-items:start}
+#statementAdminView .field-row label{font-size:12px;margin:0}
+#statementAdminView .field-row .check{padding-top:28px;align-items:center}
+#statementAdminView .field-row code{padding-top:10px;color:#1758a0;overflow-wrap:anywhere}
+#statementAdminView .field-row button{justify-self:start;font-size:12px}
+#statementAdminView .field-row input:disabled{background:#e7edf5;color:#526580}
+#statementAdminView .field-row input:not([type=checkbox]),#statementAdminView .field-row select{font-size:13px}
+#statementAdminView .field-row label:has(input[type=text]):nth-child(5){grid-column:span 2}
+#statementAdminView .field-row input[type=checkbox]{order:-1}
+#statementAdminView .error-text{color:#ad2035;white-space:pre-wrap}
+#statementAdminView .dialog-actions{display:flex;justify-content:flex-end;border-top:1px solid #dce4ef;padding-top:20px}
+#statementAdminView .field-chips{display:flex;gap:8px;flex-wrap:wrap}
+#statementAdminView .chip{background:#edf3fb;color:#214a7a;padding:6px 10px;border-radius:20px;font-size:12px}
+#statementAdminView .identity-list{display:grid;grid-template-columns:max-content 1fr;gap:7px 20px;font-size:13px}
+#statementAdminView .identity-list dt{color:#526580}
+#statementAdminView .identity-list dd{margin:0;overflow-wrap:anywhere}
+#statementAdminView .word-preview{min-width:0;width:100%;margin:16px 0;overflow:hidden}
+#statementAdminView .button.primary{background:#1758a0;color:white}
+#statementAdminView [data-statement-id="detailHash"]{display:block;overflow-wrap:anywhere;font-size:10px}
+#statementAdminView [data-statement-id="publicFields"] textarea{min-height:110px}
+#statementAdminView .header-kicker+.header-kicker{margin:0}
+#statementAdminView code{font-size:12px}
+#statementAdminView input[type=file]{font-size:13px}
+@media(max-width:760px){#statementAdminView .stats{grid-template-columns:1fr 1fr}
+#statementAdminView .field-row{grid-template-columns:1fr 1fr}
+#statementAdminView .field-row .check{padding-top:5px}
+#statementAdminView .header-note{margin-left:0}
+#statementAdminView .page-intro{align-items:flex-start;flex-direction:column}
+#statementAdminView .identity-list{grid-template-columns:1fr;gap:4px}
+#statementAdminView .identity-list dd{margin-bottom:9px}
+}
+#statementAdminView .field-row .fixed-value{grid-column:span 2}
+
+#statementAdminView{color:var(--ink,#182b46)}
+#statementAdminView .page-intro{margin-bottom:16px}
+#statementAdminView .page-heading h2{font-size:28px}
+#statementAdminView .card,#statementAdminView .stat,#statementAdminView details,#statementAdminView dialog{background:var(--panel,#eef2f6);border-color:var(--line,#c9d3df)}
+#statementAdminView .muted,#statementAdminView small,#statementAdminView .hint,#statementAdminView .stat span{color:var(--muted,#53657d)}
+#statementAdminView .field-row{background:var(--bg,#e6ecf2);border-color:var(--line,#c9d3df)}
+#statementAdminView input:not([type=checkbox]),#statementAdminView select,#statementAdminView textarea{background:var(--panel,#eef2f6);color:var(--ink,#182b46);border-color:var(--line,#c9d3df)}
+#statementAdminView dialog{color:var(--ink,#182b46)}
+html[data-theme=dark] #statementAdminView{color:#e5edf7}
+html[data-theme=dark] #statementAdminView :is(.card,.stat,details,dialog){background:#1a2638;color:#e5edf7;border-color:#3b4e67}
+html[data-theme=dark] #statementAdminView :is(.muted,small,.hint,.stat span,.table-scroll td p){color:#adbed3}
+html[data-theme=dark] #statementAdminView .field-row{background:#142033;border-color:#3b4e67}
+html[data-theme=dark] #statementAdminView :is(input:not([type=checkbox]),select,textarea){background:#142033;color:#e5edf7;border-color:#3b4e67}
+html[data-theme=dark] #statementAdminView button:not(.primary):not(.selected),html[data-theme=dark] #statementAdminView .button{background:#23344b;color:#d6e7fb;border-color:#47607e}
+html[data-theme=dark] #statementAdminView a{color:#9ac9ff}
+html[data-theme=dark] #statementAdminView :is(.chip,.badge){background:#23344b;color:#c4daef}
+html[data-theme=dark] #statementAdminView .badge.active{background:#174437;color:#a7edce}
+#statementAdminView [data-statement-id=message]:empty{display:none}
+
+#statementAdminView .statement-word-editor{width:calc(100vw - 40px);height:calc(100vh - 40px);max-width:1600px;max-height:none;padding:20px;overflow:auto}
+#statementAdminView .statement-word-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+#statementAdminView .statement-word-heading h2{margin:0}
+#statementAdminView .statement-word-placeholders{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+#statementAdminView .statement-word-placeholders label{display:flex;align-items:center;gap:8px;font-size:12px;margin:0}
+#statementAdminView .statement-word-placeholders select{width:auto;margin:0}
+#statementAdminView .statement-word-toolbar{position:sticky;top:0;z-index:5;background:white;color:#182b46;border:1px solid #c9d3df;border-radius:6px}
+#statementAdminView .statement-word-canvas{background:#e0e6ed;min-height:600px;color:#111;overflow:auto;margin-top:10px}
+#statementAdminView .statement-word-canvas :is(p,td,th,span){line-height:revert}
+#statementAdminView .statement-word-toolbar button{padding:4px;font-size:12px}
+#statementAdminView .statement-word-heading button.primary{background:#1758a0!important;color:white!important}
+#statementAdminView .statement-word-backdrop{position:fixed;inset:0;background:#142b4770;backdrop-filter:blur(3px);z-index:199}
+#statementAdminView .statement-word-editor[open]{position:fixed;inset:20px;margin:auto;z-index:200}
+@media(max-width:760px){#statementAdminView .statement-word-editor{width:100vw;height:100vh;padding:12px}#statementAdminView .statement-word-heading{flex-direction:column}}
+
+#statementAdminView .statement-custom-field{padding:12px;margin:10px 0}#statementAdminView .statement-custom-field .grid{grid-template-columns:repeat(2,minmax(0,1fr))}

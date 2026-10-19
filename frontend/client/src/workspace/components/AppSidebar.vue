@@ -19,6 +19,7 @@
         <section class="sidebar-group" id="complianceNavGroup">
           <button class="sidebar-group-toggle" type="button" aria-controls="complianceNav" aria-expanded="true"><span>Compliance</span><span class="sidebar-group-chevron" aria-hidden="true">v</span></button>
           <div class="sidebar-group-items" id="complianceNav">
+            <button class="nav-item" data-view="surat-pernyataan" type="button" title="Surat Pernyataan"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H5a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9l-6-6Z"/><path d="M14 3v6h6M8 13h8m-8 4h5"/></svg></span><span>Surat Pernyataan</span></button>
             <button class="nav-item" data-view="reporting-regulator" type="button" title="Reporting Regulator"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span>Reporting Regulator</span></button>
             <button class="nav-item" data-view="narahubung" type="button" title="Narahubung"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="9" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></span><span>Narahubung</span></button>
           </div>

@@ -82,11 +82,18 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
     return path.join(root, fileName);
   }
   function selection(folder) {
+    if (Array.isArray(folder)) {
+      if (!folder.length) throw invalid('Pilih setidaknya satu folder.');
+      return [...new Set(folder.map(item => {
+        if (typeof item !== 'string') throw invalid('Folder tidak valid.');
+        return item === '' ? '' : store.normalizePath(item);
+      }))];
+    }
     if (folder == null || folder === '') return '';
     if (typeof folder !== 'string') throw invalid('Folder tidak valid.');
     return store.normalizePath(folder);
   }
-  const matches = (filePath, folder) => !folder || filePath.startsWith(`${folder}/`);
+  const matches = (filePath, folder) => Array.isArray(folder) ? folder.some(item => matches(filePath, item)) : !folder || filePath.startsWith(`${folder}/`);
   async function folders() {
     const { rows } = await db.query('SELECT path FROM evidence_files ORDER BY path');
     const result = new Set();
@@ -211,7 +218,7 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
         if (archives.length !== batch.partCount) throw invalid(`Batch belum lengkap: pilih seluruh ${batch.partCount} bagian backup.`);
         const parts = new Set();
         for (const { manifest, entries } of archives) {
-          if (manifest.version !== 2 || manifest.batchId !== batch.batchId || manifest.partCount !== batch.partCount || manifest.fileCount !== batch.fileCount || manifest.totalSize !== batch.totalSize || manifest.folder !== batch.folder || manifest.createdAt !== batch.createdAt || !Number.isInteger(manifest.part) || manifest.part < 1 || manifest.part > batch.partCount || parts.has(manifest.part) || !Array.isArray(manifest.chunks)) throw invalid('Bagian batch duplikat atau berasal dari backup berbeda.');
+          if (manifest.version !== 2 || manifest.batchId !== batch.batchId || manifest.partCount !== batch.partCount || manifest.fileCount !== batch.fileCount || manifest.totalSize !== batch.totalSize || JSON.stringify(manifest.folder) !== JSON.stringify(batch.folder) || manifest.createdAt !== batch.createdAt || !Number.isInteger(manifest.part) || manifest.part < 1 || manifest.part > batch.partCount || parts.has(manifest.part) || !Array.isArray(manifest.chunks)) throw invalid('Bagian batch duplikat atau berasal dari backup berbeda.');
           parts.add(manifest.part); const local = new Set();
           for (const item of manifest.files) {
             validate(item);
@@ -260,6 +267,25 @@ function createFileBackupService({ db = pool, store = storage, root = path.join(
     } catch (error) { if (restoredCount) throw Object.assign(new Error(`Restore berhenti setelah ${restoredCount} file dipulihkan. ${error.message}`), { status: error.status || 500 }); throw error; }
     finally { await cleanup(staging); for (const file of uploads) await fs.promises.rm(file.path, { force: true }); }
   }
-  return { create, folders, list, resolve, remove, restore };
+  async function inspect(input) {
+    const uploads = Array.isArray(input) ? input : [input];
+    if (!uploads.length || uploads.some(file => !file?.path)) throw invalid('Pilih file backup ZIP.');
+    const staging = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'nist-file-inspect-'));
+    try {
+      const paths = new Set();
+      for (let index = 0; index < uploads.length; index++) {
+        const { manifest } = await extract(uploads[index], staging, index, store.normalizePath, partLimit);
+        for (const file of manifest.files) {
+          const parts = store.normalizePath(file.path).split('/');
+          for (let i = 1; i < parts.length; i++) paths.add(parts.slice(0, i).join('/'));
+        }
+      }
+      return { folders: [...paths].sort() };
+    } finally {
+      await cleanup(staging);
+      await Promise.all(uploads.map(file => fs.promises.rm(file.path, { force: true })));
+    }
+  }
+  return { create, folders, list, resolve, remove, restore, inspect };
 }
 module.exports = { ...createFileBackupService(), createFileBackupService, MAX_PART_BYTES };

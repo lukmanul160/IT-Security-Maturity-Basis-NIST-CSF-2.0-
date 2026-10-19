@@ -53,15 +53,19 @@ async function start() {
   await require('./services/auditFindingService').ensureStore();
   await require('./services/auditFindingReminderService').ensureStore();
   await require('./services/complianceService').ensureStore();
+  await require('./services/statementService').ensureStore();
   await require('./services/officeDesignService').ensureStore();
   await ensureBackupRoot();
   await pool.query(await fs.readFile(usersFile, 'utf8'));
   await new Promise((resolve, reject) => {
-    app.listen(port, error => {
+    const server = app.listen(port, error => {
       if (error) return reject(error);
       console.log(`NIST CSF Express server: http://localhost:${port}`);
       resolve();
     });
+    // Large database uploads may take longer than Node's default five minutes.
+    // Keep the default headers timeout; do not impose a whole-body deadline.
+    server.requestTimeout = 0;
   });
   require('./services/auditRetentionService').startScheduler();
   require('./services/assetManagementService').startScheduler();

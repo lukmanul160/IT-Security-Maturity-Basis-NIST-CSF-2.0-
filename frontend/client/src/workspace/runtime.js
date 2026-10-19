@@ -53,6 +53,7 @@ import auditFindingDetailView from './features/audit-finding/detail-view.js?raw'
 import complianceReminderSettings from './features/compliance/reminder-settings.js?raw';
 import complianceSmtpSettings from './features/compliance/smtp-settings.js?raw';
 import complianceRegister from './features/compliance/register.js?raw';
+import complianceStatements from './features/compliance/statements.js?raw';
 import officeDesignShapes from './features/office-design/shapes.js?raw';
 import officeDesign from './features/office-design/editor.js?raw';
 import auditFindingTracker from './features/audit-finding/tracker.js?raw';
@@ -106,6 +107,7 @@ export default [
   auditFindingDetailView,
   auditFindingTracker,
   complianceRegister,
+  complianceStatements,
   complianceSmtpSettings,
   complianceReminderSettings,
   officeDesignShapes,

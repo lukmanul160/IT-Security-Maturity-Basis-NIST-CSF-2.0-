@@ -253,8 +253,7 @@ restart backend.
 
 ## 5. Login awal dan verifikasi
 
-Setelah `db:setup`, akun awal pada tabel di bawah sudah tersedia. Jika memerlukan
-administrator tambahan, jalankan perintah opsional dari terminal interaktif:
+Setelah `db:setup`, buat administrator pertama dari terminal interaktif:
 
 ```bash
 npm run admin:create
@@ -266,21 +265,10 @@ Password ditampilkan sebagai bintang dan wajib 8–72 karakter, memuat huruf bes
 huruf kecil, dan angka. Perintah memakai validator serta bcrypt aplikasi dan
 menambahkan akun role admin; username duplikat ditolak.
 
-Seed membuat akun awal pada semua mode, termasuk `NODE_ENV=production`:
-
-| Username | Password awal | Role |
-| --- | --- | --- |
-| `admin` | `AdminInitial123!` | admin |
-| `user` | `UserInitial123!` | user |
-
-`admin:create` opsional untuk administrator tambahan. **Segera ganti password
-kedua akun awal setelah login pertama** melalui **Account → Account Management**:
-isi password saat ini, password baru, dan konfirmasi, lalu **Save profile**.
-Login kembali dengan password baru. Lakukan sebelum memberikan akses kepada
-pengguna lain. Seed memakai `ON CONFLICT DO NOTHING`, sehingga akun yang sudah
-ada dan password yang sudah diganti tidak ditimpa saat provisioning/startup.
-Pada instalasi lama, gunakan password lama atau reset melalui administrator
-yang sudah berfungsi; password awal di atas hanya berlaku untuk akun baru.
+Tidak ada akun/password bawaan pada instalasi baru, termasuk production.
+Akun dan password lama tidak diubah. Jika masih memakai password awal versi lama,
+ganti melalui Account Management; buat admin pemulihan dengan `admin:create`
+jika tidak bisa login. Username administrator baru harus belum terdaftar.
 
 Setelah login, buka `http://localhost:8000/api/health/db` di browser yang sama.
 Hasil sukses memuat `connected: true`. HTTP 401 berarti belum login, bukan
@@ -292,8 +280,7 @@ database gagal. Verifikasi juga:
 - Threat Modelling dapat membuka **Example diagram** lalu menyimpan diagram.
 - Upload evidence, buka kembali berkas tersebut, dan buat Database Backup.
 
-`npm run db:setup` membuat database, schema dasar, seed akun historis pada mode
-development, dan katalog
+`npm run db:setup` membuat database, schema dasar tanpa akun bawaan, dan katalog
 sertifikasi. `npm start` melengkapi inisialisasi framework, indikator risiko,
 permission, tabel pendukung, dan scheduler. Startup menulis ke database; lakukan
 backup sebelum menjalankan versi baru pada data operasional.

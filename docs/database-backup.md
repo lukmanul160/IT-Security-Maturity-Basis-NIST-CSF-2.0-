@@ -78,3 +78,62 @@ Verifikasi 2 Oktober 2026: backup nyata dibandingkan dengan catalog database
 aktif melalui `pg_restore --list`; seluruh 32 tabel dan 17 sequence tercakup.
 Restore ke database aktif tidak dilakukan. Pengujian otomatis:
 `node --test test/backupService.test.js`.
+
+## Database besar (GB)
+
+Pembuatan, unduhan, dan restore `.dump` tidak memiliki batas ukuran tetap di
+aplikasi dan tidak mengikuti batas import/export Website Setting. Upload memakai
+stream ke file sementara, unduhan memakai stream file, dan pg_dump/pg_restore
+membaca/menulis file langsung, sehingga isi dump tidak dimuat seluruhnya ke RAM.
+Server tidak memasang batas waktu total penerimaan request; batas header tetap aktif.
+Snapshot JSON lama tetap maksimal 500 MiB karena diproses dalam memori.
+
+Sediakan ruang di direktori sementara OS untuk seluruh dump unggahan, ruang backup
+untuk arsip yang dibuat, serta ruang database/WAL yang cukup untuk restore. Pada
+Docker, file sementara berada di writable layer container; untuk dump besar dapat
+memasang volume disk khusus ke `/tmp`, jangan memakai tmpfs yang memakan RAM.
+Pantau kapasitas disk dan tunggu proses selesai sebelum menutup halaman.
+
+Jika memakai reverse proxy, sesuaikan batas body dan timeout di proxy juga.
+Contoh Nginx untuk server aplikasi internal yang sudah dilindungi autentikasi:
+
+```nginx
+location /api/backups {
+    client_max_body_size 0;
+    proxy_request_buffering off;
+    proxy_read_timeout 24h;
+    proxy_send_timeout 24h;
+    client_body_timeout 24h;
+    proxy_pass http://127.0.0.1:8000;
+}
+```
+
+Sesuaikan upstream dengan deployment. Batas gateway/hosting di luar aplikasi tetap
+berlaku. Ukuran maksimum praktis mengikuti disk, PostgreSQL, filesystem dan proxy.
+
+## Split backup dan restore database
+
+Pada Database Backup atur **Ambang pembagian backup**, default 500 MiB per bagian
+(dapat diisi 1?10240 MiB). Dump yang tidak melebihi ambang tetap satu `.dump`.
+Dump di atas ambang menjadi beberapa `.dump.part-0001`, `.dump.part-0002`, dan
+satu `.manifest.json`. Seluruh bagian dan manifest tersedia di daftar backup.
+Unduh semuanya dan simpan bersama, tanpa mengganti nama file.
+
+Untuk restore, pilih **manifest dan semua bagian dari satu batch** sekaligus.
+Urutan pemilihan bebas. Server memeriksa nama batch, jumlah bagian, ukuran, dan
+SHA-256 tiap bagian serta dump gabungan sebelum menjalankan pg_restore. Jika
+ada bagian hilang, duplikat, tercampur atau rusak, database tidak diubah.
+Dump tunggal dan snapshot JSON lama masih dapat dipilih melalui form yang sama.
+
+Pembagian dilakukan sesudah pg_dump berhasil membuat dump lengkap, bukan
+sebagai pengganti backup yang gagal karena koneksi, izin atau disk penuh.
+Sediakan ruang untuk dump penuh ditambah seluruh bagian selama split. Restore
+memerlukan ruang temporary untuk seluruh unggahan dan dump yang digabung.
+Semua bagian dipilih dalam satu upload multipart; batas body reverse proxy
+harus cukup untuk ukuran total batch, bukan hanya satu bagian.
+
+Pemilih restore mendukung multi-file melalui Ctrl/Shift dan penambahan bertahap.
+Klik **Tambah file backup / bagian** berulang kali untuk menambahkan manifest
+dan bagian tanpa menghapus pilihan sebelumnya. **Hapus dari pilihan** menghapus
+satu item; **Kosongkan pilihan** menghapus seluruh daftar. Nama file yang sama
+menggantikan pilihan lama sehingga tidak terkirim dua kali.

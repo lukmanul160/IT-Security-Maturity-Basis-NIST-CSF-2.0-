@@ -28,6 +28,7 @@ router.use('/asset-management', require('./assetManagementRoutes'));
 router.use('/knowledge-notes', require('./knowledgeNoteRoutes'));
 router.use('/threat-modelling', require('./threatModelRoutes'));
 router.use('/compliance', require('./complianceRoutes'));
+router.use('/statements', require('./statementRoutes').router);
 router.use('/office-design', require('./officeDesignRoutes'));
 router.use('/audit-finding-tracker', require('./auditFindingRoutes'));
 router.use('/website-settings',require('./websiteSettingsRoutes'));

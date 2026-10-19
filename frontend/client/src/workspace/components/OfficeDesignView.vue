@@ -13,10 +13,10 @@
     <button id="odDelete" class="button button-danger" type="button">Hapus denah</button>
   </div>
   <p class="muted">Kanvas baru menyimpan perubahan kanvas lama terlebih dahulu. Buka kembali melalui Kanvas tersimpan.</p>
-  <p class="muted">Ctrl/Cmd+Z: Undo ? Ctrl+Y / Ctrl/Cmd+Shift+Z: Redo ? Ctrl/Cmd+S: Simpan ? Delete: Hapus objek ? Panah: Geser (Shift: 10 satuan). Tarik pegangan biru untuk resize.</p>
+  <p class="muted">Ctrl/Cmd+Z: Undo ? Ctrl+Y / Ctrl/Cmd+Shift+Z: Redo ? Ctrl/Cmd+S: Simpan ? Delete: Hapus objek ? Panah: Geser (Shift: 10 satuan). Tarik pegangan biru di sudut untuk resize, atau lingkaran di atas objek untuk memutar (Shift: 15 derajat).</p>
   <p id="odStatus" class="muted" role="status"></p>
   <div class="od-editor">
-    <aside class="od-palette"><h3>Objek denah</h3><p class="muted">Klik untuk menambah.</p><div id="odPalette"></div><label class="od-grid-label"><input id="odSnap" type="checkbox" checked> Snap grid 10</label><p class="muted">Pilih objek lalu geser. Tarik pegangan biru di sudut untuk mengubah ukuran. Atur rotasi di panel properti.</p></aside>
+    <aside class="od-palette"><h3>Objek denah</h3><p class="muted">Klik untuk menambah.</p><div id="odPalette"></div><label class="od-grid-label"><input id="odSnap" type="checkbox" checked> Snap grid 10</label><p class="muted">Pilih objek lalu geser. Tarik pegangan biru di sudut untuk mengubah ukuran. Tarik lingkaran di atas objek untuk memutar dengan kursor. Tahan Shift untuk kelipatan 15 derajat.</p></aside>
     <div class="od-center"><div class="od-canvas-tools"><strong id="odName">Denah baru</strong><label>Zoom <select id="odZoom"><option value="fit" selected>Pas kanvas</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option><option value="1.5">150%</option></select></label></div><div id="odViewport" class="od-viewport"><svg id="odCanvas" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kanvas denah kantor" tabindex="0"></svg></div><p id="odDimensions" class="muted"></p></div>
     <aside class="od-inspector"><h3>Properti objek</h3><p id="odSelectionHint" class="muted">Pilih objek pada kanvas.</p><form id="odProperties" hidden>
       <label>Label<input name="label" maxlength="120"></label>

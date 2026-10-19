@@ -31,7 +31,7 @@ test('workspace bundles are compressed and cached without bypassing authenticati
   assert.equal(cached.status, 304);
 });
 
-test('landing screenshots load publicly with caching while workspace remains protected', async t => {
+test('landing excludes screenshots and blocks direct screenshot access', async t => {
   t.mock.method(require('../src/services/auditService'), 'record', async () => {});
   const server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
@@ -48,19 +48,10 @@ test('landing screenshots load publicly with caching while workspace remains pro
   assert.equal(languageScript.status, 200);
   assert.match(languageScript.headers.get('content-type'), /javascript/);
   assert.ok((await languageScript.text()).includes('nist-basis-language'));
-  const images = [...html.matchAll(/src="(\/landing-media\/[^\"]+)"/g)].map(match => match[1]);
-  assert.equal(images.length, 12);
-  for (const image of images) {
-    const response = await fetch(base + image);
-    assert.equal(response.status, 200, image);
-    assert.match(response.headers.get('content-type'), /image\/webp/);
-    assert.match(response.headers.get('cache-control'), /public.*max-age=86400/);
-    const actual = Buffer.from(await response.arrayBuffer());
-    const expected = await fs.readFile(path.join(__dirname, '../frontend/public', image));
-    assert.deepEqual(actual, expected);
-    const cached = await fetch(base + image, { headers: { 'If-None-Match': response.headers.get('etag'), 'Cache-Control': 'max-age=0' } });
-    assert.equal(cached.status, 304);
-  }
+  assert.ok(!html.includes('/landing-media/'));
+  assert.ok(!html.includes('data-preview='));
+  assert.ok(!html.includes('href="#galeri"'));
+  assert.equal((await fetch(base + '/landing-media/csf.webp')).status, 404);
   const missing = await fetch(base + '/landing-media/missing.webp');
   assert.equal(missing.status, 404);
   for (const route of ['/app', '/vue/index.html', '/styles.css', '/landing-media/../login.html']) {

@@ -99,6 +99,13 @@ test('replacement denies non-owner before multipart storage receives file bytes'
 });
 
 test('password limiter shares account budget across both routes without limiting name updates', async t => {
+  t.mock.method(require('../src/services/websiteSettingsService'), 'read', async () => ({}));
+  t.mock.method(require('pg').Pool.prototype, 'connect', async () => ({
+    async query(sql) {
+      assert.match(sql, /^SELECT pg_(?:try_advisory_lock|advisory_unlock)/);
+      return { rows: [{ acquired: true }] };
+    }, release() {},
+  }));
   const { pool } = require('../src/config/database');
   const auth = require('../src/config/auth');
   const accounts = require('../src/services/accountService');

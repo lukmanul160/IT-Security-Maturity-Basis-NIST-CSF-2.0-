@@ -1,5 +1,5 @@
 async function loadAuditTrail() { const eventType = $('auditEventFilter')?.value || ''; const filters = new URLSearchParams(); if ($('auditActorFilter')?.value.trim()) filters.set('actor', $('auditActorFilter').value.trim()); for (const [id, key, end] of [['auditFromFilter','from',false],['auditToFilter','to',true]]) { const value = $(id)?.value; if (value) filters.set(key, new Date(`${value}T${end ? '23:59:59.999' : '00:00:00'}+07:00`).toISOString()); } const response = await fetch(`/api/audit?${filters}&limit=${auditPageSize}&offset=${(auditPage - 1) * auditPageSize}${eventType ? `&eventType=${encodeURIComponent(eventType)}` : ''}`, { cache: 'no-store' }); if (!response.ok) { $('auditBody').innerHTML = '<tr><td colspan="12">Gagal memuat audit trail.</td></tr>'; return; } const rows = await response.json(); $('auditBody').innerHTML = rows.map(row => `<tr><td>${(globalThis.NistI18n?.dateHtml?.(row.createdAt, {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'}) ?? escapeHtml(new Date(row.createdAt).toLocaleString(globalThis.NistI18n?.locale || 'id-ID', {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'})))}</td><td>${escapeHtml(row.actorUsername || 'anonymous')}<br><small>${escapeHtml(row.actorRole || '')}</small></td><td>${escapeHtml(row.eventType)}</td><td>${escapeHtml(row.method)}</td><td>${escapeHtml(row.path)}</td><td>${escapeHtml(String(row.statusCode))}</td><td>${escapeHtml(row.ipAddress || 'Tidak tersedia')}</td><td>${escapeHtml(row.device || 'Tidak tersedia')}</td><td title="${escapeHtml(row.userAgent || '')}">${escapeHtml(row.browser || 'Tidak tersedia')}</td><td>${escapeHtml(String(row.durationMs))} ms</td><td><details><summary>${escapeHtml(({success: 'Berhasil', failed: 'Gagal', initiated: 'Dimulai', aborted: 'Terputus'})[row.details?.outcome] || 'Detail')}</summary><p>${escapeHtml(row.details?.message || '')}</p>${row.details?.error ? `<p>Error: ${escapeHtml(row.details.error)}</p>` : ''}<pre>${escapeHtml(JSON.stringify(row.details || {}, null, 2))}</pre></details></td><td title="${escapeHtml(row.requestId)}">${escapeHtml(row.requestId.slice(0, 12))}</td></tr>`).join('') || '<tr><td colspan="12">Belum ada aktivitas.</td></tr>'; $('auditPagination').innerHTML = `<button type="button" data-audit-page="${auditPage - 1}" ${auditPage === 1 ? 'disabled' : ''}>Previous</button><span>Page ${auditPage}${rows.length === auditPageSize ? '+' : ''}</span><button type="button" data-audit-page="${auditPage + 1}" ${rows.length < auditPageSize ? 'disabled' : ''}>Next</button>`; }
-function formatBackupSize(bytes) { const value = Number(bytes) || 0; if (value < 1024) return `${value} B`; if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`; return `${(value / (1024 * 1024)).toFixed(1)} MB`; }
+function formatBackupSize(bytes) { const value = Number(bytes) || 0; if (value < 1024) return `${value} B`; if (value >= 1024 ** 3) return `${(value / (1024 ** 3)).toFixed(2)} GB`; if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`; return `${(value / (1024 * 1024)).toFixed(1)} MB`; }
 async function loadBackups() { const response = await fetch('/api/backups', { cache: 'no-store' }); if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Backup list unavailable'); const rows = await response.json(); $('backupCount').textContent = `${rows.length} backup${rows.length === 1 ? '' : 's'}`; $('backupBody').innerHTML = rows.map(row => `<tr><td><strong>${escapeHtml(row.fileName)}</strong></td><td>${(globalThis.NistI18n?.dateHtml?.(row.createdAt, {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'}) ?? escapeHtml(new Date(row.createdAt).toLocaleString(globalThis.NistI18n?.locale || 'id-ID', {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'})))}</td><td>${formatBackupSize(row.size)}</td><td><div class="backup-row-actions"><a class="attachment-action-button" href="/api/backups/${encodeURIComponent(row.fileName)}">Download</a><button class="attachment-action-button danger" type="button" data-backup-delete="${escapeHtml(row.fileName)}">Delete</button></div></td></tr>`).join('') || '<tr><td colspan="4">Belum ada database backup.</td></tr>'; }
 async function deleteBackup(fileName) { if (!confirm(`Hapus backup ${fileName}?`)) return; const status = $('backupStatus'); const response = await fetch(`/api/backups/${encodeURIComponent(fileName)}`, { method: 'DELETE' }); if (!response.ok) { status.textContent = (await response.json().catch(() => ({}))).error || 'Backup delete failed'; return; } status.textContent = `Backup dihapus: ${fileName}`; await loadBackups(); }
 async function createBackup() {
@@ -9,40 +9,71 @@ async function createBackup() {
   window.NistUploadProgress.setProgress('backup', { label: 'Membuat backup database...', detail: 'PostgreSQL sedang mencadangkan schema dan data. Persentase proses server belum tersedia.' });
   status.textContent = 'Membuat backup database...';
   try {
-    const response = await fetch('/api/backups', { method: 'POST' });
+    const response = await fetch('/api/backups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ partSizeMb: Number($('backupPartSizeMb').value) }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Database backup failed');
-    status.textContent = 'Backup berhasil dibuat: ' + data.fileName;
+    status.textContent = data.partCount ? `Backup berhasil dibagi menjadi ${data.partCount} bagian. Unduh manifest dan semua bagian dari batch ${data.fileName}.` : 'Backup berhasil dibuat: ' + data.fileName;
     window.NistUploadProgress.setProgress('backup', { phase: 'success', label: 'Backup database selesai', percent: 100, detail: data.fileName + ' ? ' + formatBackupSize(data.size) });
     await loadBackups().catch(error => { status.textContent += ' Daftar belum diperbarui: ' + error.message; });
   } catch (error) { status.textContent = error.message; window.NistUploadProgress.setProgress('backup', { phase: 'error', label: 'Backup database gagal', detail: error.message }); }
   finally { button.disabled = false; $('backupRestoreInput').disabled = false; $('backupRestoreButton').disabled = !selectedRestoreFile; }
 }
 let selectedRestoreFile = null;
-function selectRestoreFile(event) {
-  selectedRestoreFile = event.target.files?.[0] || null;
-  $('backupRestoreFileName').textContent = selectedRestoreFile ? selectedRestoreFile.name + ' ? ' + formatBackupSize(selectedRestoreFile.size) : 'No file selected';
+let selectedRestoreFiles = [];
+function renderDatabaseRestoreSelection() {
+  selectedRestoreFile = selectedRestoreFiles[0] || null;
+  $('backupRestoreFileName').textContent = selectedRestoreFiles.length ? `${selectedRestoreFiles.length} file - ${formatBackupSize(selectedRestoreFiles.reduce((sum, file) => sum + file.size, 0))}` : 'No file selected';
   $('backupRestoreButton').disabled = !selectedRestoreFile;
-  window.NistUploadProgress.showFiles('backup', selectedRestoreFile ? [selectedRestoreFile] : []);
+  $('backupRestoreClearButton').hidden = !selectedRestoreFiles.length;
+  const queue = $('backupRestoreQueue');
+  queue.replaceChildren(); queue.hidden = !selectedRestoreFiles.length;
+  selectedRestoreFiles.forEach(file => {
+    const row = document.createElement('li');
+    const label = document.createElement('span'); label.textContent = `${file.name} (${formatBackupSize(file.size)})`;
+    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button button-quiet'; remove.textContent = 'Hapus dari pilihan';
+    remove.setAttribute('aria-label', `Hapus ${file.name} dari pilihan`);
+    remove.addEventListener('click', () => {
+      if ($('backupRestoreInput').disabled) return;
+      selectedRestoreFiles = selectedRestoreFiles.filter(item => item !== file);
+      renderDatabaseRestoreSelection();
+    });
+    row.append(label, remove); queue.append(row);
+  });
+  window.NistUploadProgress.showFiles('backup', selectedRestoreFiles);
   $('backupProgressPanel').hidden = true;
 }
+function selectRestoreFile(event) {
+  if (event.target.disabled) return;
+  const files = new Map(selectedRestoreFiles.map(file => [file.name, file]));
+  Array.from(event.target.files || []).forEach(file => files.set(file.name, file));
+  selectedRestoreFiles = [...files.values()];
+  event.target.value = '';
+  renderDatabaseRestoreSelection();
+}
+$('backupRestoreClearButton').addEventListener('click', () => {
+  if ($('backupRestoreInput').disabled) return;
+  selectedRestoreFiles = []; renderDatabaseRestoreSelection();
+});
 async function restoreBackup() {
   if (!selectedRestoreFile || !confirm('Restore akan mengganti data database saat ini dan tidak dapat dibatalkan. Lanjutkan?')) return;
   const button = $('backupRestoreButton'), status = $('backupStatus'), file = selectedRestoreFile;
-  const body = new FormData(); body.append('backup', file, file.name);
+  const batch = selectedRestoreFiles.some(file => /\.manifest\.json$|\.dump\.part-\d+$/.test(file.name));
+  if (!batch && selectedRestoreFiles.length !== 1) { status.textContent = 'Pilih satu dump/JSON, atau manifest dan seluruh bagian dari satu batch.'; return; }
+  const files = [...selectedRestoreFiles];
+  const body = new FormData(); files.forEach(file => body.append(batch ? 'backups' : 'backup', file, file.name));
   button.disabled = true; $('backupRestoreInput').disabled = true; $('backupCreateButton').disabled = true; $('backupReloginLink').hidden = true;
   status.textContent = 'Mengunggah backup database...';
   try {
-    const response = await fetch('/api/backups/restore', { method: 'POST', body, uploadProgressTarget: 'backup', onUploadProgress: info => {
+    const response = await fetch(batch ? '/api/backups/restore-batch' : '/api/backups/restore', { method: 'POST', body, uploadProgressTarget: 'backup', onUploadProgress: info => {
       if (info.phase === 'processing') window.NistUploadProgress.setProgress('backup', { label: 'Memulihkan database di server...', detail: 'Unggahan selesai. PostgreSQL sedang memulihkan schema dan data; tunggu konfirmasi hasil.' });
     } });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Database restore failed');
     status.textContent = 'Restore berhasil: ' + data.fileName + '. Silakan login kembali untuk menggunakan data hasil restore.';
     window.NistUploadProgress.setProgress('backup', { phase: 'success', label: 'Restore database selesai', percent: 100, detail: data.fileName });
-    window.NistUploadProgress.showFiles('backup', [file], 'Dipulihkan');
+    window.NistUploadProgress.showFiles('backup', files, 'Dipulihkan');
     $('backupReloginLink').hidden = false;
-    selectedRestoreFile = null; $('backupRestoreInput').value = ''; $('backupRestoreFileName').textContent = 'No file selected';
+    selectedRestoreFile = null; selectedRestoreFiles = []; $('backupRestoreInput').value = ''; $('backupRestoreFileName').textContent = 'No file selected'; $('backupRestoreQueue').replaceChildren(); $('backupRestoreQueue').hidden = true; $('backupRestoreClearButton').hidden = true;
   } catch (error) { status.textContent = error.message; window.NistUploadProgress.setProgress('backup', { phase: 'error', label: 'Restore database gagal', detail: error.message }); }
   finally { button.disabled = !selectedRestoreFile; $('backupRestoreInput').disabled = false; $('backupCreateButton').disabled = false; }
 }

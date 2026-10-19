@@ -8,7 +8,7 @@ const { pool } = require('../config/database');
 const { beginDatabaseRestore, endDatabaseRestore } = require('../config/auth');
 
 const execFileAsync = promisify(execFile);
-const backupNamePattern = /^nist-basis-\d{8}T\d{6}Z\.(dump|json)$/;
+const backupNamePattern = /^nist-basis-\d{8}T\d{6}Z(?:\.(dump|json)|-[a-f0-9-]{36}(?:\.manifest\.json|\.dump\.part-\d+))$/;
 const restoreNamePattern = /^nist-basis-\d{8}T\d{6}Z\.(dump|json)$/;
 
 async function ensureBackupRoot() {
@@ -35,7 +35,8 @@ function pgDumpArguments(outputPath) {
   return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, '--format=custom', '--file', outputPath];
 }
 
-async function createBackup() {
+async function createBackup({ partSizeMb = 500 } = {}) {
+  if (!Number.isInteger(partSizeMb) || partSizeMb < 1 || partSizeMb > 10240) throw Object.assign(new Error('Ambang bagian harus 1 sampai 10240 MiB.'), { status: 400 });
   await ensureBackupRoot();
   const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
   const fileName = `nist-basis-${timestamp}.dump`;
@@ -45,6 +46,10 @@ async function createBackup() {
   try {
     await execFileAsync(await resolvePgTool('pg_dump'), pgDumpArguments(filePath), { env: environment, windowsHide: true, maxBuffer: 1024 * 1024 });
     const stats = await fs.stat(filePath);
+    if (stats.size > partSizeMb * 1024 * 1024) {
+      const result = await require('./databaseBackupParts').splitDump(filePath, backupRoot, fileName, partSizeMb * 1024 * 1024);
+      return { ...result, createdAt: stats.mtime.toISOString(), format: 'PostgreSQL split dump' };
+    }
     return { fileName, format: 'PostgreSQL custom dump', scope: 'Seluruh schema, tabel, data, sequence, view, fungsi, index, dan constraint database aplikasi', size: stats.size, createdAt: stats.mtime.toISOString() };
   } catch (error) {
     await fs.rm(filePath, { force: true });
@@ -67,6 +72,10 @@ function pgRestoreArguments(filePath) {
 }
 
 async function restoreJsonSnapshot(filePath) {
+  // Legacy JSON is parsed in memory; use custom dumps for large databases.
+  if ((await fs.stat(filePath)).size > 500 * 1024 * 1024) {
+    throw Object.assign(new Error('Snapshot JSON lama maksimal 500 MB. Gunakan backup .dump untuk database besar.'), { status: 413 });
+  }
   const snapshot = JSON.parse(await fs.readFile(filePath, 'utf8'));
   if (!snapshot || snapshot.format !== 'PostgreSQL data snapshot' || !snapshot.tables || typeof snapshot.tables !== 'object') {
     const error = new Error('Invalid database snapshot');
@@ -155,4 +164,6 @@ async function deleteBackup(fileName) {
   await fs.rm(filePath, { force: true });
 }
 
-module.exports = { ensureBackupRoot, createBackup, listBackups, readBackup, deleteBackup, restoreBackup };
+async function restoreBackupParts(files) { return require('./databaseBackupParts').restoreParts(files, restoreBackup); }
+
+module.exports = { restoreBackupParts, ensureBackupRoot, createBackup, listBackups, readBackup, deleteBackup, restoreBackup };

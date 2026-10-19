@@ -5,6 +5,8 @@ const path = require('node:path');
 function tooLarge(mb) { return Object.assign(new Error(`Ukuran export melebihi batas ${mb} MB. Kurangi cakupan export atau ubah Website Setting.`), { status: 413 }); }
 async function fileLimits(req, res, next) {
   try {
+    // Database archives are streamed from disk, independently of report export limits.
+    if (req.method === 'GET' && /^\/backups\/nist-basis-\d{8}T\d{6}Z(?:\.(dump|json)|-[a-f0-9-]{36}(?:\.manifest\.json|\.dump\.part-\d+))$/.test(req.path)) return next();
     req.fileLimits = settings.fileLimits(await settings.read());
     if (/import|restore/i.test(req.path) && req.is('application/json') && Buffer.byteLength(JSON.stringify(req.body ?? {})) > req.fileLimits.importMb * 1048576) {
       return res.status(413).json({ error: `Ukuran data import melebihi batas ${req.fileLimits.importMb} MB.` });

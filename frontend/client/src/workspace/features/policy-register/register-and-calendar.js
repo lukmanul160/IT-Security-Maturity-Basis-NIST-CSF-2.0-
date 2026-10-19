@@ -7,6 +7,55 @@ function getPolicyReviewCycleMonths(reviewCycle) {
   return null;
 }
 
+let policyDocumentEditorOpen = false;
+async function openPolicyDocumentEditor(row) {
+  if (policyDocumentEditorOpen) return;
+  policyDocumentEditorOpen = true;
+  const dialog = document.createElement('dialog'); dialog.className = 'policy-word-editor';
+  const backdrop = document.createElement('div'); backdrop.className = 'policy-word-backdrop';
+  const heading = document.createElement('div'); heading.className = 'toolbar';
+  const title = document.createElement('h2'); title.textContent = row.title; title.setAttribute('data-no-translate', '');
+  const save = document.createElement('button'); save.type = 'button'; save.className = 'button primary'; save.textContent = 'Simpan dokumen'; save.disabled = true;
+  const close = document.createElement('button'); close.type = 'button'; close.className = 'button'; close.textContent = 'Tutup';
+  const status = document.createElement('p'); status.setAttribute('role', 'status'); status.textContent = 'Memuat editor Word...';
+  const toolbar = document.createElement('div'); toolbar.className = 'policy-word-toolbar';
+  const canvas = document.createElement('div'); canvas.className = 'policy-word-canvas';
+  heading.append(title, save, close); dialog.append(heading, status, toolbar, canvas); document.body.append(backdrop, dialog); dialog.show();
+  let controller, dirty = false, saving = false, closed = false;
+  const unload = event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } };
+  const dismiss = () => {
+    if (saving || (dirty && !confirm('Tutup editor dan batalkan perubahan yang belum disimpan?'))) return;
+    closed = true; controller?.destroy(); dialog.close(); dialog.remove(); backdrop.remove(); policyDocumentEditorOpen = false; window.removeEventListener('beforeunload', unload);
+  };
+  close.onclick = dismiss; dialog.addEventListener('cancel', event => { event.preventDefault(); dismiss(); });
+  window.addEventListener('beforeunload', unload);
+  try {
+    const url = '/api/policy-register/' + encodeURIComponent(row.id) + '/document';
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error((await response.json()).error || 'Dokumen tidak dapat dibuka.');
+    const revision = response.headers.get('X-Document-Revision');
+    const buffer = await response.arrayBuffer();
+    const module = await window.NistStatementEditor();
+    if (closed) return;
+    const mounted = await module.mount({ container: canvas, toolbar, buffer, name: row.attachmentName, user: (await workspaceUserReady) || {}, onChange: () => { dirty = true; status.textContent = 'Perubahan belum disimpan.'; } });
+    if (closed) { mounted.destroy(); return; }
+    controller = mounted; save.disabled = false; status.textContent = 'Editor siap. Klik dokumen untuk mulai mengedit.';
+    save.onclick = async () => {
+      if (saving) return;
+      saving = true; save.disabled = true; status.textContent = 'Menyimpan dokumen...';
+      try {
+        const file = await controller.export();
+        const body = new FormData(); body.set('revision', revision); body.set('document', file, row.attachmentName);
+        const result = await fetch(url, { method: 'PUT', body });
+        if (!result.ok) throw new Error((await result.json()).error || 'Dokumen gagal disimpan.');
+        dirty = false; saving = false; dismiss(); await loadPolicyRegisterRows();
+        $('policyRegisterStatus').textContent = 'Dokumen Word berhasil disimpan.';
+      } catch (error) { status.textContent = error.message; }
+      finally { saving = false; save.disabled = false; }
+    };
+  } catch (error) { if (!closed) status.textContent = error.message; }
+}
+
 function getPolicyNextReviewDate(row) {
   const reviewDate = row.lastReview || row.last_review || null;
   const cycle = row.reviewCycle || row.review_cycle || '';
@@ -131,7 +180,7 @@ function renderPolicyRegisterRows() {
       <td>${escapeHtml(row.reviewCycle || '-')}</td>
       <td>${escapeHtml(row.approvalStatus || '-')}</td>
       <td>${row.lastReview ? new Date(row.lastReview).toLocaleDateString((globalThis.NistI18n?.locale || 'id-ID')) : '-'}</td>
-      <td>${row.attachmentName ? `<a href="/api/files/${encodeURIComponent(String(row.attachmentPath || '').replace(/^upload\//, ''))}" target="_blank" rel="noreferrer">${escapeHtml(row.attachmentName)}</a>` : '-'}</td>
+      <td>${row.attachmentName ? `<a href="/api/files/${encodeURIComponent(String(row.attachmentPath || '').replace(/^upload\//, ''))}" target="_blank" rel="noreferrer">${escapeHtml(row.attachmentName)}</a>${row.approvalStatus === 'Draft' && row.attachmentPath && /\.docx$/i.test(row.attachmentName) && canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-document-edit="${row.id}">Edit dokumen</button>` : ''}${row.approvalStatus === 'Draft' && /\.doc$/i.test(row.attachmentName) ? '<small>Konversikan ke .docx untuk mengedit dokumen.</small>' : ''}` : '-'}</td>
       <td class="policy-related-cell">${policyRelatedMarkup(row)}</td>
       <td class="policy-register-actions">${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>
     </tr>

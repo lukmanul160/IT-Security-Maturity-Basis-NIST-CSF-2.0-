@@ -29,6 +29,7 @@ test('Knowledge document imports commit with notes and roll back if originals ca
 });
 
 test('Knowledge multipart import sends original documents and images to the same transaction',async t=>{
+ t.mock.method(require('../src/services/websiteSettingsService'),'read',async()=>({}));
  const express=require('express'),service=require('../src/services/knowledgeNoteService'),permissions=require('../src/services/permissionService'),access=require('../src/services/evidenceAccessService');
  let saved;
  t.mock.method(service,'ensureStore',async()=>{});t.mock.method(permissions,'has',async()=>true);t.mock.method(access,'userId',async()=>11);

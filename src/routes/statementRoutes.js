@@ -1,0 +1,53 @@
+const express = require('express');
+const service = require('../services/statementService');
+const { requirePermission } = require('../middleware/permission');
+const wrap = fn => (req,res,next) => Promise.resolve(fn(req,res,next)).catch(next);
+const multer=require('../middleware/configuredUpload');
+const upload=multer({storage:multer.memoryStorage(),limits:{files:1,fileSize:5*1024*1024,fields:4,fieldSize:150000}}).single('document');
+const sendDocument=(res,buffer,name='surat-pernyataan.docx')=>res.set('Cache-Control','no-store').attachment(name).type('application/vnd.openxmlformats-officedocument.wordprocessingml.document').send(buffer);
+function typeInput(req){if(req.is('multipart/form-data')){try{return JSON.parse(req.body.data);}catch{throw Object.assign(new Error('Data template tidak valid.'),{status:400});}}return req.body;}
+const employees=require('../services/statementEmployeeService');
+const publicRouter = express.Router();
+const {createLimit}=require('../middleware/statementRateLimit');
+publicRouter.use((req,res,next)=>{res.set('Cache-Control','no-store');next();},createLimit({limit:120}));
+publicRouter.use(require('./statementEmployeeRoutes').requireEmployee);
+publicRouter.use(createLimit({limit:30,key:req=>req.employee.nip}));
+publicRouter.use(wrap(async(req,res,next)=>{const id=req.path.split('/').filter(Boolean)[0];req.assignmentYear=await employees.verify(req.employee.nip,id,req.method==='POST'?req.body?.assignmentYear:req.query.year);next();}));
+publicRouter.use((req,res,next) => { res.set('Cache-Control','no-store'); next(); });
+// Bound anonymous write traffic without retaining identity or submission data.
+const attempts = new Map();
+publicRouter.post('/:id', (req,res,next) => {
+  const now = Date.now();
+  for (const [key,value] of attempts) if (value.until < now) attempts.delete(key);
+  const key = req.ip;
+  const bucket = attempts.get(key) || { count: 0, until: now + 60000 };
+  if (bucket.count >= 10 || (!attempts.has(key) && attempts.size >= 10000)) return res.status(429).set('Retry-After','60').json({error:'Terlalu banyak pengiriman. Coba kembali satu menit lagi.'});
+  bucket.count++; attempts.set(key,bucket); next();
+}, wrap(async(req,res) => res.status(201).json(await service.submit(req.params.id,{...req.body,nip:req.employee.nip,nama:req.employee.name},{nip:req.employee.nip,year:req.assignmentYear,department:req.employee.department}))));
+publicRouter.get('/:id', wrap(async(req,res) => res.json(await service.getType(req.params.id,true).then(type=>({...type,employee:req.employee,assignmentYear:req.assignmentYear})))));
+publicRouter.get('/:id/document',wrap(async(req,res)=>sendDocument(res,await service.preview(req.params.id,{},true))));
+publicRouter.post('/:id/preview',wrap(async(req,res)=>sendDocument(res,await service.preview(req.params.id,{...req.body,nip:req.employee.nip,nama:req.employee.name},true))));
+const router = express.Router();
+router.use((req,res,next)=>{res.set('Cache-Control','no-store');next();});
+router.use(require('./statementEmployeeRoutes').router);
+router.get('/examples/:key',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>{
+  const examples={basic:['example.docx','Contoh-Template-Surat-Pernyataan.docx'],benturan:['1.docx','Contoh-Benturan-Kepentingan.docx'],etika:['2.docx','Contoh-Kode-Etik.docx'],integritas:['3.docx','Contoh-Pakta-Integritas.docx']};
+  const example=Object.hasOwn(examples,req.params.key)?examples[req.params.key]:null;if(!example)return res.status(404).json({error:'Contoh template tidak ditemukan.'});
+  const buffer=await require('node:fs/promises').readFile(require('node:path').join(__dirname,'../../templates/statements',example[0]));sendDocument(res,buffer,example[1]);
+}));
+router.get('/stats',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>res.json(await service.stats())));
+router.get('/types',requirePermission('surat-pernyataan','read'),wrap(async(req,res) => res.json(await service.types())));
+router.post('/types',requirePermission('surat-pernyataan','create'),upload,wrap(async(req,res) => res.status(201).json(await service.saveType(null,typeInput(req),req.file))));
+router.put('/types/:id',requirePermission('surat-pernyataan','update'),upload,wrap(async(req,res) => res.json(await service.saveType(req.params.id,typeInput(req),req.file))));
+router.get('/types/:id/document',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>{const buffer=await service.templateBuffer(req.params.id);sendDocument(res,req.query.editor==='true'?await require('../services/statementDocumentService').forEditor(buffer):buffer,'template-surat.docx');}));
+router.put('/types/:id/document',requirePermission('surat-pernyataan','update'),upload,wrap(async(req,res)=>res.json(await service.saveDocument(req.params.id,typeInput(req),req.file))));
+router.post('/types/:id/preview',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>sendDocument(res,await service.preview(req.params.id,req.body))));
+router.get('/exports/filled.xlsx',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>{const exports=require('../services/statementExportService'),result=await exports.records(req.query);res.set('Cache-Control','no-store').attachment('Daftar-Pengisian-'+result.year+'.xlsx').type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').send(exports.workbook(result));}));
+router.get('/exports/submissions.zip',requirePermission('surat-pernyataan','read'),wrap(async(req,res,next)=>{const exports=require('../services/statementExportService');await exports.zip(req,res,next,await exports.records(req.query));}));
+router.get('/annual-recap',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>res.json(await service.annualRecap(req.query))));
+router.get('/groups',requirePermission('surat-pernyataan','read'),wrap(async(req,res) => res.json(await service.groups(req.query.q ?? ''))));
+router.get('/submissions',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>res.json(await service.submissions(req.query))));
+router.delete('/submissions/:id',require('../middleware/authorization').requireAdmin,wrap(async(req,res)=>res.json(await service.deleteSubmission(req.params.id))));
+router.get('/submissions/:id',requirePermission('surat-pernyataan','read'),wrap(async(req,res) => res.json(await service.submission(req.params.id))));
+router.get('/submissions/:id/document',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>sendDocument(res,await service.signedDocument(req.params.id))));
+module.exports = { router, publicRouter };
