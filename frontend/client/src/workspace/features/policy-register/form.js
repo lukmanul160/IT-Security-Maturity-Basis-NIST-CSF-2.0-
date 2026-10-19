@@ -120,6 +120,7 @@ function resetPolicyRegisterForm() {
   $('policyRegisterFile').value = '';
   $('policyRegisterFilePreview').hidden = true;
   $('policyRegisterFileName').textContent = '-';
+  $('policyRegisterDocumentEdit').hidden = true;
   $('policyRegisterFormTitle').textContent = 'New policy';
   policyRelatedSelection = new Set();
   policyRelatedExpandedFolders.clear();
@@ -148,6 +149,7 @@ function fillPolicyRegisterForm(row) {
   policyRelatedSelection = new Set((row.relatedNoteIds || []).map(String));
   renderPolicyRelatedNotes();
   $('policyRegisterId').value = row.id;
+  $('policyRegisterDocumentEdit').hidden = !canEditPolicyDocument(row);
   $('policyRegisterTitle').value = row.title || '';
   $('policyRegisterCategory').value = row.category || '';
   $('policyRegisterOwner').value = row.owner || '';

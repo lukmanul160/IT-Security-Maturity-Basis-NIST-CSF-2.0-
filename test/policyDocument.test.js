@@ -7,7 +7,7 @@ const storage = require('../src/services/storageService');
 const access = require('../src/services/evidenceAccessService');
 const permissions = require('../src/services/permissionService');
 
-test('Word editing checks draft status, stale revisions, file ownership and saves a separate version', async t => {
+test('Word editing resets approval to Draft, checks stale revisions, file ownership and saves a separate version', async t => {
   const file = { originalname: 'policy.docx', buffer: await require('../src/services/statementDocumentService').plain('Edited policy') };
   const row = { id: 1, approval_status: 'Draft', attachment_name: 'policy.docx', attachment_path: 'policy-register/original.docx', document_revision: 'revision-1' };
   const statements = [], stored = [];
@@ -24,9 +24,11 @@ test('Word editing checks draft status, stale revisions, file ownership and save
   await assert.rejects(() => service.save(1, user, file, 'old-revision'), { status: 409 });
   assert.equal(stored.length, 0);
   row.approval_status = 'Approved';
-  await assert.rejects(() => service.load(1, user), { status: 409 });
-  await assert.rejects(() => service.save(1, user, file, 'revision-1'), { status: 409 });
-  assert.equal(stored.length, 0);
+  assert.equal((await service.load(1, user)).revision, 'revision-1');
+  await service.save(1, user, file, 'revision-1');
+  assert.equal(stored.length, 1);
+  assert.ok(statements.some(([sql]) => sql.startsWith('UPDATE') && sql.includes("approval_status='Draft'")));
+  stored.length = 0;
   row.approval_status = 'Draft'; row.attachment_name = 'policy.doc';
   await assert.rejects(() => service.load(1, user), { status: 400 });
   row.attachment_name = 'policy.docx';

@@ -7,7 +7,6 @@ const mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 const fail = (message, status = 400) => Object.assign(new Error(message), { status });
 function editable(row) {
   if (!row) throw fail('Policy tidak ditemukan.', 404);
-  if (row.approval_status !== 'Draft') throw fail('Hanya dokumen berstatus Draft yang dapat diedit.', 409);
   if (!row.attachment_path || !/\.docx$/i.test(row.attachment_name)) throw fail('Editor mendukung dokumen Word .docx. Konversikan file .doc ke .docx terlebih dahulu.');
 }
 async function load(id, user) {
@@ -31,7 +30,7 @@ async function save(id, user, file, revision) {
     // Save a separate version: other records may reference the original file.
     const target = `policy-register/${randomUUID()}.docx`;
     await storage.put(target, { buffer: file.buffer, name: row.attachment_name, mimeType: mime, uploadedBy: await access.userId(user) });
-    await client.query('UPDATE policy_register SET attachment_path=$2,attachment_type=$3,updated_at=now() WHERE id=$1', [id, target, mime]);
+    await client.query("UPDATE policy_register SET attachment_path=$2,attachment_type=$3,approval_status='Draft',updated_at=now() WHERE id=$1", [id, target, mime]);
     await client.query('COMMIT');
     return { saved: true };
   } catch (error) { await client.query('ROLLBACK'); throw error; }

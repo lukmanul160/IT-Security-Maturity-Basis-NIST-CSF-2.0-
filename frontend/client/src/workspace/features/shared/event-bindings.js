@@ -126,6 +126,10 @@ $('policyRegisterFileRemove').addEventListener('click', () => {
       $('policyRegisterStatus').textContent='Referensi dilepas. File asli tetap tersedia di Uploaded files.';
     }).catch(error=>{ $('policyRegisterStatus').textContent=error.message; });
 });
+$('policyRegisterDocumentEdit').addEventListener('click', () => {
+  const row = policyRegisterRows.find(item => String(item.id) === String($('policyRegisterId').value));
+  if (row && canEditPolicyDocument(row)) openPolicyDocumentEditor(row);
+});
 $('policyRegisterBody').addEventListener('click', event => {
   const documentEdit = event.target.closest('[data-policy-document-edit]');
   if (documentEdit) {

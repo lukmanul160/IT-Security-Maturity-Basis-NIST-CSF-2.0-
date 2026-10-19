@@ -15,7 +15,7 @@
     "test:statements-integration": "node scripts/test-statements-integration.js",
     "test:statements-browser": "node scripts/test-statements-browser.js",
     "test:policy-word-browser": "node scripts/test-policy-word-browser.js",
-    "test:policy-word": "node --test test/policyDocument.test.js",
+    "test:policy-word": "node --test test/policyDocument.test.js test/policyDocumentFrontend.test.js",
     "test:statements-security": "node --test test/statements.test.js test/statementDocuments.test.js test/statementEmployees.test.js test/statementRateLimit.test.js test/auditTrail.test.js",
     "seed:ikas": "node scripts/generate-ikas-seed.js",
     "test:ikas": "node --test test/ikasAssessment.test.js test/assessmentPeriods.test.js",

@@ -31,7 +31,7 @@ try{
  await call('Page.navigate',{url:base+'/app#policy-register'});
  await wait("!!document.querySelector('[data-view=policy-register]')");await evaluate("document.querySelector('[data-view=policy-register]').click()");
  await wait(`!!document.querySelector('[data-policy-document-edit="${policyIds[0]}"]')`);
- assert.equal(await evaluate(`!!document.querySelector('[data-policy-document-edit="${policyIds[1]}"]')`),false);
+ assert.equal(await evaluate(`!!document.querySelector('[data-policy-document-edit="${policyIds[1]}"]')`),true);
  assert.equal(await evaluate(`!!document.querySelector('[data-policy-document-edit="${policyIds[2]}"]')`),false);
  await evaluate(`document.querySelector('[data-policy-document-edit="${policyIds[0]}"]').click()`);
  await wait("!!document.querySelector('.policy-word-editor')&&!document.querySelector('.policy-word-editor .primary').disabled");
@@ -46,7 +46,7 @@ try{
  const revisionResponse=await fetch(base+'/api/policy-register/'+policyIds[0]+'/document',{headers:{cookie:auth.sessionCookie+'='+token}});const revision=revisionResponse.headers.get('x-document-revision');assert.equal(revisionResponse.status,200);
  const put=async rev=>{const body=new FormData();body.set('revision',rev);body.set('document',new Blob([original]),'draft.docx');return fetch(base+'/api/policy-register/'+policyIds[0]+'/document',{method:'PUT',headers:{cookie:auth.sessionCookie+'='+token},body});};
  assert.equal((await put('stale')).status,409);await policies.update(policyIds[0],{approvalStatus:'Approved'});assert.equal((await put(revision)).status,409);
- console.log('PASS: draft-only DOCX action, Word editor typing/save, separate file version, unchanged original, stale revision and approval-change rejection.');
+ console.log('PASS: DOCX action across approval statuses, Word editor typing/save, separate file version, unchanged original, stale revision and approval-change rejection.');
  }finally{
   for(const id of policyIds){const row=(await pool.query('SELECT attachment_path FROM policy_register WHERE id=$1',[id])).rows[0];if(row?.attachment_path)filePaths.add(row.attachment_path);await pool.query('DELETE FROM policy_register WHERE id=$1',[id]);}
   for(const value of filePaths){await require('../src/services/storageService').remove(value);await pool.query('DELETE FROM evidence_files WHERE path=$1',[value]);}

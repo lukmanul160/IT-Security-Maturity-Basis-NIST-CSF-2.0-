@@ -8,3 +8,5 @@
 .policy-word-canvas{background:#e0e6ed;min-height:600px;color:#111;overflow:auto;margin-top:10px}
 .policy-word-canvas :is(p,td,th,span){line-height:revert}
 @media(max-width:760px){.policy-word-editor{inset:0;width:100vw;height:100vh;padding:12px}}
+
+.policy-word-editor::backdrop{background:#0f172a88}

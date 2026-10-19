@@ -7,6 +7,10 @@ function getPolicyReviewCycleMonths(reviewCycle) {
   return null;
 }
 
+function canEditPolicyDocument(row) {
+  return !!(row?.attachmentPath && /\.docx$/i.test(String(row.attachmentName || '').trim()) && canManagePolicyRegister('update'));
+}
+
 let policyDocumentEditorOpen = false;
 async function openPolicyDocumentEditor(row) {
   if (policyDocumentEditorOpen) return;
@@ -20,7 +24,7 @@ async function openPolicyDocumentEditor(row) {
   const status = document.createElement('p'); status.setAttribute('role', 'status'); status.textContent = 'Memuat editor Word...';
   const toolbar = document.createElement('div'); toolbar.className = 'policy-word-toolbar';
   const canvas = document.createElement('div'); canvas.className = 'policy-word-canvas';
-  heading.append(title, save, close); dialog.append(heading, status, toolbar, canvas); document.body.append(backdrop, dialog); dialog.show();
+  heading.append(title, save, close); dialog.append(heading, status, toolbar, canvas); document.body.append(backdrop, dialog); dialog.showModal();
   let controller, dirty = false, saving = false, closed = false;
   const unload = event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } };
   const dismiss = () => {
@@ -35,11 +39,13 @@ async function openPolicyDocumentEditor(row) {
     if (!response.ok) throw new Error((await response.json()).error || 'Dokumen tidak dapat dibuka.');
     const revision = response.headers.get('X-Document-Revision');
     const buffer = await response.arrayBuffer();
+    status.textContent = 'Memuat komponen editor Word...';
     const module = await window.NistStatementEditor();
     if (closed) return;
+    status.textContent = 'Menyiapkan isi dokumen dan toolbar...';
     const mounted = await module.mount({ container: canvas, toolbar, buffer, name: row.attachmentName, user: (await workspaceUserReady) || {}, onChange: () => { dirty = true; status.textContent = 'Perubahan belum disimpan.'; } });
     if (closed) { mounted.destroy(); return; }
-    controller = mounted; save.disabled = false; status.textContent = 'Editor siap. Klik dokumen untuk mulai mengedit.';
+    controller = mounted; save.disabled = false; status.textContent = 'Editor siap. Klik dokumen untuk mulai mengedit. Menyimpan dokumen akan mengembalikan status policy ke Draft.';
     save.onclick = async () => {
       if (saving) return;
       saving = true; save.disabled = true; status.textContent = 'Menyimpan dokumen...';
@@ -49,7 +55,7 @@ async function openPolicyDocumentEditor(row) {
         const result = await fetch(url, { method: 'PUT', body });
         if (!result.ok) throw new Error((await result.json()).error || 'Dokumen gagal disimpan.');
         dirty = false; saving = false; dismiss(); await loadPolicyRegisterRows();
-        $('policyRegisterStatus').textContent = 'Dokumen Word berhasil disimpan.';
+        $('policyRegisterStatus').textContent = 'Dokumen Word berhasil disimpan. Status policy: Draft.';
       } catch (error) { status.textContent = error.message; }
       finally { saving = false; save.disabled = false; }
     };
@@ -180,9 +186,9 @@ function renderPolicyRegisterRows() {
       <td>${escapeHtml(row.reviewCycle || '-')}</td>
       <td>${escapeHtml(row.approvalStatus || '-')}</td>
       <td>${row.lastReview ? new Date(row.lastReview).toLocaleDateString((globalThis.NistI18n?.locale || 'id-ID')) : '-'}</td>
-      <td>${row.attachmentName ? `<a href="/api/files/${encodeURIComponent(String(row.attachmentPath || '').replace(/^upload\//, ''))}" target="_blank" rel="noreferrer">${escapeHtml(row.attachmentName)}</a>${row.approvalStatus === 'Draft' && row.attachmentPath && /\.docx$/i.test(row.attachmentName) && canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-document-edit="${row.id}">Edit dokumen</button>` : ''}${row.approvalStatus === 'Draft' && /\.doc$/i.test(row.attachmentName) ? '<small>Konversikan ke .docx untuk mengedit dokumen.</small>' : ''}` : '-'}</td>
+      <td>${row.attachmentName ? `<a href="/api/files/${encodeURIComponent(String(row.attachmentPath || '').replace(/^upload\//, ''))}" target="_blank" rel="noreferrer">${escapeHtml(row.attachmentName)}</a>${canEditPolicyDocument(row) ? `<button class="attachment-action-button" type="button" data-policy-document-edit="${row.id}">Edit dokumen</button>` : ''}${/\.doc$/i.test(row.attachmentName) ? '<small>Konversikan ke .docx untuk mengedit dokumen.</small>' : ''}` : '-'}</td>
       <td class="policy-related-cell">${policyRelatedMarkup(row)}</td>
-      <td class="policy-register-actions">${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>
+      <td class="policy-register-actions">${canEditPolicyDocument(row) ? `<button class="attachment-action-button" type="button" data-policy-document-edit="${row.id}">Edit dokumen</button>` : ''}${canManagePolicyRegister('update') ? `<button class="attachment-action-button" type="button" data-policy-edit="${row.id}">Edit</button>` : ''}${canManagePolicyRegister('delete') ? `<button class="attachment-action-button danger" type="button" data-policy-delete="${row.id}">Delete</button>` : ''}</td>
     </tr>
   `).join('') || '<tr><td colspan="9">No policy records found.</td></tr>';
   filterPolicyRegisterTable();
