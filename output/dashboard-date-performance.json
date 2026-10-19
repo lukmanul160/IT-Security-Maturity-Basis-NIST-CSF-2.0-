@@ -1,0 +1,48 @@
+{
+  "node": "v24.19.0",
+  "scope": "VM helper CPU only; five timed samples, one warmup; identical outputs verified",
+  "results": [
+    {
+      "file": "risk-management/dashboard.js",
+      "version": "before",
+      "calls": 100,
+      "medianMs": 13.021999999999935,
+      "output": "2026-10-01"
+    },
+    {
+      "file": "risk-management/dashboard.js",
+      "version": "after",
+      "calls": 100,
+      "medianMs": 0.47870000000011714,
+      "output": "2026-10-01"
+    },
+    {
+      "file": "risk-acceptance/dashboard.js",
+      "version": "before",
+      "calls": 100,
+      "medianMs": 100.10080000000016,
+      "output": "2026-10-01"
+    },
+    {
+      "file": "risk-acceptance/dashboard.js",
+      "version": "after",
+      "calls": 100,
+      "medianMs": 11.450000000000273,
+      "output": "2026-10-01"
+    },
+    {
+      "file": "shared/governance-dashboard.js",
+      "version": "before",
+      "calls": 100,
+      "medianMs": 41.41939999999977,
+      "output": -19
+    },
+    {
+      "file": "shared/governance-dashboard.js",
+      "version": "after",
+      "calls": 100,
+      "medianMs": 2.807300000000396,
+      "output": -19
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 // Classic-script fragment. No approval, expiry, or financial data is fabricated.
 const raDashboardState = { drill: null, page: 1, auditId: '', auditPage: 1, auditGeneration: 0 };
-function raToday() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+const raDayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
+function raToday() { return raDayFormatter.format(new Date()); }
 function raDate(value) {
   if (!value) return '';
   const text = String(value);
@@ -9,7 +10,7 @@ function raDate(value) {
     return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === text ? text : '';
   }
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+  return Number.isNaN(date.getTime()) ? '' : raDayFormatter.format(date);
 }
 function raDays(date, today = raToday()) { return date ? Math.round((Date.parse(date + 'T00:00:00Z') - Date.parse(today + 'T00:00:00Z')) / 86400000) : null; }
 function raSigned(form, stage) {

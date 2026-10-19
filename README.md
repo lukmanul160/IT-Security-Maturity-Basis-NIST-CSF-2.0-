@@ -128,9 +128,15 @@ npm run dev
 npm run dev:client
 npm run build
 npm test
+npm run test:performance
 npm run test:threat-browser
 npm run test:risk-options-browser
 ~~~
+
+Performance test memakai PostgreSQL dan folder data sementara, tanpa membaca
+`.env` atau memakai data operasional. PostgreSQL client/server tools harus tersedia;
+atur `PERF_PG_BIN` bila lokasinya berbeda. Hasil dan batas pengujian ada di
+[laporan performance per modul](docs/performance-modules-2026-10-19.md).
 
 Backend dan dev frontend dijalankan pada terminal terpisah. Perubahan frontend
 memerlukan build; perubahan backend/config memerlukan restart. Session ada dalam

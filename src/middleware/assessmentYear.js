@@ -37,10 +37,11 @@ function describe(path, method) {
 }
 async function assessmentYear(req,res,next) {
   const descriptor=describe(req.path,req.method);
+  let defaultPeriod;
   if(req.query.assessmentYear===undefined){
     if(!descriptor)return next();
     await service.ensureStore();
-    const defaultPeriod=await service.period(descriptor.owner,2026);
+    defaultPeriod=await service.periodMetadata(descriptor.owner,2026);
     if(defaultPeriod.legacy)return next();
   }
   if(!descriptor)return next(fail('Endpoint ini tidak mendukung tahun assessment.',404));
@@ -50,7 +51,7 @@ async function assessmentYear(req,res,next) {
   if(descriptor.kind==='iso-reset'&&!await permissions.has(req.user?.role,'iso27001-soa','delete'))return res.status(403).json({error:'Izin Delete SOA diperlukan untuk reset ISO 27001/SOA.'});
   if(descriptor.kind==='objectives'&&((req.query.year!==undefined&&Number(req.query.year)!==year)||(['POST','PUT'].includes(req.method)&&Number(req.body?.year)!==year)))return next(fail('Tahun sasaran harus sesuai tahun assessment.'));
   await service.ensureStore();
-  const period=await service.period(descriptor.owner,year);
+  const period=defaultPeriod || await service.periodMetadata(descriptor.owner,year);
   if(period.legacy){
     if(descriptor.kind==='objectives'&&descriptor.id){
       const row=(await require('../config/database').pool.query('SELECT objective_year FROM information_security_objectives WHERE id=$1',[descriptor.id])).rows[0];

@@ -1,7 +1,8 @@
 // Shared classic-script scope; all dashboard values derive from the existing register.
 const rdState = { drill: null };
-function rdToday() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
-function rdDate(value) { if (!value) return ''; const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date); }
+const rdDayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
+function rdToday() { return rdDayFormatter.format(new Date()); }
+function rdDate(value) { if (!value) return ''; const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : rdDayFormatter.format(date); }
 function rdActive(row) { return row.workflowStatus !== 'Closed' && row.workflowStatus !== 'Legacy Closed' && row.treatmentAction !== 'Closed'; }
 function rdScore(row, mode = 'inherent') { const l = Number(row[mode === 'residual' ? 'residualLikelihood' : 'likelihood']); const i = Number(row[mode === 'residual' ? 'residualImpact' : 'impact']); return [l, i].every(n => Number.isInteger(n) && n >= 1 && n <= 5) ? l * i : null; }
 function rdHigh(row, mode = 'inherent') { return rdScore(row, mode) >= 15; }

@@ -1,0 +1,679 @@
+✔ gap validation requires description and Open/Closed, allowing evidence to be added later (2.0082ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+[e8792116-84cd-4626-b745-0aa4db14428a] Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+    at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+    at ensureStore (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:5:45)
+    at Object.read (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:6:29)
+    at fileLimits (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\fileLimits.js:10:57)
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:342:13)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:297:9
+    at processParams (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:582:12)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:291:5)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\uploadCapacity.js:6:48
+[audit-recovery] Database write failed; retaining event on disk: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+✔ gap saves create distinct IDs for multiple findings on the same assessment (7.1307ms)
+✔ gap update rejects stale edits and cross-control IDs before linking evidence (2.7305ms)
+✔ evidence ownership rejection rolls back gap writes (0.6003ms)
+✖ gap endpoints enforce assessment read/update/delete permissions and reject unknown frameworks (2146.5706ms)
+✔ assessment year validation and route scopes reject invalid years and preserve permission boundaries (2.9907ms)
+✖ yearly assessments copy all results, start empty, isolate mutations, and preserve evidence references (1.8255ms)
+✔ resized and hidden diagram nodes round-trip while old layouts remain compatible (2.6991ms)
+✔ diagram validates asset IDs, duplicate nodes, bounded coordinates and required versions (1.067ms)
+✔ diagram save verifies registered assets and prevents overwriting a newer version (1.7701ms)
+✔ diagram API allows readers and denies edits without modelling update permission (572.6528ms)
+✔ canvas names are required and reserved names cannot shadow the existing diagram (0.5602ms)
+✔ multiple canvas API requires independent read/create/update permissions and valid UUIDs (105.5449ms)
+✔ reciprocal and parallel relationships have distinct routes and label positions (21.0405ms)
+✔ routes follow moved nodes and reciprocal directions remain distinct for vertical layouts (3.3351ms)
+✔ asset pagination caps rows at 20 and handles filtering, deletion and empty results (9.2252ms)
+✔ asset filters combine CIA, owner, vendor, renewal and search and reset without changing source order (31.4103ms)
+✔ rack/device filters preserve selection, occupancy and diagram data (2.4613ms)
+✔ relation filters search both endpoints and notes and combine type with related asset (2.4726ms)
+✔ managed TPRM vendor is optional and validates the reference format (2.0648ms)
+✔ selected managed vendor must exist; missing references roll back before creating an asset (7.4863ms)
+✔ renewal validation requires valid recipient and date (4.1534ms)
+✔ rack capacity and collisions are checked including exact boundaries (0.4222ms)
+✔ reminders include overdue renewals and exclude retired assets (0.1749ms)
+✔ asset permissions allow read-only viewers and deny mutations (3.2225ms)
+✔ all add/edit flows open a native modal and edit copies preserve the original record (47.0104ms)
+✔ failed saves preserve modal values and successful saves close it (5.7461ms)
+✔ busy modal blocks cancel/Escape and repeated submissions (2.8407ms)
+✔ mutation forms are inside dialog; relation editing sends PUT and deletion has confirmation (4.6069ms)
+✔ placement rejects duplicate installs, accepts explicit moves and empty change references (9.0537ms)
+✔ asset status and relation changes accept missing change references (1.7646ms)
+✔ selection remarks identify occupied racks, block new installs and allow explicit move dialogs (5.692ms)
+✔ dragging a multi-U device preserves grab offset and opens modal without changing saved position (9.2329ms)
+✔ drop rejects overlaps and positions outside rack capacity (2.6244ms)
+✔ cross-rack card selects first contiguous free space and full racks reject drop (5.21ms)
+✔ viewer/busy/foreign drags cannot move devices; dropping same position is a no-op (2.9118ms)
+✔ photo API failure does not hide racks or their placements (8.9102ms)
+✔ reloading selects first available rack and prevents concurrent requests (2.7768ms)
+✔ saved rack page is restored after workspace initialization (4.1359ms)
+✔ photo validation rejects active content, disguised MIME types and oversized images (2.0251ms)
+✔ front and rear shallow devices share U while same-side and full-depth collisions are rejected (0.7518ms)
+✔ rack drawings span exact U height and map front/rear photos according to orientation (5.7579ms)
+✔ dragging between front/rear views respects side occupancy and keeps full depth (2.6512ms)
+✖ photo API enforces access, handles multipart data and serves images without MIME sniffing (440.1085ms)
+✔ front/rear photo updates commit together and roll back if a second write fails (13.7489ms)
+[] Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+    at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+    at ensureStore (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:5:45)
+    at Object.read (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:6:29)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\configuredUpload.js:9:75
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\route.js:157:13)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\routes\assetManagementRoutes.js:61:289
+✔ asset and front/rear photos commit atomically; invalid photos never create an asset (12.679ms)
+[] Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+    at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+    at ensureStore (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:5:45)
+    at Object.read (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:6:29)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\configuredUpload.js:9:75
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\route.js:157:13)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\permission.js:2:156
+✖ registration accepts photos under Asset Register create/update permissions and restricts rack photo access (3464.0297ms)
+✔ related risk links validate IDs, preserve asset data and roll back stale selections (8.9046ms)
+✔ risk catalog and link API require Risk Register read plus asset permissions (503.5464ms)
+✔ H-30 every five days has matching slots in assets, policy and audit (8.2689ms)
+✔ asset delivery history prevents hourly duplicates, honors five-day intervals and maximum count (43.8393ms)
+✔ custom asset renewal templates render fields and reject malformed subjects or SMTP selections (0.7127ms)
+✔ selected SMTP and custom messages persist without storing account credentials (1.2399ms)
+✔ asset renewal scheduler uses selected SMTP and the custom message (15.1125ms)
+✔ CIA assessment uses the highest impact and a 5 by 5 likelihood matrix, consistent in browser and server (17.3058ms)
+✔ invalid and incomplete assessment is rejected and client-supplied scores cannot override the result (1.9194ms)
+✔ Asset Management opens and closes through the shared sidebar handler (2.9321ms)
+✔ asset transfer rejects foreign formats, dangling references and duplicate assets before writes (2.7431ms)
+✖ export requires Read and import requires Read/Add/Edit on all asset modules (485.5509ms)
+[] Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+    at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+    at ensureStore (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:5:45)
+    at Object.read (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\websiteSettingsService.js:6:29)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\configuredUpload.js:9:75
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\route.js:157:13)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\permission.js:2:156
+✔ snapshot index preserves hierarchy, child ordering and fresh records after reload (2.059ms)
+✔ missing parents and cyclic hierarchy terminate without including the record itself (0.3082ms)
+✔ detail rendering keeps closed findings in totals, sorts overdue first and escapes text (0.7648ms)
+[audit-finding-reminder] Delivery failed for finding finding-1
+✔ settings validate recipients and refuse module SMTP credentials (4.0936ms)
+✔ reminders include audit title and finding, skip closed/undated/future and stop after due date (3.8734ms)
+✔ test email uses central SMTP and closes transport (1.3086ms)
+✔ saved templates survive reloading settings and schedule-only updates (1.2136ms)
+✔ custom content validates templates and renders plain text without recursive substitution (0.71ms)
+✔ scheduler retries failed delivery and deduplicates successful delivery (9.3372ms)
+✔ calendar intervals clamp month ends, support leap years and catch up only the latest slot (0.5727ms)
+✔ settings endpoints reject non-admin before service access (504.6788ms)
+✔ finding recipients follow owner and only Open findings (0.8375ms)
+✔ registered PIC email takes priority over stale finding email (0.5008ms)
+✔ validates required fields, statuses, severity and calendar dates (5.0446ms)
+✔ tracker permission preserves role boundaries (2.3028ms)
+﹣ PostgreSQL hierarchy, binary evidence, update and protected deletion (0.1902ms) # SKIP
+✔ only findings accept status deadlines and owner email (132.13ms)
+✔ retention validates explicit activation and duration; client detection is derived from user agent (3.8696ms)
+✖ retention deletes only expired records when enabled; exports honor filters with client metadata (0.7328ms)
+✔ retention and log export remain admin-only (425.3543ms)
+✔ audit removes nested credentials and binary content (2.5919ms)
+✔ audit distinguishes transfers, mutations and login (0.6929ms)
+✔ failed requests retain attempted action and safe details exactly once (4.4699ms)
+✔ date filters are parameterized and invalid dates rejected (1.8697ms)
+[audit] Transfer persistence failed: connection unavailable
+✔ transfer endpoint persists result and exposes database failure (520.2569ms)
+✔ backup dumps the whole configured database without table or schema exclusions (6.9971ms)
+✔ missing pg_dump fails clearly rather than reporting a partial JSON backup as complete (2.8036ms)
+✔ dump errors never return success and remove the incomplete archive (1.9193ms)
+✔ dump restore uses one transaction for all database objects (3.0152ms)
+✔ failed restore releases authentication lock and removes the uploaded archive (2.1219ms)
+✔ cross-installation restore does not depend on source owners or granted roles (3.4261ms)
+✔ large legacy JSON is rejected before reading it into memory (2.39ms)
+✔ backup above threshold splits automatically while a dump at the threshold stays single (5.9707ms)
+✔ invalid split thresholds are rejected before starting pg_dump (2.2094ms)
+✔ budget follows approval and realization workflow without changing its year (4.4839ms)
+✔ budget rejects skipped approval, self approval and unauthorized reviewers (1.2482ms)
+✔ rejection requires a reason and resubmission starts at draft (0.3589ms)
+✔ years and amounts are validated; realization cannot exceed approval (0.4726ms)
+✔ annual lists are partitioned and duplicate years are rejected (3.4558ms)
+✔ only the assigned user may approve, including users without global approver role (0.549ms)
+✔ Excel round trip accepts draft fields and rejects bad headers, rows and formulas (254.0551ms)
+✔ submission captures configured approver and rejects missing configuration (3.9238ms)
+✔ Excel import validates every row before writing and rolls back write failures (11.3844ms)
+✔ canvas keyboard supports Windows and Mac undo, redo, save and movement (4.4125ms)
+✔ typing, composition, dialogs handled by callers, and consumed events keep native editing (0.5278ms)
+✔ compliance validates reports, real calendar dates, reminders, and contact data (6.1939ms)
+✔ reminder uses UTC+7, stops at deadline/completion, and distinguishes once from daily (0.7633ms)
+✔ continuous reminders continue after deadline without a delivery count limit until stopped (0.5234ms)
+✔ global reminder settings support monthly schedules, templates and recipient modes (2.524ms)
+✖ PostgreSQL compliance CRUD, reminder deduplication, retries and cascade cleanup (0.8572ms)
+✔ evidence validates completion, file size/type and multipart JSON (3.5491ms)
+✖ PostgreSQL evidence is atomic, downloadable, retained on edits and removed with report (0.7244ms)
+✔ reports resolve the same SMTP schedule and owner email used by shared reminders (5.1922ms)
+✔ report status, missing mappings and custom schedules remain distinguishable (0.4792ms)
+✔ shared setting changes update existing reports without editing the report (3.6568ms)
+✔ risk reset uses one checked-out connection and rolls back all related writes on failure (2.3813ms)
+✔ TPRM deletion reports an asset foreign-key conflict instead of an internal server error (0.6904ms)
+✔ legacy certification status cannot escape an HTML class attribute to inject an event handler (2.8911ms)
+✔ TPRM vendor and related risks save atomically and roll back the vendor when link writes fail (1.5435ms)
+✔ evidence path validation rejects traversal and absolute paths (1.7255ms)
+﹣ uploader isolation across upload, file routes, assessment and framework references (0.3029ms) # SKIP
+✔ central library identifies uploads across TPRM, Knowledge, ISO, policy, audit and assets (1.6502ms)
+✔ searchable evidence receives only linked Vault content with read permission (4.1083ms)
+✔ shared picker search matches filenames, policy notes/content and linked Vault with escaped previews (3.5119ms)
+✔ ZIP preserves uploaded paths, binary contents and metadata, and supports list/download/delete (79.1337ms)
+✔ unreadable storage fails without leaving a partial or published backup (5.6559ms)
+✔ legacy database file contents are included when disk copy is missing (25.8563ms)
+✔ archive paths reject traversal, and empty libraries produce a valid archive (17.6691ms)
+✔ file backup routes reject non-admin roles for every archive action (448.0304ms)
+✔ restore round trip preserves content, paths, owner and PDF page through active storage (68.9623ms)
+✔ folder backup includes descendants and excludes folders with similar names (54.1357ms)
+✔ folder restore changes only descendants and rejects missing folders without writes (118.1413ms)
+✔ restore rejects missing files and incorrect sizes before writing any live files (67.0465ms)
+✔ restore rejects manifest traversal without modifying storage (23.6912ms)
+✔ restore reports partial progress when storage fails and cleans uploaded archive (46.0693ms)
+✔ restore rejects corrupt CRC before changing live storage (34.0593ms)
+✔ batch backup streams a large single file across parts and restores in arbitrary order (484.4613ms)
+✔ incomplete, duplicate and mixed backup parts fail before any storage write (3987.707ms)
+✔ batch restore folder selection restores only selected descendants (3471.6162ms)
+✔ stream failure removes every staged or published batch part (196.3288ms)
+✔ administrator batch restore route receives multiple staged ZIPs and folder selection (454.3043ms)
+✔ missing physical files without database bytes are reported explicitly in backup and restore (658.9388ms)
+✔ inspection derives parents and children from backup, cleans uploads and never writes live storage (643.9866ms)
+✔ multiple folder backup and restore select the union without duplicate files (750.6462ms)
+✔ live limits enforce multipart upload/import, JSON import and export before download (275.556ms)
+✔ file downloads and streamed note ZIP exports honor the configured export limit (763.6452ms)
+✖ main file deletion detaches every source, preserves other files and rolls back on storage failure (1.4467ms)
+✔ original-file deletion requires explicit confirmation before deleting all references (2.9182ms)
+✔ ISO reference deletion preserves the original file and other references and respects cancellation (3.1702ms)
+✔ failed evidence refresh keeps known files and exposes the actual HTTP error (2.4315ms)
+✔ refresh after deletion waits for an earlier list request and fetches fresh data (1.9332ms)
+✖ replaceFile keeps the evidence path and updates its content and metadata (18.0375ms)
+✔ standalone library upload keeps successful files when a later upload fails and enforces Add (34.532ms)
+✔ review windows use calendar days, include H-30 and today, and exclude closed overdue findings (32.4297ms)
+✔ policy review dates clamp month ends, validate dates, and do not invent deadlines for ad hoc cycles (2.8907ms)
+✔ policy dashboard scope, drill-down, and original register search filters intersect (4.0759ms)
+✔ audit finding filters preserve only matching findings and their audit, follow-ups, and evidence (6.5799ms)
+✔ completed IKAS workbook recovers a blank repeated validation header and preserves inputs (436.928ms)
+✔ IKAS single index preserves historical scores, notes and evidence references (1.4855ms)
+✔ IKAS seed preserves every source question, scope, rubric and respondent field (160.1904ms)
+✔ IKAS uses subcategory and category averages with domain weights, zero scores and incomplete status (8.1305ms)
+✔ Excel export preserves all package parts and only changes maturity index and validation cells (1217.338ms)
+✔ domain import follows identifiers and accepts a future template with added questions (8268.8659ms)
+✔ original template is preserved and the four columns contain independent current assessment values (15615.9643ms)
+✔ new control/category/subcategory export and import preserve scores, multiline reasoning and existing evidence (6327.9915ms)
+✔ invalid scores, duplicate control codes, missing hierarchy and wrong headers are rejected before import (2662.7963ms)
+✔ blank imported scores clear legacy fallback only for imported controls and preserve controls outside the file (1.4869ms)
+✔ unrelated modules do not fetch assessment data; concurrent assessment entry shares a load (3.4877ms)
+✔ failed initial data can be retried when reopening a module (4.1461ms)
+✔ the file library loads its cross-framework sources only when requested (1.7074ms)
+✔ Excel preserves progress, relationships, zero, booleans, multiline notes and empty sections (38.9051ms)
+✔ import reads edited cells rather than an embedded original snapshot (37.3471ms)
+✔ wrong module, missing sheet, changed headers and formulas are rejected before writes (38.8698ms)
+✔ templates produce usable empty sheets with complete fields (6.3119ms)
+✔ asset envelope and reminder configuration survive Excel round trip (10.5787ms)
+✔ oversized cell data fails explicitly instead of silently truncating progress (0.6032ms)
+✔ every requested module exposes a transfer definition (6.9139ms)
+✔ IKAS transfer template describes respondent fields and all six maturity rubrics (2.5071ms)
+✔ audit Excel payload imports parents before children and remaps newly created IDs (4.0815ms)
+✔ audit imports reject broken parents before creating any record (3.531ms)
+✔ audit exports expose editable progress columns instead of hiding status inside data (4.4263ms)
+✔ assessment exports and reports include gap status, evidence and framework relationships (3.3715ms)
+✔ gap import uses the batch endpoint, validates before writes, and retains compatibility with old exports (3.875ms)
+✔ TPRM exports include questionnaires, template sections, and CIA assessments in reports (3.8397ms)
+✔ TPRM checks vendor and risk references before writes and normalizes nextReview (2.9816ms)
+✔ invalid questionnaires and template sections are rejected before requests (3.7058ms)
+✔ each module template has matching headers and passes its import format validation (3.945ms)
+✔ risk report includes complete register fields and collect exports only the risk register (2.8467ms)
+✔ reject wrong modules, missing sections, duplicate IDs and invalid scores before writing (2.9422ms)
+✔ reports escape imported content and include module-specific columns and empty state (1.7731ms)
+✔ assessment failures are surfaced without claiming success (1.7237ms)
+✔ assessment report groups policy/practice notes and evidence under one control (2.0246ms)
+✔ broken personnel references are rejected before any request (1.9401ms)
+✔ upsert uses encoded risk ID and normalizes exported dates (2.5318ms)
+✔ personnel imports remap certifications to newly created employee IDs (2.7941ms)
+✔ partial import reports persisted count and stops subsequent writes (2.7445ms)
+✔ transfer records initiated and success with actual filename and count (3.9367ms)
+✔ partial import records failure with error and persisted count (2.3872ms)
+✔ missing audit endpoint exposes HTTP and restart hint before transfer (2.1101ms)
+✔ audit failure after completion reports that operation already succeeded (2.8912ms)
+✔ import uses Add for new records and Edit for existing records (5.1175ms)
+✔ assessment monitoring includes explicit gaps without treating maturity shortfalls as findings (11.8527ms)
+✔ monitoring queries no business module without its read permission (1.2415ms)
+✔ file monitoring uses the existing owner-scoped evidence reader (2.8087ms)
+✔ dashboard deadlines use Bangkok day boundaries and include today through 30 days (0.8777ms)
+✔ new-record trends group actual timestamps into Bangkok months and preserve empty months (0.4269ms)
+✔ monitoring validates calendar dates and derives CIA from actual assessment indicators (0.4298ms)
+✔ acceptance monitoring requires all sign-off stages and distinguishes rejected decisions (0.5481ms)
+✔ closed risks do not contribute high or overdue monitoring indicators (1.1239ms)
+✔ failure of one readable module does not invent zero values or suppress other modules (1.3945ms)
+✔ monitoring endpoint enforces dashboard read permission and prevents caching (408.9374ms)
+✔ identical pending browser mutations use one request and independently readable responses (44.3367ms)
+✔ different payloads remain independent and failed requests can be retried (8.973ms)
+✔ multipart repeats share one upload and GET requests remain independent (9.6438ms)
+✔ update and delete on the same record are locked across users (97.6606ms)
+Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+    at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+    at Object.connect (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\mutationGuard.test.js:47:54)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\mutationGuard.js:37:29
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\mutationGuard.test.js:49:115
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:342:13)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:297:9
+    at processParams (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:582:12)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:291:5)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\mutationGuard.test.js:48:107
+✖ test\mutationGuard.test.js (116791.3921ms)
+✔ security objects and calibrated CCTV coverage persist and reject invalid settings (4.1023ms)
+✔ editable office example validates and rejects duplicate IDs, unknown shapes and out-of-bounds positions (2.3964ms)
+✔ new modules honor normal role actions (0.484ms)
+✖ PostgreSQL office save preserves layout and rejects stale updates/deletes (0.6415ms)
+✔ upload capacity rejects excess requests and releases slots exactly once (1.4524ms)
+✔ streamed multipart aggregate limit rejects excess and removes all staged files (189.8544ms)
+✔ audit survives database outage and process recreation, then retries successfully (34.7617ms)
+✔ replacement denies non-owner before multipart storage receives file bytes (80.7807ms)
+✔ password limiter shares account budget across both routes without limiting name updates (269.6833ms)
+✔ personnel actions follow Access Settings for employees and certificates (602.8653ms)
+✔ certificate uploads validate formats, size and signatures (130.3154ms)
+✔ certificate registration saves original bytes and server-owned attachment metadata (2.4231ms)
+✔ failed certification save cleans the newly staged file (1.1847ms)
+✔ ordinary edits preserve certificates and explicit removal clears the link (0.8563ms)
+✔ certifications require a registered personnel ID, not a free-text name (3.4172ms)
+✔ personnel may have no supervisor but cannot supervise themselves (0.4124ms)
+﹣ registered personnel workflow and legacy migration in isolated PostgreSQL TEMP tables (0.1715ms) # SKIP
+✔ policy relations survive create, partial update, reload and explicit removal (6.2233ms)
+✔ policy search includes only linked note content and combines with category filters (48.0866ms)
+✔ folder selection includes descendants and hidden search results, excluding similarly named folders (4.2896ms)
+✔ policy register service supports CRUD and attachment metadata (21.7104ms)
+✖ policy deletion handles missing and other-owner attachments while enforcing Delete (1.8019ms)
+✔ failed policy deletion shows the server error and keeps the dialog open (6.1512ms)
+✔ policy deletion completes even when refreshing files fails, and reports network errors (6.2902ms)
+[policy-reminder] Delivery failed for policy 1
+✔ review dates clamp month ends and handle leap years (13.2145ms)
+✔ unscheduled and missing dates are skipped (0.9817ms)
+✔ scheduler skips unassigned policies, records success, deduplicates, and retries failures (25.3804ms)
+✔ reminder settings validate recipients and schedule independently of SMTP (8.2753ms)
+✔ custom email content renders placeholders without recursive replacement (1.9666ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+✔ workspace bundles are compressed and cached without bypassing authentication (1920.217ms)
+✔ landing excludes screenshots and blocks direct screenshot access (623.7419ms)
+✔ ensureStore falls back when template markdown files are missing (8.3463ms)
+✔ creating an imported template preserves its default flag and sections (5.8208ms)
+✔ recipient register validates names and email addresses (4.5696ms)
+✖ register persists recipients and updates same name without duplicates (1.1535ms)
+✔ default Approved selection without signatures is Pending; rejected decisions override complete signatures (63.5529ms)
+✔ review windows include today and H-30, exclude H-31, and never invent expiry from one_year (6.7295ms)
+✔ global status, asset and department filters combine with calendar drill and search (8.5181ms)
+✔ audit query matches exact request paths and creation response IDs, with bound pagination (3.3258ms)
+✔ per-request audit API remains Admin-only and rejects non-admin roles before reading logs (1446.0326ms)
+✔ guarded acceptance save sends a request even when submission guard already disabled the button (5.2878ms)
+✔ Risk Management browser assessment matches Asset Management for all 25 matrix cells (8.2208ms)
+✔ server derives impact from CIA and rejects partial assessment instead of trusting supplied scores (4.6349ms)
+✔ dashboard filters combine scope, category, owner and custom dates without mutating the register (55.2137ms)
+✔ overdue excludes Closed, missing residual stays unrated and matrix drill-down uses the selected assessment (5.8652ms)
+✔ category drill-down handles risks without a category (3.9968ms)
+✔ single register combines dashboard drill-down with local category, rating, treatment and search (3.3945ms)
+✔ drill-down clears stale local filters and opens the single Risk Register tab (3.9017ms)
+✔ editing a risk preserves an ISO deadline in the native date input (3.9069ms)
+✔ Excel report fetches authoritative rows, keeps strings literal, and only includes requested IDs (50.5548ms)
+✔ PDF report paginates long content and rejects unsupported formats (312.1652ms)
+✔ report route allows read-only users and denies users without Risk Register read access (684.2166ms)
+✔ dropdown synchronization preserves persisted IDs for referenced register values (7.3616ms)
+✔ dropdown listing keeps real IDs instead of zero from register references (4.6776ms)
+✔ invalid fields, empty labels and invalid ordering are rejected before writes (4.5068ms)
+✔ duplicate dropdown values return a useful conflict error (3.8031ms)
+✔ referenced options cannot be renamed or deleted; ordering can still change (4.6643ms)
+✔ full mitigation lifecycle requires independent approval, verification and closure (6.0134ms)
+✔ draft cannot skip assessment or fabricate a completed control (0.6426ms)
+✔ residual above tolerance returns to evaluation instead of monitoring (0.3765ms)
+✔ acceptance requires a form, conditions, future expiry and independent approval (0.7661ms)
+✔ safe parsing rejects impossible dates, invalid scores and forged workflow state (0.7932ms)
+✔ closure requires evidence and cannot be self-approved (0.6908ms)
+✔ expired acceptance cannot be extended through a review action (0.4609ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+✔ configured actions override role defaults but require read access (4.0981ms)
+✔ permission payload validates all entries before starting a transaction (3.8013ms)
+﹣ action settings persist and are enforced by real routes (0.332ms) # SKIP
+✔ every feature applies Read, Add, Edit and Delete independently (20.7472ms)
+[policyRegisterRoutes] GET /
+[policyRegisterRoutes] GET / - before permission check
+[policyRegisterRoutes] POST /
+[policyRegisterRoutes] PUT /1
+[policyRegisterRoutes] DELETE /1
+✔ real feature APIs reject each disabled action before handling data (10034.4276ms)
+✔ policy option rename uses Edit and rejected saves never become local changes (12.8565ms)
+✔ database restore revokes old sessions and prevents authentication until completed (4.3483ms)
+✔ password verification rejects oversized current password before bcrypt (2.9002ms)
+✔ new login replaces same account session without affecting other accounts (0.6006ms)
+✔ failed login does not revoke active device (32.4931ms)
+✔ role changes and deletion revoke every session for the affected account (2.0285ms)
+✔ password change revokes existing sessions (720.4286ms)
+✔ bcrypt passwords exceeding 72 UTF-8 bytes are rejected before database writes (1.4969ms)
+✔ login limit cannot be bypassed by rotating usernames and expires (1.3939ms)
+✔ login limiter bounds peer storage without evicting active limits (1.0001ms)
+✔ uploaded content is sandboxed even when stored MIME type claims HTML (106.2079ms)
+✔ invalid upload metadata removes staged files (55.8878ms)
+✔ registering an SMTP account creates a separate record and validates its name (6.1425ms)
+✔ registered accounts are listed without exposing encrypted secrets (0.6956ms)
+✔ editing one registered SMTP account preserves its secret and leaves the default untouched (0.8033ms)
+✔ policy and audit test emails use their own saved SMTP selection (4.0207ms)
+✔ unknown SMTP accounts cannot be saved even for a disabled reminder (3.3106ms)
+✔ SMTP validates TLS, port, sender and header injection (0.8789ms)
+✔ SMTP updates preserve encrypted password and never change reminder settings (1.0764ms)
+✔ reminder API hides legacy credentials and saves only module settings (1.7687ms)
+✔ enabling a reminder requires central SMTP but disabled drafts may be saved (1.5005ms)
+✔ policy test messages use central connection and local template (1.2305ms)
+✔ SMTP routes reject non-admin roles before reading or writing settings (678.1867ms)
+﹣ legacy SMTP migration preserves settings and ciphertext, is idempotent, and keeps reminder schedule (0.4508ms) # SKIP
+✔ s3: settings probe, upload, read, replacement and delete retain original bucket (57.0933ms)
+✔ gcs: settings probe, upload, read, replacement and delete retain original bucket (8.7892ms)
+✔ local storage remains readable when new uploads switch to cloud (43.292ms)
+✔ cloud failure preserves settings and never falls back to local (8.0221ms)
+✔ database rollback removes the new object and retains the prior file (6.489ms)
+✔ rejects invalid bucket, missing S3 region and unsafe prefix (4.1961ms)
+✔ explicit deletion removes the managed object and the original legacy upload only (41.8497ms)
+✔ asset and note photos retain original database bytes after storage restore/replacement (66.39ms)
+✔ local: streaming backup and staged restore preserve bytes (58.2929ms)
+✔ s3: streaming backup and staged restore preserve bytes (21.0889ms)
+✔ gcs: streaming backup and staged restore preserve bytes (21.0034ms)
+✔ rapid submits send once and stay locked through follow-up writes (7.3094ms)
+✔ separate handlers on one form share the same lock (2.7643ms)
+✔ failure releases the lock so the user can retry (5.1308ms)
+✔ different forms can save independently (4.7728ms)
+✔ flat list headers map each resize boundary to its own column (1.8495ms)
+✔ merged headers preserve separate leaf column boundaries and rowspan columns (0.6411ms)
+✔ leading rowspans do not shift subsequent column identities (0.509ms)
+✔ hidden columns do not offset the visible resize boundaries (0.4679ms)
+✔ saved theme applies synchronously before the UI is mounted and toggles persist (4.1622ms)
+✔ invalid values and unavailable storage safely use light mode without preventing toggles (11.0515ms)
+✔ theme preferences synchronize across tabs without affecting unrelated settings (2.2414ms)
+✔ fit uses visible viewport measurements and ignores a hidden viewport (3.5637ms)
+✔ reloading selects saved data after an empty initial load and preserves unsaved edits (3.9405ms)
+✔ validates diagrams and STRIDE threats before database writes (14.6666ms)
+✔ rejects duplicate IDs, dangling edges, non-finite coordinates and invalid shapes (11.1448ms)
+✔ saves complete diagrams as parameterized JSONB, retaining threat annotations (4.7811ms)
+✔ optimistic version check prevents overwriting another editor (2.9287ms)
+✔ empty diagrams are valid and missing versions cannot update stored records (3.0953ms)
+✔ unbounded diagrams support negative coordinates and content beyond legacy canvas dimensions (5.7795ms)
+✔ stencil properties persist and invalid types or values are rejected (89.99ms)
+✔ late risk data cannot reopen a cancelled picker (3.686ms)
+✔ late risk data cannot replace another vendor picker (3.4441ms)
+✔ TPRM global filters intersect vendor, level and relationship (43.8587ms)
+✔ TPRM review ignores inactive relationships and unassigned dates (5.4888ms)
+✔ TPRM drill filters preserve exact IDs and unassessed records are not high (3.3805ms)
+✔ vendor workbook has editable answer columns, dropdown, protected structure and no private evidence paths or scores (54.6218ms)
+✔ offline answers and evidence references import while blank rows, scores and uploaded documents remain intact (25.1059ms)
+✔ questionnaire supports N/A and partially completed rows for later review (22.1976ms)
+✔ import rejects another vendor, stale assessment and changed template version (27.1961ms)
+✔ internal score and document updates while the vendor fills Excel do not invalidate unchanged offline answers (12.129ms)
+✔ invalid answers, duplicate IDs, missing rows, altered questions and formulas are rejected (52.3747ms)
+✔ rows can be reordered using their original question IDs (14.7275ms)
+✔ generic template can be filled for a selected vendor without importing approval or file paths (18.8901ms)
+✔ Excel date values and ordinary ISO text are both accepted for respondent dates (19.8325ms)
+✔ missing assessment stays incomplete instead of Low Risk (1.6349ms)
+✔ server recalculates CIA and rejects missing, fractional or out-of-range indicators (1.1929ms)
+✔ due diligence requires every decision, explanation, scores and evidence, including N/A reasons (0.4671ms)
+✔ criticality uses highest impact and does not dilute critical access (0.2313ms)
+✔ residual risk is distinct from inherent risk and missing residual is unknown (0.4373ms)
+✔ review fingerprint changes when answers, service scope, CIA or residual risks change (1.924ms)
+✔ critical failures and unsupported N/A claims cannot pass the gate (0.7694ms)
+✔ dates reject impossible dates and require a future expiry (3.0054ms)
+✔ multipart progress measures bytes, distinguishes server processing and completes only after response (50.265ms)
+✔ HTTP errors preserve fetch response and show server error without claiming completion (1.4407ms)
+✔ abort signal cancels upload and late responses cannot turn failure into success (1.9021ms)
+✔ network failure is actionable and observer failures do not break the request (0.9619ms)
+✔ parallel uploads keep independent byte progress and completion (1.5228ms)
+✔ shared interceptor handles API multipart while preserving JSON, foreign and Request fetch calls (4.8524ms)
+✔ users can enter data in operational modules without administrative or shared-delete privileges (8.1188ms)
+[policyRegisterController] Module loaded
+[policyRegisterRoutes] Loading routes
+[policyRegisterRoutes] Routes configured successfully
+[app] Mounting /api routes with requireAuth
+✔ website settings validate text and image content (3.8378ms)
+✔ file limits validate all fields and retain legacy defaults (1.1757ms)
+✖ website identity persists and retains images when editing text (0.5795ms)
+[b409c499-ef1b-453d-b12c-55023309bc21] Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+    at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\mutationGuard.js:37:29
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:342:13)
+    at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:297:9
+    at processParams (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:582:12)
+    at next (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:291:5)
+    at requireAuth (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\middleware\auth.js:11:3)
+    at Layer.handleRequest (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\node_modules\router\index.js:342:13)
+✖ branding is publicly readable but only administrators may change it (2293.9091ms)
+✔ Excel workers bound concurrency and queue size and reject saturation before creating another worker (3.3009ms)
+✔ worker timeout retains capacity until termination completes and then resumes queued work (29.064ms)
+✔ worker crashes do not leak internal errors or leave the queue blocked (1.9922ms)
+✔ real worker preserves independent maturity values and reasoning; invalid input keeps its validation status (3411.3185ms)
+ℹ tests 376
+ℹ suites 0
+ℹ pass 355
+ℹ fail 16
+ℹ cancelled 0
+ℹ skipped 5
+ℹ todo 0
+ℹ duration_ms 120599.1153
+
+✖ failing tests:
+
+test at test\assessmentGaps.test.js:41:1
+✖ gap endpoints enforce assessment read/update/delete permissions and reject unknown frameworks (2146.5706ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 200
+  
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\assessmentGaps.test.js:51:58)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\assessmentPeriods.test.js:19:1
+✖ yearly assessments copy all results, start empty, isolate mutations, and preserve evidence references (1.8255ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\assessmentPeriods.test.js:20:28)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at test\assetRackPhotos.test.js:43:1
+✖ photo API enforces access, handles multipart data and serves images without MIME sniffing (440.1085ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 200
+  
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\assetRackPhotos.test.js:53:60)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\assetRegistrationPhotos.test.js:15:1
+✖ registration accepts photos under Asset Register create/update permissions and restricts rack photo access (3464.0297ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 201
+  
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\assetRegistrationPhotos.test.js:21:69)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 201,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\assetTransfer.test.js:9:1
+✖ export requires Read and import requires Read/Add/Edit on all asset modules (485.5509ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 200
+  
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\assetTransfer.test.js:18:174)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\auditRetentionExport.test.js:11:1
+✖ retention deletes only expired records when enabled; exports honor filters with client metadata (0.7328ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\auditRetentionExport.test.js:12:26)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at test\compliance.test.js:49:1
+✖ PostgreSQL compliance CRUD, reminder deduplication, retries and cascade cleanup (0.8572ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\compliance.test.js:50:29)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at test\complianceEvidence.test.js:15:1
+✖ PostgreSQL evidence is atomic, downloadable, retained on edits and removed with report (0.7244ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\complianceEvidence.test.js:16:29)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at test\fileReferenceDeletion.test.js:7:1
+✖ main file deletion detaches every source, preserves other files and rolls back on storage failure (1.4467ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\fileReferenceDeletion.test.js:8:29)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at test\fileService.test.js:14:1
+✖ replaceFile keeps the evidence path and updates its content and metadata (18.0375ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\storageService.js:25:16
+      at ensureStore (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\storageService.js:40:7)
+      at location (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\storageService.js:125:11)
+      at Object.remove (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\src\services\storageService.js:225:23)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\fileService.test.js:41:19)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at test\mutationGuard.test.js:1:1
+✖ test\mutationGuard.test.js (116791.3921ms)
+  'test failed'
+
+test at test\officeDesign.test.js:41:1
+✖ PostgreSQL office save preserves layout and rejects stale updates/deletes (0.6415ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\officeDesign.test.js:42:29)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at test\policyRegisterService.test.js:86:1
+✖ policy deletion handles missing and other-owner attachments while enforcing Delete (1.8019ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\policyRegisterService.test.js:87:27)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at test\reminderRecipientService.test.js:8:1
+✖ register persists recipients and updates same name without duplicates (1.1535ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\reminderRecipientService.test.js:9:26)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at test\websiteSettings.test.js:10:1
+✖ website identity persists and retains images when editing text (0.5795ms)
+  Error: SECURITY_TEST: real PostgreSQL access is disabled; use a fixture
+      at BoundPool.blocked (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\scripts\security-test-isolation.cjs:7:31)
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\websiteSettings.test.js:10:105)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at test\websiteSettings.test.js:11:1
+✖ branding is publicly readable but only administrators may change it (2293.9091ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 403
+  
+      at TestContext.<anonymous> (C:\Users\25992005\Documents\Rahasia Negara\NIST Basis\test\websiteSettings.test.js:11:1047)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 403,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

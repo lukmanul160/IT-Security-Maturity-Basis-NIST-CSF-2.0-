@@ -2,7 +2,6 @@ const express = require('express');
 const controller = require('../controllers/policyRegisterController');
 const { requirePermission, requirePageAccess } = require('../middleware/permission');
 
-console.log('[policyRegisterRoutes] Loading routes');
 
 const router = express.Router();
 const reminders = require('../services/policyReminderService');
@@ -16,11 +15,6 @@ router.get('/reminder-settings', adminOnly, reminderHandler(() => reminders.getS
 router.put('/reminder-settings', adminOnly, reminderHandler(req => reminders.saveSettings(req.body)));
 router.post('/reminder-settings/test', adminOnly, reminderHandler(req => reminders.testEmail(req.body?.to)));
 
-// Log all requests to this router
-router.use((req, res, next) => {
-  console.log(`[policyRegisterRoutes] ${req.method} ${req.path}`);
-  next();
-});
 
 router.get('/dropdowns', requirePermission('policy-register', 'read'), controller.listDropdowns);
 const documentService=require('../services/policyDocumentService');
@@ -43,15 +37,7 @@ router.delete('/:id/items/:itemId', requirePageAccess('policy-register', 'delete
 // GET /api/policy-register - List all policies
 router.get(
   '/',
-  (req, res, next) => {
-    console.log('[policyRegisterRoutes] GET / - before permission check');
-    next();
-  },
   requirePermission('policy-register', 'read'),
-  (req, res, next) => {
-    console.log('[policyRegisterRoutes] GET / - after permission, calling list');
-    next();
-  },
   controller.list
 );
 
@@ -78,6 +64,5 @@ router.delete(
   controller.remove
 );
 
-console.log('[policyRegisterRoutes] Routes configured successfully');
 
 module.exports = router;

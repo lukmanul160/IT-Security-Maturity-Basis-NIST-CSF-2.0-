@@ -1,0 +1,123 @@
+{
+  "node": "v24.19.0",
+  "fixtureRows": 100,
+  "samples": 5,
+  "scope": "Real monitoring summary CPU with synthetic SQL/service fixtures; no database, network, browser, storage or email latency. iso27001 includes objectives; administration includes accounts/audit/backups/SMTP/storage.",
+  "results": [
+    {
+      "id": "csf",
+      "medianMs": 0.4029000000000451,
+      "maxMs": 0.8497999999999593
+    },
+    {
+      "id": "privacy",
+      "medianMs": 0.4665999999997439,
+      "maxMs": 2.5244000000002416
+    },
+    {
+      "id": "framework",
+      "medianMs": 61.8132999999998,
+      "maxMs": 72.67799999999988
+    },
+    {
+      "id": "iso27001",
+      "medianMs": 108.24219999999968,
+      "maxMs": 117.49850000000015
+    },
+    {
+      "id": "iso27001-soa",
+      "medianMs": 49.594600000000355,
+      "maxMs": 51.754399999999805
+    },
+    {
+      "id": "risk-management",
+      "medianMs": 49.47890000000007,
+      "maxMs": 55.524100000000544
+    },
+    {
+      "id": "risk-acceptance",
+      "medianMs": 45.26440000000002,
+      "maxMs": 57.92529999999988
+    },
+    {
+      "id": "audit-finding-tracker",
+      "medianMs": 49.238000000000284,
+      "maxMs": 80.32129999999961
+    },
+    {
+      "id": "threat-modelling",
+      "medianMs": 45.469099999999344,
+      "maxMs": 205.02679999999964
+    },
+    {
+      "id": "policy-register",
+      "medianMs": 58.6251000000002,
+      "maxMs": 60.21439999999984
+    },
+    {
+      "id": "asset-register",
+      "medianMs": 54.83420000000024,
+      "maxMs": 56.51140000000032
+    },
+    {
+      "id": "server-racks",
+      "medianMs": 0.23619999999937136,
+      "maxMs": 0.5531000000000859
+    },
+    {
+      "id": "asset-modelling",
+      "medianMs": 63.121900000000096,
+      "maxMs": 72.83899999999994
+    },
+    {
+      "id": "personnel-certification",
+      "medianMs": 63.297199999999975,
+      "maxMs": 74.84940000000006
+    },
+    {
+      "id": "tprm-register",
+      "medianMs": 85.51779999999962,
+      "maxMs": 95.94290000000001
+    },
+    {
+      "id": "tprm-questionnaire",
+      "medianMs": 103.34500000000025,
+      "maxMs": 104.97630000000026
+    },
+    {
+      "id": "questionnaire-templates",
+      "medianMs": 89.77319999999963,
+      "maxMs": 97.59040000000095
+    },
+    {
+      "id": "tprm",
+      "medianMs": 0.16229999999995925,
+      "maxMs": 0.30209999999897263
+    },
+    {
+      "id": "tprm-tiering",
+      "medianMs": 0.15859999999884167,
+      "maxMs": 0.19279999999889696
+    },
+    {
+      "id": "knowledge-notes",
+      "medianMs": 104.44859999999971,
+      "maxMs": 130.58619999999974
+    },
+    {
+      "id": "files",
+      "medianMs": 127.6232,
+      "maxMs": 160.3096000000005
+    },
+    {
+      "id": "administration",
+      "medianMs": 163.43219999999928,
+      "maxMs": 193.69720000000052
+    },
+    {
+      "id": "all-summaries",
+      "medianMs": 3852.1422999999995,
+      "maxMs": 5805.2119999999995
+    }
+  ]
+}

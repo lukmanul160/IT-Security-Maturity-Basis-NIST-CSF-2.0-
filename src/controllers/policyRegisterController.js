@@ -10,7 +10,6 @@ const { pool } = require('../config/database');
 const { uploadRoot } = require('../config/paths');
 const { MAX_FILE_SIZE_BYTES } = require('../config/upload');
 
-console.log('[policyRegisterController] Module loaded');
 
 // Sanitize filename untuk keamanan
 const sanitizeFilename = (filename) => {
@@ -150,10 +149,8 @@ const removeItem = async (req, res) => {
 
 // Handler: List all policies
 const list = async (req, res, next) => {
-  console.log('[policyRegisterController.list] Handler called');
   try {
     const items = await service.list();
-    console.log('[policyRegisterController.list] Returning', items.length, 'policies');
     return res.json(items);
   } catch (error) {
     console.error('[policyRegisterController.list] Error:', error.message);
@@ -165,7 +162,6 @@ const list = async (req, res, next) => {
 
 // Handler: Create new policy
 const create = async (req, res, next) => {
-  console.log('[policyRegisterController.create] Handler called');
   try {
     const payload = getPayload(req);
 
@@ -187,7 +183,6 @@ const create = async (req, res, next) => {
 
 // Handler: Update existing policy
 const update = async (req, res, next) => {
-  console.log('[policyRegisterController.update] Handler called');
   try {
     const { id } = req.params;
     const payload = getPayload(req);
@@ -211,7 +206,6 @@ const update = async (req, res, next) => {
 
 // Handler: Delete policy
 const remove = async (req, res, next) => {
-  console.log('[policyRegisterController.remove] Handler called');
   try {
     const { id } = req.params;
     // The route checks Policy Delete; deleting this reference never modifies its original file.

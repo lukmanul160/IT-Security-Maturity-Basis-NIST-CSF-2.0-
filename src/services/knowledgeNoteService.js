@@ -13,7 +13,7 @@ function validate(note) {
   if (typeof note.content !== 'string' || Buffer.byteLength(note.content) > 1000000) throw fail('Isi catatan maksimal 1 MB.');
   return { title: note.title.trim(), content: note.content, folder: validateFolder(note.folder) };
 }
-async function ensureStore() {
+async function initializeStore() {
   await pool.query(`CREATE TABLE IF NOT EXISTS knowledge_notes (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL DEFAULT '', version INTEGER NOT NULL DEFAULT 1, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
   await pool.query("ALTER TABLE knowledge_notes ADD COLUMN IF NOT EXISTS folder TEXT NOT NULL DEFAULT ''");
   await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS knowledge_notes_folder_title_unique ON knowledge_notes (folder, LOWER(title))');
@@ -23,6 +23,11 @@ async function ensureStore() {
   END $$`);
   await pool.query('CREATE TABLE IF NOT EXISTS knowledge_note_folders (path TEXT PRIMARY KEY)');
   await require('./knowledgeImageService').ensureStore();
+}
+let initialization;
+function ensureStore() {
+  if (!initialization) initialization = initializeStore().catch(error => { initialization = null; throw error; });
+  return initialization;
 }
 const selection = 'id, title, content, folder, version, updated_at AS "updatedAt"';
 async function folders() { return (await pool.query('SELECT path FROM knowledge_note_folders ORDER BY path')).rows.map(row=>row.path); }

@@ -34,6 +34,12 @@ async function period(framework, year, client = pool, lock = '') {
   if (!row) throw fail('Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.', 404);
   return row;
 }
+async function periodMetadata(framework, year) {
+  validateFramework(framework); validateYear(year);
+  const row = (await pool.query('SELECT legacy FROM assessment_periods WHERE framework_id=$1 AND assessment_year=$2', [framework, year])).rows[0];
+  if (!row) throw fail('Assessment tahun ini belum dibuat. Pilih New atau Duplicate terlebih dahulu.', 404);
+  return row;
+}
 async function legacySnapshot(framework, client) {
   await gaps.ensureStore();
   const frameworks = framework === 'iso27001' ? ['iso27001','iso27001-soa'] : [framework];
@@ -380,4 +386,4 @@ async function importMaturityWorkbook(framework,year,payload,user) {
     await client.query('COMMIT');return result;
   }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
-module.exports = {ensureStore,permissions,validateYear,list,period,create,remove,execute,prepareSnapshot,references,fileReferenceCount,detachFile,importIkas,workbookSnapshot,mergeMaturityWorkbook,importMaturityWorkbook};
+module.exports = {ensureStore,permissions,validateYear,list,period,periodMetadata,create,remove,execute,prepareSnapshot,references,fileReferenceCount,detachFile,importIkas,workbookSnapshot,mergeMaturityWorkbook,importMaturityWorkbook};

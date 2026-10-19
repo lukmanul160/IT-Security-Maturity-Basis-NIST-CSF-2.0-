@@ -2,7 +2,9 @@ const { pool } = require('../config/database');
 const permissions = require('./permissionService');
 
 const day = value => value instanceof Date ? value.toISOString().slice(0, 10) : String(value || '').slice(0, 10);
-const todayInBangkok = now => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
+// Reuse ICU setup across rows and requests; retain Bangkok month/day boundaries.
+const bangkokDateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' });
+const todayInBangkok = now => bangkokDateFormatter.format(now);
 function validDay(value) {
   const text = day(value);
   return /^\d{4}-\d{2}-\d{2}$/.test(text) && Number.isFinite(Date.parse(text)) && new Date(text + 'T00:00:00Z').toISOString().slice(0,10) === text ? text : '';
@@ -46,10 +48,11 @@ function recordTrend(rows, now) {
     const date = new Date(anchor); date.setUTCMonth(date.getUTCMonth() - 5 + index);
     return { label: date.toISOString().slice(0, 7), value: 0 };
   });
+  const months = new Map(points.map(point => [point.label, point]));
   for (const row of rows) {
     const date = new Date(row.created_at);
     if (!Number.isFinite(date.getTime())) continue;
-    const point = points.find(p => p.label === todayInBangkok(date).slice(0, 7));
+    const point = months.get(todayInBangkok(date).slice(0, 7));
     if (point) point.value++;
   }
   return points;
@@ -57,8 +60,7 @@ function recordTrend(rows, now) {
 const metric = (label, value) => ({ label, value });
 const query = async (sql, args = []) => (await pool.query(sql, args)).rows;
 
-async function snapshot(user, now = new Date()) {
-  const access = await permissions.getRoleActions(user.role);
+async function buildSnapshot(user, now, access) {
   const can = key => Boolean(access[key]?.read);
   const today = todayInBangkok(now), modules = [], tasks = [];
   function add(id, title, group, view, load, allowed = can(id)) {
@@ -203,5 +205,19 @@ async function snapshot(user, now = new Date()) {
     while (cursor < tasks.length) { const index = cursor++; modules[index] = await tasks[index](); }
   }));
   return { generatedAt: now.toISOString(), timezone: 'Asia/Bangkok', modules };
+}
+// Share only concurrent identical refreshes. Recheck permissions every time and
+// discard the result immediately after completion so later refreshes stay fresh.
+const pendingSnapshots = new Map();
+async function snapshot(user, now) {
+  const access = await permissions.getRoleActions(user.role);
+  if (now !== undefined) return buildSnapshot(user, now, access);
+  const key = JSON.stringify([user.id, user.username, user.role, access]);
+  if (pendingSnapshots.has(key)) return pendingSnapshots.get(key);
+  const pending = buildSnapshot(user, new Date(), access);
+  if (pendingSnapshots.size >= 256) return pending;
+  pendingSnapshots.set(key, pending);
+  try { return await pending; }
+  finally { pendingSnapshots.delete(key); }
 }
 module.exports = { snapshot, distribution, deadlines, recordTrend, todayInBangkok, validDay, ciaLevel, acceptanceStatus };

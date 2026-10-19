@@ -10,6 +10,9 @@
   "description": "NIST CSF 2.0 maturity assessment powered by Node.js",
   "main": "src/server.js",
   "scripts": {
+    "test:performance": "node scripts/performance-all-modules.cjs --regression",
+    "test:performance-unit": "node --require ./scripts/security-test-isolation.cjs --test test/performanceInitialization.test.js test/monitoringDashboard.test.js test/riskDashboard.test.js test/riskAcceptanceDashboard.test.js test/governanceDashboards.test.js test/tprmDashboard.test.js",
+    "benchmark:modules": "node scripts/benchmark-module-summaries.cjs",
     "test:security-assessment": "node scripts/test-security-assessment.cjs",
     "test:statements": "node --test test/statements.test.js test/statementDocuments.test.js test/statementEmployees.test.js",
     "test:statements-integration": "node scripts/test-statements-integration.js",

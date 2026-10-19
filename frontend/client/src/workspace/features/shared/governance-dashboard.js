@@ -1,5 +1,6 @@
 // Shared presentation helpers for dashboards backed by existing module records.
-function gdToday() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+const gdDayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
+function gdToday() { return gdDayFormatter.format(new Date()); }
 function gdDate(value) {
   const date = String(value || '').slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(Date.parse(date)) && new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) === date ? date : '';

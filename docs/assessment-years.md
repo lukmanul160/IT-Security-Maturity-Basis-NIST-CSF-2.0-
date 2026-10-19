@@ -19,4 +19,6 @@ Perubahan dalam satu periode memakai transaksi dan row lock agar perubahan kontr
 
 Migration `database/assessment-periods.sql` dijalankan oleh provisioning dan startup; endpoint periode juga menyiapkannya secara idempotent. Tidak diperlukan pemindahan manual data assessment lama.
 
+Pemeriksaan routing tahun hanya mengambil metadata `legacy`, bukan seluruh snapshot JSON. Metadata periode default digunakan ulang di request yang sama. Pembacaan isi serta transaksi/row lock untuk perubahan tetap dilakukan oleh service assessment; tidak ada cache lintas request untuk data assessment.
+
 Validasi: `node --test test/assessmentPeriods.test.js`, `npm test`, `npm run build:client`, dan `npm run test:assessment-years-browser`. Tes API menggunakan schema PostgreSQL sementara; tes browser memakai fixture untuk seluruh penulisan assessment.

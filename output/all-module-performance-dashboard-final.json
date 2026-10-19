@@ -1,0 +1,60 @@
+{
+  "startedAt": "2026-10-19T15:32:14.110Z",
+  "node": "v24.19.0",
+  "scope": "Loopback HTTP, real disposable PostgreSQL, startup reference seeds plus synthetic notes; admin session; normal audit writes; no schedulers/email. Warm GETs, same host generator, no browser rendering. TPRM framework/tiering reference UI shares TPRM endpoints. No backup/restore mutation or external cloud test.",
+  "durationSeconds": 3,
+  "results": [
+    {
+      "id": "monitoring-dashboard",
+      "endpoint": "/monitoring-dashboard",
+      "concurrency": 1,
+      "requests": 66,
+      "errors": 0,
+      "p50Ms": 43.79699999999866,
+      "p95Ms": 67.31429999999818,
+      "p99Ms": 158.97110000000248,
+      "successfulRps": 21.818329677936678,
+      "rssMB": 165.296875,
+      "dbWaiting": 0
+    },
+    {
+      "id": "monitoring-dashboard",
+      "endpoint": "/monitoring-dashboard",
+      "concurrency": 10,
+      "requests": 381,
+      "errors": 0,
+      "p50Ms": 69.13260000000082,
+      "p95Ms": 110.03889999999956,
+      "p99Ms": 466.3054999999986,
+      "successfulRps": 123.29482608310141,
+      "rssMB": 240.71484375,
+      "dbWaiting": 0
+    },
+    {
+      "id": "monitoring-dashboard",
+      "endpoint": "/monitoring-dashboard",
+      "concurrency": 25,
+      "requests": 500,
+      "errors": 0,
+      "p50Ms": 157.88100000000122,
+      "p95Ms": 187.3599000000031,
+      "p99Ms": 192.69219999999768,
+      "successfulRps": 165.0787684899365,
+      "rssMB": 266.48046875,
+      "dbWaiting": 0
+    },
+    {
+      "id": "monitoring-dashboard",
+      "endpoint": "/monitoring-dashboard",
+      "concurrency": 100,
+      "requests": 700,
+      "errors": 0,
+      "p50Ms": 415.59530000000086,
+      "p95Ms": 504.14040000000386,
+      "p99Ms": 510.10599999999977,
+      "successfulRps": 230.75695500638236,
+      "rssMB": 272.38671875,
+      "dbWaiting": 60
+    }
+  ]
+}
