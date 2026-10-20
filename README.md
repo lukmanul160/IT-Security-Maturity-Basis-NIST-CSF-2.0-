@@ -34,12 +34,7 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ### Akun dan password awal
 
-Instalasi baru tidak membuat akun dengan password bawaan. Setelah database siap,
-jalankan `npm run admin:create` (Windows: `npm.cmd run admin:create`) dari terminal
-interaktif, lalu pilih username dan password administrator sendiri. Pada Docker:
-`docker compose --env-file .env.docker exec app npm run admin:create`.
-Akun dan password pada instalasi lama tetap dipertahankan. Jika pernah memakai
-password awal yang tercantum pada versi lama, segera ubah melalui Account Management.
+Instalasi baru otomatis membuat administrator **`admin`** dengan password **`admin`** saat tabel akun kosong, termasuk mode production. Akun dan password lama tetap dipertahankan. Setelah login pertama, ubah password melalui Account Management. `admin:create` tetap tersedia untuk administrator tambahan.
 
 Aplikasi menyediakan dua pilihan deployment. Pilih salah satu sesuai lingkungan:
 
@@ -52,7 +47,7 @@ Aplikasi menyediakan dua pilihan deployment. Pilih salah satu sesuai lingkungan:
 
 Untuk opsi ini, Anda tidak perlu menginstal Node.js, npm, atau PostgreSQL pada
 host. Docker membangun frontend dan menjalankan backend serta database.
-Perintah `npm run admin:create` di bawah dijalankan di container melalui
+Perintah opsional `npm run admin:create` dijalankan di container melalui
 `docker compose exec`, sehingga tidak membutuhkan npm pada host.
 
 Nama aplikasi/container: **IT_Governance_BLACKOWL**. Database: **BlackOwl_DB_Gov**.
@@ -60,10 +55,9 @@ Salin `docker.env.example` ke `.env.docker`, isi `BLACKOWL_DB_PASSWORD`, lalu:
 
 ```bash
 docker compose --env-file .env.docker up -d --build
-docker compose --env-file .env.docker exec app npm run admin:create
 ```
 
-Jalankan pembuatan admin setelah startup aplikasi selesai. Buka
+Setelah startup aplikasi selesai, buka
 http://localhost:5000/login. PostgreSQL hanya diakses melalui `db:5432` di
 jaringan internal Docker, tanpa membuka port 5432 pada host. Database dan file
 memakai volume permanen.
@@ -84,7 +78,6 @@ cp env.exsample .env
 npm ci
 npm run build
 npm run db:setup
-npm run admin:create
 npm start
 ~~~
 
@@ -96,13 +89,10 @@ notepad .env
 npm.cmd ci
 npm.cmd run build
 npm.cmd run db:setup
-npm.cmd run admin:create
 npm.cmd start
 ~~~
 
-Buat akun administrator melalui perintah admin:create (username default
-**nistadmin**, password dipilih sendiri), lalu login di http://localhost:8000/login.
-Perintah menambahkan admin baru setelah db:setup; username harus belum terdaftar.
+Login memakai **admin / admin** di http://localhost:8000/login.
 Mode production memakai cookie Secure, sehingga akses melalui HTTPS.
 
 Startup/provisioning tetap memakai DB_* meskipun DATABASE_URL diisi. Gunakan

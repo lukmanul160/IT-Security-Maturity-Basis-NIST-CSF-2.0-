@@ -47,16 +47,11 @@ docker compose --env-file .env.docker ps
 docker compose --env-file .env.docker logs -f app
 ```
 
-Tunggu aplikasi siap, lalu buat administrator pertama dari terminal interaktif.
-Tidak ada akun atau password bawaan. Akun instalasi lama tetap dipertahankan;
-ganti password lama yang masih memakai password awal versi sebelumnya.
+Tunggu aplikasi siap, lalu login memakai **admin / admin**.
 
-```bash
-docker compose --env-file .env.docker exec app npm run admin:create
-```
+Instalasi baru otomatis membuat administrator **`admin`** dengan password **`admin`** saat tabel akun kosong, termasuk mode production. Akun dan password lama tetap dipertahankan. Setelah login pertama, ubah password melalui Account Management. `admin:create` tetap tersedia untuk administrator tambahan.
 
-Pilih username baru dan password sendiri. **Mode production menjalankan seed
-data referensi aplikasi, tanpa akun bawaan.**
+Mode production menjalankan seed data referensi aplikasi.
 Startup memanggil provisioning database, lalu inisialisasi dan seed setiap modul:
 
 - NIST CSF dari `data/csf-data.json`.

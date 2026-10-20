@@ -130,7 +130,6 @@ konfigurasi di bawah. Setelah disimpan:
 npm ci
 npm run build
 npm run db:setup
-npm run admin:create
 npm start
 ```
 
@@ -192,7 +191,6 @@ yang sudah berisi konfigurasi. Setelah `.env` disimpan:
 npm.cmd ci
 npm.cmd run build
 npm.cmd run db:setup
-npm.cmd run admin:create
 npm.cmd start
 ```
 
@@ -217,7 +215,7 @@ DB_SSL=false
 
 | Variabel | Fungsi |
 | --- | --- |
-| `NODE_ENV` | `development` untuk instalasi lokal HTTP; `production` untuk deployment HTTPS. Buat admin melalui admin:create pada kedua mode. |
+| `NODE_ENV` | `development` untuk instalasi lokal HTTP; `production` untuk deployment HTTPS. Admin awal admin / admin tersedia pada kedua mode jika tabel akun kosong. |
 | `PORT` | Port HTTP Express; default 8000. |
 | `DB_HOST`, `DB_PORT` | Host dan port PostgreSQL. |
 | `DB_NAME` | Database aplikasi; default `nist_basis`. |
@@ -253,22 +251,9 @@ restart backend.
 
 ## 5. Login awal dan verifikasi
 
-Setelah `db:setup`, buat administrator pertama dari terminal interaktif:
+Instalasi baru otomatis membuat administrator **`admin`** dengan password **`admin`** saat tabel akun kosong, termasuk mode production. Akun dan password lama tetap dipertahankan. Setelah login pertama, ubah password melalui Account Management. `admin:create` tetap tersedia untuk administrator tambahan.
 
-```bash
-npm run admin:create
-```
-
-Windows memakai `npm.cmd run admin:create`. Masukkan username yang belum
-terdaftar (default `nistadmin`), nama lengkap opsional, password, dan konfirmasi.
-Password ditampilkan sebagai bintang dan wajib 8–72 karakter, memuat huruf besar,
-huruf kecil, dan angka. Perintah memakai validator serta bcrypt aplikasi dan
-menambahkan akun role admin; username duplikat ditolak.
-
-Tidak ada akun/password bawaan pada instalasi baru, termasuk production.
-Akun dan password lama tidak diubah. Jika masih memakai password awal versi lama,
-ganti melalui Account Management; buat admin pemulihan dengan `admin:create`
-jika tidak bisa login. Username administrator baru harus belum terdaftar.
+Untuk administrator tambahan, jalankan `npm run admin:create` (Windows: `npm.cmd run admin:create`) dari terminal interaktif. Username default perintah tambahan adalah `nistadmin`; password dipilih sendiri dan harus memenuhi validasi aplikasi.
 
 Setelah login, buka `http://localhost:8000/api/health/db` di browser yang sama.
 Hasil sukses memuat `connected: true`. HTTP 401 berarti belum login, bukan
@@ -280,7 +265,7 @@ database gagal. Verifikasi juga:
 - Threat Modelling dapat membuka **Example diagram** lalu menyimpan diagram.
 - Upload evidence, buka kembali berkas tersebut, dan buat Database Backup.
 
-`npm run db:setup` membuat database, schema dasar tanpa akun bawaan, dan katalog
+`npm run db:setup` membuat database, schema dasar dan admin / admin jika tabel akun kosong, dan katalog
 sertifikasi. `npm start` melengkapi inisialisasi framework, indikator risiko,
 permission, tabel pendukung, dan scheduler. Startup menulis ke database; lakukan
 backup sebelum menjalankan versi baru pada data operasional.

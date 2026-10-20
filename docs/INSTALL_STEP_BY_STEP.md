@@ -116,31 +116,14 @@ Jika startup gagal, periksa log sebelum melanjutkan.
 Database **BlackOwl_DB_Gov**, schema, dan data referensi disiapkan otomatis saat
 startup. Tidak perlu menjalankan `db:setup` secara terpisah pada metode Docker.
 **Seed tetap berjalan pada mode production**: CSF, Privacy, ISO/SOA, indikator
-risiko dan katalog sertifikasi, tanpa akun bawaan.
+risiko dan katalog sertifikasi, serta admin awal jika tabel akun kosong.
 Lihat [rincian seed dan perintah eksplisit](DOCKER.md#instalasi-pertama).
 Data operasional tambahan perlu import/restore atau migrasi khusus; file SQL/JSON
 tambahan tidak otomatis dijalankan.
 
-### A4. Buat administrator
+### A4. Administrator awal
 
-Buat administrator pertama dengan username dan password pilihan sendiri.
-Tidak ada akun bawaan. Akun lama dipertahankan; ganti password lama yang masih
-menggunakan password awal versi sebelumnya. Jalankan dari terminal interaktif:
-
-```text
-docker compose --env-file .env.docker exec app npm run admin:create
-```
-
-Jalankan dari terminal interaktif, tanpa opsi `-T`. Masukkan:
-
-1. Username baru, atau Enter untuk `nistadmin`.
-2. Nama lengkap (opsional).
-3. Password 8–72 karakter, mengandung huruf besar, huruf kecil, dan angka.
-4. Konfirmasi password yang sama.
-
-Tunggu pesan bahwa administrator tambahan berhasil dibuat. Pada instalasi ulang,
-gunakan akun yang sudah ada; jangan membuat
-ulang username yang sama.
+Instalasi baru otomatis membuat administrator **`admin`** dengan password **`admin`** saat tabel akun kosong, termasuk mode production. Akun dan password lama tetap dipertahankan. Setelah login pertama, ubah password melalui Account Management. `admin:create` tetap tersedia untuk administrator tambahan.
 
 ### A5. Login dan cek hasil
 
@@ -290,27 +273,11 @@ masalah execution policy `npm.ps1`.
 
 ### B5. Siapkan database dan admin
 
-`db:setup` menyiapkan schema tanpa akun bawaan. `admin:create` wajib untuk
-administrator pertama instalasi baru, dan opsional untuk administrator tambahan.
+`db:setup` menyiapkan schema serta akun **admin / admin** jika tabel akun kosong.
 
-Windows:
+Windows: `npm.cmd run db:setup`. Linux: `npm run db:setup`.
 
-```powershell
-npm.cmd run db:setup
-npm.cmd run admin:create
-```
-
-Linux:
-
-```bash
-npm run db:setup
-npm run admin:create
-```
-
-Pastikan provisioning selesai dan menampilkan tabel yang siap. Masukkan username
-baru (default `nistadmin`), nama opsional, password, dan konfirmasinya.
-Password wajib 8–72 karakter dengan huruf besar, huruf kecil, dan angka.
-Gunakan administrator yang telah dibuat untuk login.
+Instalasi baru otomatis membuat administrator **`admin`** dengan password **`admin`** saat tabel akun kosong, termasuk mode production. Akun dan password lama tetap dipertahankan. Setelah login pertama, ubah password melalui Account Management. `admin:create` tetap tersedia untuk administrator tambahan.
 
 ### B6. Jalankan aplikasi
 
@@ -328,11 +295,11 @@ npm start
 
 Startup melengkapi tabel dan data referensi. Tunggu server siap, lalu buka
 **http://localhost:8000/login**. Login memakai akun dari B5.
-**Segera ubah password akun `admin` dan `user`**
+**Segera ubah password akun `admin`**
 melalui **Account → Account Management**, isi password saat ini, password baru,
 dan konfirmasi, lalu **Save profile**. Login kembali memakai password baru.
 Password baru harus 8–72 karakter dengan huruf besar, huruf kecil, dan angka.
-Jangan membuka akses kepada pengguna lain sebelum kedua password diganti.
+Jangan membuka akses kepada pengguna lain sebelum password awal diganti.
 Biarkan terminal terbuka selama server dipakai; `Ctrl+C` menghentikan aplikasi.
 Ikuti pemeriksaan bagian C. Untuk start otomatis setelah reboot, gunakan
 [systemd atau Task Scheduler](INSTALLATION.md#6-menjalankan-terus-menerus).

@@ -108,3 +108,11 @@ File dengan nama sama menggantikan pilihan sebelumnya; tombol per item menghapus
 satu file dan Kosongkan pilihan mereset daftar. File Backup memeriksa ulang folder
 manifest ketika daftar berubah; nomor inspeksi mencegah respons lama menimpa
 pilihan terbaru. Daftar pilihan dikunci selama operasi melalui input.disabled.
+
+## Administrator instalasi baru
+
+Instalasi baru otomatis membuat administrator **`admin`** dengan password **`admin`** saat tabel akun kosong, termasuk mode production. Akun dan password lama tetap dipertahankan. Setelah login pertama, ubah password melalui Account Management. `admin:create` tetap tersedia untuk administrator tambahan.
+Seed berada di `database/users.sql`, dipakai oleh db:setup dan startup Node/Docker. Pemeriksaan tabel kosong dikunci untuk mencegah seed bersamaan. Password disimpan sebagai bcrypt; kebijakan password baru tetap berlaku.
+
+Verifikasi perubahan: `node --test test/defaultAccountSeed.test.js test/createAdmin.test.js test/dockerDataInitialization.test.js test/sessionCookieConfig.test.js` lulus (9 test). Test seed memakai cluster PostgreSQL sementara tanpa membaca .env; memeriksa login bcrypt admin/admin, pengulangan seed, password yang sudah diganti, serta akun lama dengan username lain. Deployment Docker belum diuji langsung. Gunakan `PERF_PG_BIN` untuk lokasi binary PostgreSQL nondefault saat menjalankan test seed.
+`npm run build` berhasil; Vite memberi peringatan script legacy, font yang diselesaikan saat runtime, dan ukuran chunk besar.
