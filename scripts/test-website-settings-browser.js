@@ -20,15 +20,17 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
   await client.evaluate("document.getElementById('accountButton').click();document.querySelector('[data-account-tab=website]').click()");
   await client.wait("!document.querySelector('#websiteSettingsForm [type=submit]').disabled");
   assert.equal(await client.evaluate("document.getElementById('websiteSettingsForm').elements.uploadMb.value"),'100');
-  await client.evaluate("{const f=document.getElementById('websiteSettingsForm');f.elements.uploadMb.value=2;f.elements.importMb.value=3;f.elements.exportMb.value=4;f.requestSubmit();}");
+  assert.equal(await client.evaluate("document.getElementById('websiteSettingsForm').elements.documentEditMb.value"),'50');
+  await client.evaluate("{const f=document.getElementById('websiteSettingsForm');f.elements.uploadMb.value=2;f.elements.importMb.value=3;f.elements.exportMb.value=4;f.elements.documentEditMb.value=25;f.requestSubmit();}");
   await client.wait("document.querySelector('[data-website-status]').textContent.includes('tersimpan')");
-  assert.deepEqual(fixture.fileLimits,{uploadMb:2,importMb:3,exportMb:4});
+  assert.deepEqual(fixture.fileLimits,{uploadMb:2,importMb:3,exportMb:4,documentEditMb:25});
   assert.equal(await client.evaluate("(()=>{try{window.NistFileLimits.check(5*1048576,'export');return false;}catch(e){return e.message.includes('4 MB');}})()"),true);
   await client.evaluate("document.querySelector('[data-account-tab=profile]').click();document.querySelector('[data-account-tab=website]').click()");
   await client.wait("!document.querySelector('#websiteSettingsForm [type=submit]').disabled");
   assert.equal(await client.evaluate("document.getElementById('websiteSettingsForm').elements.importMb.value"),'3');
+  assert.equal(await client.evaluate("document.getElementById('websiteSettingsForm').elements.documentEditMb.value"),'25');
   assert.deepEqual(client.errors,[]);
-  console.log('PASS: Website Settings loads default limits, saves all three fields, reloads saved values and updates client export checks without browser errors.');
+  console.log('PASS: Website Settings loads default limits, saves all four fields, reloads saved values and updates client export checks without browser errors.');
  }finally{
   settings.read=read;settings.save=save;client?.socket.close();chrome?.kill();if(token)auth.destroySession(token);if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();try{await fs.rm(profile,{recursive:true,force:true});}catch{}
  }

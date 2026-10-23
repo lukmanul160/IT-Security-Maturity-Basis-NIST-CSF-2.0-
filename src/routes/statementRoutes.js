@@ -3,7 +3,7 @@ const service = require('../services/statementService');
 const { requirePermission } = require('../middleware/permission');
 const wrap = fn => (req,res,next) => Promise.resolve(fn(req,res,next)).catch(next);
 const multer=require('../middleware/configuredUpload');
-const upload=multer({storage:multer.memoryStorage(),limits:{files:1,fileSize:5*1024*1024,fields:4,fieldSize:150000}}).single('document');
+const upload=multer({limitKey:'documentEditMb',storage:multer.memoryStorage(),limits:{files:1,fields:4,fieldSize:150000}}).single('document');
 const sendDocument=(res,buffer,name='surat-pernyataan.docx')=>res.set('Cache-Control','no-store').attachment(name).type('application/vnd.openxmlformats-officedocument.wordprocessingml.document').send(buffer);
 function typeInput(req){if(req.is('multipart/form-data')){try{return JSON.parse(req.body.data);}catch{throw Object.assign(new Error('Data template tidak valid.'),{status:400});}}return req.body;}
 const employees=require('../services/statementEmployeeService');
@@ -37,10 +37,10 @@ router.get('/examples/:key',requirePermission('surat-pernyataan','read'),wrap(as
 }));
 router.get('/stats',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>res.json(await service.stats())));
 router.get('/types',requirePermission('surat-pernyataan','read'),wrap(async(req,res) => res.json(await service.types())));
-router.post('/types',requirePermission('surat-pernyataan','create'),upload,wrap(async(req,res) => res.status(201).json(await service.saveType(null,typeInput(req),req.file))));
-router.put('/types/:id',requirePermission('surat-pernyataan','update'),upload,wrap(async(req,res) => res.json(await service.saveType(req.params.id,typeInput(req),req.file))));
-router.get('/types/:id/document',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>{const buffer=await service.templateBuffer(req.params.id);sendDocument(res,req.query.editor==='true'?await require('../services/statementDocumentService').forEditor(buffer):buffer,'template-surat.docx');}));
-router.put('/types/:id/document',requirePermission('surat-pernyataan','update'),upload,wrap(async(req,res)=>res.json(await service.saveDocument(req.params.id,typeInput(req),req.file))));
+router.post('/types',requirePermission('surat-pernyataan','create'),upload,wrap(async(req,res) => res.status(201).json(await service.saveType(null,typeInput(req),req.file,{maxFileMb:req.fileLimits?.documentEditMb ?? 50}))));
+router.put('/types/:id',requirePermission('surat-pernyataan','update'),upload,wrap(async(req,res) => res.json(await service.saveType(req.params.id,typeInput(req),req.file,{maxFileMb:req.fileLimits?.documentEditMb ?? 50}))));
+router.get('/types/:id/document',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>{const buffer=await service.templateBuffer(req.params.id);sendDocument(res,req.query.editor==='true'?await require('../services/statementDocumentService').forEditor(buffer,{maxFileMb:req.fileLimits?.documentEditMb ?? 50}):buffer,'template-surat.docx');}));
+router.put('/types/:id/document',requirePermission('surat-pernyataan','update'),upload,wrap(async(req,res)=>res.json(await service.saveDocument(req.params.id,typeInput(req),req.file,{maxFileMb:req.fileLimits?.documentEditMb ?? 50}))));
 router.post('/types/:id/preview',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>sendDocument(res,await service.preview(req.params.id,req.body))));
 router.get('/exports/filled.xlsx',requirePermission('surat-pernyataan','read'),wrap(async(req,res)=>{const exports=require('../services/statementExportService'),result=await exports.records(req.query);res.set('Cache-Control','no-store').attachment('Daftar-Pengisian-'+result.year+'.xlsx').type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').send(exports.workbook(result));}));
 router.get('/exports/submissions.zip',requirePermission('surat-pernyataan','read'),wrap(async(req,res,next)=>{const exports=require('../services/statementExportService');await exports.zip(req,res,next,await exports.records(req.query));}));

@@ -28,6 +28,9 @@ import './styles/module-transfer.css';
 import './styles/risk-dashboard.css';
 import './styles/risk-acceptance-dashboard.css';
 import './styles/governance-dashboard.css';
+import './styles/status-colors.css';
+import './styles/tprm-guide.css';
+import { installStatusColors } from './services/statusColors.mjs';
 import { bootstrapWorkspaceRuntime } from './services/workspaceRuntime';
 window.NistProgressExcel = () => import('./services/moduleProgressWorkbook.mjs');
 window.NistStatementEditor = () => import('./services/statementWordEditor.js');
@@ -46,6 +49,7 @@ async function bootstrap() {
   const [{default:workspaceRuntime},{default:workspaceEnhancements}]=await runtimeReady;
   await bootstrapWorkspaceRuntime({ app: workspaceRuntime, enhancements: workspaceEnhancements });
   installTableResize();
+  installStatusColors();
   document.documentElement.dataset.frontend = 'vue';
   window.NistI18n?.refresh();
   window.dispatchEvent(new CustomEvent('vue:workspace-ready'));

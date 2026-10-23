@@ -209,3 +209,43 @@ selection baru aktif setelah ada histori atau elemen dipilih. Jika API gagal,
 administrator perlu memeriksa database/backend. Setelah versi aplikasi berubah,
 backend perlu restart dan frontend perlu build; lakukan Ctrl+F5 dan login
 kembali. Untuk Threat Modelling, gunakan Coba lagi jika pesan load error muncul.
+
+
+## Warna status penyelesaian
+
+Status pada tabel, badge, dan pilihan status menggunakan warna yang sama di seluruh workspace:
+
+- Merah: belum selesai/dilaporkan/diisi, Open, Draft, ditolak, atau lewat tenggat.
+- Kuning: dalam proses, menunggu persetujuan/verifikasi, monitoring, atau selesai sebagian.
+- Hijau: selesai, sudah dilaporkan/diisi, lengkap, Closed, atau disetujui.
+- Abu-abu: status khusus yang belum dipetakan, nonaktif, atau tidak berlaku.
+
+Warna mengikuti status saat data berubah, pagination/filter dijalankan, atau bahasa diganti.
+Teks status tetap ditampilkan agar maknanya dapat dibaca tanpa mengandalkan warna. Tersedia
+palet terang dan gelap. Nilai data, filter, dan hasil ekspor tetap memakai status aslinya.
+
+Urutan sidebar: **Risk Management** diikuti **Risk Acceptance**. Perubahan ini hanya
+mengatur urutan navigasi; akses dan fungsi kedua modul tetap sama.
+
+
+## Penugasan dan kontrol TPRM
+
+Buka **TPRM Risk Register / 3. Reviewer & Approver**, lalu **Atur penugasan** pada vendor.
+Admin memilih pengusul, reviewer, dan approver dari tiga akun berbeda. Pengusul mengajukan
+assessment dan mengaktifkan vendor, reviewer memvalidasi bukti/monitoring, dan approver
+mencatat keputusan. Isi ketergantungan vendor atau alasan tidak ada ketergantungan pada
+Assessment. Untuk residual risk tinggi, pilih Risk Acceptance yang sudah disetujui dan
+masih berlaku. Pada aktivasi, pilih bukti kontrak ditandatangani dan isi target SLA,
+notifikasi insiden, RTO/RPO, serta masa berlaku. Kosongkan tanggal review untuk jadwal
+otomatis 90/180/365 hari menurut tier/risiko, dibatasi masa berlaku bukti dan persetujuan.
+Reminder dan eskalasi ditampilkan di tab penugasan; tidak mengirim email otomatis.
+
+
+## Panduan pengisian TPRM
+
+Urutan menu TPRM adalah **TPRM Framework / Flow Pengisian TPRM / Vendor Tiering Matrix**.
+Buka Flow Pengisian TPRM untuk 10 langkah dari template, assessment vendor, register,
+penugasan, profil, kuesioner/CIA/risiko, review, approval, aktivasi, hingga monitoring
+dan offboarding. Setiap langkah menunjukkan pelaku, lokasi formulir, kelengkapan,
+dan hasilnya. Tombol tujuan mengikuti izin baca modul; membaca panduan tidak
+menyimpan record atau menjalankan keputusan workflow.

@@ -2,7 +2,7 @@ const service = require('../services/tprmService');
 const workflow = require('../services/tprmWorkflowService');
 const wrap = handler => (req, res, next) => Promise.resolve(handler(req, res)).catch(next);
 module.exports = {
-  workflow: wrap(async (req, res) => res.json(await workflow.get(req.params.id))),
+  workflow: wrap(async (req, res) => res.json(await workflow.get(req.params.id,req.user))),
   transition: wrap(async (req, res) => res.json(await workflow.act(req.params.id, req.body, req.user))),
   list: wrap(async (req, res) => res.json(await service.list())),
   create: wrap(async (req, res) => res.status(201).json(await service.create(req.body))),

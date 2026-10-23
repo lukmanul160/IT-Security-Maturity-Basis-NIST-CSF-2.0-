@@ -12,12 +12,14 @@ const parse=xml=>{
 const serialize=node=>new XMLSerializer().serializeToString(node);
 const elements=(node,name)=>Array.from(node.getElementsByTagNameNS(W,name));
 const xmlEscape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
-async function open(buffer) {
-  if(!Buffer.isBuffer(buffer)||buffer.length>5*1024*1024)throw fail('Template Word maksimum 5 MB.');
-  await require('./statementZip').validate(buffer);
+async function open(buffer, { maxFileMb = 50 } = {}) {
+  const maxFileBytes = maxFileMb * 1048576;
+  const maxBytes = maxFileBytes * 5;
+  if(!Buffer.isBuffer(buffer)||buffer.length>maxFileBytes)throw Object.assign(fail(`Dokumen Word maksimum ${maxFileMb} MB.`),{status:413});
+  await require('./statementZip').validate(buffer, { maxFileBytes, maxBytes });
   let zip;try{zip=await JSZip.loadAsync(buffer);}catch{throw fail('File bukan dokumen DOCX yang valid.');}
   const entries=Object.values(zip.files);
-  if(entries.length>600 || entries.reduce((sum,e)=>sum+(e._data?.uncompressedSize||0),0)>25*1024*1024)throw fail('Isi template Word terlalu besar.');
+  if(entries.length>600 || entries.reduce((sum,e)=>sum+(e._data?.uncompressedSize||0),0)>maxBytes)throw fail('Isi template Word terlalu besar.');
   if(!zip.file('word/document.xml')||!zip.file('[Content_Types].xml'))throw fail('File harus berformat DOCX.');
   if(entries.some(e=>/vbaProject|embeddings\/|activeX\/|\.(?:html?|svg|js|exe|dll)$/i.test(e.name)))throw fail('Template tidak boleh berisi macro, HTML, atau objek tersemat.');
   for(const entry of entries.filter(e=>/\.(?:xml|rels)$/i.test(e.name))){
@@ -54,9 +56,9 @@ function png(strokes=[],width=800,height=320){
   const raw=Buffer.alloc(height*(width*4+1));for(let y=0;y<height;y++)pixels.copy(raw,y*(width*4+1)+1,y*width*4,(y+1)*width*4);
   return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',zlib.deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]);
 }
-async function inspect(buffer){const zip=await open(buffer),doc=parse(await zip.file('word/document.xml').async('string'));const body=elements(doc,'p').map(p=>elements(p,'t').map(t=>t.textContent).join('')).join('\n');const placeholders=[...new Set(Array.from(body.matchAll(/\{\{([a-z][a-z0-9_]{0,39})\}\}/g),m=>m[1]))];return {body,placeholders};}
-async function forEditor(buffer){
-  const zip=await open(buffer);
+async function inspect(buffer,options){const zip=await open(buffer,options),doc=parse(await zip.file('word/document.xml').async('string'));const body=elements(doc,'p').map(p=>elements(p,'t').map(t=>t.textContent).join('')).join('\n');const placeholders=[...new Set(Array.from(body.matchAll(/\{\{([a-z][a-z0-9_]{0,39})\}\}/g),m=>m[1]))];return {body,placeholders};}
+async function forEditor(buffer,options){
+  const zip=await open(buffer,options);
   const defaults=await open(await require('node:fs/promises').readFile(require('node:path').join(__dirname,'../../templates/statements/1.docx')));
   const types=parse(await zip.file('[Content_Types].xml').async('string'));
   const relPath='word/_rels/document.xml.rels',ns='http://schemas.openxmlformats.org/package/2006/relationships';
@@ -92,7 +94,7 @@ async function normalizeSeed(buffer){
 }
 function signatureRun(){return `<w:r xmlns:w="${W}"><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="1828800" cy="731520"/><wp:docPr id="987654" name="Tanda tangan"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="Tanda tangan"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="${R}" r:embed="rIdStatementSignature"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1828800" cy="731520"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;}
 async function generate(buffer,data={},strokes=[],{preview=false}={}){
-  const zip=await open(buffer),signatureImage=data.signatureImage?Buffer.from(data.signatureImage.split(',')[1],'base64'):png(strokes),emptySignature=png();
+  const zip=await open(buffer,{maxFileMb:500}),signatureImage=data.signatureImage?Buffer.from(data.signatureImage.split(',')[1],'base64'):png(strokes),emptySignature=png();
   const parts=[];
   for(const entry of Object.values(zip.files).filter(e=>/^word\/(document|header\d+|footer\d+)\.xml$/.test(e.name)))parts.push({name:entry.name,doc:parse(await entry.async('string'))});
   const explicitPlacement=parts.some(part=>elements(part.doc,'p').some(p=>elements(p,'t').map(n=>n.textContent).join('').includes('{{tanda_tangan}}')));

@@ -11,7 +11,7 @@ const ratingScores = { 'Very Low': 10, Low: 25, Medium: 50, High: 75, 'Very High
 function invalid(message, status = 400) { return Object.assign(new Error(message), { status }); }
 function text(value) { return String(value ?? '').trim(); }
 function validDate(value) { return /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value; }
-function today() { return new Date().toISOString().slice(0, 10); }
+function today() { const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const value=Object.fromEntries(parts.map(part=>[part.type,part.value]));return `${value.year}-${value.month}-${value.day}`; }
 function futureDate(value) { return validDate(value) && value > today(); }
 function cia(source = {}) {
   const fields = ciaFields[source.assessmentType || 'vendor'];
@@ -49,7 +49,8 @@ function riskLevel(score) { return score === null ? 'Not assessed' : score >= 70
 function riskSummary(row, questionnaire, risks = []) {
   const assessment = cia(row.dueDiligenceAssessment);
   const readiness = questionnaireReadiness(questionnaire?.responses);
-  const tier = profileTier(row.workflow?.profile);
+  const profileCriticality = profileTier(row.workflow?.profile);
+  const tier = profileCriticality && (row.workflow?.dependencies || []).some(item=>item.critical===true) ? 'Tier 1 (Critical)' : profileCriticality;
   const complete = Boolean(tier && readiness.complete && assessment.riskScore !== undefined);
   if (!complete) return { complete: false, tier: tier || 'Not classified', inherent: null, residual: null, level: 'Incomplete', readiness };
   const base = 100 - assessment.riskScore;
@@ -59,7 +60,7 @@ function riskSummary(row, questionnaire, risks = []) {
   return { complete, tier, inherent, residual, level: riskLevel(residual), readiness };
 }
 function fingerprint(row, questionnaire, risks) {
-  return crypto.createHash('sha256').update(stableJson({ vendor: row.thirdParty, service: row.serviceDependency, questionnaireId: row.questionnaireId, profile: row.workflow?.profile, noRisksReason: row.workflow?.noRisksReason, cia: cia(row.dueDiligenceAssessment), questionnaire: questionnaire?.responses, risks: [...risks].sort((a, b) => String(a.risk_id ?? a.riskId).localeCompare(String(b.risk_id ?? b.riskId))) })).digest('hex');
+  return crypto.createHash('sha256').update(stableJson({ vendor: row.thirdParty, service: row.serviceDependency, questionnaireId: row.questionnaireId, profile: row.workflow?.profile, assignments: row.workflow?.assignments, dependencies: row.workflow?.dependencies, noRisksReason: row.workflow?.noRisksReason, cia: cia(row.dueDiligenceAssessment), questionnaire: questionnaire?.responses, risks: [...risks].sort((a, b) => String(a.risk_id ?? a.riskId).localeCompare(String(b.risk_id ?? b.riskId))) })).digest('hex');
 }
 function stableJson(value) {
   const normalize = item => item instanceof Date ? item.toISOString() : Array.isArray(item) ? item.map(normalize) : item && typeof item === 'object' ? Object.fromEntries(Object.keys(item).sort().filter(key => item[key] !== undefined).map(key => [key, normalize(item[key])])) : item;

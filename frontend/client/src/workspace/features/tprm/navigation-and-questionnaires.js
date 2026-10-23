@@ -1,3 +1,28 @@
+function showTprmFlowView() {
+  if (!currentUserPermissions.includes('tprm')) return;
+  document.querySelectorAll('.view').forEach(view=>view.classList.remove('active-view'));
+  $('tprmFlowView').classList.add('active-view');
+  document.querySelectorAll('.nav-item').forEach(item=>item.classList.toggle('active',item.dataset.view==='tprm-flow'));
+  saveUiState('tprm-flow');
+}
+function syncTprmGuideNavigation() {
+  document.querySelectorAll('[data-tprm-guide-nav]').forEach(button=>{
+    const permission=button.dataset.tprmGuideNav==='tprm-flow'?'tprm':button.dataset.tprmGuideNav;
+    button.disabled=!currentUserPermissions.includes(permission);
+  });
+}
+document.querySelector('[data-view="tprm-flow"]').addEventListener('click',showTprmFlowView);
+document.addEventListener('click',event=>{
+  const button=event.target.closest('[data-tprm-guide-nav]');
+  if(!button || button.disabled)return;
+  const nav=document.querySelector(`[data-view="${button.dataset.tprmGuideNav}"]`);
+  if(!nav || nav.hidden || nav.disabled)return;
+  nav.click();
+  if(button.dataset.tprmGuideNav==='tprm-register') {
+    const tab=button.dataset.tprmGuideTab || 'register';
+    document.querySelector(`[data-tprm-register-tab="${tab}"]`)?.click();
+  }
+});
 function showTprmView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('tprmView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'tprm')); saveUiState('tprm'); }
 function showTprmTieringView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('tprmTieringView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'tprm-tiering')); saveUiState('tprm-tiering'); }
 function showTprmQuestionnaireView() { document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('tprmQuestionnaireView').classList.add('active-view'); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === 'tprm-questionnaire')); saveUiState('tprm-questionnaire'); loadQuestionnaires().catch(() => { $('questionnaireStatus').textContent = 'Database unavailable'; }); }

@@ -1,0 +1,19 @@
+﻿.tprm-guide-page>.csf-actions{margin-bottom:24px;flex-wrap:wrap}
+.tprm-guide-page .tprm-grid{margin:20px 0}
+.tprm-guide-page .insight-panel p{line-height:1.8;margin:12px 0;color:var(--muted,#52635d)}
+.tprm-guide-page .insight-panel h3{margin:0 0 12px}
+.tprm-guide-page>h3{margin:28px 0 14px}
+.tprm-guide-page .excel-wrap{margin:16px 0;max-width:100%;overflow:auto}
+.tprm-guide-page .excel-table{min-width:640px}
+.tprm-guide-page .excel-table td{white-space:normal;line-height:1.75;vertical-align:top}
+.tprm-guide-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px;margin:24px 0}
+.tprm-guide-map a{display:block;padding:12px;border:1px solid var(--line,#d7e3de);border-radius:10px;text-decoration:none;color:var(--ink,#19362c);background:var(--surface,#fff);font-size:12px;font-weight:600;line-height:1.6}
+.tprm-guide-map a:hover,.tprm-guide-map a:focus-visible{border-color:var(--green,#237951);outline:2px solid var(--green,#237951);outline-offset:2px}
+.tprm-guide-steps{list-style:none;margin:28px 0;padding:0;display:grid;gap:18px}
+.tprm-guide-steps>li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;scroll-margin-top:24px}
+.tprm-guide-number{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;font-weight:700;background:var(--green,#237951);color:#fff}
+.tprm-guide-steps .insight-panel{min-width:0}
+.tprm-guide-steps .tprm-guide-result{display:inline-block;padding:5px 10px;border-radius:8px;background:var(--surface-alt,#eef4f0);font-size:12px;font-weight:700}
+.tprm-guide-steps .button{display:block;width:max-content;max-width:100%;white-space:normal;text-align:left}
+html[data-theme=dark] .tprm-guide-map a{background:var(--surface,#1b2b27);color:var(--text,#e3eee8)}
+@media(max-width:640px){.tprm-guide-steps>li{grid-template-columns:32px minmax(0,1fr);gap:8px}.tprm-guide-number{width:30px;height:30px;font-size:11px}.tprm-guide-steps .insight-panel{padding:14px}.tprm-guide-map{grid-template-columns:1fr 1fr}}

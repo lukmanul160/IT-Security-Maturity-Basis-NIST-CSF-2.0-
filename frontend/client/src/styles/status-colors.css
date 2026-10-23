@@ -1,0 +1,14 @@
+﻿/* Completion colors are shared across legacy tables and Vue modules. Text remains visible. */
+[data-status-tone="danger"]{--status-fg:#a51d2d;--status-bg:#fff0f1;--status-line:#eab2b8}
+[data-status-tone="warning"]{--status-fg:#855000;--status-bg:#fff7df;--status-line:#e5c77b}
+[data-status-tone="success"]{--status-fg:#17613b;--status-bg:#eaf7ee;--status-line:#a4d3b6}
+[data-status-tone="neutral"]{--status-fg:#475569;--status-bg:#f1f5f9;--status-line:#cbd5e1}
+:is(span,strong,small,select)[data-status-tone]{color:var(--status-fg)!important;background-color:var(--status-bg)!important;font-weight:700}
+:is(span,strong,small)[data-status-tone]{display:inline-flex;align-items:center;padding:4px 9px;border:1px solid var(--status-line);border-radius:999px;font-size:11px;line-height:1.45;max-width:100%}
+select[data-status-tone]{border-color:var(--status-line)!important}
+select[data-status-tone] option{color:var(--text,#182b46);background:var(--surface,#fff);font-weight:400}
+html[data-theme="dark"] [data-status-tone="danger"]{--status-fg:#ffb6bd;--status-bg:#47242c;--status-line:#9e4d5a}
+html[data-theme="dark"] [data-status-tone="warning"]{--status-fg:#f6d27c;--status-bg:#42351d;--status-line:#8c743c}
+html[data-theme="dark"] [data-status-tone="success"]{--status-fg:#a3e7ba;--status-bg:#1e3d2e;--status-line:#4c8563}
+html[data-theme="dark"] [data-status-tone="neutral"]{--status-fg:#cbd5e1;--status-bg:#293544;--status-line:#63758c}
+@media print{[data-status-tone]{print-color-adjust:exact;-webkit-print-color-adjust:exact}}

@@ -36,5 +36,74 @@ Import preserves uploaded evidence, internal scores and internal record fields, 
 ## Verification
 
 - `npm run test:tprm`: scoring, completeness, criticality, residual risk, fingerprint and date checks plus existing TPRM/template tests.
-- `npm run test:tprm-integration`: real database lifecycle with temporary fixtures, cleaned up after the run.
-- `npm run test:tprm-browser`: real API and built Vue interface, including role separation, activation, history, offboarding, mobile layout and dark theme. Temporary fixtures are removed.
+- `npm run test:tprm-integration`: lifecycle and API permission gates using PostgreSQL TEMP tables on one dedicated connection; operational tables are shadowed and never read or changed.
+- `npm run test:tprm-browser`: real source component/handlers in Chrome with a fixture API; assignment payloads, readonly access, actor-specific actions, dependency fields and contract fields. It does not test deployment, email delivery or every live application page.
+
+
+## Assigned governance and stronger activation gates
+
+The register now has **3. Reviewer & Approver**, and each vendor workflow has a
+**Reviewer & Approver** tab. An administrator selects three distinct existing accounts:
+requester (any role with TPRM Update), reviewer (editor/approver/admin with Update),
+and approver (approver/admin with Update). Only those assigned users may submit/activate,
+review/return/monitor/close, and approve respectively. Assignment changes invalidate the
+prior review and approval, preserve history, and retain Offboarding if already in progress.
+There is no administrative bypass for acting as an assigned reviewer or approver.
+
+High residual risk (>=70) requires a linked Risk Acceptance record, not only free text.
+The form must have accepted business-owner/CIS decisions, the existing three signature/name/date
+fields completed, a future remediation date, and conditions when conditional. The approval
+cannot outlive that acceptance. The approver must have Risk Acceptance Read permission and
+record how its scope covers the vendor/linked risk. A version hash is saved and rechecked
+before activation; changed/deleted/expired acceptance blocks activation and is shown as invalid.
+This reuses the existing Risk Acceptance form model; it does not introduce cryptographic
+signature verification or a new identity-verified signing workflow for that module.
+
+Review policy defaults are 90 days for critical/high-residual-risk vendors, 180 days for
+important vendors, and 365 days for standard vendors. These are application policy choices,
+not mandatory NIST intervals. Empty next-review dates are calculated on activation; a manually
+selected date may be earlier, but may not exceed the policy, approval, evidence, or contract
+expiry. Day boundaries use Asia/Bangkok. Incident, service/data/access change, financial
+trouble, and subvendor changes can be recorded as reassessment triggers. Active relationships
+are not silently disabled while reassessment is pending.
+
+Activation requires a signed-contract evidence reference selected from vendor documents
+and still registered in evidence_files, signing/expiry dates, an SLA target, incident
+notification hours, and numeric RTO/RPO. Only noncritical vendors may justify RTO/RPO N/A.
+The registered evidence check does not inspect a signature's authenticity or contact cloud
+storage during the workflow transaction. Existing contract checkboxes remain mandatory.
+
+Profiles capture subvendor/provider name, service, data location, owner, criticality and
+replacement/exit plan, or a reason that no dependencies apply. Shared named providers
+across vendors are surfaced in the governance tab; this is an inventory-based concentration
+indicator, not automatic fourth-party discovery or a comprehensive concentration score.
+Declaring a critical dependency elevates vendor criticality to Tier 1.
+
+The governance tab displays in-app reminders for the next 30 days and overdue escalation
+to the assigned approver. It does not send emails or revoke external vendor access.
+No operational assignments, acceptance forms, or relationships are migrated automatically.
+Legacy vendors require explicit assignments and the new fields before the next transition.
+Backend updates require a restart; changing assignments later does not require one.
+
+Verification results: 373 application regression tests passed (5 skipped), focused TPRM
+rules passed, PostgreSQL TEMP-table lifecycle/API gates passed, Chrome source-UI fixture
+passed, and frontend build passed. The local Node server was restarted and /login returned
+HTTP 200. Existing vendor records and assignments were not changed during verification.
+Legacy test-tprm-workflow integration/browser entry points forward to the current fixtures.
+
+## Framework, entry guide and tiering reference
+
+Sidebar order: TPRM Framework, Flow Pengisian TPRM, Vendor Tiering Matrix.
+The Framework summarizes the implemented governance gates; the Entry Flow provides
+ten steps with the responsible actor, destination page, required inputs and outcome;
+the Tiering Matrix distinguishes criticality (1-3), due diligence (100-500), CIA (20-100)
+and residual risk (0-100), including critical-dependency elevation and 90/180/365-day
+review policy. These are application rules, not a claim of mandatory NIST scoring.
+The guide shares TPRM Framework Read permission and does not create new role settings.
+Destination shortcuts honor each target module permission. Reading the guide does not
+fetch operational records or advance vendor workflow. Sidebar selection persists on reload.
+
+Entry-guide verification: 15 focused tests passed; the application suite passed
+373 tests with 5 skipped. Chrome fixtures verified navigation, permissions, language,
+mobile/dark layout and no operational API requests. Frontend build passed.
+These checks did not exercise a live vendor approval or alter operational records.

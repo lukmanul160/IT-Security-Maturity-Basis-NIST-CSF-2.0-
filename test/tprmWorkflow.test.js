@@ -46,3 +46,11 @@ test('critical failures and unsupported N/A claims cannot pass the gate',()=>{
 test('dates reject impossible dates and require a future expiry',()=>{
   assert.equal(rules.validDate('2027-02-30'),false);assert.equal(rules.futureDate('2000-01-01'),false);assert.equal(rules.futureDate('2099-01-01'),true);
 });
+
+
+test('critical subvendor dependencies elevate criticality and change the reviewed version',()=>{
+ const {row,questionnaire,risks}=fixture();const original=rules.fingerprint(row,questionnaire,risks);
+ const updated={...row,workflow:{...row.workflow,dependencies:[{name:'Critical cloud',critical:true}]}};
+ assert.equal(rules.riskSummary(updated,questionnaire,risks).tier,'Tier 1 (Critical)');
+ assert.notEqual(rules.fingerprint(updated,questionnaire,risks),original);
+});

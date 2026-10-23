@@ -21,7 +21,7 @@ const mapped=map({...row,risk_register_ids:row.relation_ids.length ? row.relatio
 const questionnaire=questionnaires.rows.find(item=>String(item.id)===String(row.questionnaire_id));
 const risks=related.rows.filter(item=>String(item.tprm_id)===String(row.id)).map(({tprm_id,...risk})=>risk);
 const description=require('./tprmWorkflowService').describe({row:{...mapped,relationship_status:row.relationship_status,next_review:row.next_review},questionnaire,risks});
-return {...mapped,riskSummary:description.summary,workflowStage:description.review && !description.reviewed && !['Closed','Offboarding'].includes(description.stage) ? 'Review required' : description.stage,workflowAlerts:description.alerts};
+return {...mapped,riskSummary:description.summary,workflowStage:description.review && !description.reviewed && !['Closed','Offboarding'].includes(description.stage) ? 'Review required' : description.stage,workflowAlerts:description.alerts,governance:description.governance};
 }); }
 async function transaction(action) {
   const client = await pool.connect();

@@ -75,11 +75,11 @@ async function getType(id, publicOnly = false, db = pool) {
   if (!result.rows.length) throw fail('Jenis surat tidak ditemukan atau sudah dinonaktifkan.',404);
   return result.rows[0];
 }
-async function saveType(id,input,file) {
+async function saveType(id,input,file,options) {
   let buffer=null,documentName=null;
   if(file){if(!/\.docx$/i.test(file.originalname))throw fail('Unggah file .docx.');buffer=file.buffer;documentName=file.originalname.slice(0,250);}
   else if(input?.sourceTypeId){await getType(input.sourceTypeId);const source=(await pool.query('SELECT docx,document_name,body FROM compliance_statement_types WHERE id=$1',[input.sourceTypeId])).rows[0];buffer=source.docx;documentName=source.document_name;if(!buffer)input={...input,body:source.body};}
-  if(buffer){const meta=await documents.inspect(buffer);input={...input,body:meta.body};}
+  if(buffer){const meta=await documents.inspect(buffer,options);input={...input,body:meta.body};}
   const data = normalizeType(input);
   if(!buffer&&!id&&!data.body)throw fail('Unggah template Word, pilih template sumber, atau isi teks surat.');
   if (id && !uuid(id)) throw fail('ID surat tidak valid.');
@@ -156,11 +156,11 @@ async function templateBuffer(id){await getType(id);const row=(await pool.query(
 async function preview(id,input,publicOnly=false){const type=await getType(id,publicOnly);if(input.revision!==undefined&&input.revision!==type.revision)throw fail('Template berubah. Muat ulang halaman.',409);const data=fieldService.values(input,type.fields||fieldService.defaults,{preview:true});return documents.generate(await templateBuffer(id),data,[],{preview:true});}
 async function signedDocument(id){await submission(id);const row=(await pool.query('SELECT document FROM compliance_statement_submissions WHERE id=$1',[id])).rows[0];if(!row.document)throw fail('Surat lama ini belum memiliki dokumen Word. Gunakan tampilan teks.',404);return row.document;}
 async function stats(){return (await pool.query('SELECT (SELECT count(*)::int FROM compliance_statement_types) AS types,(SELECT count(*)::int FROM compliance_statement_types WHERE active) AS active,(SELECT count(*)::int FROM compliance_statement_submissions) AS submissions,(SELECT count(DISTINCT type_id)::int FROM compliance_statement_submissions) AS people')).rows[0];}
-async function saveDocument(id,input,file){
+async function saveDocument(id,input,file,options){
   const type=await getType(id);
   if(!file||!/\.docx$/i.test(file.originalname))throw fail('Unggah file .docx.');
   if(!Number.isInteger(input?.revision)||input.revision!==type.revision)throw fail('Template berubah. Muat ulang halaman.',409);
-  const meta=await documents.inspect(file.buffer);
+  const meta=await documents.inspect(file.buffer,options);
   const data=normalizeType({title:type.title,active:type.active,fields:input.fields??type.fields,body:meta.body});
   const result=await pool.query('UPDATE compliance_statement_types SET docx=$2,body=$3,document_name=COALESCE(document_name,$4),fields=$6,revision=revision+1,updated_at=now() WHERE id=$1 AND revision=$5 RETURNING id',[id,file.buffer,meta.body,file.originalname.slice(0,250),input.revision,JSON.stringify(data.fields)]);
   if(!result.rows.length)throw fail('Template berubah. Muat ulang halaman.',409);

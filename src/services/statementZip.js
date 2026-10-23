@@ -2,8 +2,8 @@ const yauzl = require('yauzl');
 const fail = () => Object.assign(new Error('Arsip dokumen tidak valid atau terlalu besar.'), { status: 400 });
 
 // Enforce limits on actual decompressed bytes, including forged ZIP size headers.
-function validate(buffer, { maxBytes = 25 * 1024 * 1024, maxEntries = 600 } = {}) {
-  if (!Buffer.isBuffer(buffer) || buffer.length > 5 * 1024 * 1024) return Promise.reject(fail());
+function validate(buffer, { maxBytes = 25 * 1024 * 1024, maxFileBytes = 5 * 1024 * 1024, maxEntries = 600 } = {}) {
+  if (!Buffer.isBuffer(buffer) || buffer.length > maxFileBytes) return Promise.reject(fail());
   return new Promise((resolve, reject) => {
     yauzl.fromBuffer(buffer, { lazyEntries: true, validateEntrySizes: true }, (error, zip) => {
       if (error) return reject(fail());

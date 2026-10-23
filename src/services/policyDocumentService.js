@@ -9,16 +9,16 @@ function editable(row) {
   if (!row) throw fail('Policy tidak ditemukan.', 404);
   if (!row.attachment_path || !/\.docx$/i.test(row.attachment_name)) throw fail('Editor mendukung dokumen Word .docx. Konversikan file .doc ke .docx terlebih dahulu.');
 }
-async function load(id, user) {
+async function load(id, user, options) {
   const row = (await pool.query('SELECT *,updated_at::text AS document_revision FROM policy_register WHERE id=$1', [id])).rows[0];
   editable(row);
   await access.assertAccess(row.attachment_path, user);
   const buffer = await storage.read(row.attachment_path);
-  return { buffer: await documents.forEditor(buffer), revision: row.document_revision, name: row.attachment_name };
+  return { buffer: await documents.forEditor(buffer, options), revision: row.document_revision, name: row.attachment_name };
 }
-async function save(id, user, file, revision) {
+async function save(id, user, file, revision, options) {
   if (!file || !/\.docx$/i.test(file.originalname) || typeof revision !== 'string' || revision.length > 100) throw fail('Dokumen atau versi tidak valid.');
-  await documents.inspect(file.buffer);
+  await documents.inspect(file.buffer, options);
   if (!await require('./permissionService').hasFileAction(user?.role, 'create')) throw fail('Izin tambah file diperlukan untuk menyimpan dokumen.', 403);
   const client = await pool.connect();
   try {

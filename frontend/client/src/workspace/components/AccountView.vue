@@ -31,6 +31,7 @@
               <fieldset><legend>Batas ukuran file</legend><div class="csf-form-grid">
                 <label>Upload per file (MB)<input name="uploadMb" type="number" min="1" max="500" step="1" required></label>
                 <label>Import / restore per file (MB)<input name="importMb" type="number" min="1" max="500" step="1" required></label>
+                <label>Edit dokumen Word (MB)<input name="documentEditMb" type="number" min="1" max="500" step="1" required><small>Default 50 MB. Berlaku untuk buka dan simpan DOCX di Policy Register dan Surat Pernyataan.</small></label>
                 <label>Export per file (MB)<input name="exportMb" type="number" min="1" max="500" step="1" required></label>
               </div><p class="muted">Isi 1?500 MB (1 MB = 1.048.576 byte). Berlaku untuk semua pengguna setelah disimpan, tanpa restart. Batas khusus modul, format, gambar identitas (1 MB), serta total batch tetap berlaku jika lebih kecil. Export mencakup laporan dan backup; unduhan lampiran biasa tetap tersedia.</p></fieldset>
               <button type="submit" class="button button-accent" disabled>Simpan pengaturan website</button><p data-website-status role="status" aria-live="polite"></p>

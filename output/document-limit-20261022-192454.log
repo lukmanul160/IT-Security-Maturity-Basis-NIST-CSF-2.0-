@@ -1,0 +1,4 @@
+Database exists: nist_basis
+Tables ready: app_users, assessment_state, evidence_files
+Personnel Certification and roadmap catalog seed ready.
+NIST CSF Express server: http://localhost:8000

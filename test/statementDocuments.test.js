@@ -70,7 +70,7 @@ test('custom field settings enforce allowed values and keep NIP/name for groupin
 });
 test('rejects oversized, invalid, embedded executable and external-resource Word files',async()=>{
  await assert.rejects(()=>documents.inspect(Buffer.from('not a Word file')),{status:400});
- await assert.rejects(()=>documents.inspect(Buffer.alloc(5*1024*1024+1)),{status:400});
+ await assert.rejects(()=>documents.inspect(Buffer.alloc(50*1024*1024+1)),{status:413});
  const zip=await JSZip.loadAsync(await documents.plain('Hello'));
  zip.file('word/_rels/document.xml.rels','<Relationships><Relationship TargetMode="External" Target="https://example.com"/></Relationships>');
  await assert.rejects(()=>zip.generateAsync({type:'nodebuffer'}).then(documents.inspect),{status:400});
