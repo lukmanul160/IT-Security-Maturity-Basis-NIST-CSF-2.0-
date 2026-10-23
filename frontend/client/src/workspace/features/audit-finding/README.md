@@ -14,6 +14,9 @@ entry point is `../../runtime.js`; do not add ES imports or exports to fragments
 - `../../../../../public/theme.css`: shared light/dark styles, including nested
   finding cells selected by `[data-aft-details]`.
 
+Descriptions in the Audit/Finding table use `white-space: pre-wrap` so line
+breaks entered in the description textarea remain visible in the Details cell.
+
 The index costs one pass over the API snapshot. ID and direct-child lookup avoid
 scanning the entire list; ancestor traversal follows only the parent chain and
 stops safely on missing parents or cycles. Child order matches API order.

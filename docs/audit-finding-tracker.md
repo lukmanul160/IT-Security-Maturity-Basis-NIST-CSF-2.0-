@@ -4,6 +4,8 @@ Modul mandiri pada navigasi Assessment map, mengikuti komponen dan kelas UI work
 
 Setiap tingkat memiliki judul, referensi, PIC, status, tenggat, dan deskripsi. Finding memiliki severity. Evidence wajib memiliki file saat dibuat (maksimum 10 MB); file dapat diganti saat mengubah data. Pencarian dan filter status berlaku pada tingkat yang sedang dibuka. Status dicatat manual, bukan approval otomatis. Induk dengan turunan tidak dapat dihapus.
 
+Baris baru pada deskripsi/rekomendasi ditampilkan sebagai baris baru di kolom Detail.
+
 Permission `audit-finding-tracker`: semua peran dapat membaca jika permission diaktifkan; admin/approver/editor dapat membuat dan mengubah; admin/approver dapat menghapus. Endpoint `/api/audit-finding-tracker` mengikuti autentikasi dan pencatatan audit aplikasi. File evidence tersimpan sebagai BYTEA bersama metadata di tabel PostgreSQL khusus `audit_finding_records`, bukan pada Uploaded files atau konfigurasi penyimpanan modul lain. Unduhan selalu berupa attachment melalui API berizin.
 
 Restart server untuk membuat tabel dan mendaftarkan permission baru. Build frontend: `npm.cmd run build:client`. Unit test: `node --test test/auditFindingService.test.js`. Integration test PostgreSQL menggunakan tabel TEMP: set `RUN_AFT_DB_TESTS=1` sebelum menjalankan test tersebut.
