@@ -8,7 +8,7 @@ berurutan; lanjutkan hanya jika langkah sebelumnya berhasil.
 | Metode | Software pada host | URL lokal |
 | --- | --- | --- |
 | Docker | Docker dan Compose v2 | http://localhost:5000/login |
-| Manual | Node.js 24, npm, PostgreSQL server dan client tools | http://localhost:8000/login |
+| Manual | Node.js 26.13.0 LTS, npm, PostgreSQL server dan client tools | http://localhost:8000/login |
 
 ## 1. Siapkan folder aplikasi
 
@@ -156,7 +156,7 @@ mengubah password PostgreSQL pada volume yang sudah berisi data.
 
 **Windows:**
 
-1. Instal Node.js 24 beserta npm dari [installer resmi Node.js](https://nodejs.org/en/download).
+1. Instal Node.js 26.13.0 LTS beserta npm dari [installer resmi Node.js](https://nodejs.org/en/download).
 2. Instal [PostgreSQL untuk Windows](https://www.postgresql.org/download/windows/),
    termasuk server dan command line tools. Catat password `postgres` dan port
    database (contoh berikut memakai 5432).
@@ -168,7 +168,7 @@ npm.cmd --version
 Get-Service *postgresql*
 ```
 
-Pastikan Node menampilkan `v24...` dan service PostgreSQL `Running`. Jika belum,
+Pastikan Node menampilkan `v26.13.0` dan service PostgreSQL `Running`. Jika belum,
 jalankan service melalui aplikasi **Services**. Contoh berikut menggunakan
 PostgreSQL 18; sesuaikan angka versi dalam path dengan versi terpasang.
 
@@ -183,10 +183,10 @@ pg_dump --version
 pg_restore --version
 ```
 
-Pasang Node.js 24 menggunakan distribusi resmi atau paket organisasi. Langkah
-instalasi binary Linux tersedia di [panduan manual bagian 2.2](INSTALLATION.md#22-nodejs-24-lts).
+Pasang Node.js 26.13.0 LTS menggunakan distribusi resmi atau paket organisasi. Langkah
+instalasi binary Linux tersedia di [panduan manual bagian 2.2](INSTALLATION.md#22-nodejs-26130-lts).
 Sesudah instalasi, periksa `node --version` dan `npm --version`.
-Engine proyek memerlukan `^20.19.0 || >=22.12.0`; contoh panduan menggunakan 24.
+Engine proyek memerlukan `>=26.13.0 <27`; contoh panduan menggunakan 26.13.0.
 Client `pg_dump`/`pg_restore` sebaiknya sama major version dengan server.
 
 ### B2. Buat role PostgreSQL
@@ -320,7 +320,7 @@ Ikuti pemeriksaan bagian C. Untuk start otomatis setelah reboot, gunakan
 | Docker tidak terhubung ke engine | Buka Docker Desktop; di Linux periksa service dan akses akun ke Docker. |
 | `Set BLACKOWL_DB_PASSWORD` | Isi password dan sertakan `--env-file .env.docker` pada setiap perintah Compose. |
 | Container restart atau tidak healthy | Periksa `docker compose --env-file .env.docker logs --tail 100 app db`. |
-| Build gagal karena versi Node | Periksa versi Node, pasang 24, ulangi `npm ci` dan build. |
+| Build gagal karena versi Node | Periksa versi Node, pasang 26.13.0, ulangi `npm ci` dan build. |
 | PostgreSQL `ECONNREFUSED` | Periksa service PostgreSQL, host, dan port pada `.env`. |
 | `password authentication failed` | Cocokkan password role database dengan konfigurasi; ini berbeda dari password login admin. |
 | `permission denied to create database` | Pastikan role provisioning memiliki `CREATEDB`. |

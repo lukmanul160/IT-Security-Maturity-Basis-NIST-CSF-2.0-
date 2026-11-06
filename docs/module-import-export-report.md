@@ -84,3 +84,91 @@ sebelum mencoba kembali, terutama bila file berisi record baru tanpa ID lokal.
 
 Pengujian: `node --test test/moduleTransfer.test.js`, `npm run build:client`,
 `npm run test:browser` (server dan akun pengujian diperlukan).
+
+## Rincian dan Excel gap assessment
+
+Tab Gap pada NIST CSF dan Privacy menyediakan Export Excel Gap. Workbook khusus
+gap berisi seluruh gap tersimpan pada framework tersebut, tanpa mengikuti filter
+atau halaman, dengan urutan header: No, Domain, Sub, People/ Process/ Technology,
+Gap Number, Gap, Client, PIC, Initiative, Recommendation, Year of Initiative,
+Kuartal, Konfirmasi, Evidence/ Dokumen Pendukung, Decision Note.
+No dihitung otomatis pada daftar/ekspor. Rincian lainnya dapat diisi melalui
+Tambah/Edit gap; Gap adalah deskripsi wajib. Status Open/Closed tetap dikelola
+terpisah. Rincian opsional maksimal 4000 karakter per field. Evidence pada Excel
+berisi catatan dokumen serta nama/path file terkait, bukan isi berkas.
+Gap lama tetap tersedia; rincian yang belum diisi kosong, dan Sub pada ekspor
+memakai kode kontrol jika belum diisi. Metadata rincian ikut JSON gap/import.
+Restart backend untuk migrasi penambahan kolom JSONB otomatis. Ekspor ini terpisah
+dari template maturity dan tidak menyediakan impor Excel gap.
+
+Verifikasi: build frontend dan test fixture/mock gap serta pembacaan ulang workbook
+Excel. PostgreSQL nyata, browser, dan Docker belum diuji langsung untuk perubahan ini.
+
+Decision (header Excel tetap **Decision Note**) memakai dropdown dengan tepat tiga
+pilihan: **Comply**, **Partially Comply**, **Not Comply**. Pilihan wajib saat
+menyimpan rincian gap melalui formulir atau API/import yang menyertakan details.
+Payload lama tanpa details tetap didukung. Data lama tidak diubah otomatis; saat
+mengedit nilai lama/kosong, pilih salah satu nilai yang sah. Excel mengekspor
+nilai tersimpan; data lama tetap ditampilkan sampai diperbarui pengguna.
+
+Pada daftar Pemantauan gap, Edit/Ubah kesenjangan langsung memfokuskan formulir
+di bagian atas dialog. Setelah simpan berhasil atau Batal edit, dialog kembali
+ke filter, halaman, dan posisi scroll daftar semula. Jika perubahan membuat
+gap keluar dari filter (misalnya Open menjadi Closed), daftar mengikuti filter
+semula dan halaman disesuaikan bila jumlah halaman berkurang. Simpan gagal
+tetap berada di formulir agar dapat diperbaiki.
+Verifikasi alur navigasi menggunakan fixture DOM; browser nyata belum diuji.
+
+Gap NIST CSF terhubung ke kontrol CSF Core melalui controlCode. Domain mengikuti
+Function kontrol (bagian sebelum titik dua, contoh GOVERN (GV)), dan Sub mengikuti
+kode Subcategory (contoh GV.OC-01, bukan ID internal GV-OC-01). Field tersebut
+otomatis dan hanya-baca pada formulir. Backend mengabaikan isian manual Domain/Sub
+dan mengambil metadata kontrol untuk simpan, import, daftar, serta ekspor Excel.
+Metadata mengikuti kontrol pada tahun assessment yang dipilih, termasuk gap lama,
+tanpa migrasi yang menulis ulang data operasional. Field lainnya tetap dipertahankan.
+Verifikasi memakai fixture/mock kontrol dan workbook; browser serta PostgreSQL nyata
+belum diuji langsung untuk perubahan ini.
+
+Field rencana gap menggunakan isian terstruktur: Kuartal memilih Q1/Q2/Q3/Q4,
+Year of Initiative berupa angka tahun empat digit 1000?9999 (tanpa pecahan),
+dan People/Process/Technology memilih salah satu People, Process, Technology.
+Ketiganya boleh kosong jika belum ditentukan. API/import menolak nilai di luar
+format tersebut. Excel mempertahankan nilai tahun dan kuartal yang disimpan.
+Data lama tidak dikonversi otomatis; nilai nonstandar harus disesuaikan saat
+menyimpan rincian. Decision tetap wajib memilih salah satu tiga nilai compliance.
+
+Card ringkas hanya berlaku di tab Gap: maksimal 480px per card, padding lebih
+kecil, dan detail dua kolom yang menyesuaikan layar. Card KPI Pemantauan Gap
+dan dialog monitoring mempertahankan ukuran semula (dialog 820px).
+Verifikasi melalui build frontend; browser nyata belum diuji langsung.
+
+Form Tambah/Edit gap memakai ukuran sesuai jenis isian: Sub/Gap Number, tahun,
+dan Kuartal memiliki lebar pendek serta berbagi baris. Domain, Client, dan PIC
+memakai input satu baris. Initiative, Recommendation, Konfirmasi, deskripsi Gap,
+dan dokumen pendukung tetap multiline. Konfirmasi memakai lebar penuh dan tinggi
+awal yang sama dengan Recommendation, termasuk pada layar kecil. Field menyesuaikan lebar layar kecil;
+ukuran card Pemantauan Gap tidak berubah. Verifikasi melalui test fixture form
+dan build frontend, belum melalui browser nyata.
+
+Lihat semua gap menampilkan detail tersimpan secara berdampingan mengikuti
+panjang isinya, termasuk Kuartal/Tahun/PIC/Decision. Nilai panjang (>80 karakter)
+atau multiline mendapat satu baris penuh agar tetap terbaca. Ukuran dialog dan
+card KPI monitoring dipertahankan. Verifikasi lewat build dan fixture render;
+browser nyata belum diuji untuk perubahan tata letak ini.
+
+Gap Number menyediakan mode Otomatis dan Manual. Format otomatis adalah
+G-{Sub}-{kategori}-{urutan minimal dua digit}; People=PE, Process=PR, Technology=T.
+Contoh G-RS.CO-2-PE-01. Mode otomatis memerlukan Sub dan kategori. Nomor baru
+mengikuti nomor urut tertinggi yang masih tersimpan untuk awalan yang sama.
+Nomor otomatis yang sudah ada dipertahankan saat edit jika awalan tetap sesuai.
+Mengubah Sub/kategori menghasilkan nomor sesuai awalan baru. Pratinjau form
+bersifat sementara; server menentukan nomor akhir saat penyimpanan.
+Nomor manual wajib diisi, maksimal 120 karakter (huruf, angka, titik, garis bawah,
+tanda hubung); nomor dinormalisasi huruf besar. Nomor tidak boleh duplikat dalam
+framework dan tahun assessment yang sama, termasuk impor. Tahun berbeda dapat
+memakai nomor sama agar duplikasi assessment tahunan tetap didukung. Penyimpanan
+legacy diserialisasi dengan advisory lock transaksi, sementara data tahunan
+memakai lock baris periode. Data lama tanpa mode tetap didukung dan tidak diubah
+secara massal. Excel mengekspor nomor yang telah tersimpan.
+Verifikasi menggunakan fixture/mock dan build; PostgreSQL nyata serta browser
+belum diuji langsung untuk penomoran.

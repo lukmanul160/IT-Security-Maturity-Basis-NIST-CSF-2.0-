@@ -289,3 +289,13 @@ Pipeline frontend aktif sekarang menggunakan Vue 3 dan Vite. Express menyajikan 
 - `npm run test:browser`: menjalankan Chrome headless untuk memeriksa mount Vue, seluruh view utama, modal, tab, Uploaded Files, serta viewport desktop/tablet/mobile.
 
 Hasil regresi browser terakhir memeriksa 17 view utama, 18 item navigasi, 19 view terdaftar, alur edit Uploaded Files, tab framework, modal create/cancel, tidak ada duplicate ID, tidak ada overflow pada tiga viewport, dan tidak ada request browser ke `/app.js`. Pemecahan runtime menjadi komponen SFC per domain dapat dilakukan bertahap kemudian; untuk migrasi ini seluruh frontend aktif sudah melewati pipeline Vue/Vite dengan behavior-preserving runtime internal.
+
+Sidebar Framework menempatkan Manage IKAS BSSN tepat setelah ISO 27001:2022,
+sebelum Manage Privacy dan Manage CSF. Perubahan urutan diverifikasi pada sumber
+komponen dan build frontend; browser nyata belum diuji untuk perubahan ini.
+
+Light mode: warna permukaan putih dikelola pada aturan light di
+frontend/public/theme.css (sumber stylesheet, ikut bundel Vite). Pertahankan
+aturan dark dan warna status semantik. Overall maturity CSF/Privacy kini
+memiliki tiga card Policy/Proses/Gabungan; ID overallScore/privacyOverallScore
+tetap tersedia untuk card Gabungan. Layout responsif memakai maturity-snapshot-grid.

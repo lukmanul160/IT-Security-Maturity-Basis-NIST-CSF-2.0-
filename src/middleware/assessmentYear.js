@@ -21,7 +21,7 @@ function describe(path, method) {
     else return null;
     permission=framework==='ikas'?(kind==='targets'?'ikas-assessment':'ikas'):['iso27001','iso27001-soa'].includes(framework)?framework:kind==='targets'?service.permissions[framework][0]:'framework';
   } else if(parts[0]==='assessment-gaps'&&['csf','privacy','ikas','iso27001','iso27001-soa'].includes(parts[1])) {
-    framework=parts[1];kind='gaps';importing=parts[2]==='import';code=importing?undefined:parts[2];id=parts[3];
+    framework=parts[1];kind='gaps';importing=parts[2]==='import';code=importing||parts[2]==='export.xlsx'?undefined:parts[2];id=parts[3];
     if(parts.length>4||(importing&&id))return null;
     permission=framework==='csf'?'assessment':['privacy','ikas'].includes(framework)?framework+'-assessment':framework;
   } else return null;
@@ -62,6 +62,7 @@ async function assessmentYear(req,res,next) {
   const result=await service.execute(descriptor.owner,year,descriptor,req.method,req.body,req.user,req.query);
   res.set('Cache-Control','no-store');
   if(result===null)return res.status(204).end();
+  if(descriptor.kind==='gaps' && req.path.endsWith('/export.xlsx')) return res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').attachment(`gap-${descriptor.framework}-${year}.xlsx`).send(require('../services/assessmentGapWorkbook').build(result));
   return res.status(req.method==='POST'&&!descriptor.import?201:200).json(result);
 }
 module.exports={assessmentYear,describe};

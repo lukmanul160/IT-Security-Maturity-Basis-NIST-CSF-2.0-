@@ -39,6 +39,11 @@ test('evidence ownership rejection rolls back gap writes',async t=>{
   assert.ok(calls.includes('ROLLBACK'));assert.ok(!calls.some(sql=>sql.startsWith('INSERT')));
 });
 test('gap endpoints enforce assessment read/update/delete permissions and reject unknown frameworks',async t=>{
+  t.mock.method(require('../src/services/assessmentPeriodService'),'ensureStore',async()=>{});
+  t.mock.method(require('../src/services/assessmentPeriodService'),'periodMetadata',async()=>({legacy:true}));
+  t.mock.method(require('../src/services/websiteSettingsService'),'read',async()=>({}));
+  t.mock.method(pool,'query',async()=>({rows:[],rowCount:1}));
+  t.mock.method(require('pg').Pool.prototype,'connect',async()=>({query:async()=>({rows:[{acquired:true}]}),release(){}}));
   const permissions=require('../src/services/permissionService');
   const auth=require('../src/config/auth');
   t.mock.method(permissions,'has',async(role,key,action)=>role==='viewer'&&key==='assessment'&&action==='read');
@@ -49,7 +54,31 @@ test('gap endpoints enforce assessment read/update/delete permissions and reject
     const base='http://127.0.0.1:'+server.address().port+'/api/assessment-gaps';
     const headers={cookie:auth.sessionCookie+'='+token,'Content-Type':'application/json'};
     const read=await fetch(base+'/csf',{headers});assert.equal(read.status,200);assert.equal(read.headers.get('cache-control'),'no-store');
+    assert.equal((await fetch(base+'/csf/export.xlsx',{headers})).status,200);
+    t.mock.method(require('../src/services/assessmentPeriodService'),'periodMetadata',async()=>({legacy:false}));
+    t.mock.method(require('../src/services/assessmentPeriodService'),'execute',async()=>[{description:'Gap tahun 2027',evidence:[]}]);
+    const annual=await fetch(base+'/csf/export.xlsx?assessmentYear=2027',{headers});
+    assert.equal(annual.status,200);assert.match(annual.headers.get('content-disposition'),/2027/);
+    t.mock.method(require('../src/services/assessmentPeriodService'),'periodMetadata',async()=>({legacy:true}));
     for(const [method,url] of [['POST','/csf/DE.AE-02'],['PUT','/csf/DE.AE-02/id'],['DELETE','/csf/DE.AE-02/id'],['GET','/privacy']])assert.equal((await fetch(base+url,{method,headers})).status,403);
     assert.equal((await fetch(base+'/unknown',{headers})).status,404);
   }finally{auth.destroySession(token);server.closeAllConnections();await new Promise(r=>server.close(r));}
+});
+test('gap save locks number allocation before reading used numbers and rejects duplicate manual values',async t=>{
+ const calls=[],writes=[];
+ t.mock.method(pool,'query',async()=>({rows:[]}));
+ t.mock.method(access,'assertReferences',async()=>{});
+ t.mock.method(pool,'connect',async()=>({query:async(sql,args)=>{
+   calls.push(sql);
+   if(sql.startsWith('SELECT 1'))return {rowCount:1,rows:[{function:'RESPOND (RS): Description',subcategory:'RS.CO-2: Communication'}]};
+   if(sql.startsWith('SELECT id,details'))return {rows:[{id:'old',details:{gapNumber:'G-RS.CO-2-PR-01'}}]};
+   if(sql.startsWith('INSERT')){writes.push(args);return {rows:[{details:JSON.parse(args[7])}]};}
+   return {rows:[]};
+ },release(){}}));
+ const base={description:'Gap',status:'Open',evidence:[],details:{decisionNote:'Comply',dimension:'Process',gapNumberMode:'auto'}};
+ const row=await service.save('csf','RS-CO-2',null,base,{});
+ assert.equal(row.details.gapNumber,'G-RS.CO-2-PR-02');
+ assert.ok(calls.findIndex(sql=>sql.includes('pg_advisory_xact_lock'))<calls.findIndex(sql=>sql.startsWith('SELECT id,details')));
+ await assert.rejects(service.save('csf','RS-CO-2',null,{...base,details:{...base.details,gapNumberMode:'manual',gapNumber:'g-rs.co-2-pr-01'}},{}),{status:409});
+ assert.equal(writes.length,1);assert.equal(calls.at(-1),'ROLLBACK');
 });

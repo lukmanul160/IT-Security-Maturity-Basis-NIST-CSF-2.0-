@@ -8,6 +8,12 @@ router.use('/:framework',(req,res,next)=>{
   return requirePermission(service.permissionKeys[req.params.framework],action)(req,res,next);
 });
 router.get('/:framework',async(req,res)=>{res.set('Cache-Control','no-store');res.json(await service.list(req.params.framework));});
+router.get('/:framework/export.xlsx',async(req,res)=>{
+  const buffer=require('../services/assessmentGapWorkbook').build(await service.list(req.params.framework));
+  res.set('Cache-Control','no-store');
+  res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.attachment(`gap-${req.params.framework}.xlsx`).send(buffer);
+});
 router.post('/:framework/import',async(req,res)=>res.json(await service.importGaps(req.params.framework,req.body?.gaps,req.user)));
 const save=async(req,res)=>{
   if(req.params.id && !validId(req.params.id)) return res.status(400).json({error:'ID gap tidak valid.'});

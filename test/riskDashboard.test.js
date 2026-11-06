@@ -68,12 +68,14 @@ test('drill-down clears stale local filters and opens the single Risk Register t
 });
 test('editing a risk preserves an ISO deadline in the native date input', () => {
   const fields = { rmDeadline: { type: 'date', value: '' }, riskRegisterOriginalId: {}, riskRegisterFormTitle: {}, riskRegisterSubmit: {} };
-  const context = vm.createContext({ $: id => fields[id], riskManagementFields: ['deadline'], riskDate: value => String(value || '').slice(0, 10), updateRiskCalculations() {}, openRiskManagementModal() {} });
+  const sections = [{ open: false }, { open: false }];
+  const context = vm.createContext({ document: { querySelectorAll: () => sections }, $: id => fields[id], riskManagementFields: ['deadline'], riskDate: value => String(value || '').slice(0, 10), updateRiskCalculations() {}, openRiskManagementModal() {} });
   const source = fs.readFileSync('frontend/client/src/workspace/features/risk-management/register.js', 'utf8');
   vm.runInContext(source.slice(source.indexOf('function fillRiskManagementForm'), source.indexOf('function renderRiskRegister')), context);
   vm.runInContext('fillRiskManagementForm({riskId:"R1", deadline:"2026-10-01T00:00:00.000Z"})', context);
   assert.equal(fields.rmDeadline.value, '2026-10-01');
   assert.equal(fields.riskRegisterOriginalId.value, 'R1');
+  assert.ok(sections.every(section => section.open));
 });
 test('Excel report fetches authoritative rows, keeps strings literal, and only includes requested IDs', async t => {
   t.mock.method(register, 'listRegister', async () => risks.map(r => ({ ...r, comment: '=HYPERLINK("https://example.com")' })));

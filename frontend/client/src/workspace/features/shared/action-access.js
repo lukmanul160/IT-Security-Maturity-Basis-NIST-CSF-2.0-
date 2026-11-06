@@ -16,7 +16,7 @@ const actionControlRules = [
   ['iso27001','create','#iso27001NewButton,#isoObjectiveNewButton'],['iso27001','update','[data-iso-edit],[data-objective-edit],#isoObjectiveCalendarSave'],['iso27001','delete','[data-iso-delete],[data-objective-delete]'],
   ['iso27001-soa','create','#iso27001SoaNewButton'],['iso27001-soa','update','[data-soa-edit],[data-soa-app-toggle]'],['iso27001-soa','delete','[data-soa-delete]'],
   ['risk-acceptance','create','#riskAcceptanceNew'],['risk-acceptance','update','[data-risk-edit]'],['risk-acceptance','delete','[data-risk-delete],#riskAcceptanceDeleteConfirm'],
-  ['risk-management','create','#riskManagementNewButton,#riskIndicatorNewButton,#riskRegisterImportInput'],['risk-management','update','[data-rm-edit],[data-indicator-edit]'],['risk-management','delete','[data-rm-delete],[data-indicator-delete]'],
+  ['risk-management','create','#riskManagementNewButton,[data-rm-start],#riskIndicatorNewButton,#riskRegisterImportInput'],['risk-management','update','[data-rm-edit],[data-indicator-edit],#riskRegisterContinue'],['risk-management','delete','[data-rm-delete],[data-indicator-delete]'],
   ['policy-register','create','#policyDropdownAddBtn,#policyDropdownNewOption'],['policy-register','update','.policy-dropdown-option-input'],['policy-register','delete','[data-delete-index]'],
   ['policy-register','create','#policyRegisterNewButton,#policyRegisterAddItem'],['policy-register','update','[data-policy-edit]'],['policy-register','delete','[data-policy-delete],#policyRegisterDelete'],
   ['tprm-register','create','#tprmNewButton'],['tprm-register','update','[data-tprm-edit],[data-tprm-start-assessment],[data-tprm-edit-assessment],[data-tprm-risk-register]'],['tprm-register','delete','[data-tprm-delete],#tprmDelete'],

@@ -14,7 +14,7 @@ frontend/public/vue/ dan aset pendukung; jangan mengubah hasil build langsung.
 
 ## Menjalankan dengan Node.js
 
-Gunakan Node.js 24, npm dan PostgreSQL (17 untuk kesesuaian default Docker).
+Gunakan Node.js 26.13.0 LTS, npm dan PostgreSQL (17 untuk kesesuaian default Docker).
 Salin env.exsample menjadi .env hanya pada instalasi baru, lalu atur DB_*.
 Jalankan npm ci, npm run build, npm run db:setup, lalu npm start.
 Windows dapat memakai npm.cmd. URL default http://localhost:8000/login.

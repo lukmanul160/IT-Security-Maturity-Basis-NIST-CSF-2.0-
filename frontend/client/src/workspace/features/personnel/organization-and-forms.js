@@ -144,7 +144,23 @@ document.querySelectorAll('[data-personnel-tab]').forEach(button => button.addEv
 document.querySelector('#organizationPersonnelNewButton').addEventListener('click', () => openOrganizationPersonnelForm()); $('organizationPersonnelForm').addEventListener('submit', guardFormSubmission(saveOrganizationPersonnel)); $('organizationPersonnelCancel').addEventListener('click', () => $('organizationPersonnelModal').close()); $('organizationPersonnelBody').addEventListener('click', event => { const edit = event.target.closest('[data-organization-edit]'); const remove = event.target.closest('[data-organization-delete]'); if (edit) openOrganizationPersonnelForm(organizationPersonnel.find(person => String(person.id) === edit.dataset.organizationEdit)); if (remove) deleteOrganizationPersonnel(remove.dataset.organizationDelete); });
 document.querySelector('#certificationBody').addEventListener('click', event => { const canvas = event.target.closest('[data-certification-canvas]'); if (canvas) addCertificationToCanvas(canvas.dataset.certificationCanvas); });
 document.addEventListener('click', event => { const canvas = event.target.closest('[data-certification-canvas]'); if (canvas && !event.target.closest('#certificationBody')) { event.preventDefault(); addCertificationToCanvas(canvas.dataset.certificationCanvas); } });
-async function saveRiskManagement(event) { event.preventDefault(); const originalId = $('riskRegisterOriginalId').value; const data = riskManagementData(); const response = await fetch(originalId ? `/api/risk-management/${encodeURIComponent(originalId)}` : '/api/risk-management', { method: originalId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); $('riskRegisterStatus').textContent = response.ok ? 'Risk saved' : ((await response.json().catch(() => ({}))).error || 'Save failed'); if (response.ok) { $('riskManagementModal').close(); resetRiskManagementForm(); await loadRiskManagement(); } }
+async function saveRiskManagement(event) {
+  event.preventDefault();const originalId=$('riskRegisterOriginalId').value,data=riskManagementData();
+  const continueFlow=Boolean(event.submitter?.hasAttribute('data-rm-continue')||rwReturnAfterEdit);
+  rmSaving=true;
+  try {
+    const response=await fetch(originalId?`/api/risk-management/${encodeURIComponent(originalId)}`:'/api/risk-management',{method:originalId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const body=await response.json().catch(()=>({}));
+    if(!response.ok)throw Error(body.error||'Risiko gagal disimpan.');
+    const id=body.riskId||originalId||data.riskId;
+    rwReturnAfterEdit=null;$('riskManagementModal').close();resetRiskManagementForm();
+    const feedback=$('rmSaveFeedback');feedback.hidden=false;feedback.innerHTML=`<strong>${escapeHtml(id)} tersimpan.</strong> Lanjutkan penilaian dan keputusan melalui Alur risiko. <button type="button" class="button button-quiet" data-rw-open="${escapeHtml(id)}">Lanjutkan alur risiko</button>`;
+    try{await loadRiskManagement();}catch(error){feedback.append(document.createTextNode(' Data tersimpan, tetapi daftar belum diperbarui. Gunakan Refresh data.'));return;}
+    if(continueFlow&&canPerform('risk-management','update'))await rwOpen(id);
+    else {setRiskManagementTab('register');feedback.scrollIntoView({block:'nearest'});}
+  }catch(error){$('riskRegisterStatus').textContent=error.message;}
+  finally{rmSaving=false;}
+}
 async function deleteRiskManagement(id) { if (!confirm(`Delete risk ${id}?`)) return; const response = await fetch(`/api/risk-management/${encodeURIComponent(id)}`, { method: 'DELETE' }); if (response.ok) await loadRiskManagement(); }
 function ensureCertificationLevelField() { if ($('certificationLevel')) return; const reference = $('certificationReferenceUrl').closest('label'); const label = document.createElement('label'); label.innerHTML = 'Level<select id="certificationLevel"><option>Entry Level</option><option>Intermediate</option><option>Advanced / Expert</option></select>'; reference.after(label); }
 function syncCertificationCatalogFields() { const match = certificationRoadmapCatalog.find(row => row.certificationName.toLowerCase() === $('certificationName').value.trim().toLowerCase()); if (!match) return; $('certificationIssuer').value = match.issuer || ''; $('certificationReferenceUrl').value = match.referenceUrl || ''; ensureCertificationLevelField(); $('certificationLevel').value = match.certificationLevel || 'Intermediate'; $('certificationStatus').textContent = 'Catalog details applied'; }

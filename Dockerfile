@@ -1,4 +1,4 @@
-FROM node:24-trixie-slim AS build
+FROM node:26.13.0-trixie-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -8,7 +8,7 @@ COPY scripts/prepare-vue-client.js ./scripts/prepare-vue-client.js
 COPY scripts/prepare-virtual-office.js ./scripts/prepare-virtual-office.js
 RUN npm run build && npm prune --omit=dev
 
-FROM node:24-trixie-slim AS runtime
+FROM node:26.13.0-trixie-slim AS runtime
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-17 ca-certificates \
     && rm -rf /var/lib/apt/lists/*

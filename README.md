@@ -65,7 +65,7 @@ Lihat [panduan Docker](docs/DOCKER.md) untuk konfigurasi, HTTPS, backup, dan upg
 
 ### Instalasi tanpa Docker
 
-Instal Node.js 24 LTS, PostgreSQL server beserta client tools, lalu buka root
+Instal Node.js 26.13.0 LTS, PostgreSQL server beserta client tools, lalu buka root
 project. Buat role database dan konfigurasikan kredensial sesuai panduan instalasi.
 Template environment di repository bernama **env.exsample**. Jangan menimpa
 file .env yang sudah dipakai pada instalasi lama.

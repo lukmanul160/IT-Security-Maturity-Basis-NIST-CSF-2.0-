@@ -12,3 +12,5 @@ CREATE TABLE IF NOT EXISTS assessment_gaps (
   FOREIGN KEY (framework_id,control_code) REFERENCES controls(framework_id,code) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX IF NOT EXISTS assessment_gaps_control_idx ON assessment_gaps(framework_id,control_code);
+
+ALTER TABLE assessment_gaps ADD COLUMN IF NOT EXISTS details JSONB NOT NULL DEFAULT '{}'::jsonb;

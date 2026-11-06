@@ -87,7 +87,8 @@ tersedia pada [panduan akses LAN](NETWORK_ACCESS.md).
 
 ```text
 docker compose --env-file .env.docker config --quiet
-docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker build --pull app
+docker compose --env-file .env.docker up -d --no-deps app
 docker compose --env-file .env.docker ps
 docker compose --env-file .env.docker logs --tail 100 app db
 ```

@@ -18,7 +18,7 @@ bawah. Kedua metode tersedia sebagai pilihan deployment aplikasi yang sama.
 
 | Komponen | Kebutuhan |
 | --- | --- |
-| Node.js | Gunakan Node.js **24** beserta npm. Engine aplikasi dan Vite 7 memerlukan `^20.19.0 || >=22.12.0`; Node.js 18 tidak cukup untuk build. |
+| Node.js | Gunakan Node.js **26.13.0 LTS** beserta npm. Engine aplikasi dan Vite 7 memerlukan `>=26.13.0 <27`; Node.js 18 tidak cukup untuk build. |
 | PostgreSQL | Server PostgreSQL dan client tools `psql`, `pg_dump`, `pg_restore`. Lingkungan pengembangan memakai PostgreSQL 18. |
 | Source aplikasi | Clone Git atau ekstrak arsip lengkap, termasuk `data/`, `database/`, `scripts/`, dan `frontend/`. |
 | Browser | Browser modern untuk login, upload evidence, dan editor diagram SVG. |
@@ -49,14 +49,14 @@ ikuti konfigurasi repository APT resmi pada tautan PostgreSQL Ubuntu di atas,
 lalu instal server dan client dengan versi yang sama. `pg_dump` tidak boleh
 lebih tua daripada major version server yang dicadangkan.
 
-### 2.2. Node.js 24 LTS
+### 2.2. Node.js 26.13.0 LTS
 
-Jika Node.js 24 sudah tersedia, cukup verifikasi `node --version` dan
+Jika Node.js 26.13.0 sudah tersedia, cukup verifikasi `node --version` dan
 `npm --version`. Berikut contoh instalasi binary resmi untuk x64/ARM64 dengan
-versi 24.21.0 yang tersedia saat dokumentasi disusun:
+versi 26.13.0 yang tersedia saat dokumentasi disusun:
 
 ```bash
-NODE_VERSION=v24.21.0
+NODE_VERSION=v26.13.0
 case "$(uname -m)" in
   x86_64) NODE_ARCH=x64 ;;
   aarch64|arm64) NODE_ARCH=arm64 ;;
@@ -142,7 +142,7 @@ sesuai jaringan yang diizinkan. Hentikan proses foreground dengan `Ctrl+C`.
 
 ### 3.1. Prasyarat dan database
 
-1. Instal **Node.js 24 LTS** memakai installer `.msi` resmi dan aktifkan PATH.
+1. Instal **Node.js 26.13.0 LTS** memakai installer `.msi` resmi dan aktifkan PATH.
 2. Instal **PostgreSQL**, termasuk server dan command line tools. Catat password
    role `postgres` serta port saat instalasi.
 3. Instal Git jika akan melakukan clone. Tutup dan buka kembali PowerShell
@@ -420,7 +420,7 @@ dan menetapkan izin target sesuai kebutuhan. Lihat [detail backup](database-back
 | Gejala | Pemeriksaan / tindakan |
 | --- | --- |
 | `npm.ps1 cannot be loaded` | Gunakan `npm.cmd` di PowerShell. |
-| `EBADENGINE`, `crypto.hash is not a function` saat build | Periksa `node --version`; gunakan Node.js 24 LTS, lalu ulangi `npm ci` dan build. |
+| `EBADENGINE`, `crypto.hash is not a function` saat build | Periksa `node --version`; gunakan Node.js 26.13.0 LTS, lalu ulangi `npm ci` dan build. |
 | `ECONNREFUSED` PostgreSQL | Periksa service, `DB_HOST`, `DB_PORT`, serta jaringan database. |
 | `password authentication failed` | Cocokkan password role dengan `.env`; `DB_PASSWORD` bukan password akun aplikasi. |
 | `permission denied to create database` | Berikan CREATEDB pada role provisioning atau minta DBA membuat database aplikasi dengan owner role tersebut. |

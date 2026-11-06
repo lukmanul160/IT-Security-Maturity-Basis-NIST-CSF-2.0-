@@ -46,7 +46,7 @@ async function legacySnapshot(framework, client) {
   const data = { assessment:emptyAssessment(), controls:{}, targets:{}, gaps:{}, objectives:[] };
   const controls = (await client.query(`SELECT framework_id,code AS id,function,category,subcategory,implementation,"references",minimum_evidence AS "minimumEvidence",notes,evidence,applicability FROM controls WHERE framework_id=ANY($1::text[]) ORDER BY code`, [frameworks])).rows;
   const targets = (await client.query(`SELECT framework_id,category,target_score AS "targetScore" FROM framework_category_targets WHERE framework_id=ANY($1::text[]) ORDER BY category`, [frameworks])).rows;
-  const findings = (await client.query(`SELECT id,framework_id AS framework,control_code AS "controlCode",description,status,evidence,created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt" FROM assessment_gaps WHERE framework_id=ANY($1::text[]) ORDER BY created_at,id`, [frameworks])).rows;
+  const findings = (await client.query(`SELECT id,framework_id AS framework,control_code AS "controlCode",description,status,evidence,details,created_by AS "createdBy",updated_by AS "updatedBy",created_at AS "createdAt",updated_at AS "updatedAt" FROM assessment_gaps WHERE framework_id=ANY($1::text[]) ORDER BY created_at,id`, [frameworks])).rows;
   for (const id of frameworks) {
     data.controls[id] = controls.filter(row => row.framework_id === id).map(({framework_id,...row}) => row);
     data.targets[id] = targets.filter(row => row.framework_id === id).map(({framework_id,...row}) => row);
@@ -229,9 +229,10 @@ async function gapMutation(data, client, descriptor, method, body, user) {
   if (method === 'DELETE') { await access.assertReferences([],previous.evidence,user); rows.splice(index,1); return {ok:true}; }
   const value = gaps.validate(body), now = new Date(Math.max(Date.now(),previous?Date.parse(previous.updatedAt)+1:0)).toISOString();
   if(body.id && Object.values(data.gaps).flat().some(row=>row.id===body.id && row!==previous))throw fail('ID gap sudah digunakan kontrol lain.',409);
-  const row = {...value,id:previous?.id || body.id || crypto.randomUUID(),framework,controlCode:code,
+  const row = {...value,details:gaps.linkedDetails(framework,code,data.controls[framework].find(row=>row.id===code),value.details ?? previous?.details),id:previous?.id || body.id || crypto.randomUUID(),framework,controlCode:code,
     evidence:await canonicalEvidence(value.evidence,previous?.evidence || [],user,client),
     createdBy:previous?.createdBy || user.username,updatedBy:user.username,createdAt:previous?.createdAt || now,updatedAt:now};
+  row.details=require('./gapNumberService').assign(row.details,rows,previous?.id);
   if (previous) rows[index] = row; else rows.push(row); return row;
 }
 async function execute(owner, year, descriptor, method, body, user, query = {}) {
@@ -240,7 +241,7 @@ async function execute(owner, year, descriptor, method, body, user, query = {}) 
     if (descriptor.kind === 'assessment') return owner==='ikas'?require('../shared/ikasScoring').normalize(data.assessment):data.assessment;
     if (descriptor.kind === 'controls') return [...data.controls[descriptor.framework]].sort((a,b) => a.id.localeCompare(b.id,undefined,{numeric:true}));
     if (descriptor.kind === 'targets') return data.targets[descriptor.framework];
-    if (descriptor.kind === 'gaps') return data.gaps[descriptor.framework];
+    if (descriptor.kind === 'gaps') return data.gaps[descriptor.framework].map(row=>({...row,details:gaps.linkedDetails(descriptor.framework,row.controlCode,data.controls[descriptor.framework].find(control=>control.id===row.controlCode),row.details)}));
     if (descriptor.kind === 'objectives') return data.objectives.filter(row => !query.year || row.year === Number(query.year));
     throw fail('Endpoint assessment tidak tersedia.',404);
   }

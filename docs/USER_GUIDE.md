@@ -249,3 +249,45 @@ penugasan, profil, kuesioner/CIA/risiko, review, approval, aktivasi, hingga moni
 dan offboarding. Setiap langkah menunjukkan pelaku, lokasi formulir, kelengkapan,
 dan hasilnya. Tombol tujuan mengikuti izin baca modul; membaca panduan tidak
 menyimpan record atau menjalankan keputusan workflow.
+
+## Desimal rata-rata pada score card assessment
+
+Score card CSF dan Privacy menampilkan rata-rata dengan satu angka desimal
+(contoh 1.3 atau 1.4), termasuk skor Policy/Practice per fungsi. IKAS tetap
+mengikuti perhitungan berbobot dan tampilan dua desimal (1.30 atau 1.40).
+Rata-rata tidak dibulatkan menjadi bilangan bulat. Pilihan nilai per kontrol
+tetap mengikuti rubrik yang ada. Persentase completion terpisah dari skor maturity.
+ISO 27001 menggunakan ringkasan compliance, bukan skor maturity.
+
+Verifikasi: `node --test test/maturityCardDecimals.test.js` menjalankan render
+CSF/Privacy dengan fixture DOM dan perhitungan IKAS menggunakan fixture kontrol.
+Pengujian ini tidak memerlukan database; browser nyata belum diuji langsung.
+
+Overall maturity CSF dan Privacy menampilkan tiga card: Policy, Proses
+(skor Practice), dan Gabungan. CSF memakai rata-rata per kategori untuk setiap
+dimensi; Privacy memakai rata-rata kontrol yang dinilai. Gabungan dihitung
+dari (rata-rata Policy + rata-rata Proses) / 2, sebelum format satu desimal.
+Jika hanya satu dimensi memiliki penilaian, Gabungan memakai dimensi tersebut;
+jika belum ada penilaian, card menampilkan tanda kosong dan Belum dinilai.
+Completion dan Priority gaps tetap mengikuti skor Practice seperti sebelumnya.
+IKAS tetap memakai indeks tunggal sesuai rubrik.
+
+Light mode memakai latar dan permukaan putih, garis pembatas lembut, dan aksen
+biru untuk navigasi serta meter maturity. Ketiga card tersusun sejajar pada
+desktop dan vertikal pada layar kecil. Verifikasi melalui fixture render dan
+build frontend; browser nyata belum diuji untuk perubahan ini.
+
+## Memulai Risk Management
+
+1. Pilih Tambah risiko baru, tulis deskripsi kejadian, lalu Simpan draft.
+2. Gunakan Simpan & lanjutkan atau Lanjutkan alur pada register untuk melihat
+   langkah dan isian yang perlu dilengkapi pada status saat ini.
+3. Data risiko berisi identifikasi, skor inherent/residual, serta rencana tindakan.
+   Alur risiko berisi current assessment, tolerance, approver/reviewer, bukti,
+   dan keputusan. Tombol Edit Data risiko di dalam alur menghubungkan keduanya.
+4. Simpan data workflow, isi alasan keputusan, lalu jalankan aksi yang tersedia.
+   Approval/verifikasi hanya tampil untuk akun yang berwenang.
+5. Pantau hasil melalui Dashboard. Tampilan register Ringkas dapat diubah menjadi
+   Lengkap tanpa mengubah filter atau data yang diekspor.
+
+Lihat docs/risk-workflow.md untuk persyaratan setiap keputusan dan batas verifikasi.

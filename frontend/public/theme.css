@@ -1,27 +1,27 @@
 /* Shared theme overrides: high-specificity rules cover legacy and Vue modules. */
 :root { color-scheme:light; }
-/* Soft light surfaces reduce glare without dimming images or reducing text contrast. */
-html:not([data-theme=dark]),html:not([data-theme=dark]) body{--white:#eef2f6;--paper:#e6ecf2;--panel:#eef2f6;--bg:#e6ecf2;--muted:#53657d;--line:#c9d3df}
-html:not([data-theme=dark]) body.workspace-ui{background:#e6ecf2;color:#243447}
-html:not([data-theme=dark]) body.workspace-ui :is(.topbar,.sidebar,dialog,.tw-surface,.stat-panel,.insight-panel,.legend-panel,.panel,.framework-card,.summary-card,.certification-card,.smtp-card,.function-card,.assessment-table,.excel-wrap,.monitor-panel,.monitor-kpis article,.monitor-kpis .monitor-kpi-card,.monitor-filters,.asset-filter-bar,.asset-relation-guide-grid article,.knowledge-text-editor .tiptap,.wiki-suggestions,.tm-palette,.tm-inspector,.tm-threat-card,.tm-register,.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-status,.tm-fullscreen,.backup-restore-panel,.file-backup-options,.file-backup-field,.attachment-item){background:#eef2f6!important;border-color:#c9d3df!important}
-html:not([data-theme=dark]) body.workspace-ui :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=hidden]),select,textarea){background:#f3f5f8!important;color:#243447;border-color:#bdcad9}
-html:not([data-theme=dark]) body.workspace-ui :is(.excel-table,.asset-table,.monitor-table,.permission-matrix) :is(th,td){background-color:#eef2f6}
-html:not([data-theme=dark]) body.workspace-ui .view :is(td:not([class]),th:not([class])){background:#eef2f6!important}
-html:not([data-theme=dark]) body.workspace-ui :is(.framework-chooser-heading,.framework-choice,.organization-person,.toolbar,.layout,.vault-row:not(.selected),.uploaded-files-wrap,.nr-table-container,.search-box){background:#eef2f6!important;border-color:#c9d3df!important}
-html:not([data-theme=dark]) body.workspace-ui :is(.button-quiet,.attachment-button,.attachment-action-button,.module-transfer-toolbar button,.knowledge-text-editor .toolbar button:not([aria-pressed=true])){background:#e6ecf2!important;border-color:#bdcad9!important;color:#334963!important}
-html:not([data-theme=dark]) body.workspace-ui :is(.button-quiet:hover,.attachment-action-button:hover,.framework-choice:hover){background:#dce5ef!important}
-html:not([data-theme=dark]) body.workspace-ui :is(.radar-panel,.iso-chart-panel,.tm-editor,.tm-viewport,.rack-photo-name){background:#eef2f6!important;border-color:#c9d3df!important}
-html:not([data-theme=dark]) body.workspace-ui .rack-slot:not(.drop-invalid):not(.drop-valid) .rack-slot-space{background:#eef2f6!important}
+/* White light surfaces with restrained blue accents and clear boundaries. */
+html:not([data-theme=dark]),html:not([data-theme=dark]) body{--white:#ffffff;--paper:#ffffff;--panel:#ffffff;--bg:#ffffff;--muted:#53657d;--line:#e2e8f0}
+html:not([data-theme=dark]) body.workspace-ui{background:#ffffff;color:#243447}
+html:not([data-theme=dark]) body.workspace-ui :is(.topbar,.sidebar,dialog,.tw-surface,.stat-panel,.insight-panel,.legend-panel,.panel,.framework-card,.summary-card,.certification-card,.smtp-card,.function-card,.assessment-table,.excel-wrap,.monitor-panel,.monitor-kpis article,.monitor-kpis .monitor-kpi-card,.monitor-filters,.asset-filter-bar,.asset-relation-guide-grid article,.knowledge-text-editor .tiptap,.wiki-suggestions,.tm-palette,.tm-inspector,.tm-threat-card,.tm-register,.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-status,.tm-fullscreen,.backup-restore-panel,.file-backup-options,.file-backup-field,.attachment-item){background:#ffffff!important;border-color:#e2e8f0!important}
+html:not([data-theme=dark]) body.workspace-ui :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=hidden]),select,textarea){background:#ffffff!important;color:#243447;border-color:#cbd5e1}
+html:not([data-theme=dark]) body.workspace-ui :is(.excel-table,.asset-table,.monitor-table,.permission-matrix) :is(th,td){background-color:#ffffff}
+html:not([data-theme=dark]) body.workspace-ui .view :is(td:not([class]),th:not([class])){background:#ffffff!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.framework-chooser-heading,.framework-choice,.organization-person,.toolbar,.layout,.vault-row:not(.selected),.uploaded-files-wrap,.nr-table-container,.search-box){background:#ffffff!important;border-color:#e2e8f0!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.button-quiet,.attachment-button,.attachment-action-button,.module-transfer-toolbar button,.knowledge-text-editor .toolbar button:not([aria-pressed=true])){background:#ffffff!important;border-color:#cbd5e1!important;color:#334963!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.button-quiet:hover,.attachment-action-button:hover,.framework-choice:hover){background:#eff6ff!important}
+html:not([data-theme=dark]) body.workspace-ui :is(.radar-panel,.iso-chart-panel,.tm-editor,.tm-viewport,.rack-photo-name){background:#ffffff!important;border-color:#e2e8f0!important}
+html:not([data-theme=dark]) body.workspace-ui .rack-slot:not(.drop-invalid):not(.drop-valid) .rack-slot-space{background:#ffffff!important}
 html:not([data-theme=dark]) body.workspace-ui :is(.button-danger,.attachment-action-button.danger,.button-quiet.danger,.tm-danger){background:#f0dfe4!important;color:#843245!important;border-color:#c68692!important}
 html[data-theme=dark] body.workspace-ui :is(.button-quiet.danger,.tm-danger){background:#492839!important;color:#ffb7c0!important;border-color:#7d4355!important}
 html:not([data-theme=dark]) body.workspace-ui :is(.muted,.lede,.eyebrow,.editor-help,.monitor-empty){color:#53657d}
-html:not([data-theme=dark]) body:is(.landing-page,.login-page){--white:#eef2f6;--paper:#e6ecf2;--panel:#eef2f6;background-color:#e6ecf2!important}
-html:not([data-theme=dark]) body.landing-page :is(nav,.gallery-card,.gallery-image,.screenshot-dialog,.screenshot-header,.screenshot-footer,.concept-detail,.catalog-item){background-color:#eef2f6!important;border-color:#c9d3df}
-html:not([data-theme=dark]) body.login-page :is(.login-form-panel,.login-card){background-color:#eef2f6!important}
-html:not([data-theme=dark]) :is([data-language-select],[data-theme-toggle]){background:#eef2f6!important;color:#334963!important;border-color:#bdcad9!important}
-html:not([data-theme=dark]) body.virtual-office-page{background:#e6ecf2!important}
-html:not([data-theme=dark]) body.virtual-office-page :is(header,.scene-panel,aside,.camera-pad,button:not(.selected)){background:#eef2f6!important;border-color:#c9d3df}
-html:not([data-theme=dark]) body.virtual-office-page input{background:#f3f5f8;border-color:#bdcad9;color:#243447}
+html:not([data-theme=dark]) body:is(.landing-page,.login-page){--white:#ffffff;--paper:#ffffff;--panel:#ffffff;background-color:#ffffff!important}
+html:not([data-theme=dark]) body.landing-page :is(nav,.gallery-card,.gallery-image,.screenshot-dialog,.screenshot-header,.screenshot-footer,.concept-detail,.catalog-item){background-color:#ffffff!important;border-color:#c9d3df}
+html:not([data-theme=dark]) body.login-page :is(.login-form-panel,.login-card){background-color:#ffffff!important}
+html:not([data-theme=dark]) :is([data-language-select],[data-theme-toggle]){background:#ffffff!important;color:#334963!important;border-color:#bdcad9!important}
+html:not([data-theme=dark]) body.virtual-office-page{background:#ffffff!important}
+html:not([data-theme=dark]) body.virtual-office-page :is(header,.scene-panel,aside,.camera-pad,button:not(.selected)){background:#ffffff!important;border-color:#c9d3df}
+html:not([data-theme=dark]) body.virtual-office-page input{background:#ffffff;border-color:#bdcad9;color:#243447}
 html:not([data-theme=dark]) body.virtual-office-page :is(.hint,.legend,footer,.intro p){color:#53657d}
 @media print{html:not([data-theme=dark]) body,html:not([data-theme=dark]) body.workspace-ui :is(.stat-panel,.insight-panel,.excel-wrap){background:#fff!important}}
 .rw-steps{display:flex;flex-wrap:wrap;gap:12px;list-style:none;padding:0;counter-reset:workflow}.rw-steps li{counter-increment:workflow;padding:10px 14px;background:#e8f0fa;color:#183453;border-radius:8px}.rw-steps li:before{content:counter(workflow) '. ';font-weight:700}.rw-decisions,.rw-history{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.rw-decisions textarea{display:block;width:100%;margin:8px 0 14px}.rw-warning{background:#fff3d7;color:#795400;padding:12px;border-radius:8px}.rw-event{padding:12px 0;border-bottom:1px solid var(--line)}.rw-event p{white-space:pre-wrap}.rw-event pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;max-height:300px;overflow:auto}.rw-event small{color:var(--muted)}
@@ -339,10 +339,17 @@ html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-optio
 html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:focus-visible{background:#24344b!important;border-color:#82b5ff!important}
 html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-option:focus-visible{outline:2px solid #82b5ff;outline-offset:2px}
 /* Keep secondary controls and lifecycle cards soft in both themes. */
-html[data-theme=light] body.workspace-ui .rm-cia-assessment{background:#eef2f6!important;border-color:#c9d3df!important}
-html[data-theme=light] body.workspace-ui .button.button-quiet:not(.danger){background:#e6ecf2!important;color:#243447!important;border-color:#bdcad9!important}
-html[data-theme=light] body.workspace-ui :is(.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-palette,.tm-stencil-group,.tm-palette-help,.assessment-pagination,.toolbar,.folder-create,.note-link-items) :is(button,a:not(.primary)){background:#e6ecf2!important}
-html[data-theme=light] body.workspace-ui .tprm-lifecycle>article{background:#eef2f6!important}
-html[data-theme=light] body.workspace-ui input[type=range]{background:#e6ecf2!important}
+html[data-theme=light] body.workspace-ui .rm-cia-assessment{background:#ffffff!important;border-color:#e2e8f0!important}
+html[data-theme=light] body.workspace-ui .button.button-quiet:not(.danger){background:#ffffff!important;color:#243447!important;border-color:#bdcad9!important}
+html[data-theme=light] body.workspace-ui :is(.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-palette,.tm-stencil-group,.tm-palette-help,.assessment-pagination,.toolbar,.folder-create,.note-link-items) :is(button,a:not(.primary)){background:#ffffff!important}
+html[data-theme=light] body.workspace-ui .tprm-lifecycle>article{background:#ffffff!important}
+html[data-theme=light] body.workspace-ui input[type=range]{background:#ffffff!important}
 html[data-theme=dark] body.workspace-ui input[type=range]{background:#142033!important}
 html[data-theme=dark] body.workspace-ui .soa-applicability-toggle.applicable{background:#164536!important;color:#b4e5c9!important;border-color:#337456!important}
+
+html:not([data-theme=dark]) body.workspace-ui .score-panel{background:#fff;border-color:#dbe5f1;color:#0f172a;box-shadow:0 3px 14px #0f172a08;border-top:3px solid #2563eb}
+html:not([data-theme=dark]) body.workspace-ui .score-panel :is(.panel-kicker,p,.score-foot){color:#52657c}
+html:not([data-theme=dark]) body.workspace-ui .score-panel .score-line strong{color:#1d4ed8}
+html:not([data-theme=dark]) body.workspace-ui .score-panel .meter{background:#e8eff8}
+html:not([data-theme=dark]) body.workspace-ui :is(.gap-kpi,.gap-form,.module-transfer-toolbar){background:#fff;border-color:#e2e8f0}
+html:not([data-theme=dark]) body.workspace-ui .nav-item:hover{background:#eff6ff;color:#1e40af}
