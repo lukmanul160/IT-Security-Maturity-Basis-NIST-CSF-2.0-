@@ -27,9 +27,12 @@ async function checkUser(client, username, approve = false) {
   const row = (await client.query('SELECT username, role FROM app_users WHERE username = $1', [username])).rows[0];
   if (!row || (approve && !['admin', 'approver'].includes(row.role)) || !(await permissions.has(row.role, 'risk-management', 'update'))) rules.fail('Akun reviewer/approver tidak memiliki kewenangan yang diperlukan.');
 }
-async function acceptance(client, id) {
+/** Read an existing form; draft saves check existence, submission additionally checks approval. */
+async function acceptance(client, id, requireApproval = true) {
+  if (!Number.isSafeInteger(Number(id)) || Number(id) < 1) rules.fail('Pilih ID form Risk Acceptance yang sudah tersimpan. Buka modul Risk Acceptance untuk membuat atau memeriksa form.');
   const row = (await client.query('SELECT * FROM risk_acceptance_forms WHERE id = $1', [id])).rows[0];
-  if (!row) rules.fail('Form Risk Acceptance tidak ditemukan.');
+  if (!row) rules.fail(`Form Risk Acceptance RAF-${String(id).padStart(5, '0')} tidak ditemukan. Buka modul Risk Acceptance, simpan form terlebih dahulu, lalu gunakan ID form yang tersedia dan simpan data workflow kembali.`);
+  if (!requireApproval) return;
   if (!['temporary', 'one_year'].includes(row.business_owner_decision) || !['approved', 'conditional'].includes(row.cis_decision)) rules.fail('Form Risk Acceptance belum disetujui atau ditolak.');
   for (const key of ['requestor_signature', 'requestor_date', 'cio_name', 'cio_signature', 'cio_date', 'cis_name', 'cis_signature', 'cis_date']) if (!row[key]) rules.fail('Pengesahan pada form Risk Acceptance belum lengkap.');
   return hash(row);
@@ -71,6 +74,8 @@ async function mutate(id, input, actor, action) {
       data = { ...previous, ...rules.sanitize(input) };
       if (data.approver) await checkUser(client, data.approver, true);
       if (data.reviewer) await checkUser(client, data.reviewer);
+      // A draft may reference an unsigned form, but never a nonexistent form.
+      if (data.acceptanceFormId && Number(data.acceptanceFormId) !== Number(previous.acceptanceFormId)) await acceptance(client, data.acceptanceFormId, false);
       const changed = protectedFields.some(key => (data[key] ?? '') !== (previous[key] ?? ''));
       if (changed && previous.stage !== 'Draft') { data.stage = 'Draft'; data.approvedBy = null; data.verifiedBy = null; data.acceptanceSnapshot = null; }
       if (previous.stage === 'Accepted' && !changed && data.reviewDate !== previous.reviewDate && data.reviewDate > data.acceptanceExpiry) rules.fail('Review tidak boleh melewati expiry acceptance.');

@@ -32,3 +32,9 @@ pagination, dan pengelolaan penerima. Tautan edit Owner/PIC dari form membuka
 dropdown secara otomatis agar penerima yang dituju langsung dapat diedit.
 Perubahan ini hanya mengatur tampilan; tidak mengubah data penerima.
 Verifikasi: build frontend lokal; koneksi SMTP dan pengiriman email tidak diuji.
+
+## Pemulihan scheduler dan verifikasi
+
+Policy, Audit Finding, Asset Renewal, dan Compliance memakai scheduler bersama. Pemeriksaan berjalan saat startup lalu setiap jam setelah sukses; kegagalan tingkat scheduler (misalnya koneksi database) dicoba ulang dalam 5 menit. Satu scheduler tidak menjalankan dua pemeriksaan bersamaan. Kegagalan pengiriman per penerima tetap dicoba pada pemeriksaan normal berikutnya; riwayat hanya dicatat setelah SMTP menerima email. Pesan log tidak memuat kredensial/koneksi mentah.
+
+Jalankan `npm run test:reminder` untuk suite terisolasi. Test transport menggunakan SMTP lokal sungguhan di loopback, tidak mengirim ke internet. Penerimaan oleh server SMTP belum membuktikan email masuk inbox; gunakan tombol Email tes ke alamat yang Anda kendalikan untuk memeriksa relay/provider, folder spam dan kebijakan pengirim pada instalasi aktual. Scheduler tidak dapat mengirim selama koneksi PostgreSQL gagal.

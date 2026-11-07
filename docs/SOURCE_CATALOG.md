@@ -5,7 +5,7 @@ Dibuat oleh `npm run docs:source`. Jangan edit tabel manual.
 `source-catalog.json` memuat nama fungsi, baris, parameter, komentar dan dependency statis.
 Indeks ini bukan call graph lengkap atau bukti bahwa semua fungsi telah memiliki dokumentasi bisnis.
 
-Cakupan: 293 file, 2224 fungsi bernama, 67 fragmen runtime.
+Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 
 ## Urutan runtime
 
@@ -440,12 +440,12 @@ Cakupan: 293 file, 2224 fungsi bernama, 67 fragmen runtime.
 | [assessmentPeriodService.js](../src/services/assessmentPeriodService.js) | `fail`, `validId`, `object`, `ensureStore`, `validateYear`, `validateFramework`, `emptyAssessment`, `list`, `period`, `periodMetadata`, `legacySnapshot`, `prepareSnapshot`, `references`, `persist`, `create`, `remove`, `mutate`, `validateAssessment`, `canonicalEvidence`, `controlMutation`, `gapMutation`, `execute`, `fileReferenceCount`, `detachFile`, `keep`, `importIkas`, `workbookSnapshot`, `mergeMaturityWorkbook`, `importMaturityWorkbook` |
 | [assessmentService.js](../src/services/assessmentService.js) | `getAssessment`, `saveAssessment`, `initializeAssessmentStore` |
 | [assetDiagramService.js](../src/services/assetDiagramService.js) | `invalid`, `ensureStore`, `validate`, `read`, `save`, `validateName`, `listCanvases`, `canvasTransaction`, `createCanvas`, `readCanvas`, `renameCanvas`, `saveCanvas` |
-| [assetManagementService.js](../src/services/assetManagementService.js) | `fail`, `ensureStore`, `text`, `date`, `validateAsset`, `validatePlacement`, `transaction`, `list`, `managedVendorCatalog`, `validateManagedVendor`, `saveAsset`, `saveRack`, `place`, `relate`, `remove`, `validateRiskIds`, `saveRiskLinks`, `due`, `runReminders`, `startScheduler`, `run` |
+| [assetManagementService.js](../src/services/assetManagementService.js) | `fail`, `ensureStore`, `text`, `date`, `validateAsset`, `validatePlacement`, `transaction`, `list`, `managedVendorCatalog`, `validateManagedVendor`, `saveAsset`, `saveRack`, `place`, `relate`, `remove`, `validateRiskIds`, `saveRiskLinks`, `due`, `runReminders`, `startScheduler` |
 | [assetRackPhotoService.js](../src/services/assetRackPhotoService.js) | `fail`, `ensureStore`, `validateFile`, `kind`, `side`, `list`, `read`, `prepareChanges`, `applyChanges`, `save` |
 | [assetReminderSettingsService.js](../src/services/assetReminderSettingsService.js) | `ensureStore`, `read`, `getSettings`, `validate`, `saveSettings`, `renderMessage`, `render`, `reminderSlot` |
 | [assetRiskAssessmentService.js](../src/services/assetRiskAssessmentService.js) | `assess` |
 | [assetTransferService.js](../src/services/assetTransferService.js) | `fail`, `uuid`, `ensure`, `exportData`, `validate`, `importData` |
-| [auditFindingReminderService.js](../src/services/auditFindingReminderService.js) | `invalid`, `ensureStore`, `read`, `getSettings`, `validate`, `saveSettings`, `renderMessage`, `render`, `reminderSlot`, `eligible`, `testEmail`, `runReminders`, `startScheduler`, `tick`, `recipientsFor` |
+| [auditFindingReminderService.js](../src/services/auditFindingReminderService.js) | `invalid`, `ensureStore`, `read`, `getSettings`, `validate`, `saveSettings`, `renderMessage`, `render`, `reminderSlot`, `eligible`, `testEmail`, `runReminders`, `startScheduler`, `recipientsFor` |
 | [auditFindingService.js](../src/services/auditFindingService.js) | `fail`, `normalize`, `ensureStore`, `syncAuditStatus`, `attachments`, `list`, `save`, `remove`, `download` |
 | [auditRecoveryService.js](../src/services/auditRecoveryService.js) | `createAuditRecovery`, `serial`, `pending`, `recover`, `start`, `save` |
 | [auditRetentionService.js](../src/services/auditRetentionService.js) | `ensureStore`, `validate`, `read`, `save`, `cleanup`, `startScheduler` |
@@ -458,7 +458,7 @@ Cakupan: 293 file, 2224 fungsi bernama, 67 fragmen runtime.
 | [cloudStorageService.js](../src/services/cloudStorageService.js) | `createCloudStorageService`, `adapter`, `send` |
 | [complianceEvidenceService.js](../src/services/complianceEvidenceService.js) | `invalid`, `parse`, `validateFiles`, `save`, `list`, `download`, `remove` |
 | [complianceReminderLinkService.js](../src/services/complianceReminderLinkService.js) | `describe`, `context`, `enrich`, `publicContext` |
-| [complianceReminderService.js](../src/services/complianceReminderService.js) | `businessDate`, `reminderSlot`, `renderMessage`, `runReminders`, `startScheduler`, `tick` |
+| [complianceReminderService.js](../src/services/complianceReminderService.js) | `businessDate`, `reminderSlot`, `renderMessage`, `runReminders`, `startScheduler` |
 | [complianceReminderSettingsService.js](../src/services/complianceReminderSettingsService.js) | `invalid`, `read`, `validate`, `getSettings`, `saveSettings`, `renderMessage`, `render`, `recipientsFor`, `testEmail` |
 | [complianceService.js](../src/services/complianceService.js) | `invalid`, `text`, `calendarDate`, `normalize`, `table`, `ensureStore`, `list`, `save`, `remove` |
 | [csfService.js](../src/services/csfService.js) | `validate`, `getAll`, `create`, `update`, `remove`, `initialize` |
@@ -483,11 +483,12 @@ Cakupan: 293 file, 2224 fungsi bernama, 67 fragmen runtime.
 | [personnelCertificationService.js](../src/services/personnelCertificationService.js) | `invalid`, `text`, `date`, `number`, `validate`, `level`, `values`, `map`, `transaction`, `registeredPersonnel`, `ensureStore`, `list`, `create`, `update`, `updateLayout`, `remove`, `employeeMap`, `validateEmployee`, `listOrganizationPersonnel`, `createOrganizationPersonnel`, `updateOrganizationPersonnel`, `removeOrganizationPersonnel` |
 | [policyDocumentService.js](../src/services/policyDocumentService.js) | `fail`, `editable`, `load`, `save` |
 | [policyRegisterService.js](../src/services/policyRegisterService.js) | `invalid`, `normalizeText`, `normalizeItems`, `validate`, `values`, `mapRow`, `ensureStore`, `listDropdowns`, `createDropdown`, `updateDropdown`, `removeDropdown`, `syncDropdownValues`, `getItems`, `syncItems`, `validateItem`, `listItems`, `createItem`, `updateItem`, `removeItem`, `list`, `create`, `update`, `remove` |
-| [policyReminderService.js](../src/services/policyReminderService.js) | `renderMessage`, `render`, `invalid`, `email`, `ensureStore`, `read`, `getSettings`, `validate`, `saveSettings`, `testEmail`, `nextReview`, `runReminders`, `startScheduler`, `tick` |
+| [policyReminderService.js](../src/services/policyReminderService.js) | `renderMessage`, `render`, `invalid`, `email`, `ensureStore`, `read`, `getSettings`, `validate`, `saveSettings`, `testEmail`, `nextReview`, `runReminders`, `startScheduler` |
 | [privacyService.js](../src/services/privacyService.js) | `getAll`, `create`, `update`, `remove` |
 | [questionnaireTemplateService.js](../src/services/questionnaireTemplateService.js) | `invalid`, `normalizeSections`, `parseMarkdownSections`, `flushSection`, `fallbackSectionsForTemplate`, `loadSectionsFromMarkdown`, `ensureStore`, `list`, `create`, `update`, `remove` |
 | [reminderRecipientService.js](../src/services/reminderRecipientService.js) | `ensureStore`, `validate`, `list`, `save`, `ownerKey`, `create`, `update`, `remove`, `registerOwners`, `emailMap` |
 | [reminderSchedule.js](../src/services/reminderSchedule.js) | `localDate`, `shiftDate`, `scheduleSlot`, `validateSchedule`, `invalid` |
+| [reminderScheduler.js](../src/services/reminderScheduler.js) | `startReminderScheduler`, `tick` |
 | [riskAcceptanceService.js](../src/services/riskAcceptanceService.js) | `invalid`, `validate`, `values`, `mapRow`, `ensureStore`, `list`, `create`, `update`, `remove`, `get`, `dateText`, `exportPdf`, `wrap`, `header`, `section`, `paragraph`, `field`, `inline`, `choice` |
 | [riskDashboardReportService.js](../src/services/riskDashboardReportService.js) | `score`, `createReport`, `plain`, `newPage`, `draw` |
 | [riskManagementService.js](../src/services/riskManagementService.js) | `invalid`, `cleanText`, `numberOrNull`, `validate`, `values`, `mapRow`, `rating`, `assetValue`, `normalizeAssessment`, `ensureStore`, `refreshCalculatedValues`, `seedIndicators`, `listIndicators`, `syncDropdownValues`, `listDropdowns`, `validateDropdown`, `dropdownFailure`, `createDropdown`, `getDropdown`, `dropdownInUse`, `updateDropdown`, `removeDropdown`, `createIndicator`, `updateIndicator`, `removeIndicator`, `listRegister`, `create`, `update`, `remove`, `resetRegister`, `nextRiskId`, `dashboard` |

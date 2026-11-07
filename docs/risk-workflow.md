@@ -102,3 +102,7 @@ mengakses PostgreSQL; belum merupakan uji pengajuan terhadap database nyata.
 ## Pemeliharaan sumber
 
 Risk workflow kini dipisah menjadi `workflow-model.js` (aturan/panduan), `workflow-view.js` (draft dan UI), serta `workflow.js` (state/API/event). Grup manifest `risk-workflow` digunakan aplikasi dan fixture. Transisi, payload, permission, dan urutan listener dipertahankan.
+
+## Referensi form acceptance tidak ditemukan
+
+ID baru/berubah diperiksa saat Simpan data workflow. Form harus sudah ada di modul Risk Acceptance; draft boleh belum disahkan, tetapi Ajukan approval tetap mensyaratkan pengesahan lengkap. Pesan form tidak ditemukan menyebut nomor RAF dan langkah pemulihan. Buat/simpan form yang benar, gunakan ID numeriknya, lalu simpan workflow sebelum mengajukan lagi. Tidak ada form yang dibuat otomatis.

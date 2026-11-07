@@ -15494,13 +15494,6 @@
           "async": false,
           "parameters": [],
           "description": ""
-        },
-        {
-          "name": "run",
-          "line": 64,
-          "async": false,
-          "parameters": [],
-          "description": ""
         }
       ],
       "dependencies": [
@@ -15510,6 +15503,7 @@
         "./assetRiskAssessmentService",
         "./evidenceAccessService",
         "./reminderRecipientService",
+        "./reminderScheduler",
         "./smtpService",
         "./tprmService",
         "crypto"
@@ -15906,15 +15900,8 @@
           "description": ""
         },
         {
-          "name": "tick",
-          "line": 134,
-          "async": true,
-          "parameters": [],
-          "description": ""
-        },
-        {
           "name": "recipientsFor",
-          "line": 137,
+          "line": 135,
           "async": false,
           "parameters": [
             "row",
@@ -15928,6 +15915,7 @@
         "../config/database",
         "./reminderRecipientService",
         "./reminderSchedule",
+        "./reminderScheduler",
         "./smtpService"
       ]
     },
@@ -16860,13 +16848,6 @@
           "async": false,
           "parameters": [],
           "description": ""
-        },
-        {
-          "name": "tick",
-          "line": 77,
-          "async": true,
-          "parameters": [],
-          "description": ""
         }
       ],
       "dependencies": [
@@ -16874,6 +16855,7 @@
         "./complianceReminderSettingsService",
         "./reminderRecipientService",
         "./reminderSchedule",
+        "./reminderScheduler",
         "./smtpService"
       ]
     },
@@ -19541,19 +19523,13 @@
           "async": false,
           "parameters": [],
           "description": ""
-        },
-        {
-          "name": "tick",
-          "line": 137,
-          "async": true,
-          "parameters": [],
-          "description": ""
         }
       ],
       "dependencies": [
         "../config/database",
         "./reminderRecipientService",
         "./reminderSchedule",
+        "./reminderScheduler",
         "./smtpService"
       ]
     },
@@ -19847,6 +19823,29 @@
           "name": "invalid",
           "line": 43,
           "async": false,
+          "parameters": [],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "src/services/reminderScheduler.js",
+      "functions": [
+        {
+          "name": "startReminderScheduler",
+          "line": 5,
+          "async": false,
+          "parameters": [
+            "run",
+            "label"
+          ],
+          "description": "Shared reminder polling: no overlapping runs; retry infrastructure failures in five minutes."
+        },
+        {
+          "name": "tick",
+          "line": 9,
+          "async": true,
           "parameters": [],
           "description": ""
         }
@@ -20558,17 +20557,18 @@
         },
         {
           "name": "acceptance",
-          "line": 30,
+          "line": 31,
           "async": true,
           "parameters": [
             "client",
-            "id"
+            "id",
+            "requireApproval = true"
           ],
-          "description": ""
+          "description": "Read an existing form; draft saves check existence, submission additionally checks approval."
         },
         {
           "name": "decorate",
-          "line": 37,
+          "line": 40,
           "async": true,
           "parameters": [
             "client",
@@ -20579,7 +20579,7 @@
         },
         {
           "name": "get",
-          "line": 50,
+          "line": 53,
           "async": true,
           "parameters": [
             "id"
@@ -20588,7 +20588,7 @@
         },
         {
           "name": "mutate",
-          "line": 58,
+          "line": 61,
           "async": true,
           "parameters": [
             "id",
@@ -20600,7 +20600,7 @@
         },
         {
           "name": "invalidateRegister",
-          "line": 96,
+          "line": 101,
           "async": true,
           "parameters": [
             "client",

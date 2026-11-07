@@ -13,3 +13,5 @@ Daftar seluruh file, fungsi, parameter dan dependency ada pada
 - Izin frontend tidak menggantikan pemeriksaan server.
 - Verifikasi melalui fixture atau PostgreSQL sementara: `npm run test:isolated`.
 - Jangan melakukan restore, pengiriman email atau panggilan cloud operasional sebagai test.
+
+`reminderScheduler.js` menyatukan polling, pencegahan overlap dan retry koneksi untuk empat reminder. Service modul tetap menentukan penerima, jadwal, advisory lock, transport SMTP dan riwayat sukses.

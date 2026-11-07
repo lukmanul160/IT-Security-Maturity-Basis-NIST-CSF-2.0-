@@ -61,5 +61,7 @@ async function runReminders(now=new Date()){
   }
  }finally{mailer?.close?.();try{if(c&&locked)await c.query('SELECT pg_advisory_unlock(872147)');}finally{c?.release();running=false;}}
 }
-function startScheduler(){const run=()=>runReminders().catch(e=>console.error('[asset-reminder]',e.message));run();const timer=setInterval(run,60*60*1000);timer.unref();return timer;}
+function startScheduler() {
+  return require('./reminderScheduler').startReminderScheduler(() => runReminders(), 'asset-reminder');
+}
 module.exports={ensureStore,list,saveAsset,saveRack,place,relate,remove,validateAsset,validatePlacement,due,statuses,types,relationships,managedVendorCatalog,validateRiskIds,saveRiskLinks,runReminders,startScheduler};

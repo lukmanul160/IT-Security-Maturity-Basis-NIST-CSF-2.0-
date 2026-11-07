@@ -133,15 +133,6 @@ async function runReminders(now = new Date()) {
   }
 }
 function startScheduler() {
-  let running = false;
-  const tick = async () => {
-    if (running) return;
-    running = true;
-    try { await runReminders(); } catch { console.error('[policy-reminder] Scheduler failed'); } finally { running = false; }
-  };
-  const timer = setInterval(tick, 60 * 60 * 1000);
-  timer.unref();
-  void tick();
-  return timer;
+  return require('./reminderScheduler').startReminderScheduler(() => runReminders(), 'policy-reminder');
 }
 module.exports = { renderMessage, templateDefaults, ensureStore, getSettings, saveSettings, testEmail, nextReview, validate, runReminders, startScheduler };

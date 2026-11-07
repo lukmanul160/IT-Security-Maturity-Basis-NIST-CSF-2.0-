@@ -130,9 +130,7 @@ async function runReminders(now = new Date()) {
   }
 }
 function startScheduler() {
-  let running = false;
-  const tick = async () => { if (running) return; running = true; try { await runReminders(); } catch { console.error('[audit-finding-reminder] Scheduler failed'); } finally { running = false; } };
-  const timer = setInterval(tick, 60 * 60 * 1000); timer.unref(); void tick(); return timer;
+  return require('./reminderScheduler').startReminderScheduler(() => runReminders(), 'audit-finding-reminder');
 }
 function recipientsFor(row,settings,recipientEmails=new Map()){
   if(row.kind!=='finding'||row.data?.status!=='Open')return [];

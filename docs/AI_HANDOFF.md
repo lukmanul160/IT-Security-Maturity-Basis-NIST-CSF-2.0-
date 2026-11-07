@@ -212,3 +212,17 @@ suite luas dan pembersihan fixture sudah selesai; log sementara tidak disertakan
 - Verifikasi aktual: 36 test terarah (manifest, Risk, Gap, struktur, guidance/form TPRM) lulus; `check-structure --catalog` lulus; `npm run build` lulus. Build masih memberi peringatan script statis non-module, font yang diselesaikan saat runtime, dan ukuran chunk; tidak diklaim semua aset/font diperiksa visual.
 - Chrome fixture Risk lulus: alasan wajib, status pending/sukses, draft dan penolakan API terlihat. Chrome fixture TPRM lulus: tab, assignment payload, read-only, aktor, dependency, acceptance dan field kontrak. Keduanya memakai transport/fixture terisolasi tanpa database operasional. Browser Gap berbasis aplikasi tidak dijalankan ulang karena memakai konfigurasi database aplikasi; fixture unit Gap lulus.
 - Hasil browser terbaru menggantikan keterbatasan startup Chrome sebelumnya untuk dua fixture tersebut saja. Regresi PostgreSQL penuh sebelumnya masih belum hijau akibat timeout; tidak diulang pada pemisahan mekanis ini. Docker/cloud, produksi, seluruh viewport, dan seluruh alur modul belum diverifikasi langsung.
+
+## Perbaikan referensi Risk Acceptance dari log pengguna
+
+Log menunjukkan form acceptance tidak ditemukan saat submit (HTTP 400), terpisah dari timeout PostgreSQL pada scheduler. Referensi form baru/berubah kini diperiksa keberadaannya saat save; draft unsigned tetap diizinkan, submit tetap memeriksa pengesahan. Error menyebut RAF dan langkah pemulihan; input diberi petunjuk ID tersimpan. Tiga test transaksi fixture tanpa database menguji rollback form hilang, draft unsigned, dan tanpa referensi; bersama aturan/guidance total 18 test lulus. Penyebab timeout koneksi operasional belum dipastikan; timeout/pool produksi tidak diubah dan database operasional tidak diakses.
+
+## Reminder email: retry bersama dan transport nyata terisolasi
+
+Empat scheduler (Policy, Audit Finding, Asset Renewal, Compliance) menggunakan `reminderScheduler.js`: startup langsung, interval normal satu jam, retry kegagalan tingkat pemeriksaan lima menit, tanpa overlap. Log kegagalan memakai kategori tetap tanpa mencetak kredensial/error mentah. Riwayat pengiriman dan advisory lock per modul tetap dipertahankan. Kegagalan per penerima tetap dicoba pada polling normal berikutnya.
+
+Suite SMTP/reminder pada cluster PostgreSQL temporer: 39 test, 38 lulus, 1 skip (migrasi SMTP legacy opt-in). Mencakup penerima aktual fixture database, akun SMTP, jadwal, deduplikasi, retry delivery, template dan read-only. Test tambahan mengirim melalui Nodemailer ke SMTP TCP lokal dan memeriksa penolakan penerima; bukan hanya mock sendMail. Test scheduler membuktikan retry lima menit, overlap guard, kembali ke interval satu jam, dan redaksi kredensial. Command `npm run test:reminder` tersedia; kini juga mencakup regresi Compliance.
+
+Build frontend perubahan petunjuk acceptance berhasil; struktur/katalog terbaru 294 file/67 fragment lulus. Tidak mengakses konfigurasi SMTP operasional atau mengirim ke internet; penerimaan inbox/provider belum diklaim. Timeout PostgreSQL operasional pada log pengguna masih perlu diagnosis lingkungan; perubahan ini mengatur retry dan pesan kegagalan, bukan klaim memperbaiki server database yang tidak tersedia. Restart backend diperlukan untuk scheduler/validasi baru.
+
+Regresi Compliance terisolasi juga selesai: 5/5 lulus, termasuk PostgreSQL CRUD, reminder terdeduplikasi, retry dan cleanup. Total pemeriksaan reminder dua eksekusi: 43 lulus, 1 skip; tidak ada gagal.
