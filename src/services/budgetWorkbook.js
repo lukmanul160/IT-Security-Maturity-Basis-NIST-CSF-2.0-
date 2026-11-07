@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: budgetWorkbook.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const XLSX=require('xlsx');
 const service=require('./budgetService');
 const {pool}=require('../config/database');

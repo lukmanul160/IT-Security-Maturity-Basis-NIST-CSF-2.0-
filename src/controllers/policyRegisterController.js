@@ -1,3 +1,8 @@
+/**
+ * Adapter HTTP: policyRegisterController.
+ * Baca req, delegasikan kasus penggunaan ke service, lalu bentuk response/error. Aturan domain dan transaksi tetap di service.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const multer = require('../middleware/configuredUpload');
 const path = require('path');
 const crypto = require('crypto');

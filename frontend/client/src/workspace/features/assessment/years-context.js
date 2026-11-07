@@ -1,3 +1,8 @@
+/**
+ * Kontrol CSF, skor, gap dan konteks tahun assessment.
+ * Pisahkan nilai kosong dari nol; filter tahun berlaku pada request dan ID kontrol tetap menjadi kontrak evidence.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Capture the year before a request starts, including autosaves and import/export.
 const assessmentPeriodStorage = 'nist-assessment-years';
 let assessmentYears;

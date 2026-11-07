@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: loginRateLimit.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 // Limit all attempts per peer, including rotating usernames and successful logins.
 function createLoginRateLimit({ limit = 30, windowMs = 15 * 60 * 1000, maxPeers = 10000, now = Date.now, key } = {}) {
   const peers = new Map();

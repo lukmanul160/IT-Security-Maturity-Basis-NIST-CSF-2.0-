@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: assessmentService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const fs = require('fs').promises;
 const { stateFile, schemaFile } = require('../config/paths');
 const { pool } = require('../config/database');

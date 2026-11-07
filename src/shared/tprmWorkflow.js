@@ -1,3 +1,4 @@
+/** Aturan domain TPRM tanpa akses database/HTTP. Dipakai service dan test fixture. */
 const crypto = require('node:crypto');
 
 const ciaFields = {
@@ -13,6 +14,7 @@ function text(value) { return String(value ?? '').trim(); }
 function validDate(value) { return /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value; }
 function today() { const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const value=Object.fromEntries(parts.map(part=>[part.type,part.value]));return `${value.year}-${value.month}-${value.day}`; }
 function futureDate(value) { return validDate(value) && value > today(); }
+/** Validasi sembilan indikator integer 1?5; input tidak lengkap menghasilkan objek kosong. */
 function cia(source = {}) {
   const fields = ciaFields[source.assessmentType || 'vendor'];
   if (!fields || !fields.every(key => Number.isInteger(Number(source[key])) && Number(source[key]) >= 1 && Number(source[key]) <= 5)) return {};
@@ -27,6 +29,7 @@ function questionnaireScore(responses = {}) {
   const score = fields.reduce((sum, key, index) => sum + Number(responses[key]) * [40, 30, 10, 20][index], 0);
   return { riskScore: score, riskTier: score <= 200 ? 'Tier 1 (High)' : score <= 350 ? 'Tier 2 (Medium)' : 'Tier 3 (Low)' };
 }
+/** Hitung jawaban lengkap; siap hanya jika jawaban, dokumen, dan empat skor terpenuhi. */
 function questionnaireReadiness(responses = {}) {
   const sections = responses.questionnaireSections || [];
   let total = 0, answered = 0;
@@ -46,6 +49,7 @@ function profileTier(profile = {}) {
   return value === 3 ? 'Tier 1 (Critical)' : value === 2 ? 'Tier 2 (Important)' : 'Tier 3 (Standard)';
 }
 function riskLevel(score) { return score === null ? 'Not assessed' : score >= 70 ? 'High Risk' : score >= 40 ? 'Medium Risk' : 'Low Risk'; }
+/** Pisahkan criticality, inherent, dan residual; residual tidak ditebak jika rating belum ada. */
 function riskSummary(row, questionnaire, risks = []) {
   const assessment = cia(row.dueDiligenceAssessment);
   const readiness = questionnaireReadiness(questionnaire?.responses);
@@ -59,6 +63,7 @@ function riskSummary(row, questionnaire, risks = []) {
   const residual = risks.length ? risks.every(risk => ratingScores[risk.residual_rating ?? risk.residualRating] !== undefined) ? Math.max(...risks.map(risk => ratingScores[risk.residual_rating ?? risk.residualRating])) : null : text(row.workflow?.noRisksReason) ? base : null;
   return { complete, tier, inherent, residual, level: riskLevel(residual), readiness };
 }
+/** Hash versi assessment untuk mendeteksi perubahan yang membatalkan review/approval. */
 function fingerprint(row, questionnaire, risks) {
   return crypto.createHash('sha256').update(stableJson({ vendor: row.thirdParty, service: row.serviceDependency, questionnaireId: row.questionnaireId, profile: row.workflow?.profile, assignments: row.workflow?.assignments, dependencies: row.workflow?.dependencies, noRisksReason: row.workflow?.noRisksReason, cia: cia(row.dueDiligenceAssessment), questionnaire: questionnaire?.responses, risks: [...risks].sort((a, b) => String(a.risk_id ?? a.riskId).localeCompare(String(b.risk_id ?? b.riskId))) })).digest('hex');
 }

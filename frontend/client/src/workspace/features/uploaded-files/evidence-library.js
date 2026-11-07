@@ -1,12 +1,19 @@
+/**
+ * Pustaka evidence, lampiran, pencarian serta editor file.
+ * Metadata evidence dan byte file berbeda. Pemilihan file tidak memberi izin baru; penghapusan referensi divalidasi server.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // The server supplies an uploader-scoped library; never derive picker options from shared assessments.
 let evidenceLibrary = [];
 let evidenceLibraryPending = null;
 let evidenceLibraryError = "";
 function selectableEvidenceRecords() { return evidenceLibrary; }
+/** Bentuk referensi evidence dari metadata pustaka, bukan menyalin byte berkas ke state assessment. */
 function evidenceReference(file) {
   const { policyDetails, knowledgeDetails, ...reference } = file;
   return reference;
 }
+/** Cocokkan pencarian terhadap metadata/konten evidence yang tersedia untuk akun ini. */
 function evidenceMatches(file, query = '') {
   const text = [file.name,file.path,file.source,...(file.policyDetails || []).flatMap(item=>[item.title,item.notes,item.subtitle,item.content]),...(file.knowledgeDetails || []).flatMap(item=>[item.title,item.folder,item.content])].join(' ').toLowerCase().replace(/\s+/g,' ');
   return text.includes(String(query).trim().toLowerCase().replace(/\s+/g,' '));
@@ -84,6 +91,7 @@ function updateEvidencePicker(picker, html) {
     if (selection && replacement) { try { replacement.setSelectionRange(...selection); } catch {} }
   }
 }
+/** Muat pustaka file yang dapat diakses; error tidak memberi akses ke evidence yang tidak diizinkan. */
 async function refreshEvidenceLibrary({force=false}={}) {
   if (evidenceLibraryPending) { if(!force) return evidenceLibraryPending; await evidenceLibraryPending; }
   evidenceLibraryPending = (async () => {

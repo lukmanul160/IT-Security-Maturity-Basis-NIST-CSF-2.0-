@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 export const imageUrl=id=>'/api/knowledge-notes/images/'+encodeURIComponent(id);
 export const isImageFile=name=>/\.(png|jpe?g|gif|webp)$/i.test(name);
 function normalize(path){const result=[];for(const part of path.split('/')){if(!part||part==='.')continue;if(part==='..'){if(!result.length)return null;result.pop();}else result.push(part);}return result.join('/');}

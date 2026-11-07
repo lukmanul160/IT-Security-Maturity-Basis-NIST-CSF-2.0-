@@ -7,6 +7,10 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Dokumentasi
 
+- [Struktur kode dan panduan pemeliharaan AI/manusia](docs/CODE_STRUCTURE.md).
+- [Katalog seluruh file dan fungsi sumber](docs/SOURCE_CATALOG.md) (JSON tersedia untuk tooling).
+
+
 - [Panduan untuk agen AI dan backup/restore Node/Docker](docs/AI_HANDOFF.md).
 
 - [Pull terbaru, rebuild Docker, dan pemulihan login](docs/UPDATE_DOCKER.md):

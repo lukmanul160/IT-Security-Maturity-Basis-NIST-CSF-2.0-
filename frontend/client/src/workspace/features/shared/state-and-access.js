@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 window.addEventListener('pageshow', event => { if (!event.persisted) return; fetch('/api/auth/me', { cache: 'no-store' }).then(response => { if (!response.ok) window.location.replace('/login'); }).catch(() => window.location.replace('/login')); });
 const functions = [
   { id: 'GV', name: 'Govern', description: 'Establish and monitor cybersecurity strategy.', controls: ['Organizational Context', 'Risk Management Strategy', 'Roles, Responsibilities & Authorities', 'Policy'] },

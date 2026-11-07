@@ -1,3 +1,8 @@
+/**
+ * Register kebijakan, editor dokumen, relasi catatan, kalender dan reminder.
+ * Review date dihitung dari siklus tersimpan. Editor, lampiran, catatan terkait dan SMTP memiliki jalur penyimpanan berbeda.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function getPolicyReviewCycleMonths(reviewCycle) {
   const value = String(reviewCycle || '').trim().toLowerCase();
   if (value === 'annual') return 12;
@@ -62,6 +67,7 @@ async function openPolicyDocumentEditor(row) {
   } catch (error) { if (!closed) status.textContent = error.message; }
 }
 
+/** Turunkan jadwal review dari tanggal tersimpan dan siklus; siklus tanpa interval tidak diberi tenggat buatan. */
 function getPolicyNextReviewDate(row) {
   const reviewDate = row.lastReview || row.last_review || null;
   const cycle = row.reviewCycle || row.review_cycle || '';

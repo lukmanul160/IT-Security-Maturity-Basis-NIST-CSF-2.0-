@@ -1,3 +1,8 @@
+/**
+ * Pustaka evidence, lampiran, pencarian serta editor file.
+ * Metadata evidence dan byte file berbeda. Pemilihan file tidak memberi izin baru; penghapusan referensi divalidasi server.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function attachmentRecords() {
   const csfRecords = Object.entries(state.attachments || {}).flatMap(([key, attachments]) => {
     const separator = key.indexOf('-'); const kind = key.slice(0, separator); const controlId = key.slice(separator + 1); const item = allControls().find(control => control.id === controlId);

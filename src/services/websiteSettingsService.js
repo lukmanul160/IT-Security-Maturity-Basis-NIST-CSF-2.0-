@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: websiteSettingsService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const {pool}=require('../config/database');
 const defaults={name:'Black Owl Governance',tagline:'Align Your IT With Business need'};
 const defaultFileLimits={uploadMb:100,importMb:500,exportMb:500,documentEditMb:50};

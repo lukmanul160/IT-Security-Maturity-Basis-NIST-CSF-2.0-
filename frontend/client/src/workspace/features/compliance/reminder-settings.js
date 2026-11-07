@@ -1,3 +1,8 @@
+/**
+ * Register kepatuhan, reminder dan penghubung surat pernyataan.
+ * UI memuat data sesuai halaman; status reminder bukan bukti email sudah terkirim.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 ;(() => {
   async function request(path, options = {}) {
     const response = await fetch('/api/compliance/reports' + path, { cache: 'no-store', signal: AbortSignal.timeout(30000), ...options });

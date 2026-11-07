@@ -1,3 +1,8 @@
+/**
+ * Form penerimaan risiko dan dashboard status pengesahan.
+ * Form tersimpan tidak otomatis berarti disetujui; status mengikuti keputusan dan kelengkapan nama/tanda tangan/tanggal.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Classic-script fragment. No approval, expiry, or financial data is fabricated.
 const raDashboardState = { drill: null, page: 1, auditId: '', auditPage: 1, auditGeneration: 0 };
 const raDayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });

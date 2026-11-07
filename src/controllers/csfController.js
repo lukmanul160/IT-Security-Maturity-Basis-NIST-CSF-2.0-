@@ -1,3 +1,8 @@
+/**
+ * Adapter HTTP: csfController.
+ * Baca req, delegasikan kasus penggunaan ke service, lalu bentuk response/error. Aturan domain dan transaksi tetap di service.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const csfService = require('../services/csfService');
 
 async function list(req, res) { res.json(await csfService.getAll()); }

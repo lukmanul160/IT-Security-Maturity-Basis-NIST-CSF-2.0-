@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Shared presentation helpers for dashboards backed by existing module records.
 const gdDayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
 function gdToday() { return gdDayFormatter.format(new Date()); }

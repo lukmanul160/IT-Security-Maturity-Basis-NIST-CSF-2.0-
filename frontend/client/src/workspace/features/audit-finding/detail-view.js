@@ -1,4 +1,10 @@
+/**
+ * Register temuan audit, detail, evidence dan reminder.
+ * Index record membantu lookup folder; lampiran tetap mengikuti izin Files dan mutasi mengikuti izin modul.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Render only: filtering, permissions and API state stay in tracker.js.
+/** Render detail finding dari record aktif dan referensi evidence; teks pengguna harus melalui escaping. */
 function renderAuditFindingDetails(audit, { findings: scopedFindings, children, isOverdue, escapeHtml }) {
     const findings = scopedFindings.filter(row => row.parentId === audit.id);
     const pending = findings.filter(row => row.data.status !== 'Closed');

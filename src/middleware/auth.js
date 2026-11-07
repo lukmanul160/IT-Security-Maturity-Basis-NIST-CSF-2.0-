@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: auth.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { getSession, parseCookies, sessionCookie } = require('../config/auth');
 
 function requireAuth(req, res, next) {

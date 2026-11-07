@@ -1,3 +1,8 @@
+/**
+ * Register kebijakan, editor dokumen, relasi catatan, kalender dan reminder.
+ * Review date dihitung dari siklus tersimpan. Editor, lampiran, catatan terkait dan SMTP memiliki jalur penyimpanan berbeda.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 async function policySmtpRequest(method, suffix = '', payload) {
   const response = await fetch(`/api/policy-register/reminder-settings${suffix}`, { method, headers: { 'Content-Type': 'application/json' }, ...(payload === undefined ? {} : { body: JSON.stringify(payload) }) });
   const data = await response.json();

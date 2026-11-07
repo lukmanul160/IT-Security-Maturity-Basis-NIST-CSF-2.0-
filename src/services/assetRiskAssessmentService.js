@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: assetRiskAssessmentService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const dimensions=['confidentiality','integrity','availability'];
 function assess(data){
  if(!data||typeof data!=='object'||Array.isArray(data)||![...dimensions,'likelihood'].every(key=>Number.isInteger(data[key])&&data[key]>=1&&data[key]<=5))throw Object.assign(new Error('Assessment CIA dan kemungkinan kejadian harus bernilai 1-5.'),{status:400});

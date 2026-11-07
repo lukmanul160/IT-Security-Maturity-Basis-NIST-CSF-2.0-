@@ -1,4 +1,10 @@
+/**
+ * Register temuan audit, detail, evidence dan reminder.
+ * Index record membantu lookup folder; lampiran tetap mengikuti izin Files dan mutasi mengikuti izin modul.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Pure snapshot index. Keep API ordering and record object references intact.
+/** Bangun lookup record/folder agar tampilan detail dapat menelusuri referensi tanpa mengubah data sumber. */
 function createAuditRecordIndex(records) {
   const byId = new Map();
   const byParent = new Map();

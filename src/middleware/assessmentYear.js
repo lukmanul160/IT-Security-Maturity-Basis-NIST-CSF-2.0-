@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: assessmentYear.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const service = require('../services/assessmentPeriodService');
 const permissions = require('../services/permissionService');
 const fail = (message,status=400) => Object.assign(new Error(message),{status});

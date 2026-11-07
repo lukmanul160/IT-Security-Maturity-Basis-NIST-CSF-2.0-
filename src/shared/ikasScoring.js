@@ -1,3 +1,8 @@
+/**
+ * Aturan domain bersama: ikasScoring.
+ * Pertahankan input/output dan arti nilai kosong. Hindari menambah ketergantungan HTTP/DOM pada perhitungan domain.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 // Shared by browser and Node tests. Hierarchy and weights follow the supplied workbook.
 (function(root){
   const truncate=value=>Math.floor((value+1e-10)*100)/100;

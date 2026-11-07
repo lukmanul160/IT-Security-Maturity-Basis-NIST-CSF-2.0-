@@ -1,3 +1,8 @@
+/**
+ * Routing dan akses API: statementEmployeeRoutes.
+ * Router menghubungkan URL, middleware dan controller/service. Pertahankan urutan middleware autentikasi, permission dan upload.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 ﻿const express=require('express'),service=require('../services/statementEmployeeService');
 const {requirePermission}=require('../middleware/permission');
 const {parseCookies}=require('../config/auth');

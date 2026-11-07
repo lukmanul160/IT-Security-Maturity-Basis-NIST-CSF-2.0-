@@ -2,6 +2,9 @@
 
 ## Arsitektur
 
+Peta folder, kontrak fungsi, dan tahapan refactor: [CODE_STRUCTURE.md](CODE_STRUCTURE.md).
+
+
 NIST Basis menggunakan Express 5/CommonJS, PostgreSQL, Vue 3, Vite dan Tailwind.
 Mulai dari package.json ? src/server.js ? src/app.js ? src/routes/index.js.
 Logika domain ada di src/services/; konfigurasi database/environment di src/config/.
@@ -116,3 +119,96 @@ Seed berada di `database/users.sql`, dipakai oleh db:setup dan startup Node/Dock
 
 Verifikasi perubahan: `node --test test/defaultAccountSeed.test.js test/createAdmin.test.js test/dockerDataInitialization.test.js test/sessionCookieConfig.test.js` lulus (9 test). Test seed memakai cluster PostgreSQL sementara tanpa membaca .env; memeriksa login bcrypt admin/admin, pengulangan seed, password yang sudah diganti, serta akun lama dengan username lain. Deployment Docker belum diuji langsung. Gunakan `PERF_PG_BIN` untuk lokasi binary PostgreSQL nondefault saat menjalankan test seed.
 `npm run build` berhasil; Vite memberi peringatan script legacy, font yang diselesaikan saat runtime, dan ukuran chunk besar.
+
+## Penataan kode tahap 1 (7 November 2026)
+
+Peta folder dan standar fungsi/UI ada di `CODE_STRUCTURE.md`, dengan README lokal
+untuk backend, frontend dan fitur TPRM. Panduan workflow TPRM dipisah menjadi
+perhitungan murni, adapter HTML, dan pengendali lifecycle. Komentar menjelaskan
+kontrak snapshot, input/output, otorisasi, fingerprint, serta transaksi.
+Shortcut panduan memakai `data-tw-navigate`, terpisah dari status tab aktif.
+Runtime dan fixture browser diperbarui bersama; endpoint dan schema dipertahankan.
+
+Verifikasi: 35 tes TPRM lulus, fixture Chrome TPRM lulus (tab, shortcut, aktor,
+read-only, payload dan field kontrak), serta `npm run build` berhasil. Vite masih
+memberi peringatan script legacy, font runtime dan ukuran chunk. Fixture browser
+ini bukan audit visual semua halaman atau uji data vendor produksi. Tahap berikut
+pada CODE_STRUCTURE belum diterapkan; jangan menyatakan seluruh proyek selesai
+refactor atau seluruh UI sudah diaudit.
+
+Regresi luas `npm test` dicoba tetapi tidak selesai: tes database mutation guard
+mengalami timeout koneksi PostgreSQL; proses dihentikan setelah hasil tersebut.
+Jangan melaporkan suite aplikasi penuh lulus. Untuk mengulang, siapkan lingkungan
+test PostgreSQL terisolasi sesuai kebutuhan suite; jangan memakai data operasional.
+
+## Standarisasi seluruh kelompok modul (7 November 2026)
+
+Kelanjutan tahap pertama mencakup 288 file JS/MJS/Vue sumber dan 63 fragmen runtime.
+Setiap folder fitur memiliki README lokal, lapisan backend memiliki panduan,
+dan katalog AST memuat fungsi, parameter, baris, komentar yang tersedia, serta
+dependency statis. `npm run docs:source` memperbarui katalog; `check:structure`
+memeriksa cakupan runtime, syntax, tipe tombol Vue dan freshness katalog.
+CI security kini memasukkan gate tersebut; workflow CI belum dijalankan di GitHub.
+
+Import `part01`–`part22` diganti nama deskriptif tanpa mengubah urutan sumber.
+TPRM dipisah menjadi guidance, adapter HTML, view, form payload, dan lifecycle API.
+Sebanyak 145 tombol Vue diberi tipe eksplisit: submit form tetap submit,
+toolbar/navigasi menggunakan button. ID DOM dan kelas tampilan dipertahankan.
+Komentar di sumber menjelaskan lapisan, invariant, dan batas fungsi utama.
+Ini bukan konversi semua classic-script menjadi ES module atau audit visual
+seluruh viewport. Shared lexical scope masih merupakan batas arsitektur yang ada.
+
+Runner `npm run test:isolated` membuat PostgreSQL baru dan direktori fixture per
+worker, menonaktifkan dotenv sebelum modul aplikasi dimuat, dan memakai SQL schema
+repository. Tidak ada restore/database operasional atau scheduler produksi.
+Binary PostgreSQL harus tersedia; gunakan PERF_PG_BIN bila bukan lokasi default.
+Daftar test berasal dari npm test. Untuk subset:
+`npm run test:isolated -- test/fileService.test.js test/fileReferenceDeletion.test.js`.
+
+Hasil awal runner: 401 lulus, 2 gagal karena schema fixture belum lengkap, 5 skip.
+Runner kemudian diperbaiki agar menyiapkan database/schema.sql sebelum test.
+Percobaan ulang sempat timeout saat initdb dan fixture Chrome gagal tersambung
+pada host yang sedang lambat. Hasil akhir dicatat setelah pemeriksaan selesai;
+jangan menganggap percobaan tersebut sebagai kelulusan seluruh suite.
+
+Hasil akhir pemeriksaan perubahan ini:
+
+- Katalog mencakup 288 file JS/MJS/Vue aplikasi, termasuk sumber langsung surat
+  pernyataan dan virtual office; salinan vendor/build tidak disunting.
+- 17 tes struktur, guidance dan kontrak payload TPRM lulus tanpa database/browser.
+- Build terbaru berhasil; peringatan legacy script/font runtime/chunk besar tetap ada.
+- Source/UI contracts memvalidasi urutan/cakupan 63 fragmen, syntax gabungan,
+  tipe tombol Vue dan panduan fitur. Check katalog menjaga nomor baris tetap aktual.
+- Regresi penuh awal: 401 lulus, 2 kegagalan schema fixture, 5 skip. Schema runner
+  diperbaiki, tetapi verifikasi ulang PostgreSQL tertahan timeout initdb. Jangan
+  menyatakan kedua tes tersebut sudah lulus atau suite penuh sudah hijau.
+- Chrome fixture ulang gagal tersambung ke debug endpoint sebelum kode UI berjalan.
+  Uji visual/browser terbaru belum terverifikasi; build dan unit test bukan penggantinya.
+- Lingkungan lokal Node 24.19.0; engine package.json meminta >=26.13.0 <27.
+  Tidak ada pengujian Docker/cloud atau perubahan data operasional dalam refactor ini.
+
+Regresi luas dicoba lagi setelah schema tersedia. Beberapa tes integrasi tetap
+mengalami `Connection terminated due to connection timeout` pada batas pool 5 detik
+(antara lain export asset, audit retention dan compliance). Suite ini tidak boleh
+dilaporkan lulus. Pool di preload pengujian kini diberi timeout 30 detik khusus
+fixture; pengaturan production tetap 5 detik. Suite penuh dengan timeout baru
+belum diverifikasi dari awal hingga akhir. Pengujian luas dihentikan setelah
+gangguan koneksi berulang; runner induk membersihkan PostgreSQL sementaranya.
+Hasil final yang sah untuk perubahan sumber tetap: build berhasil, kontrak
+struktur/katalog 288 file valid, dan 17 tes struktur/guidance/payload lulus.
+
+Uji tambahan LF/CRLF menemukan penggabungan baris pada ekstraksi komentar.
+Normalisasi diperbaiki dan kasus tersebut lulus saat diulang. Katalog kemudian
+diregenerasi; pemeriksaan akhir 288 file / 63 fragmen kembali lulus. Penutupan
+suite luas dan pembersihan fixture sudah selesai; log sementara tidak disertakan.
+
+
+## Lanjutan standardisasi: manifest dan pemisahan Risk/Gap
+
+- `runtime-parts.json` menjadi satu sumber urutan untuk Vite dan fixture Node. `runtime-source.js` merangkai sumber tanpa separator; validator menolak path di luar sumber, duplikasi dan sumber hilang.
+- Risk Management dipisah menjadi workflow-model/view/controller; Gap menjadi gap-model/view/controller. Shared lexical scope, endpoint, payload, ID DOM, serta urutan listener dipertahankan. Model risk masih membaca identitas/izin runtime dan tanggal; ini belum merupakan migrasi ES module terisolasi.
+- Sebelum menulis pemisahan, AST gabungan lama dan baru dibandingkan dengan normalisasi posisi/komentar serta urutan deklarasi fungsi hoisted. Seluruh body fungsi dan urutan statement executable identik. Signature SHA-256: `a1b7cc68cf89040011c9d08b5e5fc988c685ce39c5b42b918c9bcf47dedb5715`.
+- Katalog diperbarui: 293 file JS/MJS/Vue sumber, 67 fragment runtime. Panduan modul dan struktur mengikuti pemilik fungsi yang baru.
+- Verifikasi aktual: 36 test terarah (manifest, Risk, Gap, struktur, guidance/form TPRM) lulus; `check-structure --catalog` lulus; `npm run build` lulus. Build masih memberi peringatan script statis non-module, font yang diselesaikan saat runtime, dan ukuran chunk; tidak diklaim semua aset/font diperiksa visual.
+- Chrome fixture Risk lulus: alasan wajib, status pending/sukses, draft dan penolakan API terlihat. Chrome fixture TPRM lulus: tab, assignment payload, read-only, aktor, dependency, acceptance dan field kontrak. Keduanya memakai transport/fixture terisolasi tanpa database operasional. Browser Gap berbasis aplikasi tidak dijalankan ulang karena memakai konfigurasi database aplikasi; fixture unit Gap lulus.
+- Hasil browser terbaru menggantikan keterbatasan startup Chrome sebelumnya untuk dua fixture tersebut saja. Regresi PostgreSQL penuh sebelumnya masih belum hijau akibat timeout; tidak diulang pada pemisahan mekanis ini. Docker/cloud, produksi, seluruh viewport, dan seluruh alur modul belum diverifikasi langsung.

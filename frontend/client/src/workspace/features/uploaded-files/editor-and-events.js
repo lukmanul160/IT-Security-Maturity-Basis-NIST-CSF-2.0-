@@ -1,3 +1,8 @@
+/**
+ * Pustaka evidence, lampiran, pencarian serta editor file.
+ * Metadata evidence dan byte file berbeda. Pemilihan file tidak memberi izin baru; penghapusan referensi divalidasi server.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function editUploadedFile(recordId) {
   const record = uploadedFileRecordMap.get(recordId);
   if (!canEditUploadedFile(record)) return;

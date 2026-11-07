@@ -1,0 +1,281 @@
+[
+  {
+    "name": "assessmentYearsContext",
+    "path": "frontend/client/src/workspace/features/assessment/years-context.js"
+  },
+  {
+    "name": "submissionGuard",
+    "path": "frontend/client/src/workspace/features/shared/submission-guard.js"
+  },
+  {
+    "name": "dashboardHelp",
+    "path": "frontend/client/src/workspace/features/shared/dashboard-help.js"
+  },
+  {
+    "name": "reminderRecipients",
+    "path": "frontend/client/src/workspace/features/shared/reminder-recipients.js"
+  },
+  {
+    "name": "reminderPreview",
+    "path": "frontend/client/src/workspace/features/shared/reminder-preview.js"
+  },
+  {
+    "name": "sharedStateAndAccess",
+    "path": "frontend/client/src/workspace/features/shared/state-and-access.js"
+  },
+  {
+    "name": "moduleLoading",
+    "path": "frontend/client/src/workspace/features/shared/module-loading.js"
+  },
+  {
+    "name": "evidenceLibrary",
+    "path": "frontend/client/src/workspace/features/uploaded-files/evidence-library.js"
+  },
+  {
+    "name": "riskAcceptanceForms",
+    "path": "frontend/client/src/workspace/features/risk-acceptance/forms.js"
+  },
+  {
+    "name": "acceptanceDashboard",
+    "path": "frontend/client/src/workspace/features/risk-acceptance/dashboard.js"
+  },
+  {
+    "name": "policyDropdowns",
+    "path": "frontend/client/src/workspace/features/policy-register/dropdowns.js"
+  },
+  {
+    "name": "policyForm",
+    "path": "frontend/client/src/workspace/features/policy-register/form.js"
+  },
+  {
+    "name": "policyEmailReminder",
+    "path": "frontend/client/src/workspace/features/policy-register/email-reminder.js"
+  },
+  {
+    "name": "governanceDashboard",
+    "path": "frontend/client/src/workspace/features/shared/governance-dashboard.js"
+  },
+  {
+    "name": "policyRegisterAndCalendar",
+    "path": "frontend/client/src/workspace/features/policy-register/register-and-calendar.js"
+  },
+  {
+    "name": "policyDashboard",
+    "path": "frontend/client/src/workspace/features/policy-register/dashboard.js"
+  },
+  {
+    "name": "tprmNavigationAndQuestionnaires",
+    "path": "frontend/client/src/workspace/features/tprm/navigation-and-questionnaires.js"
+  },
+  {
+    "name": "tprmQuestionnaireTemplates",
+    "path": "frontend/client/src/workspace/features/tprm/questionnaire-templates.js"
+  },
+  {
+    "name": "tprmVendorRegister",
+    "path": "frontend/client/src/workspace/features/tprm/vendor-register.js"
+  },
+  {
+    "name": "tprmDashboard",
+    "path": "frontend/client/src/workspace/features/tprm/dashboard.js"
+  },
+  {
+    "name": "tprmWorkflowGuidance",
+    "path": "frontend/client/src/workspace/features/tprm/workflow-guidance.js",
+    "group": "tprm-lifecycle"
+  },
+  {
+    "name": "tprmWorkflowGuidanceView",
+    "path": "frontend/client/src/workspace/features/tprm/workflow-guidance-view.js",
+    "group": "tprm-lifecycle"
+  },
+  {
+    "name": "tprmLifecycleView",
+    "path": "frontend/client/src/workspace/features/tprm/lifecycle-view.js",
+    "group": "tprm-lifecycle"
+  },
+  {
+    "name": "tprmLifecycleForm",
+    "path": "frontend/client/src/workspace/features/tprm/lifecycle-form.js",
+    "group": "tprm-lifecycle"
+  },
+  {
+    "name": "tprmLifecycle",
+    "path": "frontend/client/src/workspace/features/tprm/lifecycle.js",
+    "group": "tprm-lifecycle"
+  },
+  {
+    "name": "tprmQuestionnaireExcel",
+    "path": "frontend/client/src/workspace/features/tprm/questionnaire-excel.js"
+  },
+  {
+    "name": "riskManagementRegister",
+    "path": "frontend/client/src/workspace/features/risk-management/register.js"
+  },
+  {
+    "name": "riskDashboard",
+    "path": "frontend/client/src/workspace/features/risk-management/dashboard.js"
+  },
+  {
+    "name": "riskOptions",
+    "path": "frontend/client/src/workspace/features/risk-management/options.js"
+  },
+  {
+    "name": "riskWorkflowModel",
+    "path": "frontend/client/src/workspace/features/risk-management/workflow-model.js",
+    "group": "risk-workflow"
+  },
+  {
+    "name": "riskWorkflowView",
+    "path": "frontend/client/src/workspace/features/risk-management/workflow-view.js",
+    "group": "risk-workflow"
+  },
+  {
+    "name": "riskWorkflow",
+    "path": "frontend/client/src/workspace/features/risk-management/workflow.js",
+    "group": "risk-workflow"
+  },
+  {
+    "name": "personnelForms",
+    "path": "frontend/client/src/workspace/features/personnel/organization-and-forms.js"
+  },
+  {
+    "name": "personnelCertifications",
+    "path": "frontend/client/src/workspace/features/personnel/certifications.js"
+  },
+  {
+    "name": "assessmentGapModel",
+    "path": "frontend/client/src/workspace/features/assessment/gap-model.js",
+    "group": "assessment-gaps"
+  },
+  {
+    "name": "assessmentGapView",
+    "path": "frontend/client/src/workspace/features/assessment/gap-view.js",
+    "group": "assessment-gaps"
+  },
+  {
+    "name": "assessmentGaps",
+    "path": "frontend/client/src/workspace/features/assessment/gaps.js",
+    "group": "assessment-gaps"
+  },
+  {
+    "name": "csfOverviewAndAssessment",
+    "path": "frontend/client/src/workspace/features/assessment/overview-and-csf.js"
+  },
+  {
+    "name": "isoControlsAndEvidence",
+    "path": "frontend/client/src/workspace/features/iso27001/controls-and-evidence.js"
+  },
+  {
+    "name": "isoObjectivesAndSoa",
+    "path": "frontend/client/src/workspace/features/iso27001/objectives-and-soa.js"
+  },
+  {
+    "name": "assessmentControlEditor",
+    "path": "frontend/client/src/workspace/features/assessment/control-editor.js"
+  },
+  {
+    "name": "evidenceAttachments",
+    "path": "frontend/client/src/workspace/features/uploaded-files/attachments.js"
+  },
+  {
+    "name": "assessmentScoring",
+    "path": "frontend/client/src/workspace/features/assessment/scoring.js"
+  },
+  {
+    "name": "privacyAssessment",
+    "path": "frontend/client/src/workspace/features/privacy/assessment.js"
+  },
+  {
+    "name": "sharedImportExport",
+    "path": "frontend/client/src/workspace/features/shared/import-export.js"
+  },
+  {
+    "name": "administrationAccountsAuditBackup",
+    "path": "frontend/client/src/workspace/features/administration/audit-backup-accounts.js"
+  },
+  {
+    "name": "workspaceStartup",
+    "path": "frontend/client/src/workspace/features/shared/startup.js"
+  },
+  {
+    "name": "evidenceEditorAndEvents",
+    "path": "frontend/client/src/workspace/features/uploaded-files/editor-and-events.js"
+  },
+  {
+    "name": "auditFindingRecordIndex",
+    "path": "frontend/client/src/workspace/features/audit-finding/record-index.js"
+  },
+  {
+    "name": "auditFindingDetailView",
+    "path": "frontend/client/src/workspace/features/audit-finding/detail-view.js"
+  },
+  {
+    "name": "auditFindingTracker",
+    "path": "frontend/client/src/workspace/features/audit-finding/tracker.js"
+  },
+  {
+    "name": "complianceRegister",
+    "path": "frontend/client/src/workspace/features/compliance/register.js"
+  },
+  {
+    "name": "complianceStatements",
+    "path": "frontend/client/src/workspace/features/compliance/statements.js"
+  },
+  {
+    "name": "complianceSmtpSettings",
+    "path": "frontend/client/src/workspace/features/compliance/smtp-settings.js"
+  },
+  {
+    "name": "complianceReminderSettings",
+    "path": "frontend/client/src/workspace/features/compliance/reminder-settings.js"
+  },
+  {
+    "name": "officeDesignShapes",
+    "path": "frontend/client/src/workspace/features/office-design/shapes.js"
+  },
+  {
+    "name": "officeDesign",
+    "path": "frontend/client/src/workspace/features/office-design/editor.js"
+  },
+  {
+    "name": "eventBindings",
+    "path": "frontend/client/src/workspace/features/shared/event-bindings.js"
+  },
+  {
+    "name": "fileBackups",
+    "path": "frontend/client/src/workspace/features/administration/file-backups.js"
+  },
+  {
+    "name": "storageSettings",
+    "path": "frontend/client/src/workspace/features/administration/storage-settings.js"
+  },
+  {
+    "name": "moduleTransfer",
+    "path": "frontend/client/src/workspace/features/shared/module-transfer.js"
+  },
+  {
+    "name": "ikasScoring",
+    "path": "src/shared/ikasScoring.js"
+  },
+  {
+    "name": "ikasAssessment",
+    "path": "frontend/client/src/workspace/features/ikas/assessment.js"
+  },
+  {
+    "name": "smtpSettings",
+    "path": "frontend/client/src/workspace/features/administration/smtp-settings.js"
+  },
+  {
+    "name": "actionAccess",
+    "path": "frontend/client/src/workspace/features/shared/action-access.js"
+  },
+  {
+    "name": "threatNavigation",
+    "path": "frontend/client/src/workspace/features/shared/threat-navigation.js"
+  },
+  {
+    "name": "assessmentYearsUi",
+    "path": "frontend/client/src/workspace/features/assessment/years-ui.js"
+  }
+]

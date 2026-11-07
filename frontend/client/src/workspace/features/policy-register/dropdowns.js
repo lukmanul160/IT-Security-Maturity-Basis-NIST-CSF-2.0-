@@ -1,3 +1,8 @@
+/**
+ * Register kebijakan, editor dokumen, relasi catatan, kalender dan reminder.
+ * Review date dihitung dari siklus tersimpan. Editor, lampiran, catatan terkait dan SMTP memiliki jalur penyimpanan berbeda.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function getPolicyDropdownOptions(key) {
   if(key==='owners')return [...new Set([...getStoredPolicyDropdownOptions(key),...(window.NistReminderRecipients?.registered||[]).map(row=>row.owner)])];
   return getStoredPolicyDropdownOptions(key);
@@ -16,6 +21,7 @@ function getStoredPolicyDropdownOptions(key) {
   return [...(policyDropdownDefaults[key] || [])];
 }
 
+/** Ambil pilihan tersimpan; perubahan pilihan harus melalui endpoint dan izin pengelolaan modul. */
 async function loadPolicyDropdownOptionsFromServer() {
   try {
     const response = await fetch('/api/policy-register/dropdowns', { cache: 'no-store' });

@@ -1,3 +1,8 @@
+/**
+ * Editor denah, bentuk, coverage CCTV dan layout kantor.
+ * State canvas adalah draft; endpoint menyimpan layout. Perhitungan koordinat tidak membuktikan coverage fisik aktual.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 ;(() => {
   const key = 'office-design';
   const canvas = $('odCanvas'), properties = $('odProperties');

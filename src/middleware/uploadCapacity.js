@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: uploadCapacity.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 // Reserve capacity before multipart parsing; keep it until processing completes.
 function createUploadCapacity({ maxActive = 4, maxPerUser = 2 } = {}) {
   let active = 0;

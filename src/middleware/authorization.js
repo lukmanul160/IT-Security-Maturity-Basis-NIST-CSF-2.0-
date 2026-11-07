@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: authorization.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const fs = require('fs').promises;
 const csfFunctions = new Set(['Govern', 'Identify', 'Protect', 'Detect', 'Respond', 'Recover']);
 const evidenceFunctions = new Set(['ISO 27001', 'ISO 27001 SOA', 'IKAS BSSN', 'policy-register', 'TPRM Vendor Documents', 'Uploaded files']);

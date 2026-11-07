@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 import { resolveNote } from './noteLinks.mjs';
 export const noteUrl = id => '/app#knowledge-note='+encodeURIComponent(String(id));
 export function noteIdFromHash(hash) {

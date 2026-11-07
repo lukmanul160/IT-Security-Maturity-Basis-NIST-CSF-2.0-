@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: riskWorkflowRules.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const stages = ['Draft', 'Assessed', 'Pending Approval', 'In Treatment', 'Pending Verification', 'Monitoring', 'Accepted', 'Pending Closure', 'Closed'];
 const editable = ['Draft', 'Assessed', 'In Treatment', 'Monitoring'];
 const textFields = ['threat', 'vulnerability', 'likelihoodRationale', 'impactRationale', 'toleranceRationale', 'approver', 'reviewer', 'evidence', 'verificationNotes', 'acceptanceReason', 'acceptanceConditions', 'closureReason'];

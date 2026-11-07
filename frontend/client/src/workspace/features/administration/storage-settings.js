@@ -1,3 +1,8 @@
+/**
+ * Akun, audit, backup serta konfigurasi storage/SMTP.
+ * Perubahan konfigurasi dikirim ke endpoint khusus; backup/restore tidak dipakai sebagai pengujian terhadap data operasional.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 async function fileStorageRequest(method, suffix = '', payload) {
   const response = await fetch(`/api/storage-settings${suffix}`, {
     method, headers: { 'Content-Type': 'application/json' },

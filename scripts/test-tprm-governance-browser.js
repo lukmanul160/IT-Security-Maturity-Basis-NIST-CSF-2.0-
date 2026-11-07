@@ -4,7 +4,7 @@ const {spawn}=require('node:child_process'),{Cdp}=require('./test-threat-modelli
 (async()=>{let server,chrome,client;const profile=await fs.mkdtemp(path.join(os.tmpdir(),'nist-tprm-governance-'));try{
  const component=await fs.readFile('frontend/client/src/workspace/components/TprmRegisterView.vue','utf8');
  const template=component.match(/<template>([\s\S]*)<\/template>/)[1].replace(' v-pre','');
- const lifecycle=await fs.readFile('frontend/client/src/workspace/features/tprm/lifecycle.js','utf8');
+ const lifecycle=require('./lib/runtime-manifest.cjs').readSourceGroup('tprm-lifecycle');
  const vendor=await fs.readFile('frontend/client/src/workspace/features/tprm/vendor-register.js','utf8');
  const tabs=vendor.slice(vendor.indexOf("document.querySelectorAll('[data-tprm-register-tab]')"),vendor.indexOf(" $('tprmDashboardOpenRegister')"));
  const app=express();
@@ -33,5 +33,11 @@ const {spawn}=require('node:child_process'),{Cdp}=require('./test-threat-modelli
  await client.evaluate("document.getElementById('tprmWorkflowModal').close();useActor('viewer','viewer');openTprmLifecycle(tprmRows[0],'assignments')");await client.wait("document.getElementById('twAssignreviewer')?.disabled===true");assert.equal(await client.evaluate("!!document.querySelector('#tprmWorkflowFields button[value=assign]')"),false);
  await client.evaluate("document.getElementById('tprmWorkflowModal').close();fixture.stage='Under review';useActor('outsider','editor');openTprmLifecycle(tprmRows[0],'review')");await client.wait("document.getElementById('tprmWorkflowModal').open");assert.equal(await client.evaluate("!!document.querySelector('#tprmWorkflowFields button[value=review]')"),false);
  await client.evaluate("document.getElementById('tprmWorkflowModal').close();useActor('reviewer','editor');openTprmLifecycle(tprmRows[0],'review')");await client.wait("!!document.querySelector('#tprmWorkflowFields button[value=review]')");
+ assert.equal(await client.evaluate("document.querySelector('.tprm-next-steps').textContent.includes('Verifikasi') || document.querySelector('.tprm-next-steps').textContent.includes('verifikasi')"),true);
+ await client.evaluate("document.querySelector('[data-tw-tab=assessment]').click()");
+ assert.equal(await client.evaluate("document.querySelector('[data-tw-navigate=assignments]').getAttribute('aria-selected')"),null);
+ await client.evaluate("document.querySelector('[data-tw-navigate=assignments]').click()");
+ assert.equal(await client.evaluate("!!document.getElementById('twAssignreviewer')"),true);
+ assert.equal(await client.evaluate("document.querySelector('.tprm-workflow-tabs [data-tw-tab=assignments]').getAttribute('aria-selected')"),'true');
  assert.deepEqual(client.errors,[]);console.log('PASS: real TPRM source tabs, assignment form payload, read-only access, actor-specific buttons, dependencies, risk acceptance selection and contract fields.');
  }finally{client?.socket.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-tprm-governance-'))try{await fs.rm(resolved,{recursive:true,force:true});}catch{}}})().catch(error=>{console.error(error);process.exitCode=1;});

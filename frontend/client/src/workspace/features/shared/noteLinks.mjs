@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 export function links(content) {
   const text = content.replace(/```[\s\S]*?```/g,'').replace(/`[^`\n]*`/g,'');
   return [...new Set([...text.matchAll(/(?<!!)\[\[([^\]\n]+)\]\]/g)].map(match=>match[1].split('|')[0].split('#')[0].trim()).filter(Boolean))];

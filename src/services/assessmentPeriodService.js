@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: assessmentPeriodService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');

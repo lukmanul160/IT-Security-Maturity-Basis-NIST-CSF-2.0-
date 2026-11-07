@@ -1,3 +1,8 @@
+/**
+ * Editor denah, bentuk, coverage CCTV dan layout kantor.
+ * State canvas adalah draft; endpoint menyimpan layout. Perhitungan koordinat tidak membuktikan coverage fisik aktual.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Pure SVG primitives and an editable example; no DOM, network, or persistence.
 const officeDesignShapes = {
   cctv: { label: 'CCTV', width: 45, height: 30 },
@@ -20,6 +25,7 @@ const officeDesignShapes = {
   plant: { label: 'Tanaman', width: 45, height: 45 },
   label: { label: 'Teks', width: 140, height: 30 }
 };
+/** Bentuk markup SVG untuk bentuk denah; parameter visual tidak mengubah identitas objek tersimpan. */
 function officeShapeSvg(node, escape) {
   const w = node.width, h = node.height;
   const rect = (x, y, width, height, fill, rx = 0, stroke = '#6e675e') => `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="1.3"/>`;

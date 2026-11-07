@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: errorHandler.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const multer = require('multer');
 
 function notFound(req, res) { const requestId = req.requestId || ''; res.status(404).json({ error: 'Route not found', requestId }); }

@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: virtualOfficeService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { pool } = require('../config/database');
 const { getOfficeSessions } = require('../config/auth');
 const { permissions } = require('./permissionService');

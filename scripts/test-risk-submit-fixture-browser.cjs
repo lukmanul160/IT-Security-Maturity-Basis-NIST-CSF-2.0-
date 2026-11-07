@@ -5,7 +5,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function run(){
  const component=await fs.readFile('frontend/client/src/workspace/components/RiskManagementView.vue','utf8');
  const markup=component.match(/<template>([\s\S]*?)<\/template>/)[1];
- const workflow=await fs.readFile('frontend/client/src/workspace/features/risk-management/workflow.js','utf8');
+ const workflow=require('./lib/runtime-manifest.cjs').readSourceGroup('risk-workflow');
  const style=await fs.readFile('frontend/client/src/styles/risk-dashboard.css','utf8');
  const risk={riskId:'fixture',riskOwner:'Owner',riskCategory:'Technical',effectedAsset:'Server',identificationRisk:'Outage',riskCause:'Bug',riskControl:'Backup',riskAnalysis:'Business downtime',likelihood:3,impact:4,treatmentAction:'Mitigation',ownerOfAction:'Team',deadline:'2099-12-31',riskTreatmentDescription:'Patch'};
  const ready={stage:'Assessed',version:3,history:[],threat:'Outage',vulnerability:'Bug',likelihoodRationale:'Exposure',impactRationale:'Downtime',currentLikelihood:3,currentImpact:4,targetLikelihood:1,targetImpact:2,toleranceScore:4,toleranceRationale:'Policy',approver:'chief',reviewer:'reviewer',progress:0};

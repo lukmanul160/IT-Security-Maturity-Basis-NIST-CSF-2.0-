@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: statementRateLimit.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { createHash } = require('node:crypto');
 function createLimit({ limit = 30, windowMs = 60000, key = req => req.ip } = {}) {
   const buckets = new Map();

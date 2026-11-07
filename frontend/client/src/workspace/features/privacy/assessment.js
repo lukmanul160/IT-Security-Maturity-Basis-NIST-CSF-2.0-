@@ -1,3 +1,9 @@
+/**
+ * Dashboard dan penilaian Privacy Framework.
+ * Skor policy/practice, target dan evidence memakai konteks Privacy; jangan mencampurkan state dengan CSF.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
+/** Kirim state penilaian Privacy; identitas kontrol dan konteks tahun dipertahankan oleh adapter assessment. */
 function savePrivacy() { $('saveState').textContent = 'Saving...'; fetch('/api/privacy/assessment', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(privacyState) }).then(response => { if (!response.ok) throw new Error('Privacy state save failed'); $('saveState').textContent = 'Saved just now'; }).catch(() => { $('saveState').textContent = 'Database unavailable'; }); }
 function setPrivacyTab(tab) {
   const view = $('privacyView');

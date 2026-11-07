@@ -107,3 +107,37 @@ Entry-guide verification: 15 focused tests passed; the application suite passed
 373 tests with 5 skipped. Chrome fixtures verified navigation, permissions, language,
 mobile/dark layout and no operational API requests. Frontend build passed.
 These checks did not exercise a live vendor approval or alter operational records.
+
+## Contextual workflow guidance
+
+Each vendor Workflow tab displays **Langkah berikutnya dan syarat untuk lanjut**.
+It explains missing saved assessment inputs, assignments and actor restrictions,
+review/approval prerequisites, critical control failures, open mitigation and
+activation/closure requirements. Shortcuts open the relevant workflow tab;
+existing questionnaire, CIA and related-risk shortcuts remain in Assessment.
+Completeness guidance uses the last saved data: save the profile before submitting.
+The panel is advisory; server validation remains authoritative, including dates,
+contract evidence and Risk Acceptance checks. It does not advance workflow or
+modify operational vendor data automatically.
+
+Verification for this change uses isolated guidance fixtures, existing TPRM unit
+tests and the frontend build. Live vendor transitions, browser UI, Docker and
+cloud services are not verified by these checks.
+
+## Code ownership and maintenance
+
+Guidance calculation and markup are separated into `workflow-guidance.js` and
+`workflow-guidance-view.js`; `lifecycle.js` retains dialog/API orchestration.
+See `frontend/client/src/workspace/features/tprm/README.md` for dependencies.
+This refactor preserves endpoint payloads, permissions and workflow behavior.
+
+Refactor verification: 35 TPRM tests, Chrome source-UI fixture (including guidance
+shortcuts versus selected tabs), and frontend build passed. The fixture uses
+isolated API responses, not operational vendors. This does not verify all live
+application screens or production lifecycle transitions.
+
+The subsequent controller/view/form split is covered by 17 isolated structure,
+guidance and payload tests plus the latest successful build. The Chrome rerun
+could not connect to its debug endpoint before UI execution; its earlier pass
+must not be treated as verification of this later split. PostgreSQL regression
+reruns are also limited by initdb timeout on this host; see AI_HANDOFF.md.

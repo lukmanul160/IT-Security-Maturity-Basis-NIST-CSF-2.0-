@@ -1,14 +1,21 @@
+/**
+ * Akun, audit, backup serta konfigurasi storage/SMTP.
+ * Perubahan konfigurasi dikirim ke endpoint khusus; backup/restore tidak dipakai sebagai pengujian terhadap data operasional.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 async function fileBackupRequest(url, options = {}) {
   const response = await fetch(url, { cache: 'no-store', ...options });
   const data = response.status === 204 ? null : await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data?.error || 'File backup gagal diproses');
   return data;
 }
+/** Muat daftar arsip; daftar ini hanya metadata, bukan verifikasi bahwa seluruh isi backup dapat direstore. */
 async function loadFileBackups() {
   const rows = await fileBackupRequest('/api/file-backups');
   $('fileBackupCount').textContent = `${rows.length} backups`;
   $('fileBackupBody').innerHTML = rows.map(row => `<tr><td><strong>${escapeHtml(row.fileName)}</strong>${row.partCount ? `<br><span class="muted">Bagian ${row.part} / ${row.partCount} ? pilih semua bagian saat restore</span>` : ""}</td><td>${(globalThis.NistI18n?.dateHtml?.(row.createdAt, {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'}) ?? escapeHtml(new Date(row.createdAt).toLocaleString(globalThis.NistI18n?.locale || 'id-ID', {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'})))}</td><td>${formatBackupSize(row.size)}</td><td><div class="backup-row-actions"><a class="attachment-action-button" href="/api/file-backups/${encodeURIComponent(row.fileName)}">Download</a><button class="attachment-action-button danger" type="button" data-file-backup-delete="${escapeHtml(row.fileName)}">Delete</button></div></td></tr>`).join('') || '<tr><td colspan="4">Belum ada file backup.</td></tr>';
 }
+/** Bangun pemilih folder bertingkat; pilihan induk mencakup turunan dan mencegah pilihan ganda yang membingungkan. */
 function renderFileBackupFolders(target, folders) {
   const input = $(target), tree = $(target + 'Tree');
   const paths = new Set();
@@ -142,6 +149,7 @@ $('fileBackupRestoreClearButton').addEventListener('click', () => {
   if ($('fileBackupRestoreInput').disabled) return;
   selectedFileBackupRestore = []; inspectFileRestoreSelection();
 });
+/** Periksa manifest batch unggahan tanpa menulis storage aktif; hasil lama tidak boleh menimpa pilihan file terbaru. */
 async function inspectFileRestoreSelection() {
   const inspection = ++fileBackupInspection;
   if (selectedFileBackupRestore.some(file => file.size > 500 * 1024 * 1024 || !/\.zip$/i.test(file.name))) {

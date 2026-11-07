@@ -1,3 +1,8 @@
+/**
+ * Routing dan akses API: questionnaireTemplateRoutes.
+ * Router menghubungkan URL, middleware dan controller/service. Pertahankan urutan middleware autentikasi, permission dan upload.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const express = require('express');
 const router = express.Router();
 const { list, create, update, remove } = require('../services/questionnaireTemplateService');

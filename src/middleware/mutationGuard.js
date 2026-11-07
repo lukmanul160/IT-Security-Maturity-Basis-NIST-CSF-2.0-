@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: mutationGuard.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const crypto = require('node:crypto');
 const { Pool } = require('pg');
 const { pool } = require('../config/database');

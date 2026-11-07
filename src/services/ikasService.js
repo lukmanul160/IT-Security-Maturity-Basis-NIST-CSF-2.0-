@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: ikasService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const seed=require('../../data/ikas-data.json');
 async function initializePeriods(pool){
   const data={assessment:{scores:{},notes:{},attachments:{},targetScores:{},respondent:{}},controls:{ikas:seed.controls},targets:{ikas:[...new Set(seed.controls.map(row=>row.category))].map(category=>({category,targetScore:3}))},gaps:{ikas:[]},objectives:[]};

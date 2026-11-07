@@ -70,10 +70,10 @@ onBeforeUnmount(()=>{cancelAnimationFrame(frame);observer?.disconnect();});
  <div class="graph-tools"><input v-model="query" aria-label="Cari dalam graf" placeholder="Cari catatan / folder / #tag"><label><input v-model="local" type="checkbox"> Graf lokal</label><label><input v-model="orphans" type="checkbox"> Tanpa hubungan</label><label><input v-model="labels" type="checkbox"> Label</label></div>
  <div class="canvas-wrap"><canvas ref="canvas" tabindex="0" aria-label="Graf catatan interaktif. Drag simpul untuk memindahkan, drag latar untuk pan, roda mouse untuk zoom. Enter membuka catatan terpilih." @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="cancel" @pointerleave="hover=''" @wheel.prevent="zoomAt(Math.exp(-$event.deltaY*.001),coordinates($event))" @keydown="key"/>
  <div v-if="!nodes.length" class="graph-empty">Tidak ada catatan yang cocok dengan filter.</div>
- <div class="zoom-tools"><button aria-label="Zoom keluar" @click="zoomAt(1/1.2)">−</button><span>{{ Math.round(zoom*100) }}%</span><button aria-label="Zoom masuk" @click="zoomAt(1.2)">+</button><button @click="fit">Fit</button><button @click="paused=!paused">{{ paused?'Lanjutkan':'Jeda' }}</button><button @click="exportPng">PNG</button></div></div>
+ <div class="zoom-tools"><button type="button" aria-label="Zoom keluar" @click="zoomAt(1/1.2)">−</button><span>{{ Math.round(zoom*100) }}%</span><button type="button" aria-label="Zoom masuk" @click="zoomAt(1.2)">+</button><button type="button" @click="fit">Fit</button><button type="button" @click="paused=!paused">{{ paused?'Lanjutkan':'Jeda' }}</button><button type="button" @click="exportPng">PNG</button></div></div>
  <div class="graph-info">{{ nodes.length }} catatan · {{ edges.length }} hubungan. Drag simpul / latar · Scroll untuk zoom · Klik untuk membuka</div>
  <div class="graph-legend"><span v-for="(group,i) in groups" :key="group"><i :style="{background:colors[i%colors.length]}"/>{{ group }}</span></div>
- <details class="graph-accessible"><summary>Buka catatan dari graf</summary><button v-for="note in nodes" :key="note.id" @click="emit('open',note)">{{ note.title }}</button></details>
+ <details class="graph-accessible"><summary>Buka catatan dari graf</summary><button type="button" v-for="note in nodes" :key="note.id" @click="emit('open',note)">{{ note.title }}</button></details>
 </div>
 </template>
 <style scoped>

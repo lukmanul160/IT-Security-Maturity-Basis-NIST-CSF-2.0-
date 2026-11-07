@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 import { matchesNote, matchesFolder } from './noteSearch.mjs';
 export function treeRows(folders, notes, expanded, search = '', scope = 'all', images = []) {
   const assets=images.map(image=>({...image,folder:image.path.split('/').slice(0,-1).join('/'),label:image.path.split('/').pop()}));

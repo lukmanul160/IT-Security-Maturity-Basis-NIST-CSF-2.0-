@@ -1,26 +1,27 @@
-# Audit finding frontend
+# audit-finding
 
-These files follow the classic-script contract in `../README.md`. The ordered
-entry point is `../../runtime.js`; do not add ES imports or exports to fragments.
+Register temuan audit, detail, evidence dan reminder.
 
-- `record-index.js`: pure hierarchy lookup by ID and parent. Rebuild the index
-  when replacing the API snapshot. It retains references to records, so attachment
-  updates do not require rebuilding. Parent/ID changes do require a rebuild.
-- `detail-view.js`: renders the nested finding table from explicitly supplied
-  data and helpers. It does not read the DOM or issue API requests.
-- `tracker.js`: owns current records, navigation, filters, permissions, forms,
-  evidence library, events and API calls.
-- `../../components/AuditFindingView.vue`: page markup and form fields.
-- `../../../../../public/theme.css`: shared light/dark styles, including nested
-  finding cells selected by `[data-aft-details]`.
+## Alur dan batas tanggung jawab
 
-Descriptions in the Audit/Finding table use `white-space: pre-wrap` so line
-breaks entered in the description textarea remain visible in the Details cell.
+Index record membantu lookup folder; lampiran tetap mengikuti izin Files dan mutasi mengikuti izin modul.
 
-The index costs one pass over the API snapshot. ID and direct-child lookup avoid
-scanning the entire list; ancestor traversal follows only the parent chain and
-stops safely on missing parents or cycles. Child order matches API order.
+Markup utama berada di `../../components/`; urutan classic-script di `../../runtime.js`.
+File `.js` runtime tidak boleh diberi import/export tanpa migrasi dependency.
+File `.mjs` mempertahankan kontrak ES module yang sudah ada.
 
-Validation: `node --test test/auditFindingFrontend.test.js`,
-`npm run build:client`, `npm test`, and `npm run test:browser` from the project root.
-Do not edit generated frontend assets directly.
+## File sumber
+
+| File | Titik masuk fungsi (contoh) |
+| --- | --- |
+| [detail-view.js](detail-view.js) | `renderAuditFindingDetails` |
+| [record-index.js](record-index.js) | `createAuditRecordIndex` |
+| [tracker.js](tracker.js) | State / binding / ekspor modul; lihat katalog AST |
+
+## Dokumentasi dan verifikasi
+
+Dokumen terkait: `docs/audit-finding-tracker.md`.
+Daftar fungsi lengkap, parameter dan lokasi ada pada `docs/source-catalog.json`.
+Jalankan `npm run check:structure`, `npm run test:isolated`, dan `npm run build`.
+Gunakan fixture browser modul terkait untuk perubahan interaksi; kelulusan build
+bukan bukti API produksi, cloud, email atau semua ukuran layar sudah diuji.

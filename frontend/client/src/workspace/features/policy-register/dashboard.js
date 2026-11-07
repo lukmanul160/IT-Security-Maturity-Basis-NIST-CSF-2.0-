@@ -1,3 +1,8 @@
+/**
+ * Register kebijakan, editor dokumen, relasi catatan, kalender dan reminder.
+ * Review date dihitung dari siklus tersimpan. Editor, lampiran, catatan terkait dan SMTP memiliki jalur penyimpanan berbeda.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Classic-script fragment: use actual register fields and the existing review calculation.
 let pdDrill = null;
 function pdNext(row) { return getPolicyNextReviewDate(row) || ''; }

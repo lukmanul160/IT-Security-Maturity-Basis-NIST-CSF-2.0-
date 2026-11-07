@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: gapNumberService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const codes={People:'PE',Process:'PR',Technology:'T'};
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
 function assign(details,rows,id) {

@@ -1,3 +1,8 @@
+/**
+ * Konfigurasi aplikasi: database.
+ * Pisahkan konfigurasi instalasi dari data bisnis. Jangan log kredensial atau menjadikan .env sebagai fixture pengujian.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { Pool } = require('pg');
 const { database } = require('./env');
 

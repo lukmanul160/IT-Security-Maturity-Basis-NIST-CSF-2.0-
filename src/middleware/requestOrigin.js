@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: requestOrigin.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 // Clients without browser headers remain compatible. SameSite is defense in depth.
 function createRequestOriginGuard({ secure = false } = {}) {
   return (req, res, next) => {

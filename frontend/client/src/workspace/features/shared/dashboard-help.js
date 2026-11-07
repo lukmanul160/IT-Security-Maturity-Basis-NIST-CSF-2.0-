@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Help is separate from drill-down buttons, so opening it never changes dashboard filters.
 const dashboardHelpSources={riskManagementView:'Risk Register',riskAcceptanceView:'List Risk Acceptance',policyRegisterView:'Policy Register',auditFindingView:'Audit Finding Tracker',assetManagementView:'Asset Register, Server Racks dan Modelling Asset Register',monitoringDashboardView:'API Monitoring Dashboard; modul yang diizinkan untuk akun ini',tprmRegisterView:'TPRM Risk Register, Due Diligence Questionnaire dan Questionnaire Templates',csfView:'Assessment CSF 2.0 yang tersimpan',privacyView:'Assessment Privacy Framework yang tersimpan',iso27001View:'ISO 27001: clauses, SOA dan Objective Evaluation'};
 const dashboardMetricRules={

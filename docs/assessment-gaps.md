@@ -25,3 +25,14 @@ Validation:
 - `npm test`: gap validation, permissions, ownership rejection, distinct findings, stale updates, central evidence deletion and existing application regression tests.
 - `npm run test:assessment-gaps-integration`: real API/database round trip with unique fixture controls and one fixture PDF, removed afterward.
 - `npm run test:assessment-gaps-browser`: built workspace with isolated in-memory gap API fixtures, four framework entry points, pagination, edit/status flows, KPI drilldown, dark/light, and 1440/768/390px layouts. No existing business data is edited.
+
+Gap tab editing
+---------------
+
+The Gap tab opens the selected finding directly with **Edit gap**. The editor shows only that finding's form and evidence, without other gap details or gap pagination. Save or cancel closes the editor and returns to the Gap tab. Read-only users can view the selected finding only. Control-level gap management remains available from assessment rows.
+
+Verification: navigation and rendering tests use isolated JavaScript fixtures; the frontend build is checked. No operational database, live browser, Docker, or cloud verification is performed for this UI change.
+
+## Pemeliharaan sumber
+
+Sumber gap kini dipisah menjadi `gap-model.js` (konteks kontrol), `gap-view.js` (markup/draft), dan `gaps.js` (state/API/event). Grup manifest `assessment-gaps` digunakan aplikasi dan fixture. Perilaku edit gap terpilih tetap dipertahankan.

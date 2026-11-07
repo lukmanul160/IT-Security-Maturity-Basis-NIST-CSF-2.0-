@@ -1,3 +1,8 @@
+/**
+ * Risk register, pilihan, dashboard dan workflow approval/verifikasi.
+ * Inherent, target residual dan residual aktual berbeda. Transisi memerlukan version, aktor dan keputusan server.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function renderRiskDropdownManager() {
   const panel = $('riskDropdownManager'); if (!panel) return;
   const labels = { riskCategory: 'Risk category', effectedAsset: 'Effected asset', deviceName: 'Nama perangkat', riskOwner: 'Risk owner', treatmentAction: 'Treatment action' };

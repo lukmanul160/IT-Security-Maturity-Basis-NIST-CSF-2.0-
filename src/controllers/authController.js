@@ -1,3 +1,8 @@
+/**
+ * Adapter HTTP: authController.
+ * Baca req, delegasikan kasus penggunaan ke service, lalu bentuk response/error. Aturan domain dan transaksi tetap di service.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { authenticate, createSession, destroySession, parseCookies, sessionCookie } = require('../config/auth');
 const accountService = require('../services/accountService');
 const permissionService = require('../services/permissionService');

@@ -1,3 +1,8 @@
+/**
+ * Routing dan akses API: fileRoutes.
+ * Router menghubungkan URL, middleware dan controller/service. Pertahankan urutan middleware autentikasi, permission dan upload.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const express = require('express');
 const controller = require('../controllers/fileController');
 const { requireCsfFileAccess } = require('../middleware/authorization');

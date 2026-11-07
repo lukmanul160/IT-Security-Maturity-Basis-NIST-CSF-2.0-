@@ -1,3 +1,8 @@
+/**
+ * Kontrol CSF, skor, gap dan konteks tahun assessment.
+ * Pisahkan nilai kosong dari nol; filter tahun berlaku pada request dan ID kontrol tetap menjadi kontrak evidence.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 const assessmentPeriodViews = {csf:['csfView','assessmentView','csfManageView'],privacy:['privacyView','privacyAssessmentView','privacyManageView'],iso27001:['iso27001View'],ikas:['ikasView','ikasAssessmentView','ikasManageView']};
 function canCreateAssessmentYear(group) {
   return (group === 'iso27001' ? ['iso27001','iso27001-soa'] : [group === 'csf' ? 'assessment' : group+'-assessment']).every(key => canPerform(key,'create'));
@@ -30,6 +35,7 @@ async function openDeleteAssessmentYearDialog(group) {
   dialog.addEventListener('cancel',event=>{if(dialog.querySelector('form').hasAttribute('aria-busy'))event.preventDefault();});
   dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();
 }
+/** Ganti konteks tahun untuk modul aktif dan muat ulang state terkait agar data antarperiode tidak bercampur. */
 async function selectAssessmentYear(group,year,status) {
   if (document.querySelector('form[aria-busy="true"]') || document.querySelector('.upload-progress.is-indeterminate')) {
     status.textContent = 'Selesaikan penyimpanan atau upload sebelum mengganti tahun.'; return;

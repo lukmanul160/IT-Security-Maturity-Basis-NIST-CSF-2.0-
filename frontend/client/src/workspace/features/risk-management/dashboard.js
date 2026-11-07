@@ -1,3 +1,8 @@
+/**
+ * Risk register, pilihan, dashboard dan workflow approval/verifikasi.
+ * Inherent, target residual dan residual aktual berbeda. Transisi memerlukan version, aktor dan keputusan server.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Shared classic-script scope; all dashboard values derive from the existing register.
 const rdState = { drill: null };
 const rdDayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });

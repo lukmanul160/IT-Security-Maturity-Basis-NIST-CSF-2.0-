@@ -1,3 +1,8 @@
+/**
+ * Kontrol CSF, skor, gap dan konteks tahun assessment.
+ * Pisahkan nilai kosong dari nol; filter tahun berlaku pada request dan ID kontrol tetap menjadi kontrak evidence.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function renderOverview() { renderGapSummaries();
   const s = stats();
   $('overallScore').nextElementSibling.textContent = '/ 5.0'; $('overallMeter').closest('.score-panel').querySelector('.score-foot').innerHTML = '<span>1 Initial</span><span>5 Optimized</span>'; const maturityLegend = $('recommendations').closest('.view')?.querySelector('.legend-panel .legend-list'); if (maturityLegend) maturityLegend.innerHTML = '<div><b>1</b><span><strong>Initial</strong><small>Privacy and security practices are absent or ad hoc.</small></span></div><div><b>2</b><span><strong>Repeatable</strong><small>Basic practices exist but vary.</small></span></div><div><b>3</b><span><strong>Defined</strong><small>Documented and repeatable practices.</small></span></div><div><b>4</b><span><strong>Managed</strong><small>Measured and consistently governed.</small></span></div><div><b>5</b><span><strong>Optimized</strong><small>Continuously improving and adaptive.</small></span></div>';

@@ -1,6 +1,12 @@
+/**
+ * Kontrol clauses, SOA, evidence dan sasaran keamanan informasi.
+ * Kontrol dan SOA memakai framework/izin terpisah; progress sasaran mengikuti periode evaluasi tersimpan.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function objectiveMeasurement(item) { return item.periodTargets?._measurement || { method: 'legacy', unit: '' }; }
 function objectivePeriods(item) { return Object.entries(item.periodTargets || {}).filter(([key]) => key !== '_measurement').map(([, period]) => period); }
 function objectiveNumber(value) { const text = String(value ?? '').trim().replace(/%$/, '').trim().replace(',', '.'); return text === '' ? NaN : Number(text); }
+/** Hitung tampilan progress sasaran dari data pengukuran; progress tidak menggantikan penilaian reviewer. */
 function objectiveProgress(item, target, actual) { const measurement = objectiveMeasurement(item); const value = objectiveNumber(actual), goal = objectiveNumber(target); if (!Number.isFinite(value)) return 'Belum ada realisasi'; if (measurement.method === 'percentage') return value.toLocaleString((globalThis.NistI18n?.locale || 'id-ID'), { maximumFractionDigits: 2 }) + '%'; if (measurement.method === 'quantity' && goal > 0) return (value / goal * 100).toLocaleString((globalThis.NistI18n?.locale || 'id-ID'), { maximumFractionDigits: 2 }) + '% capaian'; return ''; }
 function objectiveTargetLabel(item) { const measurement = objectiveMeasurement(item); return measurement.method === 'percentage' ? String(item.targetValue).replace(/%$/, '') + '%' : measurement.method === 'quantity' ? item.targetValue + ' ' + (measurement.unit || 'item/kegiatan') + ' / ' + (objectiveFrequencyLabels[item.evaluationFrequency] || 'Bulanan') + ' = 100%' : item.targetValue || '-'; }
 function refreshObjectiveProgress(event) { const input = event.target; if (!['target', 'actual'].includes(input.dataset.periodField)) return; const cell = input.closest('td'); if (!cell) return; const item = isoObjectives.find(row => String(row.id) === input.dataset.objectiveId); const output = cell.querySelector('[data-objective-progress]'); if (item && output) output.textContent = objectiveProgress(item, cell.querySelector('[data-period-field="target"]').value, cell.querySelector('[data-period-field="actual"]').value); }

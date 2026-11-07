@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: officeDesignService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { randomUUID } = require('node:crypto');
 const { pool } = require('../config/database');
 const invalid = (message, status = 400) => Object.assign(new Error(message), { status });

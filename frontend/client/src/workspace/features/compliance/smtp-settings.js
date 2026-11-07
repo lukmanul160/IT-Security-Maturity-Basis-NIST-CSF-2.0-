@@ -1,3 +1,8 @@
+/**
+ * Register kepatuhan, reminder dan penghubung surat pernyataan.
+ * UI memuat data sesuai halaman; status reminder bukan bukti email sudah terkirim.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Reporting SMTP tab uses the existing centralized, admin-only SMTP API.
 ;(() => {
   const form = $('crSmtpForm');

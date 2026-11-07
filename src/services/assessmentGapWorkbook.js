@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: assessmentGapWorkbook.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const XLSX=require('xlsx');
 const headers=['No','Domain','Sub','People/ Process/ Technology','Gap Number','Gap','Client','PIC','Initiative','Recommendation','Year of Initiative','Kuartal','Konfirmasi','Evidence/ Dokumen Pendukung','Decision Note'];
 function build(rows) {

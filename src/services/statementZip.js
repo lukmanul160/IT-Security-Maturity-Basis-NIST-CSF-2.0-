@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: statementZip.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const yauzl = require('yauzl');
 const fail = () => Object.assign(new Error('Arsip dokumen tidak valid atau terlalu besar.'), { status: 400 });
 

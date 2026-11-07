@@ -1,3 +1,8 @@
+/**
+ * Register kepatuhan, reminder dan penghubung surat pernyataan.
+ * UI memuat data sesuai halaman; status reminder bukan bukti email sudah terkirim.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // State and event handling shared by the two simple compliance registers.
 ;(() => {
   const configurations = [

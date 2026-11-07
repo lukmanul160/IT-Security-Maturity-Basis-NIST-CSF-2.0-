@@ -1,8 +1,14 @@
+/**
+ * Assessment IKAS dengan indikator, rubrik, tahun dan evidence.
+ * Nilai 0 valid; input kosong belum dinilai. Perhitungan resmi aplikasi berada pada src/shared/ikasScoring.js.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 let ikasRows=[],ikasState={scores:{},notes:{},attachments:{},targetScores:{},respondent:{}},ikasTemplate=null;
 let ikasPage=1,ikasManagePage=1,ikasDomain='',ikasTab='overview',ikasSaveQueue=Promise.resolve();
 const ikasInitialView=uiState.view;
 const ikasDisplay=value=>value===null||value===undefined?'—':Number(value).toFixed(2);
 function ikasStatus(message){$('ikasStatus').textContent=message;$('ikasManageStatus').textContent=message;$('saveState').textContent=message;}
+/** Adapter request IKAS yang mempertahankan konteks tahun dan melaporkan kegagalan HTTP. */
 async function ikasRequest(url,method='GET',body){
   const response=await fetch(url,{method,headers:body instanceof FormData?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body),cache:'no-store'});
   if(!response.ok)throw Error((await response.json().catch(()=>({}))).error||'Permintaan IKAS gagal.');

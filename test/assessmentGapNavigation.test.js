@@ -1,3 +1,5 @@
+const {readSourceGroup}=require('../scripts/lib/runtime-manifest.cjs');
+const gapSource=readSourceGroup('assessment-gaps');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
@@ -6,7 +8,7 @@ function fixture(){
  const title={},focus=[],dialog={scrollTop:740,querySelectorAll:()=>[{dataset:{gapEdit:'gap-9'},focus:()=>focus.push('origin')}]};
  const form={querySelector:()=>({focus:()=>focus.push('form')})};
  const context=vm.createContext({escapeHtml:value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'),document:{addEventListener(){}},$:id=>id==='gapDialogTitle'?title:form});
- vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/assessment/gaps.js','utf8'),context);
+ vm.runInContext(gapSource,context);
  context.dialog=dialog;
  vm.runInContext("gapDialog=()=>dialog;renderGapDialog=()=>{};gapContext={frameworks:['csf','privacy'],code:'',filter:'Open',editing:null};gapPage=3;",context);
  return {context,dialog,title,focus};
@@ -61,4 +63,21 @@ test('saved gap details keep short fields compact and allocate space for long co
  assert.match(html,/<div class="gap-detail-item gap-detail-wide"><dt>Recommendation/);
  assert.match(html,/<div class="gap-detail-item gap-detail-wide"><dt>Initiative/);
  assert.ok(html.includes('&lt;Team&gt;'));assert.ok(!html.includes('<Team>'));
+});
+
+
+test('editing shows only the selected form without other gap details or navigation',()=>{
+ const {context}=fixture();const content={},message={};
+ context.content=content;context.message=message;
+ vm.runInContext("$=id=>id==='gapDialogContent'?content:message;canPerform=()=>true;gapRows=()=>[{id:'selected',framework:'privacy',controlCode:'ID-P1',description:'Selected finding',details:{},evidence:[]},{id:'other',framework:'privacy',controlCode:'ID-P1',description:'Other finding',details:{},evidence:[]}];gapLinkedDetails=()=>({});renderGapDraftEvidence=()=>{};populateGapEvidence=async()=>{};updateGapNumberPreview=()=>{};gapContext={frameworks:['privacy'],code:'ID-P1',filter:'all',editing:'selected',editOnly:true};",context);
+ const form={addEventListener(){}};context.form=form;
+ vm.runInContext("$=id=>id==='gapDialogContent'?content:id==='assessmentGapForm'?form:message;",context);
+ // Restore the actual renderer replaced by the navigation fixture.
+ const source=gapSource;
+ const render=source.slice(source.indexOf('function renderGapDialog()'),source.indexOf('function renderGapDraftEvidence()'));
+ vm.runInContext(render+';renderGapDialog()',context);
+ assert.match(content.innerHTML,/Selected finding/);
+ assert.doesNotMatch(content.innerHTML,/Other finding|class="gap-records"|data-gap-page=/);
+ let closed=false;context.dialog.close=()=>{closed=true;};
+ vm.runInContext('finishAssessmentGapEdit()',context);assert.equal(closed,true);
 });

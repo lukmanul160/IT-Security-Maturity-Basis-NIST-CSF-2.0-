@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: statementEmployeeService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 ﻿const {pool}=require('../config/database');
 const bcrypt=require('bcryptjs'),crypto=require('node:crypto'),XLSX=require('xlsx');
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});

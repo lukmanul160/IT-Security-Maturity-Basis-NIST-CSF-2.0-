@@ -1,3 +1,8 @@
+/**
+ * Routing dan akses API: assessmentPeriodRoutes.
+ * Router menghubungkan URL, middleware dan controller/service. Pertahankan urutan middleware autentikasi, permission dan upload.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const router=require('express').Router();
 const service=require('../services/assessmentPeriodService');
 const permissions=require('../services/permissionService');

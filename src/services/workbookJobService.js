@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: workbookJobService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const {Worker}=require('node:worker_threads');
 const path=require('node:path');
 const fail=(message,status)=>Object.assign(Error(message),{status});

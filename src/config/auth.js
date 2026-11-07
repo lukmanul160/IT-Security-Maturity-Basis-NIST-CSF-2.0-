@@ -1,3 +1,8 @@
+/**
+ * Konfigurasi aplikasi: auth.
+ * Pisahkan konfigurasi instalasi dari data bisnis. Jangan log kredensial atau menjadikan .env sebagai fixture pengujian.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { pool } = require('./database');

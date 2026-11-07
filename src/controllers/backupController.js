@@ -1,3 +1,8 @@
+/**
+ * Adapter HTTP: backupController.
+ * Baca req, delegasikan kasus penggunaan ke service, lalu bentuk response/error. Aturan domain dan transaksi tetap di service.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const backupService = require('../services/backupService');
 const multer = require('multer');
 const path = require('path');

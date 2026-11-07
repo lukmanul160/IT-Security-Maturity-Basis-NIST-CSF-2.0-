@@ -1,3 +1,8 @@
+/**
+ * Adapter HTTP: tprmQuestionnaireController.
+ * Baca req, delegasikan kasus penggunaan ke service, lalu bentuk response/error. Aturan domain dan transaksi tetap di service.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const service = require('../services/tprmQuestionnaireService');
 const evidenceAccess = require('../services/evidenceAccessService');
 const excel = require('../services/tprmQuestionnaireExcelService');

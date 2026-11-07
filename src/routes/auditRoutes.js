@@ -1,3 +1,8 @@
+/**
+ * Routing dan akses API: auditRoutes.
+ * Router menghubungkan URL, middleware dan controller/service. Pertahankan urutan middleware autentikasi, permission dan upload.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const express = require('express');
 const auditService = require('../services/auditService');
 const { requireAdmin } = require('../middleware/authorization');

@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: fileLimits.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const settings = require('../services/websiteSettingsService');
 const fs = require('node:fs/promises');
 const path = require('node:path');

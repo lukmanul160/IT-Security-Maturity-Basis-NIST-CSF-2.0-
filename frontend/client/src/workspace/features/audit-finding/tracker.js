@@ -1,3 +1,8 @@
+/**
+ * Register temuan audit, detail, evidence dan reminder.
+ * Index record membantu lookup folder; lampiran tetap mengikuti izin Files dan mutasi mengikuti izin modul.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Isolated feature scope; reuse the workspace's existing DOM and helpers.
 ;(() => {
   const key = 'audit-finding-tracker';

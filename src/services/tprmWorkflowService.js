@@ -1,3 +1,7 @@
+/**
+ * Orkestrasi lifecycle TPRM: baca PostgreSQL, validasi transisi, simpan audit.
+ * Aturan skor murni di shared/tprmWorkflow; penugasan/kontrak di tprmGovernanceService.
+ */
 const { pool } = require('../config/database');
 const governance = require('./tprmGovernanceService');
 const rules = require('../shared/tprmWorkflow');
@@ -10,6 +14,7 @@ async function ensureStore() {
 function record(row) {
   return { ...row, thirdParty: row.third_party, serviceDependency: row.service_dependency, questionnaireId: row.questionnaire_id, dueDiligenceAssessment: row.due_diligence_assessment || {}, workflow: row.workflow || {} };
 }
+/** Muat vendor, kuesioner, dan risiko pada koneksi yang sama; lock saat transaksi perubahan. */
 async function context(id, db = pool, lock = false) {
   const result = await db.query(`SELECT *, next_review::text AS next_review FROM tprm_risk_register WHERE id=$1${lock ? ' FOR UPDATE' : ''}`, [id]);
   if (!result.rowCount) throw invalid('TPRM record not found', 404);
@@ -18,6 +23,7 @@ async function context(id, db = pool, lock = false) {
   const risks = await db.query(`SELECT r.* FROM risk_register r JOIN tprm_related_risks t ON t.risk_id=r.risk_id WHERE t.tprm_id=$1 ORDER BY r.risk_id${lock ? ' FOR SHARE OF r' : ''}`, [id]);
   return { row, questionnaire: questionnaire.rows[0], risks: risks.rows };
 }
+/** Turunkan status review/approval dari fingerprint dan masa berlaku, tanpa mengubah record. */
 function describe({ row, questionnaire, risks }) {
   const summary = rules.riskSummary(row, questionnaire, risks);
   const fingerprint = rules.fingerprint(row, questionnaire, risks);
@@ -38,6 +44,7 @@ function describe({ row, questionnaire, risks }) {
   for (const reminder of governanceStatus.reminders) if (reminder.severity==='Overdue') alerts.push(`${reminder.message} jatuh tempo; eskalasi ke ${reminder.escalateTo}.`);
   return { ...workflow, governance: governanceStatus, stage: workflow.stage || 'Draft', summary, reviewed, approved, alerts, relationshipStatus: row.relationship_status, nextReview: row.next_review };
 }
+/** Gabungkan status terkini, riwayat, dan pilihan akun/acceptance untuk dialog. */
 async function get(id, actor) {
   const data = await context(id);
   const history = await pool.query('SELECT id, action, actor, created_at, snapshot FROM tprm_workflow_events WHERE tprm_id=$1 ORDER BY id DESC', [id]);
@@ -66,6 +73,7 @@ function requireReviewer(actor) {
 function requireApprover(actor) {
   if (!['admin', 'approver'].includes(actor?.role)) throw invalid('Keputusan hanya dapat dilakukan admin atau approver.', 403);
 }
+/** Terapkan satu aksi dalam transaksi; kegagalan rollback dan koneksi selalu dilepas. */
 async function act(id, input, actor) {
   if (!text(actor?.username)) throw invalid('Authenticated user is required', 403);
   const client = await pool.connect();

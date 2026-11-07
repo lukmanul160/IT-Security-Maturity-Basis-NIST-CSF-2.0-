@@ -31,7 +31,7 @@
     "build:client": "npm run prepare:client && vite build --config frontend/client/vite.config.js",
     "build": "npm run build:css && npm run build:client",
     "build:css": "tailwindcss -i ./frontend/tailwind.css -o ./frontend/public/tailwind.css --minify",
-    "test": "node --test test/canvasInteraction.test.js test/moduleLoading.test.js test/budgetService.test.js test/ikasAssessment.test.js test/assessmentPeriods.test.js test/maturityWorkbook.test.js test/maturityCardDecimals.test.js test/workbookJobs.test.js test/websiteSettings.test.js test/fileLimits.test.js test/assessmentGaps.test.js test/assessmentGapWorkbook.test.js test/assessmentGapNavigation.test.js test/submissionGuard.test.js test/mutationGuard.test.js test/reminderRecipientService.test.js test/auditRetentionExport.test.js test/auditTrail.test.js test/publicPagePerformance.test.js test/roleActionPermissions.test.js test/fileService.test.js test/fileReferenceDeletion.test.js test/personnelCertificateFiles.test.js test/personnelCertificationService.test.js test/personnelAuthorization.test.js test/userModuleAccess.test.js test/policyRegisterService.test.js test/policyKnowledgeRelations.test.js test/questionnaireTemplateService.test.js test/policyReminderService.test.js test/moduleTransfer.test.js test/moduleProgressWorkbook.test.js test/smtpService.test.js test/auditFindingService.test.js test/auditFindingFrontend.test.js test/compliance.test.js test/complianceEvidence.test.js test/complianceReminderLink.test.js test/officeDesign.test.js test/auditFindingReminderService.test.js test/evidenceAccessService.test.js test/evidenceKnowledgeSearch.test.js test/backupService.test.js test/fileBackupService.test.js test/threatModelService.test.js test/threatModelLoading.test.js test/riskDropdownService.test.js test/riskWorkflow.test.js test/riskManagementGuidance.test.js test/storageService.test.js test/securityHardening.test.js test/owaspRemediation.test.js test/assetManagementService.test.js test/assetSidebar.test.js test/assetModals.test.js test/assetRackDrag.test.js test/assetRackPhotos.test.js test/assetRackLoading.test.js test/assetRegistrationPhotos.test.js test/assetPlacementAvailability.test.js test/assetReminderSettings.test.js test/assetDiagram.test.js test/assetDiagramRelations.test.js test/assetRiskAssessment.test.js test/assetRelatedRisks.test.js test/assetManagedVendor.test.js test/riskCiaAssessment.test.js test/assetTransfer.test.js test/assetFilters.test.js test/databaseIntegrityHardening.test.js test/monitoringDashboard.test.js test/theme.test.js test/riskDashboard.test.js test/riskAcceptanceDashboard.test.js test/governanceDashboards.test.js test/tprmDashboard.test.js test/tprmWorkflow.test.js test/uploadProgress.test.js test/tprmQuestionnaireWorkbook.test.js test/tableResize.test.js test/statusColors.test.js",
+    "test": "node --test test/canvasInteraction.test.js test/moduleLoading.test.js test/budgetService.test.js test/ikasAssessment.test.js test/assessmentPeriods.test.js test/maturityWorkbook.test.js test/maturityCardDecimals.test.js test/workbookJobs.test.js test/websiteSettings.test.js test/fileLimits.test.js test/assessmentGaps.test.js test/assessmentGapWorkbook.test.js test/assessmentGapNavigation.test.js test/submissionGuard.test.js test/mutationGuard.test.js test/reminderRecipientService.test.js test/auditRetentionExport.test.js test/auditTrail.test.js test/publicPagePerformance.test.js test/roleActionPermissions.test.js test/fileService.test.js test/fileReferenceDeletion.test.js test/personnelCertificateFiles.test.js test/personnelCertificationService.test.js test/personnelAuthorization.test.js test/userModuleAccess.test.js test/policyRegisterService.test.js test/policyKnowledgeRelations.test.js test/questionnaireTemplateService.test.js test/policyReminderService.test.js test/moduleTransfer.test.js test/moduleProgressWorkbook.test.js test/smtpService.test.js test/auditFindingService.test.js test/auditFindingFrontend.test.js test/compliance.test.js test/complianceEvidence.test.js test/complianceReminderLink.test.js test/officeDesign.test.js test/auditFindingReminderService.test.js test/evidenceAccessService.test.js test/evidenceKnowledgeSearch.test.js test/backupService.test.js test/fileBackupService.test.js test/threatModelService.test.js test/threatModelLoading.test.js test/riskDropdownService.test.js test/riskWorkflow.test.js test/riskManagementGuidance.test.js test/storageService.test.js test/securityHardening.test.js test/owaspRemediation.test.js test/assetManagementService.test.js test/assetSidebar.test.js test/assetModals.test.js test/assetRackDrag.test.js test/assetRackPhotos.test.js test/assetRackLoading.test.js test/assetRegistrationPhotos.test.js test/assetPlacementAvailability.test.js test/assetReminderSettings.test.js test/assetDiagram.test.js test/assetDiagramRelations.test.js test/assetRiskAssessment.test.js test/assetRelatedRisks.test.js test/assetManagedVendor.test.js test/riskCiaAssessment.test.js test/assetTransfer.test.js test/assetFilters.test.js test/databaseIntegrityHardening.test.js test/monitoringDashboard.test.js test/theme.test.js test/riskDashboard.test.js test/riskAcceptanceDashboard.test.js test/governanceDashboards.test.js test/tprmDashboard.test.js test/tprmWorkflow.test.js test/uploadProgress.test.js test/tprmQuestionnaireWorkbook.test.js test/tableResize.test.js test/statusColors.test.js test/sourceStructure.test.js test/tprmNextSteps.test.js test/runtimeManifest.test.js",
     "test:assessment-years-browser": "node scripts/test-assessment-years-browser.js",
     "test:virtual-office": "node --test test/virtualOffice.test.js",
     "test:virtual-office-browser": "node scripts/test-virtual-office-browser.js",
@@ -72,7 +72,7 @@
     "test:compliance-office-browser": "node scripts/test-compliance-office-browser.js",
     "test:theme-browser": "node scripts/test-theme-browser.js",
     "test:uploads": "node --test test/uploadProgress.test.js",
-    "test:tprm": "node --test test/tprmGuide.test.js test/tprmGovernance.test.js test/tprmWorkflow.test.js test/tprmDashboard.test.js test/questionnaireTemplateService.test.js test/tprmQuestionnaireWorkbook.test.js",
+    "test:tprm": "node --test test/tprmWorkflowForm.test.js test/tprmNextSteps.test.js test/tprmGuide.test.js test/tprmGovernance.test.js test/tprmWorkflow.test.js test/tprmDashboard.test.js test/questionnaireTemplateService.test.js test/tprmQuestionnaireWorkbook.test.js",
     "test:tprm-integration": "node --test test/tprmGovernanceIntegration.test.js",
     "test:tprm-guide-browser": "node scripts/test-tprm-guide-browser.js",
     "test:tprm-browser": "node scripts/test-tprm-governance-browser.js",
@@ -86,7 +86,11 @@
     "test:security-browser": "node scripts/test-workspace-error-browser.js",
     "assess:performance": "node scripts/assess-security-performance.js",
     "test:load": "node scripts/load-test.js",
-    "test:lcp": "node scripts/measure-lcp-browser.js current"
+    "test:lcp": "node scripts/measure-lcp-browser.js current",
+    "docs:source": "node scripts/document-source.cjs",
+    "check:structure": "node scripts/check-structure.cjs --catalog",
+    "test:isolated": "node scripts/test-isolated.cjs",
+    "test:structure": "node --test test/sourceStructure.test.js test/runtimeManifest.test.js"
   },
   "engines": {
     "node": ">=26.13.0 <27"
@@ -123,6 +127,7 @@
     "yauzl": "^3.4.0"
   },
   "devDependencies": {
+    "@babel/parser": "7.29.9",
     "@tailwindcss/cli": "4.3.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "tailwindcss": "^4.3.3",

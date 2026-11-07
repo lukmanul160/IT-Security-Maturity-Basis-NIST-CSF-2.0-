@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: budgetService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { pool } = require('../config/database');
 const { randomUUID } = require('node:crypto');
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };

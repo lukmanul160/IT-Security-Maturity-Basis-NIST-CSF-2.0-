@@ -1,121 +1,14 @@
+/**
+ * Pengendali dialog lifecycle TPRM: state, render tab, binding event, dan API.
+ * Render: lifecycle-view.js; payload: lifecycle-form.js; panduan: workflow-guidance*.js.
+ * Kontrak: ID DOM dipertahankan, server menentukan sah/tidaknya transisi.
+ */
 let tprmLifecycleRow = null, tprmLifecycleData = null, tprmLifecycleTab = 'assessment', tprmLifecycleActor = '';
 const tprmLifecycleStages = ['Draft', 'Under review', 'Validated', 'Approved', 'Active', 'Offboarding', 'Closed'];
 const tprmCriticalLabels = { access: 'Access control / MFA', encryption: 'Encryption & data protection', incident: 'Incident notification & response', continuity: 'Business continuity / recovery' };
 const tprmContractLabels = { security: 'Persyaratan keamanan dan batas akses', incident: 'Kewajiban notifikasi dan koordinasi insiden', audit: 'Hak audit dan bukti kontrol', subprocessors: 'Ketentuan subkontraktor / subprocessor', dataExit: 'Pengembalian atau penghapusan data saat kontrak berakhir' };
 const tprmExitLabels = { accessRevoked: 'Akses, akun, token, dan koneksi vendor sudah dicabut', dataResolved: 'Data dikembalikan / dihapus sesuai kewajiban dan bukti tersedia', obligationsResolved: 'Kewajiban kontrak dan tindakan terbuka sudah diselesaikan' };
-function tprmInput(id, label, value = '', type = 'text') {
-  return `<label>${label}<input id="${id}" type="${type}" value="${escapeHtml(value ?? '')}" ${type === 'date' ? '' : 'maxlength="1000"'}></label>`;
-}
-function tprmText(id, label, value = '') { return `<label>${label}<textarea id="${id}" rows="3" maxlength="5000">${escapeHtml(value || '')}</textarea></label>`; }
-function tprmSelect(id, label, choices, value = '') {
-  return `<label>${label}<select id="${id}">${choices.map(([key, title]) => `<option value="${escapeHtml(key)}" ${String(key) === String(value) ? 'selected' : ''}>${title}</option>`).join('')}</select></label>`;
-}
-function tprmChecks(prefix, labels, values = {}) {
-  return `<div class="tprm-workflow-checks">${Object.entries(labels).map(([key, label]) => `<label><input id="${prefix}${key}" type="checkbox" ${values[key] ? 'checked' : ''}><span>${label}</span></label>`).join('')}</div>`;
-}
-function tprmWorkflowActions(actions) {
-  const writable = canPerform('tprm-register', 'update');
-  return `<div class="csf-form-actions">${actions.map(([action, label]) => `<button class="button ${['return','startOffboarding','close'].includes(action) ? 'button-quiet' : 'button-accent'}" type="submit" value="${action}" ${writable ? '' : 'disabled'}>${label}</button>`).join('')}</div>`;
-}
-function renderTprmConditions(actions = []) {
-  $('twConditions').innerHTML = actions.map((item, index) => `<article class="insight-panel tprm-mitigation" data-tw-condition>
-    <div class="section-heading compact"><h4>Mitigasi ${index + 1}</h4><button class="attachment-action-button danger" data-tw-remove-condition type="button">Remove</button></div>
-    <div class="risk-register-grid"><label>Tindakan<input data-tw-field="description" value="${escapeHtml(item.description || '')}" maxlength="1000"></label><label>PIC<input data-tw-field="owner" value="${escapeHtml(item.owner || '')}" maxlength="200"></label><label>Tenggat<input data-tw-field="dueDate" type="date" value="${escapeHtml(item.dueDate || '')}"></label></div>
-    <div class="tprm-workflow-checks"><label><input data-tw-field="preActivation" type="checkbox" ${item.preActivation !== false ? 'checked' : ''}>Wajib selesai sebelum aktivasi</label><label><input data-tw-field="completed" type="checkbox" ${item.completed ? 'checked' : ''}>Selesai dan diverifikasi</label></div>
-    <label>Bukti verifikasi / referensi dokumen<textarea data-tw-field="evidence" rows="2" maxlength="3000">${escapeHtml(item.evidence || '')}</textarea></label></article>`).join('') || '<p class="muted">Belum ada tindakan mitigasi.</p>';
-}
-function readTprmConditions() {
-  return [...document.querySelectorAll('[data-tw-condition]')].map(node => Object.fromEntries([...node.querySelectorAll('[data-tw-field]')].map(input => [input.dataset.twField, input.type === 'checkbox' ? input.checked : input.value])));
-}
-function tprmHistory(items, label) {
-  return `<h4>${label}</h4>${items.map(item => {
-    const snapshot=item.snapshot || {}, record=snapshot.record || snapshot.after || {}, workflow=record.workflow || {};
-    const questionnaire=snapshot.questionnaire || snapshot.after || {}, responses=questionnaire.responses || {}, summary=snapshot.summary || {};
-    const assessment=record.dueDiligenceAssessment || record.due_diligence_assessment || {};
-    const values=[['Vendor',record.thirdParty || questionnaire.vendorName || questionnaire.vendor_name],['Workflow',workflow.stage],['Relationship',record.relationship_status || record.relationshipStatus],['Criticality',summary.tier],['Inherent risk',summary.inherent],['Residual risk',summary.residual],['CIA score',assessment.riskScore],['Due diligence score',responses.riskScore],['Decision',workflow.approval?.decision || questionnaire.result || questionnaire.assessment_result],['Assigned requester',workflow.assignments?.requester],['Assigned reviewer',workflow.assignments?.reviewer],['Assigned approver',workflow.assignments?.approver],['Reviewer',workflow.review?.by],['Approver',workflow.approval?.by],['Risk Acceptance',workflow.approval?.acceptance?.id]];
-    const answers=(responses.questionnaireSections || []).map(([title,questions])=>`<h5>${escapeHtml(title)}</h5>${questions.map((question,index)=>{const key=`${title}-${index}`;return `<p><strong>${escapeHtml(question)}</strong><br>${escapeHtml(responses[`${key}-decision`] || 'Belum dijawab')} · ${escapeHtml(responses[key] || '-')}</p>`;}).join('')}`).join('');
-    const documents=(responses.vendorDocuments || []).map(file=>`<a class="attachment-action-button" href="${apiFileOpenUrl(file.path)}" target="_blank" rel="noreferrer">${escapeHtml(file.name || file.path)}</a>`).join('');
-    const plans=(workflow.conditions || []).map(plan=>`<p><strong>${escapeHtml(plan.description)}</strong> · ${escapeHtml(plan.owner)} · ${escapeHtml(plan.dueDate)} · ${plan.completed ? 'Selesai' : 'Terbuka'}<br>${escapeHtml(plan.evidence || '')}</p>`).join('');
-    return `<details class="insight-panel tprm-history-entry"><summary>${escapeHtml(item.action || 'Questionnaire revision')} · ${escapeHtml(item.actor)} · ${(globalThis.NistI18n?.dateHtml?.(item.created_at, {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'}) ?? escapeHtml(new Date(item.created_at).toLocaleString(globalThis.NistI18n?.locale || 'id-ID', {year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'})))}</summary><div class="risk-register-grid">${values.filter(([,value])=>value!==undefined&&value!==null&&value!=='').map(([key,value])=>`<p><span class="muted">${key}</span><br><strong>${escapeHtml(value)}</strong></p>`).join('')}</div>${workflow.review?.notes ? `<p>${escapeHtml(workflow.review.notes)}</p>` : ''}${workflow.approval?.notes ? `<p>${escapeHtml(workflow.approval.notes)}</p>` : ''}${plans}<div class="attachment-actions">${documents}</div>${answers}</details>`;
-  }).join('') || '<p class="muted">Belum ada riwayat.</p>'}`;
-}
-function renderTprmGovernanceMatrix() {
-  if (!$('tprmGovernanceBody')) return;
-  const show = value => escapeHtml(value || 'Belum ditugaskan');
-  $('tprmGovernanceBody').innerHTML = tprmRows.map(row => {
-    const assignment=row.workflow?.assignments || {}, reminders=row.governance?.reminders || [];
-    return `<tr><td><strong>${escapeHtml(row.thirdParty)}</strong><br>${escapeHtml(row.serviceDependency)}</td><td>${show(assignment.requester)}</td><td>${show(assignment.reviewer)}<small>Terakhir: ${show(row.workflow?.review?.by)}</small></td><td>${show(assignment.approver)}<small>Terakhir: ${show(row.workflow?.approval?.by)}</small></td><td>${escapeHtml(riskDate(row.nextReview) || 'Belum dijadwalkan')}</td><td>${reminders.map(item=>`<p><span class="status-badge">${item.severity==='Overdue'?'Lewat tenggat':'Due soon'}</span> ${escapeHtml(item.message)} · ${escapeHtml(item.dueDate)}<br>PIC: ${show(item.assignee)}${item.escalateTo?` · Eskalasi: ${show(item.escalateTo)}`:''}</p>`).join('') || '<span class="muted">Tidak ada tenggat dalam 30 hari.</span>'}</td><td><button type="button" class="attachment-action-button" data-tprm-assignments="${escapeHtml(String(row.id))}">${currentUserRole==='admin'?'Atur penugasan':'Lihat penugasan'}</button></td></tr>`;
-  }).join('') || '<tr><td colspan="7">Belum ada vendor.</td></tr>';
-  const groups=new Map();
-  for (const row of tprmRows.filter(row=>!['Offboarded','Terminated'].includes(row.relationshipStatus))) for (const dependency of row.workflow?.dependencies || []) {
-    const key=dependency.name.trim().toLowerCase();if(!groups.has(key))groups.set(key,{name:dependency.name,vendors:new Set(),critical:false});
-    const group=groups.get(key);group.vendors.add(row.thirdParty);group.critical ||= dependency.critical;
-  }
-  $('tprmConcentration').innerHTML=[...groups.values()].filter(group=>group.vendors.size>1).map(group=>`<p><span class="status-badge">${group.critical?'Needs attention':'Monitoring'}</span> <strong>${escapeHtml(group.name)}</strong> — ${group.vendors.size} vendor: ${escapeHtml([...group.vendors].join(', '))}</p>`).join('') || '<p class="muted">Belum ada provider bersama yang dicatat pada lebih dari satu vendor.</p>';
-}
-function renderTprmDependencies(items=[]) {
-  $('twDependencies').innerHTML=items.map(item=>`<article class="insight-panel" data-tw-dependency><div class="risk-register-grid">${['name','service','dataLocation','owner','exitPlan'].map(key=>`<label>${({name:'Subvendor / provider',service:'Layanan',dataLocation:'Lokasi data',owner:'PIC internal',exitPlan:'Rencana pengganti / exit'})[key]}<input data-tw-dependency-field="${key}" value="${escapeHtml(item[key] || '')}" maxlength="1000"></label>`).join('')}</div><label><input type="checkbox" data-tw-dependency-field="critical" ${item.critical?'checked':''}>Ketergantungan kritis</label><button type="button" class="button button-quiet" data-tw-remove-dependency>Hapus ketergantungan</button></article>`).join('') || '<p class="muted">Belum ada ketergantungan yang dicatat.</p>';
-}
-function readTprmDependencies() { return [...document.querySelectorAll('[data-tw-dependency]')].map(node=>Object.fromEntries([...node.querySelectorAll('[data-tw-dependency-field]')].map(input=>[input.dataset.twDependencyField,input.type==='checkbox'?input.checked:input.value]))); }
-
-function renderTprmLifecycle() {
-  const data = tprmLifecycleData, row = tprmLifecycleRow, summary = data.summary;
-  const questionnaire = questionnaireForTprm(row);
-  const profile = data.profile || {}, controls = data.criticalControls || {};
-  const stale = data.review && !data.reviewed;
-  const stage = stale && !['Closed','Offboarding'].includes(data.stage) ? 'Review required' : data.stage;
-  $('tprmWorkflowTitle').textContent = `${row.thirdParty} · ${row.serviceDependency}`;
-  $('tprmWorkflowSummary').innerHTML = `<div class="tprm-workflow-steps">${tprmLifecycleStages.map(name => `<span class="status-badge ${name === data.stage ? 'status-ok' : 'status-neutral'}">${name}</span>`).join('')}</div>
-    <div class="hero-grid tprm-workflow-metrics"><article class="insight-panel"><p class="eyebrow">WORKFLOW</p><h3>${escapeHtml(stage)}</h3><p>${escapeHtml(data.relationshipStatus)}</p></article><article class="insight-panel"><p class="eyebrow">VENDOR CRITICALITY</p><h3>${escapeHtml(summary.tier)}</h3><p>Kritikalitas layanan dan akses</p></article><article class="insight-panel"><p class="eyebrow">RESIDUAL RISK</p><h3>${escapeHtml(summary.level)}${summary.residual === null ? '' : ` · ${summary.residual}/100`}</h3><p>Inherent: ${summary.inherent === null ? 'Belum dinilai' : `${summary.inherent}/100`}</p></article></div>
-    <p class="muted">Kuesioner: ${summary.readiness.answered}/${summary.readiness.total} jawaban lengkap · ${summary.readiness.documents} dokumen. Review dan approval berlaku untuk versi assessment yang diperiksa.</p>
-    ${data.alerts.length ? `<div class="tprm-workflow-alert" role="status">${data.alerts.map(alert => `<p>${escapeHtml(alert)}</p>`).join('')}</div>` : ''}
-    ${data.approval ? `<p class="muted">Keputusan terakhir: ${escapeHtml(data.approval.decision)} · ${escapeHtml(data.approval.by)} · berlaku sampai ${escapeHtml(data.approval.expiresAt || '-')}</p>` : ''}
-    ${data.returnReason ? `<p class="muted">Catatan pengembalian: ${escapeHtml(data.returnReason)}</p>` : ''}`;
-  const scoringOptions = [['','Pilih'],[1,'1 · Rendah'],[2,'2 · Sedang'],[3,'3 · Tinggi']];
-  const reviewer = ['admin','approver','editor'].includes(currentUserRole) && data.assignments?.reviewer===tprmLifecycleActor;
-  const requester = data.assignments?.requester===tprmLifecycleActor;
-  const approver = ['admin','approver'].includes(currentUserRole) && data.assignments?.approver===tprmLifecycleActor;
-  const closed = ['Offboarded','Terminated'].includes(data.relationshipStatus);
-  let html = '';
-  if (tprmLifecycleTab === 'assignments') {
-    const assignment=data.assignments || {}, users=data.options?.users || [];
-    html=`<fieldset class="questionnaire-section"><legend>Penugasan reviewer dan approver</legend><p class="muted">Pengusul, reviewer, dan approver harus tiga akun berbeda. Hanya admin dapat mengubah penugasan; perubahan membatalkan review dan approval lama.</p><div class="risk-register-grid">${['requester','reviewer','approver'].map(key=>tprmSelect('twAssign'+key,({requester:'Pengusul',reviewer:'Reviewer',approver:'Approver'})[key],[['','Pilih akun'],...users.filter(user=>user[key]).map(user=>[user.username,escapeHtml(user.name+' ('+user.username+') ? '+user.role)])],assignment[key])).join('')}</div><p>Pengusul terakhir: ${escapeHtml(data.submission?.by || '-')} ? Reviewer terakhir: ${escapeHtml(data.review?.by || '-')} ? Approver terakhir: ${escapeHtml(data.approval?.by || '-')}</p></fieldset>`;
-  } else if (tprmLifecycleTab === 'assessment') {
-    html = `<fieldset class="questionnaire-section"><legend>Profil dan kritikalitas vendor</legend><p class="muted">Nilai tertinggi menentukan tier. Skor due diligence dan CIA tetap terpisah dari kritikalitas.</p><div class="risk-register-grid">${tprmInput('twOwner','Pemilik hubungan / PIC internal',profile.owner)}${tprmSelect('twSensitivity','Sensitivitas data',scoringOptions,profile.dataSensitivity)}${tprmSelect('twAccess','Akses ke sistem',scoringOptions,profile.systemAccess)}${tprmSelect('twImpact','Dampak gangguan bisnis',scoringOptions,profile.businessImpact)}${tprmSelect('twReplacement','Kesulitan mengganti vendor',scoringOptions,profile.replaceability)}</div>${tprmText('twScope','Lingkup layanan, data, dan akses',profile.scope)}${tprmText('twNoRisks','Alasan hasil identifikasi tanpa gap (hanya jika tidak ada risiko terkait)',data.noRisksReason)}</fieldset>
-      <article class="insight-panel"><h4>Kelengkapan assessment</h4><p class="muted">Jawab setiap pertanyaan dan isi keterangan. Untuk N/A, jelaskan alasannya. Lengkapi skor due diligence, dokumen pendukung, CIA, dan residual rating pada risiko terkait.</p><div class="csf-actions"><button type="button" class="button button-quiet" data-tw-questionnaire>Isi kuesioner & unggah bukti</button><button type="button" class="button button-quiet" data-tw-cia>Isi CIA assessment</button><button type="button" class="button button-quiet" data-tw-risks>Kelola risiko terkait</button></div></article>`;
-    html += `<fieldset class="questionnaire-section"><legend>Subvendor dan ketergantungan layanan</legend><div id="twDependencies"></div><button type="button" class="button button-quiet" data-tw-add-dependency>Tambah ketergantungan</button>${tprmText('twNoDependencies','Alasan tidak ada ketergantungan (bila daftar kosong)',data.noDependenciesReason)}</fieldset>`;
-  } else if (tprmLifecycleTab === 'review') {
-    html = `<fieldset class="questionnaire-section"><legend>Validasi reviewer</legend><p class="muted">Identitas reviewer dicatat dari akun yang sedang login. Kontrol Fail menghalangi approval sampai perbaikan diverifikasi.</p><div class="risk-register-grid">${tprmInput('twEvidenceUntil','Masa berlaku / review ulang bukti',data.evidenceValidUntil,'date')}</div>${tprmChecks('tw',{evidenceVerified:'Jawaban dan semua dokumen bukti sudah diperiksa'}, {evidenceVerified:data.reviewed})}${tprmText('twReviewNotes','Catatan verifikasi atau alasan pengembalian',data.review?.notes)}${Object.entries(tprmCriticalLabels).map(([key,label]) => `<div class="risk-register-grid">${tprmSelect(`twCritical${key}`,label,[['','Pilih'],['Pass','Pass'],['Fail','Fail'],['N/A','N/A']],controls[key]?.status)}${tprmText(`twCriticalNotes${key}`,'Bukti kontrol / alasan N/A',controls[key]?.notes)}</div>`).join('')}</fieldset>`;
-  } else if (tprmLifecycleTab === 'approval') {
-    html = `<fieldset class="questionnaire-section"><legend>Keputusan approval</legend><p class="muted">Admin atau approver wajib berbeda dari reviewer. Risiko tinggi memerlukan alasan penerimaan risiko dan masa berlaku.</p><div class="risk-register-grid">${tprmSelect('twDecision','Keputusan',[['Approved','Approved'],['Approved with Conditions','Approved with Conditions'],['Rejected','Rejected']],data.approval?.decision)}${tprmInput('twApprovalUntil','Masa berlaku approval',data.approval?.expiresAt,'date')}</div>${tprmText('twApprovalNotes','Alasan keputusan',data.approval?.notes)}${tprmSelect('twRiskAcceptanceId','Risk Acceptance untuk residual risk tinggi',[['','Pilih Risk Acceptance yang disetujui'],...(data.options?.acceptances || []).map(item=>[item.id,escapeHtml('RAF-'+item.id+' ? '+item.title+' (sampai '+item.expiresAt+')')])],data.approval?.acceptance?.id)}${tprmText('twRiskAcceptance','Alasan penerimaan dan kesesuaian cakupan Risk Acceptance dengan vendor / risiko terkait',data.approval?.riskAcceptance)}${tprmText('twAccessLimits','Batas akses selama approval bersyarat',data.approval?.accessLimits)}</fieldset>`;
-  } else if (tprmLifecycleTab === 'monitoring') {
-    html = `<fieldset class="questionnaire-section"><legend>Kontrak dan aktivasi</legend>${tprmChecks('twContract',tprmContractLabels,data.contract)}<div class="risk-register-grid">${tprmInput('twContractReference','Nomor / referensi dokumen kontrak',data.contractReference)}${tprmSelect('twContractEvidence','Dokumen kontrak ditandatangani',[['','Pilih bukti kontrak'],...(questionnaire?.responses?.vendorDocuments || []).map(file=>[file.path,escapeHtml(file.name || file.path)])],data.contractDetails?.evidencePath)}${tprmInput('twContractSigned','Tanggal tanda tangan',data.contractDetails?.signedDate,'date')}${tprmInput('twContractExpiry','Kontrak berlaku sampai',data.contractDetails?.expiresAt,'date')}${tprmInput('twContractSla','Target SLA yang disepakati',data.contractDetails?.sla)}${tprmInput('twIncidentHours','Tenggat notifikasi insiden (jam)',data.contractDetails?.notificationHours,'number')}${tprmInput('twRto','Target RTO (jam)',data.contractDetails?.rtoHours,'number')}${tprmInput('twRpo','Target RPO (jam)',data.contractDetails?.rpoHours,'number')}${tprmInput('twContinuityNA','Alasan RTO/RPO tidak berlaku (khusus vendor nonkritis)',data.contractDetails?.continuityNA)}${tprmInput('twNextReview','Review berikutnya (kosongkan untuk jadwal otomatis)',riskDate(data.nextReview),'date')}</div><p class="muted">Interval maksimum: ${data.governance?.policy?.days || '-'} hari menurut kritikalitas/residual risk. Jadwal dibatasi masa berlaku kontrak, approval, dan bukti. Semua mitigasi sebelum aktivasi wajib selesai.</p></fieldset>${tprmSelect('twReviewTrigger','Pemicu review ulang',[['scheduled','Review berkala'],['incident','Insiden keamanan'],['materialChange','Perubahan layanan / akses / data'],['financialDistress','Penurunan kondisi keuangan'],['subvendorChange','Perubahan subvendor']],data.reviewTrigger?.type)}${tprmText('twMonitoringNotes','Catatan monitoring / alasan review ulang atau perubahan layanan',data.lastMonitoring?.notes)}`;
-  } else if (tprmLifecycleTab === 'offboarding') {
-    html = `<fieldset class="questionnaire-section"><legend>Penutupan hubungan vendor</legend>${tprmText('twExitNotes','Alasan penutupan dan catatan verifikasi',data.exit?.notes || data.exitReason)}${tprmChecks('twExit',tprmExitLabels,data.exit?.checklist)}<div class="risk-register-grid">${tprmSelect('twExitStatus','Status akhir',[['Offboarded','Offboarded'],['Terminated','Terminated']],data.relationshipStatus)}${tprmSelect('twExitEvidence','Dokumen bukti penutupan',[['','Pilih dokumen vendor'],...(questionnaire?.responses?.vendorDocuments || []).map(file => [file.path,escapeHtml(file.name || file.path)])],data.exit?.evidencePath)}</div><p class="muted">Unggah bukti penutupan melalui dokumen vendor di kuesioner, lalu pilih dokumennya di sini.</p></fieldset>`;
-  } else html = tprmHistory(data.history,'Riwayat workflow dan snapshot assessment') + tprmHistory(data.questionnaireHistory,'Riwayat kuesioner');
-  const withConditions = ['assessment','review','monitoring'].includes(tprmLifecycleTab);
-  if (withConditions) html += '<fieldset class="questionnaire-section"><legend>Rencana mitigasi dan syarat</legend><div id="twConditions"></div><button class="button button-quiet" type="button" data-tw-add-condition>Add mitigation</button></fieldset>';
-  const actions = [];
-  if (!closed) {
-    if (tprmLifecycleTab==='assignments' && currentUserRole==='admin') actions.push(['assign','Simpan penugasan']);
-    if (tprmLifecycleTab === 'assessment' && (requester || !data.assignments) && ['Draft','Incomplete','Changes requested','Mitigation','Review required','Active','Approved','Rejected'].includes(stage)) actions.push(['save','Save profile & mitigation']);
-    if (tprmLifecycleTab === 'assessment' && requester && ['Draft','Incomplete','Changes requested','Mitigation','Review required','Rejected'].includes(stage)) actions.push(['submit','Submit for review']);
-    if (tprmLifecycleTab === 'review' && reviewer && ['Under review','Mitigation'].includes(stage)) actions.push(['review','Validate assessment']);
-    if (tprmLifecycleTab === 'review' && reviewer && ['Under review','Validated','Mitigation'].includes(stage)) actions.push(['return','Return for changes']);
-    if (tprmLifecycleTab === 'approval' && approver && ['Validated','Mitigation'].includes(stage)) actions.push(['approve','Save decision']);
-    if (tprmLifecycleTab === 'monitoring' && requester && stage === 'Approved') actions.push(['activate','Verify contract & activate']);
-    if (tprmLifecycleTab === 'monitoring' && reviewer && data.relationshipStatus === 'Active') actions.push(['monitor','Save monitoring']);
-    if (tprmLifecycleTab === 'monitoring' && (data.relationshipStatus === 'Active' || ['Approved','Rejected','Validated','Mitigation'].includes(data.stage))) actions.push(['reassess','Start reassessment']);
-    if (tprmLifecycleTab === 'offboarding' && (requester || approver) && ['Active','Expired','Pending'].includes(data.relationshipStatus)) actions.push(['startOffboarding','Start offboarding']);
-    if (tprmLifecycleTab === 'offboarding' && data.stage === 'Offboarding' && reviewer) actions.push(['close','Verify & close relationship']);
-  }
-  $('tprmWorkflowFields').innerHTML = html + tprmWorkflowActions(actions);
-  if (tprmLifecycleTab==='assessment') renderTprmDependencies(data.dependencies || []);
-  if (tprmLifecycleTab==='assignments' && currentUserRole!=='admin') $('tprmWorkflowFields').querySelectorAll('select').forEach(input=>{input.disabled=true;});
-  if (withConditions) renderTprmConditions(data.conditions || []);
-  document.querySelectorAll('[data-tw-tab]').forEach(button => { const selected = button.dataset.twTab === tprmLifecycleTab; button.classList.toggle('button-accent',selected); button.classList.toggle('button-quiet',!selected); button.setAttribute('aria-selected',String(selected)); });
-  if (closed || !canPerform('tprm-register','update')) $('tprmWorkflowFields').querySelectorAll('input,textarea,select,[data-tw-add-condition],[data-tw-remove-condition]').forEach(input => { input.disabled = true; });
-}
+/** Muat snapshot workflow terbaru dan identitas aktor sebelum memilih tab awal. */
 async function openTprmLifecycle(row, requestedTab) {
   tprmLifecycleActor=(await workspaceUserReady)?.username || '';
   tprmLifecycleRow = row;
@@ -127,18 +20,11 @@ async function openTprmLifecycle(row, requestedTab) {
   if(requestedTab)tprmLifecycleTab=requestedTab;
   $('tprmWorkflowStatus').textContent = 'Ready'; renderTprmLifecycle(); $('tprmWorkflowModal').showModal();
 }
+/** Bentuk payload per aksi, kirim ke server, lalu muat ulang register setelah sukses. */
 async function saveTprmLifecycle(event) {
   event.preventDefault(); const action = event.submitter?.value;
   if (!action || !tprmLifecycleRow) return;
-  const val = id => $(id)?.value || '', checked = id => $(id)?.checked === true;
-  const data = { action, conditions: $('twConditions') ? readTprmConditions() : tprmLifecycleData.conditions || [] };
-  if (action==='assign') data.assignments=Object.fromEntries(['requester','reviewer','approver'].map(key=>[key,val('twAssign'+key)]));
-  if (action === 'save') Object.assign(data,{profile:{owner:val('twOwner'),dataSensitivity:val('twSensitivity'),systemAccess:val('twAccess'),businessImpact:val('twImpact'),replaceability:val('twReplacement'),scope:val('twScope')},noRisksReason:val('twNoRisks'),dependencies:readTprmDependencies(),noDependenciesReason:val('twNoDependencies')});
-  if (['review','return'].includes(action)) Object.assign(data,{notes:val('twReviewNotes'),evidenceVerified:checked('twevidenceVerified'),evidenceValidUntil:val('twEvidenceUntil'),criticalControls:Object.fromEntries(Object.keys(tprmCriticalLabels).map(key => [key,{status:val(`twCritical${key}`),notes:val(`twCriticalNotes${key}`)}]))});
-  if (action === 'approve') Object.assign(data,{decision:val('twDecision'),notes:val('twApprovalNotes'),expiresAt:val('twApprovalUntil'),riskAcceptance:val('twRiskAcceptance'),riskAcceptanceId:val('twRiskAcceptanceId'),accessLimits:val('twAccessLimits')});
-  if (action === 'activate') Object.assign(data,{contract:Object.fromEntries(Object.keys(tprmContractLabels).map(key => [key,checked(`twContract${key}`)])),contractReference:val('twContractReference'),contractDetails:{evidencePath:val('twContractEvidence'),signedDate:val('twContractSigned'),expiresAt:val('twContractExpiry'),sla:val('twContractSla'),notificationHours:val('twIncidentHours'),rtoHours:val('twRto'),rpoHours:val('twRpo'),continuityNA:val('twContinuityNA')},nextReview:val('twNextReview')});
-  if (['monitor','reassess'].includes(action)) {data.notes = val('twMonitoringNotes');data.trigger=val('twReviewTrigger');}
-  if (['startOffboarding','close'].includes(action)) Object.assign(data,{notes:val('twExitNotes'),exitChecklist:Object.fromEntries(Object.keys(tprmExitLabels).map(key => [key,checked(`twExit${key}`)])),exitEvidencePath:val('twExitEvidence'),relationshipStatus:val('twExitStatus')});
+  const data = readTprmWorkflowPayload(action);
   $('tprmWorkflowStatus').textContent = 'Saving...';
   try {
     const response = await fetch(`/api/tprm/${tprmLifecycleRow.id}/workflow`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -154,7 +40,7 @@ $('tprmWorkflowClose').addEventListener('click',() => $('tprmWorkflowModal').clo
 $('tprmWorkflowModal').addEventListener('click',event => {
   if(event.target.closest('[data-tw-add-dependency]'))renderTprmDependencies([...readTprmDependencies(),{}]);
   if(event.target.closest('[data-tw-remove-dependency]'))event.target.closest('[data-tw-dependency]').remove();
-  const tab = event.target.closest('[data-tw-tab]'); if (tab) {tprmLifecycleTab = tab.dataset.twTab;renderTprmLifecycle();}
+  const tab = event.target.closest('[data-tw-tab],[data-tw-navigate]'); if (tab) {tprmLifecycleTab = tab.dataset.twTab || tab.dataset.twNavigate;renderTprmLifecycle();}
   if (event.target.closest('[data-tw-add-condition]')) renderTprmConditions([...readTprmConditions(),{}]);
   const remove = event.target.closest('[data-tw-remove-condition]'); if (remove) {const node = remove.closest('[data-tw-condition]');node.remove();}
   if (event.target.closest('[data-tw-questionnaire]')) { const row = questionnaireForTprm(tprmLifecycleRow);if(row){$('tprmWorkflowModal').close();startQuestionnaire(row);} }

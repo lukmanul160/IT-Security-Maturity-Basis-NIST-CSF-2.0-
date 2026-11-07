@@ -1,3 +1,5 @@
+const {readSourceGroup}=require('../scripts/lib/runtime-manifest.cjs');
+const workflowSource=readSourceGroup('risk-workflow');
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function fixture(){
  const nodes=new Map();
@@ -12,7 +14,7 @@ function fixture(){
  }
  const $=id=>{if(!nodes.has(id))nodes.set(id,node(id));return nodes.get(id);};
  const context=vm.createContext({$,canPerform:()=>true,riskManagementRows:[],riskRegisterColumns:[],escapeHtml:value=>String(value).replaceAll('<','&lt;').replaceAll('>','&gt;'),document:{querySelectorAll:selector=>selector==='.rw-needs-input'?[...nodes.values()].filter(input=>input.classList.contains('rw-needs-input')):[],createElement:()=>node()}});
-vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/risk-management/workflow.js','utf8'),context);return {context,nodes};}
+vm.runInContext(workflowSource,context);return {context,nodes};}
 test('guidance distinguishes initial assessment, treatment, acceptance and verification requirements',()=>{
  const {context}=fixture();
  const draft=vm.runInContext("rwGuidance({stage:'Draft'},{})",context);assert.ok(draft.missing.includes('Risk owner (Data risiko)'));assert.ok(draft.missing.includes('Threat (Penilaian)'));

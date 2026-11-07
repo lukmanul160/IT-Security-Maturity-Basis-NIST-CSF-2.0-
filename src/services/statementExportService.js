@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: statementExportService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 ﻿const XLSX=require('xlsx'),archiver=require('archiver'),{Readable}=require('node:stream'),{pool}=require('../config/database');
 const employees=require('./statementEmployeeService');
 function filter(query){const year=employees.year(query.year),basis=query.basis||'input';if(!['input','assignment'].includes(basis))throw Object.assign(Error('Dasar tahun ekspor tidak valid.'),{status:400});return {year,basis,expression:basis==='assignment'?"COALESCE(s.assignment_year,extract(year FROM s.created_at AT TIME ZONE 'Asia/Bangkok')::int)":"extract(year FROM s.created_at AT TIME ZONE 'Asia/Bangkok')::int"};}

@@ -1,3 +1,9 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
+/** Terapkan format pada rentang teks editor; hasil tetap berupa sumber Markdown yang dapat disimpan. */
 export function formatSelection(content, start, end, kind) {
   const selected = content.slice(start,end);
   const wrappers = {bold:['**','**'],italic:['*','*'],strike:['~~','~~'],code:['`','`'],link:['[','](https://example.com)'],wiki:['[[',']]'],codeblock:['```\n','\n```']};

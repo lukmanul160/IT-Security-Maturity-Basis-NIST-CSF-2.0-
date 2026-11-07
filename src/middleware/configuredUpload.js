@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: configuredUpload.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const multer = require('multer');
 const settings = require('../services/websiteSettingsService');
 

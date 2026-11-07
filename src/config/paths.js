@@ -1,3 +1,8 @@
+/**
+ * Konfigurasi aplikasi: paths.
+ * Pisahkan konfigurasi instalasi dari data bisnis. Jangan log kredensial atau menjadikan .env sebagai fixture pengujian.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const path = require('path');
 
 const projectRoot = path.resolve(__dirname, '..', '..');

@@ -1,3 +1,8 @@
+/**
+ * Kontrol CSF, skor, gap dan konteks tahun assessment.
+ * Pisahkan nilai kosong dari nol; filter tahun berlaku pada request dan ID kontrol tetap menjadi kontrak evidence.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function showAssessment(id) {
   if (currentUserRole !== 'admin' && !currentUserPermissions.includes('assessment')) return; activeFunction = id; const fn = functions.find(item => item.id === id); document.querySelectorAll('.view').forEach(view => view.classList.remove('active-view')); $('assessmentView').classList.add('active-view'); $('assessmentTitle').textContent = fn.name; $('assessmentDescription').textContent = fn.description; $('assessmentKicker').textContent = `${fn.id} / NIST CSF CORE`; renderControls(); saveUiState('assessment', id); document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.function === id));
 }

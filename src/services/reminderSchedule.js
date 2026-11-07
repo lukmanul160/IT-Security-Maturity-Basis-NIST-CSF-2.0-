@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: reminderSchedule.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const defaults = { daysBefore: 7, repeatDaily: false, startUnit: 'days', repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366 };
 function localDate(date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;

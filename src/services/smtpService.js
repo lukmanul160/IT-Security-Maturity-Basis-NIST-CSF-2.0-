@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: smtpService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const crypto = require('node:crypto');
 const fs = require('node:fs/promises');
 const path = require('node:path');

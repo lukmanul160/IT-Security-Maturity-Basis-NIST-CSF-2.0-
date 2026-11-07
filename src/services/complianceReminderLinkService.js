@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: complianceReminderLinkService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const settingsService = require('./complianceReminderSettingsService');
 const smtp = require('./smtpService');
 function describe(data, settings, accounts, registered = new Map(), now = new Date()) {

@@ -1,3 +1,8 @@
+/**
+ * Adapter HTTP: riskManagementController.
+ * Baca req, delegasikan kasus penggunaan ke service, lalu bentuk response/error. Aturan domain dan transaksi tetap di service.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const service = require('../services/riskManagementService');
 const wrap = handler => (req, res, next) => Promise.resolve(handler(req, res)).catch(next);
 module.exports = {

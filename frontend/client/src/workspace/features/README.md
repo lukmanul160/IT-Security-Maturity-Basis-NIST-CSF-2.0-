@@ -1,6 +1,6 @@
 # Workspace feature sources
 
-`../runtime.js` is the ordered entry point. `../../main.js` imports its assembled source and the existing classic-script bootstrap executes it once after Vue mounts the workspace markup.
+`../runtime-parts.json` is the single ordered source manifest; `../runtime.js` loads it through `../runtime-source.js`. `../../main.js` imports its assembled source and the existing classic-script bootstrap executes it once after Vue mounts the workspace markup.
 
 Edit the feature source here, not generated assets:
 
@@ -14,6 +14,9 @@ Edit the feature source here, not generated assets:
 - `shared/`: shared state, startup, import/export and remaining cross-feature event bindings.
 
 ## Compatibility contract
+
+Peta proyek: `docs/CODE_STRUCTURE.md`; contoh pemisahan logika/tampilan: `tprm/README.md`.
+
 
 These files are classic-script source fragments imported with Vite `?raw`, not independent ES modules. They are joined without separators in the original order, preserving shared lexical state, function hoisting, duplicate declaration precedence and event registration order. Do not add imports/exports to these fragments or execute them separately. The initial extraction was verified byte-for-byte against the previous runtime.
 
@@ -39,3 +42,5 @@ hidden recipient pickers, and framework navigation. With Monitoring Dashboard as
 the initial view, only website identity, authentication, dashboard summary, and
 office presence are requested by the workspace. This reduces data requests;
 the legacy runtime is still assembled as one script bundle.
+
+Add classic source fragments to `runtime-parts.json` once. Source fixtures read named groups using `scripts/lib/runtime-manifest.cjs`; keep listeners in controller fragments and preserve registration order. Risk workflow and assessment gaps separate model/view/controller while retaining shared lexical state.

@@ -1,3 +1,8 @@
+/**
+ * Middleware Express: audit.
+ * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const crypto = require('crypto');
 const auditService = require('../services/auditService');
 const { getSession, parseCookies, sessionCookie } = require('../config/auth');

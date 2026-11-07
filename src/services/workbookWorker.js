@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: workbookWorker.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const {parentPort,workerData}=require('node:worker_threads');
 const modules={maturity:'./maturityWorkbookService',ikas:'./ikasWorkbookService'};
 try {

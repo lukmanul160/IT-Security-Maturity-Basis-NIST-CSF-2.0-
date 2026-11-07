@@ -1,3 +1,8 @@
+/**
+ * Kontrol CSF, skor, gap dan konteks tahun assessment.
+ * Pisahkan nilai kosong dari nol; filter tahun berlaku pada request dan ID kontrol tetap menjadi kontrak evidence.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 function resetFrameworkControlModal(framework) { const prefix = framework === 'privacy' ? 'privacyControlModal' : 'csfControlModal'; $(`${prefix}Form`).reset(); $(`${prefix}OriginalId`).value = ''; $(`${prefix}Id`).disabled = false; $(`${prefix}Mode`).textContent = 'NEW CONTROL'; $(`${prefix}Title`).textContent = framework === 'privacy' ? 'Create Privacy control' : 'Create CSF control'; $(`${prefix}Submit`).textContent = 'Create control'; $(`${prefix}Status`).textContent = 'Ready'; }
 function openFrameworkControlModal(framework, id = '') { const prefix = framework === 'privacy' ? 'privacyControlModal' : 'csfControlModal'; const rows = framework === 'privacy' ? privacyRows : csfRows; resetFrameworkControlModal(framework); const source = id ? rows.find(row => row.id === id) : null; if (source) { $(`${prefix}OriginalId`).value = source.id; $(`${prefix}Id`).value = source.id; $(`${prefix}Id`).disabled = true; $(`${prefix}Function`).value = source.function || ''; $(`${prefix}Category`).value = source.category || ''; $(`${prefix}Subcategory`).value = source.subcategory || ''; $(`${prefix}Implementation`).value = source.implementation || ''; $(`${prefix}References`).value = source.references || ''; $(`${prefix}Mode`).textContent = 'EDIT CONTROL'; $(`${prefix}Title`).textContent = `Update ${source.id}`; $(`${prefix}Submit`).textContent = 'Update control'; } $(`${prefix}`).showModal(); }
 function openCsfControlModal(id = '') { openFrameworkControlModal('csf', id); }

@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: ikasTemplateZip.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const zlib=require('node:zlib');
 const crc32=require('crc-32');
 function entries(buffer){

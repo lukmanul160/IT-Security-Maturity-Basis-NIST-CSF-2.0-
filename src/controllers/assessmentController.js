@@ -1,3 +1,8 @@
+/**
+ * Adapter HTTP: assessmentController.
+ * Baca req, delegasikan kasus penggunaan ke service, lalu bentuk response/error. Aturan domain dan transaksi tetap di service.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { getAssessment, saveAssessment } = require('../services/assessmentService');
 const { resetFilesForAssessment } = require('../services/fileService');
 const evidenceAccess = require('../services/evidenceAccessService');

@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: statementFields.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { calendarDate }=require('./complianceService');
 const fail=message=>Object.assign(new Error(message),{status:400});
 const reserved=new Set(['signature','consent','revision','tanda_tangan','__proto__','constructor','prototype','id','title','name','elements','length','reset','requestsubmit','submit','action','method','target','enctype','encoding','acceptcharset','autocomplete','checkvalidity','reportvalidity']);

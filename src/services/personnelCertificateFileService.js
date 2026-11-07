@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: personnelCertificateFileService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const crypto = require('node:crypto');
 const path = require('node:path');
 const { pool } = require('../config/database');

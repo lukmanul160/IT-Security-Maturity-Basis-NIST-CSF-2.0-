@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: threatModelService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const { pool } = require('../config/database');
 const stencils = require('../shared/threatStencils.json');
 const invalid = message => Object.assign(new Error(message), { status: 400 });

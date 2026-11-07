@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // UI controls mirror server action permissions; ownership remains a separate check.
 const actionControlRules = [
   ['ikas-assessment','delete','[data-ikas-reset]'],['ikas-assessment','update','[data-ikas-index],[data-ikas-note],[data-ikas-target],[data-ikas-upload],[data-ikas-select-file],[data-ikas-detach],[data-ikas-replace],#ikasRespondentForm input,#ikasRespondentForm select,#ikasRespondentForm button,[data-ikas-import-excel]'],
@@ -38,6 +43,7 @@ const actionForms = {
   riskRegisterForm:['risk-management','riskRegisterOriginalId'],riskAcceptanceForm:['risk-acceptance','riskAcceptanceId'],policyRegisterForm:['policy-register','policyRegisterId'],
   tprmForm:['tprm-register','tprmId'],questionnaireForm:['tprm-questionnaire','questionnaireId'],templateForm:['questionnaire-templates','templateId'],certificationForm:['personnel-certification','certificationId']
 };
+/** Sesuaikan kontrol UI dengan permission akun; pembatasan visual tidak menggantikan otorisasi API. */
 function applyActionControls() {
   if(!Object.keys(currentUserActions).length)return;
   const controls = new Map();

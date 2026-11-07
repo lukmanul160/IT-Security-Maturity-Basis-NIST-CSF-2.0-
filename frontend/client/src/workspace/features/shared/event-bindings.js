@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 document.addEventListener('click', event => { const edit = event.target.closest('[data-uploaded-file-edit]'); if (edit) editUploadedFile(edit.dataset.uploadedFileEdit); });
 $('uploadedFileEditForm').addEventListener('submit', guardFormSubmission(replaceUploadedFile));
 $('uploadedPdfOpenPageSave').addEventListener('click', saveUploadedPdfOpenPage);

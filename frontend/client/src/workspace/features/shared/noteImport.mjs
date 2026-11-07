@@ -1,3 +1,8 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 // Directory imports read notes only; configuration files and assets are ignored.
 export async function collectDirectoryFiles(directory, parent = '', { onUnreadable, onFolder = () => {} } = {}) {
   const prefix = [parent,directory.name].filter(Boolean).join('/');

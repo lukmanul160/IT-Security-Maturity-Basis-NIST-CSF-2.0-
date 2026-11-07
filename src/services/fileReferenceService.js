@@ -1,3 +1,8 @@
+/**
+ * Layanan aplikasi/domain: fileReferenceService.
+ * Periksa dependency dan pemakai sebelum mengubah alur. Validasi, persistensi serta integrasi mengikuti kontrak fungsi pada file ini.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 // Remove only links to the selected file; keep records, scores and other files.
 async function detach(client, normalized) {
   await require('./assessmentPeriodService').detachFile(client,normalized);

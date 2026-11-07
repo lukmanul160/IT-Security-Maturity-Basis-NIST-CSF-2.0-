@@ -1,9 +1,15 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 export function wikiAtCursor(before, after='') {
  const match=before.match(/\[\[([^\[\]\n|#]*)$/);
  if(match)return {query:match[1],length:match[0].length,closing:after.startsWith(']]')?2:0};
  if(before.endsWith('[[]]'))return {query:'',length:4,closing:0};
  return null;
 }
+/** Turunkan kandidat wiki-link dari query/konteks catatan; pemilihan link tetap dilakukan pengguna. */
 export function wikiSuggestions(notes,query){
  const terms=query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
  return notes.map(note=>({...note,path:(note.folder?note.folder+'/':'')+note.title+'.md',target:(note.folder?note.folder+'/':'')+note.title}))

@@ -98,3 +98,7 @@ HTML/form dan runtime workflow aktual, dengan transport API fixture. Skenario:
 klik tanpa alasan, submit berhasil dengan progress status dan payload submit,
 perubahan belum disimpan, serta API menolak pengajuan. Tidak membaca .env atau
 mengakses PostgreSQL; belum merupakan uji pengajuan terhadap database nyata.
+
+## Pemeliharaan sumber
+
+Risk workflow kini dipisah menjadi `workflow-model.js` (aturan/panduan), `workflow-view.js` (draft dan UI), serta `workflow.js` (state/API/event). Grup manifest `risk-workflow` digunakan aplikasi dan fixture. Transisi, payload, permission, dan urutan listener dipertahankan.

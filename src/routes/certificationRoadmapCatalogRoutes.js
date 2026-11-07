@@ -1,3 +1,8 @@
+/**
+ * Routing dan akses API: certificationRoadmapCatalogRoutes.
+ * Router menghubungkan URL, middleware dan controller/service. Pertahankan urutan middleware autentikasi, permission dan upload.
+ * Peta fungsi dan dependency: docs/source-catalog.json.
+ */
 const express = require('express');
 const controller = require('../controllers/certificationRoadmapCatalogController');
 const { requirePermission } = require('../middleware/permission');

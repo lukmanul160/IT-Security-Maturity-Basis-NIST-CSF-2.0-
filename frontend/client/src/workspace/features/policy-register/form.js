@@ -1,3 +1,8 @@
+/**
+ * Register kebijakan, editor dokumen, relasi catatan, kalender dan reminder.
+ * Review date dihitung dari siklus tersimpan. Editor, lampiran, catatan terkait dan SMTP memiliki jalur penyimpanan berbeda.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 let policyKnowledgeNotes = [];
 let policyRelatedSelection = new Set();
 let policyKnowledgeRequest = 0;
@@ -78,6 +83,7 @@ function renderPolicyRelatedNotes() {
   }
   if (!container.childNodes.length) container.textContent = query ? 'Tidak ada catatan yang cocok.' : 'Tidak ada catatan tersedia.';
 }
+/** Muat kandidat catatan untuk relasi kebijakan; tautan catatan tidak menyalin isi catatan ke dokumen kebijakan. */
 async function loadPolicyKnowledgeNotes() {
   const request = ++policyKnowledgeRequest;
   try {

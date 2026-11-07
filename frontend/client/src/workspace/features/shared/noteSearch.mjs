@@ -1,7 +1,13 @@
+/**
+ * State, akses, startup, navigasi dan utilitas lintas fitur.
+ * Classic-script berbagi lexical scope; .mjs adalah ES module mandiri. Load data hanya ketika modul dibuka.
+ * Peta fungsi/dependency: docs/source-catalog.json; panduan lokal: README.md.
+ */
 import { links } from './noteLinks.mjs';
 
 const aliases = { title:'title',judul:'title',file:'file',filename:'file',content:'content',isi:'content',folder:'folder',path:'file',tag:'tag',link:'link',tautan:'link' };
 export const searchScopes = [['all','Semua'],['file','Nama file / jalur'],['title','Judul'],['content','Isi catatan'],['folder','Folder'],['tag','Tag'],['link','Tautan']];
+/** Ubah sintaks pencarian catatan menjadi kriteria; token pencarian bukan kode yang boleh dieksekusi. */
 export function parseQuery(query) {
   return [...query.matchAll(/(-?)(?:(title|judul|file|filename|content|isi|folder|path|tag|link|tautan):)?("[^"]*"|[^\s"]+)/gi)]
     .map(match=>({exclude:match[1]==='-',field:aliases[match[2]?.toLowerCase()]||'all',value:match[3].replace(/^"|"$/g,'').toLowerCase()})).filter(term=>term.value);
