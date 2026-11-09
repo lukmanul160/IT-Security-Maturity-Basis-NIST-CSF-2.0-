@@ -11854,7 +11854,7 @@
       "functions": [
         {
           "name": "normalize",
-          "line": 4014,
+          "line": 4300,
           "async": false,
           "parameters": [
             "value"
@@ -11863,7 +11863,7 @@
         },
         {
           "name": "translate",
-          "line": 4017,
+          "line": 4303,
           "async": false,
           "parameters": [
             "value"
@@ -11872,7 +11872,7 @@
         },
         {
           "name": "dateText",
-          "line": 4147,
+          "line": 4433,
           "async": false,
           "parameters": [
             "value",
@@ -11882,7 +11882,7 @@
         },
         {
           "name": "dateHtml",
-          "line": 4153,
+          "line": 4439,
           "async": false,
           "parameters": [
             "value",
@@ -11892,7 +11892,7 @@
         },
         {
           "name": "apply",
-          "line": 4162,
+          "line": 4448,
           "async": false,
           "parameters": [
             "root"
@@ -11901,14 +11901,14 @@
         },
         {
           "name": "refresh",
-          "line": 4193,
+          "line": 4479,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "setLanguage",
-          "line": 4202,
+          "line": 4488,
           "async": false,
           "parameters": [
             "value"
@@ -11917,14 +11917,14 @@
         },
         {
           "name": "mount",
-          "line": 4209,
+          "line": 4495,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "start",
-          "line": 4227,
+          "line": 4513,
           "async": false,
           "parameters": [],
           "description": ""

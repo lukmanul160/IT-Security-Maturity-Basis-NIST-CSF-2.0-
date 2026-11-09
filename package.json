@@ -71,6 +71,7 @@
     "test:canvas-editors-browser": "node scripts/test-canvas-editors-browser.js",
     "test:compliance-office-browser": "node scripts/test-compliance-office-browser.js",
     "test:theme-browser": "node scripts/test-theme-browser.js",
+    "test:shared-controls-browser": "node --require ./scripts/security-test-isolation.cjs scripts/test-shared-controls-browser.cjs",
     "test:uploads": "node --test test/uploadProgress.test.js",
     "test:tprm": "node --test test/tprmWorkflowForm.test.js test/tprmNextSteps.test.js test/tprmGuide.test.js test/tprmGovernance.test.js test/tprmWorkflow.test.js test/tprmDashboard.test.js test/questionnaireTemplateService.test.js test/tprmQuestionnaireWorkbook.test.js",
     "test:tprm-integration": "node --test test/tprmGovernanceIntegration.test.js",

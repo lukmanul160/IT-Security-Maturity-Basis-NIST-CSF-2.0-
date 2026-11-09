@@ -341,7 +341,7 @@ html[data-theme=dark] body.workspace-ui #tprmAssessmentTypeModal .cia-type-optio
 /* Keep secondary controls and lifecycle cards soft in both themes. */
 html[data-theme=light] body.workspace-ui .rm-cia-assessment{background:#ffffff!important;border-color:#e2e8f0!important}
 html[data-theme=light] body.workspace-ui .button.button-quiet:not(.danger){background:#ffffff!important;color:#243447!important;border-color:#bdcad9!important}
-html[data-theme=light] body.workspace-ui :is(.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-palette,.tm-stencil-group,.tm-palette-help,.assessment-pagination,.toolbar,.folder-create,.note-link-items) :is(button,a:not(.primary)){background:#ffffff!important}
+html[data-theme=light] body.workspace-ui :is(.tm-menubar,.tm-tools,.tm-canvas-settings,.tm-palette,.tm-stencil-group,.tm-palette-help,.assessment-pagination,.toolbar,.folder-create,.note-link-items) :is(button,a:not(.primary)):not(.button-accent):not(.button-dark):not(.button-danger):not(.danger):not([aria-pressed=true]):not([aria-selected=true]){background:#ffffff!important;color:#243447!important}
 html[data-theme=light] body.workspace-ui .tprm-lifecycle>article{background:#ffffff!important}
 html[data-theme=light] body.workspace-ui input[type=range]{background:#ffffff!important}
 html[data-theme=dark] body.workspace-ui input[type=range]{background:#142033!important}
@@ -353,3 +353,17 @@ html:not([data-theme=dark]) body.workspace-ui .score-panel .score-line strong{co
 html:not([data-theme=dark]) body.workspace-ui .score-panel .meter{background:#e8eff8}
 html:not([data-theme=dark]) body.workspace-ui :is(.gap-kpi,.gap-form,.module-transfer-toolbar){background:#fff;border-color:#e2e8f0}
 html:not([data-theme=dark]) body.workspace-ui .nav-item:hover{background:#eff6ff;color:#1e40af}
+
+/* Set foreground and background together: toolbar and module rules must never
+   leave a white label on a white surface. Shared by every workspace module. */
+html:not([data-theme=dark]) body.workspace-ui .button:is(.button-accent,.button-dark){background:#1d4ed8!important;color:#fff!important;border-color:#1d4ed8!important}
+html:not([data-theme=dark]) body.workspace-ui .button:is(.button-accent,.button-dark):hover{background:#1e40af!important;border-color:#1e40af!important}
+html:is([data-theme=light],[data-theme=dark]) body.workspace-ui :is(button,a).button[role=tab][aria-selected=true],
+html:is([data-theme=light],[data-theme=dark]) body.workspace-ui :is(button,a).button[aria-pressed=true]{background:#1d4ed8!important;color:#fff!important;border-color:#1d4ed8!important}
+html[data-theme=dark] body.workspace-ui :is(button,a).button[role=tab][aria-selected=true],
+html[data-theme=dark] body.workspace-ui :is(button,a).button[aria-pressed=true]{background:#255bc2!important;color:#fff!important;border-color:#a8ccff!important}
+html body.workspace-ui .roadmap-reference-button{background:#9a4118!important;color:#fff!important;border-color:#9a4118!important}
+html:not([data-theme=dark]) body.workspace-ui .nav-item.active{background:#eff6ff;color:#1d4ed8}
+html:not([data-theme=dark]) body.workspace-ui :is(.list-pagination,.existing-file-pagination) button{background:#fff;color:#243447;border-color:#bdcad9}
+html[data-theme=dark] body.workspace-ui .dropdown-edit-btn{background:#24344b!important;color:#d6e5fa!important;border-color:#435673!important}
+html:not([data-theme=dark]) body.landing-page .hero .button.primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-color:#1d4ed8}

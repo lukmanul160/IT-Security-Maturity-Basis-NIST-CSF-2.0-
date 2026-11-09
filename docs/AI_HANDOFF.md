@@ -1,5 +1,9 @@
 # Panduan belajar dan melanjutkan proyek
 
+Tema dan bahasa lintas halaman: lihat [Shared theme and language controls](ui-theme-language.md).
+`npm run test:shared-controls-browser` memakai fixture offline seluruh komponen dan
+halaman publik untuk kontras tombol pada light/dark serta ID/EN, tanpa data operasional.
+
 ## Arsitektur
 
 Peta folder, kontrak fungsi, dan tahapan refactor: [CODE_STRUCTURE.md](CODE_STRUCTURE.md).
