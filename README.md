@@ -7,6 +7,9 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Dokumentasi
 
+- [Kebutuhan CPU, RAM, dan storage deployment](docs/DEPLOYMENT_REQUIREMENTS.md):
+  estimasi spesifikasi awal, perhitungan kapasitas file/backup, dan batas verifikasi.
+
 - [Review keamanan Technology Asset dan Compliance Security Checklist](docs/security-review-technology-checklist-2026-11-09.md).
 
 - [Struktur kode dan panduan pemeliharaan AI/manusia](docs/CODE_STRUCTURE.md).
