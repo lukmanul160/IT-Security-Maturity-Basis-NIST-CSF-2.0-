@@ -7,6 +7,8 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Dokumentasi
 
+- [Review keamanan Technology Asset dan Compliance Security Checklist](docs/security-review-technology-checklist-2026-11-09.md).
+
 - [Struktur kode dan panduan pemeliharaan AI/manusia](docs/CODE_STRUCTURE.md).
 - [Katalog seluruh file dan fungsi sumber](docs/SOURCE_CATALOG.md) (JSON tersedia untuk tooling).
 
@@ -110,10 +112,12 @@ engine aplikasi tidak cukup untuk membangun frontend saat ini.
 - Risk Acceptance dan Risk Management dengan tab Pengelolaan Pilihan.
 - Threat Modelling: diagram data flow, trust boundary, dan ancaman STRIDE.
 - Policy Register, reminder, serta SMTP terpusat.
+- [Technology Asset](docs/technology-asset.md): dashboard, technology radar, register aplikasi/versi, scan header publik, graph many-to-many dan pencarian kandidat CVE NVD.
 - Asset Management: Asset Register, Rak Server, dan Modelling Asset Register dengan reminder renewal email serta relasi CMDB. Lihat [panduan Asset Management](docs/asset-management.md).
 - Personnel Certification, organisasi, dan reference roadmap.
 - TPRM, kuesioner, template, serta register risiko vendor.
 - Audit Finding Tracker, Uploaded files, akun/permission, audit, dan backup.
+- Compliance Security Checklist: dashboard, template checklist dengan kolom kustom dan impor/ekspor Excel, serta assignment asesmen berjudul aplikasi ke diri sendiri/pengguna lain. Mendukung modal, Indonesia/English dan upload evidence. Lihat [panduan Compliance](docs/compliance-office-design.md#compliance-security-checklist).
 
 ## Operasi dan pengembangan
 

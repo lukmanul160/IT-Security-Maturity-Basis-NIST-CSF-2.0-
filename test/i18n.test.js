@@ -16,6 +16,31 @@ function load(saved, storageUnavailable = false) {
   return { i18n: context.NistI18n, values };
 }
 
+test('checklist modal, assignments, Excel and evidence UI have English labels and messages', () => {
+  const { i18n } = load('en');
+  for (const [id, en] of [
+    ['3. Buat Checklist', '3. Create Checklist'], ['2. Assignment Checklist', '2. Checklist Assignments'],
+    ['Buat checklist baru', 'Create a new checklist'], ['Kustomisasi kolom', 'Customize columns'],
+    ['Tutup modal checklist', 'Close checklist dialog'], ['Unggah evidence', 'Upload evidence'],
+    ['Hapus file', 'Delete file'], ['Simpan hasil asesmen', 'Save assessment results'],
+    ['Unduh template Excel', 'Download Excel template'],
+    ['Checklist telah berubah. Muat ulang sebelum menyimpan.', 'The checklist has changed. Reload before saving.']
+  ]) assert.equal(i18n.t(id), en);
+  i18n.setLanguage('id');
+  assert.equal(i18n.t('Unggah evidence'), 'Unggah evidence');
+});
+test('technology asset version comparison, radar and CVE UI are bilingual without rewriting values', () => {
+  const { i18n } = load('en');
+  for (const [id,en] of [
+    ['Perbandingan versi antar-aplikasi','Version comparison across applications'],
+    ['Graph aplikasi dan teknologi','Application and technology graph'],
+    ['Cari CVE versi ini','Search CVEs for this version'],
+    ['Diperbarui dalam 119 hari terakhir','Updated in the last 119 days'],
+    ['Belum diketahui','Unknown']
+  ]) assert.equal(i18n.t(id),en);
+  assert.equal(i18n.t('PHP 8.2.4'),'PHP 8.2.4');
+});
+
 test('statement management and public completion translate UI while preserving field placeholders and identifiers',()=>{
   const {i18n}=load('en');
   for(const [id,en] of [['Karyawan','Employees'],['Penugasan tahunan','Annual assignments'],['Ekspor seluruh surat ZIP','Export all letters as ZIP'],['Data masuk','Incoming data'],['Rekap NIP & Tahun','Employee ID & Year Summary'],['Metode tanda tangan','Signature method'],['Unggah gambar','Upload image'],['Tambah field Departemen','Add Department field'],['Surat Pernyataan','Statements'],['+ Buat jenis surat','+ Create statement type'],['Template & field','Templates & fields'],['Dapat diisi publik','Editable by the public'],['7 field publik','7 public fields'],['3 jenis surat','3 statement types'],['2 pengisian','2 submissions'],['Kirim surat pernyataan','Submit statement']]){
@@ -190,4 +215,21 @@ test('asset workspace labels, CIA matrix and dynamic notices follow the selected
   assert.equal(i18n.t('Server Racks'), 'Rak Server');
   assert.equal(i18n.t('Device already in use: Installed in rakGTI (U24-U25). Use Edit position or drag and drop to move it.'), samples[11][0]);
   assert.equal(i18n.t('Firewall(GTI Ragunan)'), 'Firewall(GTI Ragunan)');
+});
+
+
+test('technology rule search, relationship graph and security messages are bilingual',()=>{
+ const {i18n}=load('en');
+ for(const [id,en] of [['Pencarian teknologi','Technology search'],['Atur filter teknologi','Configure technology filters'],['Operator versi','Version operator'],['Lihat daftar simpul','Show node list'],['Hubungan terpilih','Selected relationships'],['Isi file tidak sesuai dengan format evidence yang dipilih.','File content does not match the selected evidence format.']])assert.equal(i18n.t(id),en);
+ assert.equal(i18n.t('PHP < 7.1.1'),'PHP < 7.1.1');
+});
+
+
+test('community detector details and restricted access messages support English',()=>{
+ const {i18n}=load('en');assert.equal(i18n.t('Detail deteksi'),'Detection details');assert.equal(i18n.t('Deteksi tidak langsung'),'Indirect detection');assert.equal(i18n.t('Skor kecocokan signature'),'Signature match score');
+});
+
+
+test('live scan progress and compact table labels are bilingual',()=>{
+ const {i18n}=load('en');for(const [id,en] of [['Progres scan website','Website scan progress'],['Membaca runtime JavaScript','Reading JavaScript runtime'],['Lihat selengkapnya','See more'],['Maksimum 20 baris per halaman','Maximum 20 rows per page']])assert.equal(i18n.t(id),en);
 });

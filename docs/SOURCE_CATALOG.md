@@ -5,7 +5,7 @@ Dibuat oleh `npm run docs:source`. Jangan edit tabel manual.
 `source-catalog.json` memuat nama fungsi, baris, parameter, komentar dan dependency statis.
 Indeks ini bukan call graph lengkap atau bukti bahwa semua fungsi telah memiliki dokumentasi bisnis.
 
-Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
+Cakupan: 317 file, 2396 fungsi bernama, 67 fragmen runtime.
 
 ## Urutan runtime
 
@@ -99,9 +99,17 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [canvasInteraction.mjs](../frontend/client/src/services/canvasInteraction.mjs) | `canvasShortcut` |
 | [moduleProgressWorkbook.mjs](../frontend/client/src/services/moduleProgressWorkbook.mjs) | `plain`, `forbidden`, `encode`, `decode`, `writeProgressWorkbook`, `readProgressWorkbook` |
 | [mutationGuard.js](../frontend/client/src/services/mutationGuard.js) | `stable`, `createMutationGuard`, `bodyKey`, `installMutationGuard` |
+| [securityChecklistArchive.mjs](../frontend/client/src/services/securityChecklistArchive.mjs) | `invalid`, `inspectChecklistArchive`, `verifyChecklistArchive` |
+| [securityChecklistWorkbook.mjs](../frontend/client/src/services/securityChecklistWorkbook.mjs) | `newId`, `validColumns`, `grid`, `validateRows`, `writeChecklistWorkbook`, `readChecklistWorkbook` |
+| [securityChecklistWorkbook.worker.mjs](../frontend/client/src/services/securityChecklistWorkbook.worker.mjs) | Markup / konfigurasi / binding |
+| [securityChecklistWorkbookClient.mjs](../frontend/client/src/services/securityChecklistWorkbookClient.mjs) | `readChecklistWorkbookAsync`, `finish` |
 | [statementWordEditor.js](../frontend/client/src/services/statementWordEditor.js) | `loadLibrary`, `mount` |
 | [statusColors.mjs](../frontend/client/src/services/statusColors.mjs) | `normalize`, `statusTone`, `paint`, `refreshStatusColors`, `installStatusColors`, `schedule` |
 | [tableResize.js](../frontend/client/src/services/tableResize.js) | `clamp`, `visibleCell`, `tableHeaderLayout`, `installTableResize`, `identity`, `savedWidths`, `persist`, `apply`, `autoFit`, `finish`, `handles`, `initialize`, `scan`, `schedule` |
+| [technologyAssetModel.mjs](../frontend/client/src/services/technologyAssetModel.mjs) | `technologyKey`, `technologyMap`, `versionComparison`, `radarPoints` |
+| [technologyAssetSearch.mjs](../frontend/client/src/services/technologyAssetSearch.mjs) | `compareNumericVersions`, `valid`, `matchesTechnology`, `searchTechnologyAssets` |
+| [technologyScanProgress.mjs](../frontend/client/src/services/technologyScanProgress.mjs) | `requestTechnologyScan`, `consume` |
+| [technologyTablePage.mjs](../frontend/client/src/services/technologyTablePage.mjs) | `technologyTablePage` |
 | [uploadProgress.js](../frontend/client/src/services/uploadProgress.js) | `bytes`, `element`, `setOperationProgress`, `showOperationFiles`, `createTask`, `uploadRequest`, `notify`, `clean`, `fail`, `abort`, `server`, `installUploadProgress` |
 | [workspaceError.js](../frontend/client/src/services/workspaceError.js) | `renderWorkspaceError` |
 | [workspaceRuntime.js](../frontend/client/src/services/workspaceRuntime.js) | `runClassicScript`, `bootstrapWorkspaceRuntime` |
@@ -119,6 +127,7 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [BackupsView.vue](../frontend/client/src/workspace/components/BackupsView.vue) | Markup / konfigurasi / binding |
 | [BudgetCharts.vue](../frontend/client/src/workspace/components/BudgetCharts.vue) | `money`, `percent`, `sum`, `slices` |
 | [BudgetView.vue](../frontend/client/src/workspace/components/BudgetView.vue) | `loadSettings`, `configure`, `saveSettings`, `importExcel`, `blank`, `can`, `owns`, `money`, `api`, `run`, `load`, `open`, `chartFilter`, `detail`, `edit`, `save`, `transition` |
+| [ChecklistSearchSelect.vue](../frontend/client/src/workspace/components/ChecklistSearchSelect.vue) | `open`, `search`, `choose`, `keydown`, `focusout` |
 | [ComplianceView.vue](../frontend/client/src/workspace/components/ComplianceView.vue) | Markup / konfigurasi / binding |
 | [CsfManageView.vue](../frontend/client/src/workspace/components/CsfManageView.vue) | Markup / konfigurasi / binding |
 | [CsfView.vue](../frontend/client/src/workspace/components/CsfView.vue) | Markup / konfigurasi / binding |
@@ -127,7 +136,7 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [FrameworkView.vue](../frontend/client/src/workspace/components/FrameworkView.vue) | Markup / konfigurasi / binding |
 | [IkasView.vue](../frontend/client/src/workspace/components/IkasView.vue) | Markup / konfigurasi / binding |
 | [Iso27001View.vue](../frontend/client/src/workspace/components/Iso27001View.vue) | Markup / konfigurasi / binding |
-| [KnowledgeGraph.vue](../frontend/client/src/workspace/components/KnowledgeGraph.vue) | `color`, `degree`, `rebuild`, `fit`, `physics`, `screen`, `world`, `draw`, `coordinates`, `hit`, `down`, `move`, `up`, `cancel`, `zoomAt`, `key`, `resize`, `exportPng` |
+| [KnowledgeGraph.vue](../frontend/client/src/workspace/components/KnowledgeGraph.vue) | `label`, `color`, `degree`, `rebuild`, `fit`, `physics`, `screen`, `world`, `draw`, `coordinates`, `hit`, `down`, `move`, `up`, `cancel`, `zoomAt`, `key`, `resize`, `exportPng` |
 | [KnowledgeNotesView.vue](../frontend/client/src/workspace/components/KnowledgeNotesView.vue) | `resizeNoteArea`, `toggleNotesFullscreen`, `notesFullscreenChanged`, `notesFullscreenEscape`, `setPanelWidth`, `rememberPanelWidths`, `stopPanelResize`, `startPanelResize`, `move`, `stop`, `panelResizeKey`, `format`, `shortcut`, `rememberExpanded`, `expandPath`, `toggleFolder`, `addFolder`, `openImage`, `imageAdded`, `moveImage`, `chooseImageFolder`, `removeImage`, `showMenu`, `startDrag`, `dragOver`, `endDrag`, `moveNote`, `moveFolder`, `drop`, `renameItem`, `deleteItem`, `inside`, `newInFolder`, `subfolder`, `request`, `discard`, `select`, `openNoteById`, `navigateFromUrl`, `copyNoteUrl`, `fresh`, `follow`, `load`, `save`, `remove`, `download`, `exportMd`, `chooseImportFolder`, `importFiles`, `uploadImport`, `open`, `unload` |
 | [KnowledgeTextEditor.vue](../frontend/client/src/workspace/components/KnowledgeTextEditor.vue) | `syncImageSelection`, `resizeImage`, `insertImage`, `selectImage`, `pasteContent`, `updateCompletion`, `choose`, `handleKey`, `safeUrl`, `markdownContent`, `syncTable`, `tableAction`, `insertTable`, `clamp`, `resizeTable`, `active`, `format` |
 | [MonitoringDashboardView.vue](../frontend/client/src/workspace/components/MonitoringDashboardView.vue) | `languageChanged`, `backupDate`, `chartColor`, `slices`, `openModule`, `exportSummary`, `loadDashboard`, `showDashboard`, `navigate`, `restore` |
@@ -140,6 +149,9 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [ReminderRecipientPicker.vue](../frontend/client/src/workspace/components/ReminderRecipientPicker.vue) | Markup / konfigurasi / binding |
 | [RiskAcceptanceView.vue](../frontend/client/src/workspace/components/RiskAcceptanceView.vue) | Markup / konfigurasi / binding |
 | [RiskManagementView.vue](../frontend/client/src/workspace/components/RiskManagementView.vue) | Markup / konfigurasi / binding |
+| [SecurityChecklistView.vue](../frontend/client/src/workspace/components/SecurityChecklistView.vue) | `t`, `translate`, `languageChanged`, `ask`, `closeEditor`, `newId`, `clone`, `can`, `ownsRecord`, `optionText`, `canFill`, `switchTab`, `api`, `run`, `leave`, `load`, `open`, `refresh`, `select`, `create`, `addRow`, `addColumn`, `removeColumn`, `move`, `setOptions`, `removeRow`, `save`, `remove`, `exportExcel`, `importExcel`, `assign`, `closeAssignment`, `saveAssignment`, `rowFiles`, `queueFiles`, `discardFile`, `discardPending`, `markDirty`, `beforeUnload` |
+| [TechnologyAssetView.vue](../frontend/client/src/workspace/components/TechnologyAssetView.vue) | `openTechnologyList`, `closeTechnologyList`, `filteredTechnologies`, `editRules`, `applyRules`, `closeRules`, `findVulnerabilities`, `lookupVulnerabilities`, `closeVulnerabilities`, `t`, `languageChanged`, `can`, `sourceRemark`, `resetFilters`, `api`, `run`, `load`, `edit`, `close`, `addTechnology`, `removeTechnology`, `save`, `remove`, `scan`, `beforeUnload`, `graphKey` |
+| [TechnologyTablePager.vue](../frontend/client/src/workspace/components/TechnologyTablePager.vue) | Markup / konfigurasi / binding |
 | [ThreatModellingView.vue](../frontend/client/src/workspace/components/ThreatModellingView.vue) | `genericStencil`, `stencilFor`, `defaults`, `selectStencil`, `setElementProperty`, `panStart`, `wheel`, `toggleFullscreen`, `fullscreenChanged`, `fullscreenEscape`, `clone`, `uid`, `snapshot`, `checkpoint`, `undo`, `redo`, `request`, `load`, `reset`, `newModel`, `choose`, `save`, `removeModel`, `position`, `snap`, `addNode`, `drop`, `pointerDown`, `pointerMove`, `pointerUp`, `deleteSelected`, `setProperty`, `edgePoints`, `center`, `intersect`, `addThreat`, `threatChange`, `deleteThreat`, `download`, `fileName`, `exportJson`, `importJson`, `svgContent`, `exportSvg`, `escape`, `report`, `example`, `setZoom`, `fit`, `keyboard`, `beforeUnload`, `open` |
 | [TprmFlowView.vue](../frontend/client/src/workspace/components/TprmFlowView.vue) | Markup / konfigurasi / binding |
 | [TprmQuestionnaireView.vue](../frontend/client/src/workspace/components/TprmQuestionnaireView.vue) | Markup / konfigurasi / binding |
@@ -271,7 +283,7 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [startup.js](../frontend/client/src/workspace/features/shared/startup.js) | `resetFramework`, `resetIso27001Assessment`, `reportOfficeModule`, `uploadedFileSourceLabel` |
 | [state-and-access.js](../frontend/client/src/workspace/features/shared/state-and-access.js) | `normalizeState`, `loadState`, `canPerform`, `canManagePolicyRegister`, `loadUiState`, `openUploadHandleDb`, `saveUploadDirectoryHandle`, `removeSavedUploadDirectoryHandle`, `getSavedUploadDirectoryHandle`, `restoreUploadDirectoryHandle`, `saveUiState`, `$`, `applyUserAccess`, `syncUploadFolderStatus`, `allControls`, `controlsFor`, `privacyScoreFor`, `privacyTargetScoreFor`, `privacyTargetScoreAverage`, `csfTargetScoreFor`, `persistCategoryTarget`, `privacyFunctions`, `privacyScoreButtons`, `renderAssessmentPagination`, `renderListPagination`, `attachmentStateFor`, `normalizeFileSearch`, `policyRegisterFiles`, `privacyFilePicker`, `privacyAttachmentControl`, `escapeHtml`, `existingFilePicker`, `renderExistingPicker`, `scoreControl`, `renderScoreControls`, `attachmentControl`, `scoreFor`, `policyScoreFor`, `categoryLabel`, `categorySummary`, `save`, `stats`, `loadDefaultFile` |
 | [submission-guard.js](../frontend/client/src/workspace/features/shared/submission-guard.js) | `guardFormSubmission` |
-| [threat-navigation.js](../frontend/client/src/workspace/features/shared/threat-navigation.js) | `showThreatModelling`, `showBudget` |
+| [threat-navigation.js](../frontend/client/src/workspace/features/shared/threat-navigation.js) | `showThreatModelling`, `showBudget`, `showSecurityChecklist`, `showTechnologyAsset` |
 | [wikiCompletion.mjs](../frontend/client/src/workspace/features/shared/wikiCompletion.mjs) | `wikiAtCursor`, `wikiSuggestions` |
 
 ## frontend/client/src/workspace/features/tprm
@@ -421,10 +433,12 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [reminderRecipientRoutes.js](../src/routes/reminderRecipientRoutes.js) | Markup / konfigurasi / binding |
 | [riskAcceptanceRoutes.js](../src/routes/riskAcceptanceRoutes.js) | Markup / konfigurasi / binding |
 | [riskManagementRoutes.js](../src/routes/riskManagementRoutes.js) | Markup / konfigurasi / binding |
+| [securityChecklistRoutes.js](../src/routes/securityChecklistRoutes.js) | `authorizeUpload` |
 | [smtpRoutes.js](../src/routes/smtpRoutes.js) | `handle` |
 | [statementEmployeeRoutes.js](../src/routes/statementEmployeeRoutes.js) | `wrap`, `options`, `token`, `requireEmployee` |
 | [statementRoutes.js](../src/routes/statementRoutes.js) | `wrap`, `sendDocument`, `typeInput` |
 | [storageRoutes.js](../src/routes/storageRoutes.js) | Markup / konfigurasi / binding |
+| [technologyAssetRoutes.js](../src/routes/technologyAssetRoutes.js) | `emit`, `onProgress` |
 | [threatModelRoutes.js](../src/routes/threatModelRoutes.js) | Markup / konfigurasi / binding |
 | [tprmQuestionnaireRoutes.js](../src/routes/tprmQuestionnaireRoutes.js) | Markup / konfigurasi / binding |
 | [tprmRoutes.js](../src/routes/tprmRoutes.js) | Markup / konfigurasi / binding |
@@ -494,6 +508,7 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [riskManagementService.js](../src/services/riskManagementService.js) | `invalid`, `cleanText`, `numberOrNull`, `validate`, `values`, `mapRow`, `rating`, `assetValue`, `normalizeAssessment`, `ensureStore`, `refreshCalculatedValues`, `seedIndicators`, `listIndicators`, `syncDropdownValues`, `listDropdowns`, `validateDropdown`, `dropdownFailure`, `createDropdown`, `getDropdown`, `dropdownInUse`, `updateDropdown`, `removeDropdown`, `createIndicator`, `updateIndicator`, `removeIndicator`, `listRegister`, `create`, `update`, `remove`, `resetRegister`, `nextRiskId`, `dashboard` |
 | [riskWorkflowRules.js](../src/services/riskWorkflowRules.js) | `fail`, `today`, `validDate`, `completeScore`, `must`, `initial`, `sanitize`, `approval`, `transition`, `allowed`, `assessment` |
 | [riskWorkflowService.js](../src/services/riskWorkflowService.js) | `hash`, `assessmentHash`, `camel`, `ensureStore`, `users`, `checkUser`, `acceptance`, `decorate`, `get`, `mutate`, `invalidateRegister` |
+| [securityChecklistService.js](../src/services/securityChecklistService.js) | `invalid`, `ensureStore`, `text`, `validate`, `manages`, `authorize`, `authorizeUpload`, `validateFileSignature`, `starts`, `users`, `list`, `parseInput`, `validateUploads`, `download`, `save`, `columnFor`, `createAssignment`, `updateAssignment`, `createTemplate`, `remove` |
 | [smtpService.js](../src/services/smtpService.js) | `invalid`, `email`, `key`, `encrypt`, `decrypt`, `transport`, `send`, `ensureStore`, `accountId`, `read`, `getSettings`, `validate`, `saveSettings`, `createMailer`, `testEmail`, `validateName`, `listAccounts`, `createAccount` |
 | [statementDocumentService.js](../src/services/statementDocumentService.js) | `fail`, `parse`, `serialize`, `elements`, `xmlEscape`, `open`, `replaceParagraph`, `png`, `dot`, `chunk`, `inspect`, `forEditor`, `normalizeSeed`, `signatureRun`, `generate`, `plain` |
 | [statementEmployeeService.js](../src/services/statementEmployeeService.js) | `fail`, `text`, `employee`, `year`, `currentYear`, `workbook`, `parse`, `validateRows`, `importRows`, `createEmployee`, `employees`, `monitoring`, `settings`, `newPassword`, `saveEmployee`, `digest`, `login`, `session`, `logout`, `bulkPasswords`, `assignments`, `assign`, `revoke`, `portal`, `verify` |
@@ -502,6 +517,13 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | [statementService.js](../src/services/statementService.js) | `fail`, `uuid`, `field`, `normalizeType`, `normalizeSubmission`, `render`, `ensureStore`, `types`, `getType`, `saveType`, `submit`, `groups`, `submissions`, `annualRecap`, `submission`, `deleteSubmission`, `templateBuffer`, `preview`, `signedDocument`, `stats`, `saveDocument` |
 | [statementZip.js](../src/services/statementZip.js) | `fail`, `validate`, `abort` |
 | [storageService.js](../src/services/storageService.js) | `invalid`, `normalizePath`, `inside`, `createStorageService`, `cloudConfig`, `ensureStore`, `getSettings`, `validateSettings`, `testSettings`, `saveSettings`, `location`, `physicalPath`, `read`, `exists`, `openRead`, `removePhysical`, `put`, `remove` |
+| [technologyAssetService.js](../src/services/technologyAssetService.js) | `fail`, `ensureStore`, `text`, `validate`, `list`, `save`, `remove` |
+| [technologyBrowserProbe.js](../src/services/technologyBrowserProbe.js) | `collect`, `keep`, `property`, `expression` |
+| [technologyBrowserScanService.js](../src/services/technologyBrowserScanService.js) | `delay`, `executable`, `runtimeTechnologies`, `mergeTechnologies`, `scan`, `progress`, `observation`, `paused`, `reject` |
+| [technologyHeaderScanService.js](../src/services/technologyHeaderScanService.js) | `fail`, `connectionError`, `publicAddress`, `internalAddress`, `allowedAddress`, `validateUrl`, `target`, `requestPage`, `finish`, `stop`, `failed`, `requestHeaders`, `scan`, `progress` |
+| [technologySignatureService.js](../src/services/technologySignatureService.js) | `load`, `browserPlan`, `analyze`, `finish` |
+| [technologySignatureWorker.js](../src/services/technologySignatureWorker.js) | `list`, `own`, `safeVersion`, `pattern`, `add`, `match`, `requirements` |
+| [technologyVulnerabilityService.js](../src/services/technologyVulnerabilityService.js) | `fail`, `validate`, `requestJson`, `normalize`, `lookup` |
 | [threatModelService.js](../src/services/threatModelService.js) | `invalid`, `validate`, `ensureStore`, `list`, `create`, `update`, `remove` |
 | [tprmGovernanceService.js](../src/services/tprmGovernanceService.js) | `reviewPolicy`, `eligibleUsers`, `assignments`, `requireAssigned`, `dependencies`, `vendorEvidence`, `contractDetails`, `acceptanceValid`, `acceptanceHash`, `acceptance`, `acceptanceChoices`, `reminders`, `add` |
 | [tprmQuestionnaireExcelService.js](../src/services/tprmQuestionnaireExcelService.js) | `templateFor`, `exportRecord`, `exportTemplate`, `plan`, `preview`, `importRecord` |
@@ -519,4 +541,5 @@ Cakupan: 294 file, 2222 fungsi bernama, 67 fragmen runtime.
 | File | Fungsi bernama |
 | --- | --- |
 | [ikasScoring.js](../src/shared/ikasScoring.js) | `truncate`, `average`, `level`, `summarize`, `score`, `normalize`, `idFor` |
+| [technologyFingerprint.js](../src/shared/technologyFingerprint.js) | `detect`, `attributes`, `safeAssetUrl`, `detectPage`, `add`, `assetUrls` |
 | [tprmWorkflow.js](../src/shared/tprmWorkflow.js) | `invalid`, `text`, `validDate`, `today`, `futureDate`, `cia`, `questionnaireScore`, `questionnaireReadiness`, `profileTier`, `riskLevel`, `riskSummary`, `fingerprint`, `stableJson`, `normalize`, `checkCritical` |

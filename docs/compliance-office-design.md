@@ -2,7 +2,7 @@
 
 ## Penggunaan
 
-Sidebar **Compliance** memiliki dua halaman:
+Sidebar **Compliance** memiliki tiga halaman:
 
 - **Reporting Regulator**: tambah/ubah/hapus pelaporan, tujuan regulator/induk
   perusahaan/perusahaan lain, PIC, tenggat, status, catatan, dan reminder email.
@@ -190,3 +190,155 @@ Pegangan putar tersedia bagi pengguna yang memiliki izin mengedit.
 
 Verifikasi menggunakan fixture API browser dan build lokal; tidak menguji
 deployment Docker/cloud atau menulis denah operasional.
+
+## Compliance Security Checklist
+
+Menu pada grup Compliance memiliki tiga tab:
+
+1. **Dashboard**: assignment kepada pengguna aktif, template yang dibuat, total
+   item assignment yang dapat diakses dan item mulai diasesmen. Minimal satu
+   nilai atau file di kolom hasil berarti mulai diisi, bukan bukti kepatuhan selesai.
+2. **Assignment Checklist**: **Tambah assignment** membuka modal pilihan template,
+   judul asesmen/aplikasi (misalnya Aplikasi 1, Aplikasi 2), dan assessor akun.
+   Pilih akun sendiri untuk self-assessment. Satu template dapat dipakai berkali-kali.
+   **Buka checklist** membuka modal hasil/status/evidence. **Ubah assignment**
+   mengubah judul atau assessor melalui modal tersendiri (pembuat assignment/admin).
+3. **Buat Checklist**: buat/kelola template tanpa memilih assessor. Template
+   menentukan kolom dan item; kolom hasil kosong/read-only sampai dipakai pada
+   assignment. Template dapat dibaca semua pengguna yang memiliki izin baca modul;
+   ubah/hapus tetap dibatasi pembuat template/admin dan izin aksi.
+
+Setiap assignment memiliki snapshot template, judul, assessor, hasil dan evidence
+sendiri. Perubahan template berlaku bagi assignment baru; assignment lama tetap
+memakai struktur semula. Menghapus template tidak menghapus hasil assignment.
+Judul template saat assignment dibuat tetap tercatat meskipun sumber dihapus.
+Daftar assignment hanya untuk pembuat assignment, assessor aktif, atau admin.
+Pembuat template tidak otomatis mendapat akses ke assignment yang dibuat pengguna lain.
+
+Kolom bawaan: ID, Area, How To Produce, Expected Result, Status,
+Evidence / temuan, PIC / Target. Kolom dapat ditambah, diganti nama, diurutkan,
+dihapus, bertipe teks/pilihan/evidence-file, dan ditentukan sebagai definisi atau
+hasil asesmen. Maksimum 30 kolom, 500 baris, 4000 karakter per sel.
+PIC / Target merupakan teks per item, terpisah dari assessor assignment.
+Satu assessor per assignment, tanpa email notifikasi otomatis.
+
+### Modal dan bahasa
+
+Seluruh penambahan/perubahan berlangsung dalam modal. Modal editor mengunci tab/
+daftar di belakangnya dan menahan fokus. Tutup/Escape meminta konfirmasi jika
+ada perubahan; batal mempertahankan draft. Modal tidak dapat ditutup selama request.
+Simpan berhasil tetap membuka modal editor untuk pemeriksaan. Error/konflik tampil
+di modal dan tidak menghilangkan isian. Modal assignment ditutup setelah berhasil.
+
+Pilihan bahasa Indonesia/English mengikuti pemilih bahasa workspace dan berubah
+saat modal masih terbuka. Label, tombol, petunjuk, konfirmasi dan pesan utama
+memiliki terjemahan. Judul aplikasi/template, nama akun, nama file, label/opsi
+kolom kustom dan isi pengguna tidak diterjemahkan atau diubah nilainya. Opsi Status
+bawaan diterjemahkan pada tampilan; nilai tersimpan tetap sama.
+
+### Evidence dan file
+
+Kolom bawaan Evidence / temuan bertipe evidence-file, mendukung teks dan lampiran.
+Gunakan tipe **Evidence / file** untuk kolom kustom atau kolom lama yang masih
+bertipe teks. Dalam assignment, unggah pada item yang sesuai, lalu **Simpan hasil
+asesmen**. File yang dipilih masih pending sampai simpan berhasil. Batalkan file
+menghapus pilihan lokal; Hapus file baru berlaku saat checklist disimpan.
+
+Maksimum 10 file per template/assignment, masing-masing 10 MB, tidak kosong.
+Format: PDF, Word, Excel (.xls/.xlsx), PowerPoint, PNG/JPG/GIF/WebP; backend
+memeriksa ekstensi dan MIME sesuai pola upload aplikasi. File tersimpan sebagai
+BYTEA di PostgreSQL, termasuk backup database. Simpan hasil dan file atomik;
+kegagalan/konflik membatalkan seluruh transaksi. Edit teks mempertahankan file.
+Hapus item/kolom, ganti tipe evidence ke teks, atau hapus checklist membersihkan
+lampiran terkait saat simpan berhasil. Template hanya menerima file pada kolom
+definisi; file definisi disalin ke snapshot assignment baru dengan ID terpisah.
+
+Unduhan memeriksa izin baca modul dan akses record; template dapat dibaca pengguna
+modul, assignment hanya pembuat/admin atau assessor aktif. File dikirim sebagai
+attachment dengan Cache-Control no-store. Mengganti assessor mencabut akses
+assessor lama, kecuali ia pembuat assignment/admin.
+
+### Impor/ekspor Excel
+
+Tab Buat Checklist menyediakan Unduh template Excel dan Impor dari Excel.
+Impor membuka modal template; input file dan Ekspor Excel ada di modal editor.
+Ekspor memakai isi draft saat ini, termasuk perubahan belum disimpan; bukan simpan.
+File `.xlsx` berisi sheet Checklist dan metadata tersembunyi _Checklist yang
+mempertahankan ID/label/urutan/tipe/opsi/fase kolom kustom. Lampiran biner tidak
+ikut Excel; gunakan backup database untuk file. Assignment tidak dibuat dari Excel
+secara otomatis: simpan template lalu buat assignment di tab 2.
+
+Impor maksimum 5 MB, 30 kolom, 500 baris. Baris pertama berisi nama kolom dan
+mulai A1. Ekspor ber-metadata memerlukan header yang sesuai. File biasa tanpa
+_Checklist mengenali label bawaan; label tambahan menjadi kolom teks. Status
+baru ditambahkan ke opsi (maksimum 30). Baris kosong dilewati, formula ditolak
+(ganti dengan nilai), ID teks seperti 001 dan evidence multibaris dipertahankan.
+
+Impor mengganti seluruh kolom/baris draft aktif, atau membuat draft template baru.
+Draft yang berubah meminta konfirmasi sebelum diganti. Judul aktif dipertahankan;
+judul file dipakai bila kosong. Mengimpor ulang pada template lama menandai file
+lama untuk dihapus saat simpan karena identitas baris impor baru. Periksa dahulu.
+
+### Izin, database dan verifikasi
+
+Permission `compliance-security-checklist` mengikuti default Audit Finding:
+semua role membaca, admin/approver/editor/user membuat/mengubah, admin/approver
+memiliki aksi hapus. Semua aksi juga memeriksa pembuat/assessor di server.
+Approver tidak dapat menghapus record orang lain hanya karena punya izin hapus.
+Struktur assignment baru tidak dapat diubah lewat endpoint template; judul dan
+assessor memakai endpoint assignment-info; hasil memakai PATCH assessment.
+Versi dan row lock menolak stale writes (409). Salin draft penting sebelum reload.
+
+Tabel compliance_security_checklists menyimpan kind (template/assignment), referensi
+sumber dan snapshot. Data sebelum pemisahan dipertahankan sebagai assignment lama;
+tidak dikonversi menjadi template yang dibagikan. Tabel file memiliki foreign key
+ON DELETE CASCADE ke record. Migrasi idempotent pada startup/akses pertama.
+Restart backend setelah update dan bangun ulang frontend dari sumber.
+
+Kode: securityChecklistService.js, securityChecklistRoutes.js,
+SecurityChecklistView.vue, services/securityChecklistWorkbook.mjs dan i18n.js.
+`npm run test:security-checklist` memakai PostgreSQL sementara, menguji multipart/
+unduhan HTTP nyata, akses, rollback, versi, reuse snapshot dan round-trip Excel.
+`npm run test:security-checklist-browser` memakai Chrome + transport API fixture:
+modal, tiga tab, dua aplikasi dari satu template, bahasa, file evidence, unduhan/
+impor Excel dan draft konflik. Fixture bukan sesi/login end-to-end, seluruh
+viewport atau deployment Docker/cloud. Data operasional tidak dipakai untuk tes.
+
+### Lebar tabel checklist
+
+Tabel daftar template/assignment memenuhi lebar panel, dengan teks panjang dan
+aksi membungkus di dalam sel. Empty-state memakai colspan 4 untuk template dan
+6 untuk assignment agar tidak membentuk kolom kosong. Tabel modul ini memakai
+layout responsif lokal dan mengecualikan resize kolom global yang menyimpan lebar
+piksel. Tabel editor memenuhi modal; bila kolom kustom banyak atau layar sempit,
+scroll horizontal hanya pada area grid agar formulir tetap dapat dibaca.
+Fixture Chrome mengukur tabel daftar pada viewport 1280 dan 390 piksel serta
+memeriksa tidak ada overflow halaman. Ini tidak mencakup seluruh viewport aplikasi.
+
+### Jarak modal dan pencarian pilihan assignment
+
+Modal Tambah/Ubah assignment menyusun label dan input secara vertikal, dengan
+padding 28 piksel (20 pada layar kecil), jarak antarfield 20 piksel dan footer
+aksi terpisah. Template dan assessor memakai dropdown pencarian: ketik judul
+atau nama/username, pilih dengan klik atau panah/Enter. Escape saat daftar terbuka
+menutup daftar dahulu; pilihan tidak mengubah ID/nama pengguna. Hasil kosong
+menampilkan pesan Indonesia/English. Teks ketikan yang belum dipilih tidak dapat
+disimpan sebagai ID; validasi form meminta pilihan yang sah.
+Komponen lokal ChecklistSearchSelect.vue memakai combobox/listbox dan validasi
+native. Daftar tampil dalam aliran modal agar tidak terpotong batas dialog.
+Fixture Chrome memeriksa padding/grid, filter kedua pilihan, hasil kosong,
+pemilihan via Enter dan payload assignment, bersama regresi alur sebelumnya.
+
+
+### Penguatan keamanan 2026-11-09
+
+Update record diperiksa pemilik/assessor sebelum parser multipart menerima file,
+dan diulang di transaksi. API modul memakai private/no-store; unduhan evidence
+memakai nosniff dan CSP sandbox yang sama dengan evidence utama. Upload baru juga
+memeriksa magic bytes PDF/gambar/OLE/ZIP selain ekstensi/MIME; ini bukan antivirus,
+validasi struktur Office lengkap, atau jaminan dokumen bebas macro/konten aktif.
+File lama tidak diubah. Impor Excel UI memakai Web Worker dengan timeout 15 detik,
+preflight ZIP maksimum 256 entry/25 MiB expanded, serta verifikasi ukuran aktual
+hasil deflate sebelum SheetJS. Ukuran file input tetap maksimum 5 MiB. Arsip tidak
+valid/encrypted/ZIP64, formula, dan dimensi berlebih ditolak. Worker tidak membekukan
+UI; tidak mengklaim batas heap OS atau menghapus kebutuhan scanning malware.

@@ -479,6 +479,139 @@
       "dependencies": []
     },
     {
+      "path": "frontend/client/src/services/securityChecklistArchive.mjs",
+      "functions": [
+        {
+          "name": "invalid",
+          "line": 4,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "inspectChecklistArchive",
+          "line": 6,
+          "async": false,
+          "parameters": [
+            "buffer"
+          ],
+          "description": ""
+        },
+        {
+          "name": "verifyChecklistArchive",
+          "line": 85,
+          "async": true,
+          "parameters": [
+            "buffer"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/services/securityChecklistWorkbook.mjs",
+      "functions": [
+        {
+          "name": "newId",
+          "line": 5,
+          "async": false,
+          "parameters": [
+            "index"
+          ],
+          "description": ""
+        },
+        {
+          "name": "validColumns",
+          "line": 6,
+          "async": false,
+          "parameters": [
+            "columns"
+          ],
+          "description": ""
+        },
+        {
+          "name": "grid",
+          "line": 31,
+          "async": false,
+          "parameters": [
+            "book",
+            "name",
+            "maxRows",
+            "maxCols"
+          ],
+          "description": ""
+        },
+        {
+          "name": "validateRows",
+          "line": 42,
+          "async": false,
+          "parameters": [
+            "rows",
+            "columns"
+          ],
+          "description": ""
+        },
+        {
+          "name": "writeChecklistWorkbook",
+          "line": 52,
+          "async": false,
+          "parameters": [
+            "draft"
+          ],
+          "description": ""
+        },
+        {
+          "name": "readChecklistWorkbook",
+          "line": 79,
+          "async": false,
+          "parameters": [
+            "buffer",
+            "defaults"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "./securityChecklistArchive.mjs",
+        "xlsx"
+      ]
+    },
+    {
+      "path": "frontend/client/src/services/securityChecklistWorkbook.worker.mjs",
+      "functions": [],
+      "dependencies": [
+        "./securityChecklistArchive.mjs",
+        "./securityChecklistWorkbook.mjs"
+      ]
+    },
+    {
+      "path": "frontend/client/src/services/securityChecklistWorkbookClient.mjs",
+      "functions": [
+        {
+          "name": "readChecklistWorkbookAsync",
+          "line": 2,
+          "async": false,
+          "parameters": [
+            "buffer",
+            "defaults"
+          ],
+          "description": "Transfer the input, cap parsing time, and always release the dedicated worker."
+        },
+        {
+          "name": "finish",
+          "line": 7,
+          "async": false,
+          "parameters": [
+            "error",
+            "result"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
       "path": "frontend/client/src/services/statementWordEditor.js",
       "functions": [
         {
@@ -684,6 +817,136 @@
           "async": false,
           "parameters": [],
           "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/services/technologyAssetModel.mjs",
+      "functions": [
+        {
+          "name": "technologyKey",
+          "line": 4,
+          "async": false,
+          "parameters": [
+            "technology"
+          ],
+          "description": ""
+        },
+        {
+          "name": "technologyMap",
+          "line": 11,
+          "async": false,
+          "parameters": [
+            "records"
+          ],
+          "description": ""
+        },
+        {
+          "name": "versionComparison",
+          "line": 29,
+          "async": false,
+          "parameters": [
+            "nodes"
+          ],
+          "description": ""
+        },
+        {
+          "name": "radarPoints",
+          "line": 47,
+          "async": false,
+          "parameters": [
+            "nodes"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/services/technologyAssetSearch.mjs",
+      "functions": [
+        {
+          "name": "compareNumericVersions",
+          "line": 2,
+          "async": false,
+          "parameters": [
+            "left",
+            "right"
+          ],
+          "description": "User-defined inventory rules. Numeric dotted versions are not product lifecycle or CVE assertions."
+        },
+        {
+          "name": "valid",
+          "line": 3,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "matchesTechnology",
+          "line": 15,
+          "async": false,
+          "parameters": [
+            "technology",
+            "rule"
+          ],
+          "description": ""
+        },
+        {
+          "name": "searchTechnologyAssets",
+          "line": 33,
+          "async": false,
+          "parameters": [
+            "records",
+            "rules",
+            "mode = 'AND'"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/services/technologyScanProgress.mjs",
+      "functions": [
+        {
+          "name": "requestTechnologyScan",
+          "line": 2,
+          "async": true,
+          "parameters": [
+            "url",
+            "mode",
+            "onProgress"
+          ],
+          "description": "Read real scanner stage events; normal JSON responses remain compatible with older servers."
+        },
+        {
+          "name": "consume",
+          "line": 17,
+          "async": false,
+          "parameters": [
+            "line"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/services/technologyTablePage.mjs",
+      "functions": [
+        {
+          "name": "technologyTablePage",
+          "line": 2,
+          "async": false,
+          "parameters": [
+            "rows",
+            "requestedPage = 1"
+          ],
+          "description": "All inventory tables have a fixed maximum of twenty displayed rows."
         }
       ],
       "dependencies": []
@@ -2033,6 +2296,57 @@
       ]
     },
     {
+      "path": "frontend/client/src/workspace/components/ChecklistSearchSelect.vue",
+      "functions": [
+        {
+          "name": "open",
+          "line": 30,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "search",
+          "line": 37,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "choose",
+          "line": 43,
+          "async": false,
+          "parameters": [
+            "option"
+          ],
+          "description": ""
+        },
+        {
+          "name": "keydown",
+          "line": 49,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "focusout",
+          "line": 66,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "vue"
+      ]
+    },
+    {
       "path": "frontend/client/src/workspace/components/ComplianceView.vue",
       "functions": [],
       "dependencies": []
@@ -2076,8 +2390,18 @@
       "path": "frontend/client/src/workspace/components/KnowledgeGraph.vue",
       "functions": [
         {
+          "name": "label",
+          "line": 12,
+          "async": false,
+          "parameters": [
+            "key",
+            "fallback"
+          ],
+          "description": ""
+        },
+        {
           "name": "color",
-          "line": 17,
+          "line": 69,
           "async": false,
           "parameters": [
             "note"
@@ -2086,7 +2410,7 @@
         },
         {
           "name": "degree",
-          "line": 20,
+          "line": 86,
           "async": false,
           "parameters": [
             "id"
@@ -2095,28 +2419,28 @@
         },
         {
           "name": "rebuild",
-          "line": 21,
+          "line": 87,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "fit",
-          "line": 26,
+          "line": 107,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "physics",
-          "line": 31,
+          "line": 124,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "screen",
-          "line": 43,
+          "line": 166,
           "async": false,
           "parameters": [
             "p"
@@ -2125,7 +2449,7 @@
         },
         {
           "name": "world",
-          "line": 44,
+          "line": 170,
           "async": false,
           "parameters": [
             "p"
@@ -2134,14 +2458,14 @@
         },
         {
           "name": "draw",
-          "line": 45,
+          "line": 174,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "coordinates",
-          "line": 53,
+          "line": 223,
           "async": false,
           "parameters": [
             "event"
@@ -2150,7 +2474,7 @@
         },
         {
           "name": "hit",
-          "line": 54,
+          "line": 227,
           "async": false,
           "parameters": [
             "p"
@@ -2159,7 +2483,7 @@
         },
         {
           "name": "down",
-          "line": 55,
+          "line": 233,
           "async": false,
           "parameters": [
             "event"
@@ -2168,7 +2492,7 @@
         },
         {
           "name": "move",
-          "line": 56,
+          "line": 241,
           "async": false,
           "parameters": [
             "event"
@@ -2177,7 +2501,7 @@
         },
         {
           "name": "up",
-          "line": 59,
+          "line": 258,
           "async": false,
           "parameters": [
             "event"
@@ -2186,24 +2510,24 @@
         },
         {
           "name": "cancel",
-          "line": 60,
+          "line": 269,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "zoomAt",
-          "line": 61,
+          "line": 272,
           "async": false,
           "parameters": [
             "factor",
-            "p={x:width/2,y:height/2}"
+            "p = { x: width / 2, y: height / 2 }"
           ],
           "description": ""
         },
         {
           "name": "key",
-          "line": 62,
+          "line": 278,
           "async": false,
           "parameters": [
             "event"
@@ -2212,14 +2536,14 @@
         },
         {
           "name": "resize",
-          "line": 63,
+          "line": 292,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "exportPng",
-          "line": 64,
+          "line": 301,
           "async": false,
           "parameters": [],
           "description": ""
@@ -2995,6 +3319,581 @@
     },
     {
       "path": "frontend/client/src/workspace/components/RiskManagementView.vue",
+      "functions": [],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/workspace/components/SecurityChecklistView.vue",
+      "functions": [
+        {
+          "name": "t",
+          "line": 16,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "translate",
+          "line": 18,
+          "async": false,
+          "parameters": [
+            "text"
+          ],
+          "description": ""
+        },
+        {
+          "name": "languageChanged",
+          "line": 22,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "ask",
+          "line": 25,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "closeEditor",
+          "line": 43,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "newId",
+          "line": 54,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "clone",
+          "line": 56,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "can",
+          "line": 57,
+          "async": false,
+          "parameters": [
+            "action"
+          ],
+          "description": ""
+        },
+        {
+          "name": "ownsRecord",
+          "line": 97,
+          "async": false,
+          "parameters": [
+            "record"
+          ],
+          "description": ""
+        },
+        {
+          "name": "optionText",
+          "line": 98,
+          "async": false,
+          "parameters": [
+            "column",
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "canFill",
+          "line": 106,
+          "async": false,
+          "parameters": [
+            "column"
+          ],
+          "description": ""
+        },
+        {
+          "name": "switchTab",
+          "line": 135,
+          "async": false,
+          "parameters": [
+            "next"
+          ],
+          "description": ""
+        },
+        {
+          "name": "api",
+          "line": 145,
+          "async": true,
+          "parameters": [
+            "path = ''",
+            "method = 'GET'",
+            "body"
+          ],
+          "description": ""
+        },
+        {
+          "name": "run",
+          "line": 156,
+          "async": true,
+          "parameters": [
+            "fn"
+          ],
+          "description": ""
+        },
+        {
+          "name": "leave",
+          "line": 169,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "load",
+          "line": 172,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "open",
+          "line": 187,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "refresh",
+          "line": 191,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "select",
+          "line": 199,
+          "async": false,
+          "parameters": [
+            "record"
+          ],
+          "description": ""
+        },
+        {
+          "name": "create",
+          "line": 219,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "addRow",
+          "line": 229,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "addColumn",
+          "line": 238,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "removeColumn",
+          "line": 246,
+          "async": false,
+          "parameters": [
+            "index"
+          ],
+          "description": ""
+        },
+        {
+          "name": "move",
+          "line": 254,
+          "async": false,
+          "parameters": [
+            "index",
+            "delta"
+          ],
+          "description": ""
+        },
+        {
+          "name": "setOptions",
+          "line": 259,
+          "async": false,
+          "parameters": [
+            "column",
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "removeRow",
+          "line": 263,
+          "async": false,
+          "parameters": [
+            "index"
+          ],
+          "description": ""
+        },
+        {
+          "name": "save",
+          "line": 269,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "remove",
+          "line": 309,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "exportExcel",
+          "line": 319,
+          "async": true,
+          "parameters": [
+            "template = false"
+          ],
+          "description": ""
+        },
+        {
+          "name": "importExcel",
+          "line": 339,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "assign",
+          "line": 365,
+          "async": false,
+          "parameters": [
+            "record = null"
+          ],
+          "description": ""
+        },
+        {
+          "name": "closeAssignment",
+          "line": 379,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "saveAssignment",
+          "line": 386,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "rowFiles",
+          "line": 405,
+          "async": false,
+          "parameters": [
+            "rowId",
+            "columnId"
+          ],
+          "description": ""
+        },
+        {
+          "name": "queueFiles",
+          "line": 410,
+          "async": false,
+          "parameters": [
+            "event",
+            "rowId",
+            "columnId"
+          ],
+          "description": ""
+        },
+        {
+          "name": "discardFile",
+          "line": 428,
+          "async": false,
+          "parameters": [
+            "fileId"
+          ],
+          "description": ""
+        },
+        {
+          "name": "discardPending",
+          "line": 434,
+          "async": false,
+          "parameters": [
+            "file"
+          ],
+          "description": ""
+        },
+        {
+          "name": "markDirty",
+          "line": 438,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "beforeUnload",
+          "line": 441,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "./ChecklistSearchSelect.vue",
+        "vue"
+      ]
+    },
+    {
+      "path": "frontend/client/src/workspace/components/TechnologyAssetView.vue",
+      "functions": [
+        {
+          "name": "openTechnologyList",
+          "line": 38,
+          "async": false,
+          "parameters": [
+            "record",
+            "technologies"
+          ],
+          "description": ""
+        },
+        {
+          "name": "closeTechnologyList",
+          "line": 41,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "filteredTechnologies",
+          "line": 45,
+          "async": false,
+          "parameters": [
+            "record"
+          ],
+          "description": ""
+        },
+        {
+          "name": "editRules",
+          "line": 98,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "applyRules",
+          "line": 108,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "closeRules",
+          "line": 135,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "findVulnerabilities",
+          "line": 149,
+          "async": false,
+          "parameters": [
+            "technology"
+          ],
+          "description": ""
+        },
+        {
+          "name": "lookupVulnerabilities",
+          "line": 155,
+          "async": true,
+          "parameters": [
+            "startIndex = 0"
+          ],
+          "description": ""
+        },
+        {
+          "name": "closeVulnerabilities",
+          "line": 169,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "t",
+          "line": 176,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "languageChanged",
+          "line": 180,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "can",
+          "line": 183,
+          "async": false,
+          "parameters": [
+            "action"
+          ],
+          "description": ""
+        },
+        {
+          "name": "sourceRemark",
+          "line": 290,
+          "async": false,
+          "parameters": [
+            "technology"
+          ],
+          "description": ""
+        },
+        {
+          "name": "resetFilters",
+          "line": 293,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "api",
+          "line": 300,
+          "async": true,
+          "parameters": [
+            "path = ''",
+            "method = 'GET'",
+            "body"
+          ],
+          "description": ""
+        },
+        {
+          "name": "run",
+          "line": 310,
+          "async": true,
+          "parameters": [
+            "fn"
+          ],
+          "description": ""
+        },
+        {
+          "name": "load",
+          "line": 323,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "edit",
+          "line": 337,
+          "async": false,
+          "parameters": [
+            "record = null"
+          ],
+          "description": ""
+        },
+        {
+          "name": "close",
+          "line": 347,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "addTechnology",
+          "line": 353,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "removeTechnology",
+          "line": 365,
+          "async": false,
+          "parameters": [
+            "index"
+          ],
+          "description": ""
+        },
+        {
+          "name": "save",
+          "line": 369,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "remove",
+          "line": 380,
+          "async": false,
+          "parameters": [
+            "record"
+          ],
+          "description": ""
+        },
+        {
+          "name": "scan",
+          "line": 388,
+          "async": false,
+          "parameters": [
+            "mode = 'standard'"
+          ],
+          "description": ""
+        },
+        {
+          "name": "beforeUnload",
+          "line": 410,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "graphKey",
+          "line": 416,
+          "async": false,
+          "parameters": [
+            "event",
+            "value"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../../services/technologyAssetModel.mjs",
+        "../../services/technologyAssetSearch.mjs",
+        "../../services/technologyScanProgress.mjs",
+        "../../services/technologyTablePage.mjs",
+        "./KnowledgeGraph.vue",
+        "./TechnologyTablePager.vue",
+        "vue"
+      ]
+    },
+    {
+      "path": "frontend/client/src/workspace/components/TechnologyTablePager.vue",
       "functions": [],
       "dependencies": []
     },
@@ -9438,6 +10337,20 @@
           "async": false,
           "parameters": [],
           "description": ""
+        },
+        {
+          "name": "showSecurityChecklist",
+          "line": 27,
+          "async": false,
+          "parameters": [],
+          "description": "Vue checklist loads only when its permission-checked navigation is opened."
+        },
+        {
+          "name": "showTechnologyAsset",
+          "line": 39,
+          "async": false,
+          "parameters": [],
+          "description": "Technology inventory is independent from the hardware register and loads on demand."
         }
       ],
       "dependencies": []
@@ -10941,7 +11854,7 @@
       "functions": [
         {
           "name": "normalize",
-          "line": 3857,
+          "line": 4014,
           "async": false,
           "parameters": [
             "value"
@@ -10950,7 +11863,7 @@
         },
         {
           "name": "translate",
-          "line": 3860,
+          "line": 4017,
           "async": false,
           "parameters": [
             "value"
@@ -10959,7 +11872,7 @@
         },
         {
           "name": "dateText",
-          "line": 3990,
+          "line": 4147,
           "async": false,
           "parameters": [
             "value",
@@ -10969,7 +11882,7 @@
         },
         {
           "name": "dateHtml",
-          "line": 3996,
+          "line": 4153,
           "async": false,
           "parameters": [
             "value",
@@ -10979,7 +11892,7 @@
         },
         {
           "name": "apply",
-          "line": 4005,
+          "line": 4162,
           "async": false,
           "parameters": [
             "root"
@@ -10988,14 +11901,14 @@
         },
         {
           "name": "refresh",
-          "line": 4036,
+          "line": 4193,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "setLanguage",
-          "line": 4045,
+          "line": 4202,
           "async": false,
           "parameters": [
             "value"
@@ -11004,14 +11917,14 @@
         },
         {
           "name": "mount",
-          "line": 4052,
+          "line": 4209,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "start",
-          "line": 4070,
+          "line": 4227,
           "async": false,
           "parameters": [],
           "description": ""
@@ -14174,9 +15087,11 @@
         "./reminderRecipientRoutes",
         "./riskAcceptanceRoutes",
         "./riskManagementRoutes",
+        "./securityChecklistRoutes",
         "./smtpRoutes",
         "./statementRoutes",
         "./storageRoutes",
+        "./technologyAssetRoutes",
         "./threatModelRoutes",
         "./tprmQuestionnaireRoutes",
         "./tprmRoutes",
@@ -14383,6 +15298,26 @@
       ]
     },
     {
+      "path": "src/routes/securityChecklistRoutes.js",
+      "functions": [
+        {
+          "name": "authorizeUpload",
+          "line": 16,
+          "async": false,
+          "parameters": [
+            "assessment"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../middleware/configuredUpload",
+        "../middleware/permission",
+        "../services/securityChecklistService",
+        "express"
+      ]
+    },
+    {
       "path": "src/routes/smtpRoutes.js",
       "functions": [
         {
@@ -14513,6 +15448,38 @@
       ]
     },
     {
+      "path": "src/routes/technologyAssetRoutes.js",
+      "functions": [
+        {
+          "name": "emit",
+          "line": 36,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "onProgress",
+          "line": 50,
+          "async": false,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../middleware/permission",
+        "../services/permissionService",
+        "../services/technologyAssetService",
+        "../services/technologyBrowserScanService",
+        "../services/technologyHeaderScanService",
+        "../services/technologyVulnerabilityService",
+        "express"
+      ]
+    },
+    {
       "path": "src/routes/threatModelRoutes.js",
       "functions": [],
       "dependencies": [
@@ -14595,8 +15562,10 @@
         "./services/reminderRecipientService",
         "./services/riskAcceptanceService",
         "./services/riskManagementService",
+        "./services/securityChecklistService",
         "./services/statementService",
         "./services/storageService",
+        "./services/technologyAssetService",
         "./services/threatModelService",
         "./services/tprmQuestionnaireService",
         "./services/tprmService",
@@ -20620,6 +21589,216 @@
       ]
     },
     {
+      "path": "src/services/securityChecklistService.js",
+      "functions": [
+        {
+          "name": "invalid",
+          "line": 9,
+          "async": false,
+          "parameters": [
+            "message",
+            "status = 400"
+          ],
+          "description": ""
+        },
+        {
+          "name": "ensureStore",
+          "line": 26,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "text",
+          "line": 39,
+          "async": false,
+          "parameters": [
+            "value",
+            "max",
+            "required = false"
+          ],
+          "description": ""
+        },
+        {
+          "name": "validate",
+          "line": 44,
+          "async": false,
+          "parameters": [
+            "input"
+          ],
+          "description": ""
+        },
+        {
+          "name": "manages",
+          "line": 88,
+          "async": false,
+          "parameters": [
+            "row",
+            "user"
+          ],
+          "description": ""
+        },
+        {
+          "name": "authorize",
+          "line": 89,
+          "async": false,
+          "parameters": [
+            "row",
+            "user",
+            "assessment = false"
+          ],
+          "description": ""
+        },
+        {
+          "name": "authorizeUpload",
+          "line": 97,
+          "async": true,
+          "parameters": [
+            "id",
+            "user",
+            "assessment = false"
+          ],
+          "description": "Reject unauthorized record updates before multipart bodies are buffered. Rechecked under lock in save."
+        },
+        {
+          "name": "validateFileSignature",
+          "line": 107,
+          "async": false,
+          "parameters": [
+            "name",
+            "buffer"
+          ],
+          "description": ""
+        },
+        {
+          "name": "starts",
+          "line": 109,
+          "async": false,
+          "parameters": [
+            "bytes"
+          ],
+          "description": ""
+        },
+        {
+          "name": "users",
+          "line": 127,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "list",
+          "line": 137,
+          "async": true,
+          "parameters": [
+            "user"
+          ],
+          "description": ""
+        },
+        {
+          "name": "parseInput",
+          "line": 153,
+          "async": false,
+          "parameters": [
+            "body"
+          ],
+          "description": ""
+        },
+        {
+          "name": "validateUploads",
+          "line": 161,
+          "async": false,
+          "parameters": [
+            "uploads",
+            "input"
+          ],
+          "description": ""
+        },
+        {
+          "name": "download",
+          "line": 199,
+          "async": true,
+          "parameters": [
+            "id",
+            "fileId",
+            "user"
+          ],
+          "description": ""
+        },
+        {
+          "name": "save",
+          "line": 210,
+          "async": true,
+          "parameters": [
+            "id",
+            "input",
+            "user",
+            "assessment = false",
+            "uploads = []"
+          ],
+          "description": ""
+        },
+        {
+          "name": "columnFor",
+          "line": 307,
+          "async": false,
+          "parameters": [
+            "columnId"
+          ],
+          "description": ""
+        },
+        {
+          "name": "createAssignment",
+          "line": 361,
+          "async": true,
+          "parameters": [
+            "input",
+            "user"
+          ],
+          "description": "Assignment snapshots isolate applications and retain existing results when templates change."
+        },
+        {
+          "name": "updateAssignment",
+          "line": 429,
+          "async": true,
+          "parameters": [
+            "id",
+            "input",
+            "user"
+          ],
+          "description": ""
+        },
+        {
+          "name": "createTemplate",
+          "line": 444,
+          "async": true,
+          "parameters": [
+            "input",
+            "user",
+            "uploads"
+          ],
+          "description": ""
+        },
+        {
+          "name": "remove",
+          "line": 447,
+          "async": true,
+          "parameters": [
+            "id",
+            "version",
+            "user"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../config/database",
+        "./fileService",
+        "./permissionService",
+        "node:crypto"
+      ]
+    },
+    {
       "path": "src/services/smtpService.js",
       "functions": [
         {
@@ -21734,6 +22913,537 @@
       ]
     },
     {
+      "path": "src/services/technologyAssetService.js",
+      "functions": [
+        {
+          "name": "fail",
+          "line": 4,
+          "async": false,
+          "parameters": [
+            "message",
+            "status = 400"
+          ],
+          "description": ""
+        },
+        {
+          "name": "ensureStore",
+          "line": 7,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "text",
+          "line": 12,
+          "async": false,
+          "parameters": [
+            "value",
+            "max",
+            "required = false"
+          ],
+          "description": ""
+        },
+        {
+          "name": "validate",
+          "line": 17,
+          "async": false,
+          "parameters": [
+            "input"
+          ],
+          "description": ""
+        },
+        {
+          "name": "list",
+          "line": 88,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "save",
+          "line": 92,
+          "async": true,
+          "parameters": [
+            "id",
+            "input"
+          ],
+          "description": ""
+        },
+        {
+          "name": "remove",
+          "line": 107,
+          "async": true,
+          "parameters": [
+            "id",
+            "version"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../config/database",
+        "node:crypto"
+      ]
+    },
+    {
+      "path": "src/services/technologyBrowserProbe.js",
+      "functions": [
+        {
+          "name": "collect",
+          "line": 2,
+          "async": false,
+          "parameters": [
+            "plan"
+          ],
+          "description": "Build a bounded, data-only DOM/JS observation expression for community rules. No eval of rule text."
+        },
+        {
+          "name": "keep",
+          "line": 5,
+          "async": false,
+          "parameters": [
+            "key",
+            "value",
+            "target"
+          ],
+          "description": ""
+        },
+        {
+          "name": "property",
+          "line": 20,
+          "async": false,
+          "parameters": [
+            "root",
+            "path"
+          ],
+          "description": ""
+        },
+        {
+          "name": "expression",
+          "line": 110,
+          "async": false,
+          "parameters": [
+            "plan"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "src/services/technologyBrowserScanService.js",
+      "functions": [
+        {
+          "name": "delay",
+          "line": 11,
+          "async": false,
+          "parameters": [
+            "ms"
+          ],
+          "description": ""
+        },
+        {
+          "name": "executable",
+          "line": 72,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "runtimeTechnologies",
+          "line": 102,
+          "async": false,
+          "parameters": [
+            "signals = {}"
+          ],
+          "description": ""
+        },
+        {
+          "name": "mergeTechnologies",
+          "line": 135,
+          "async": false,
+          "parameters": [
+            "...groups"
+          ],
+          "description": ""
+        },
+        {
+          "name": "scan",
+          "line": 169,
+          "async": true,
+          "parameters": [
+            "url",
+            "dependencies = {}"
+          ],
+          "description": ""
+        },
+        {
+          "name": "progress",
+          "line": 170,
+          "async": false,
+          "parameters": [
+            "percent",
+            "stage"
+          ],
+          "description": ""
+        },
+        {
+          "name": "observation",
+          "line": 188,
+          "async": true,
+          "parameters": [
+            "expression",
+            "fallback",
+            "stage",
+            "timeout"
+          ],
+          "description": ""
+        },
+        {
+          "name": "paused",
+          "line": 268,
+          "async": true,
+          "parameters": [
+            "event"
+          ],
+          "description": ""
+        },
+        {
+          "name": "reject",
+          "line": 275,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../shared/technologyFingerprint",
+        "./technologyBrowserProbe",
+        "./technologyHeaderScanService",
+        "./technologySignatureService",
+        "node:child_process",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
+        "ws"
+      ]
+    },
+    {
+      "path": "src/services/technologyHeaderScanService.js",
+      "functions": [
+        {
+          "name": "fail",
+          "line": 15,
+          "async": false,
+          "parameters": [
+            "message",
+            "status = 400"
+          ],
+          "description": ""
+        },
+        {
+          "name": "connectionError",
+          "line": 16,
+          "async": false,
+          "parameters": [
+            "error"
+          ],
+          "description": ""
+        },
+        {
+          "name": "publicAddress",
+          "line": 32,
+          "async": false,
+          "parameters": [
+            "address"
+          ],
+          "description": ""
+        },
+        {
+          "name": "internalAddress",
+          "line": 60,
+          "async": false,
+          "parameters": [
+            "address"
+          ],
+          "description": ""
+        },
+        {
+          "name": "allowedAddress",
+          "line": 74,
+          "async": false,
+          "parameters": [
+            "address"
+          ],
+          "description": ""
+        },
+        {
+          "name": "validateUrl",
+          "line": 80,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "target",
+          "line": 103,
+          "async": true,
+          "parameters": [
+            "value",
+            "resolve = dns.lookup.bind(dns)"
+          ],
+          "description": ""
+        },
+        {
+          "name": "requestPage",
+          "line": 133,
+          "async": false,
+          "parameters": [
+            "destination",
+            "method = 'GET'",
+            "options = {}"
+          ],
+          "description": ""
+        },
+        {
+          "name": "finish",
+          "line": 167,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "stop",
+          "line": 194,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "failed",
+          "line": 220,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "requestHeaders",
+          "line": 250,
+          "async": false,
+          "parameters": [
+            "destination"
+          ],
+          "description": ""
+        },
+        {
+          "name": "scan",
+          "line": 253,
+          "async": true,
+          "parameters": [
+            "value",
+            "dependencies = {}"
+          ],
+          "description": ""
+        },
+        {
+          "name": "progress",
+          "line": 254,
+          "async": false,
+          "parameters": [
+            "percent",
+            "stage"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../shared/technologyFingerprint",
+        "node:dns",
+        "node:http",
+        "node:https",
+        "node:net",
+        "node:zlib"
+      ]
+    },
+    {
+      "path": "src/services/technologySignatureService.js",
+      "functions": [
+        {
+          "name": "load",
+          "line": 7,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "browserPlan",
+          "line": 26,
+          "async": false,
+          "parameters": [],
+          "description": "Build data-only read plans; selectors and JS paths are never evaluated as JavaScript code."
+        },
+        {
+          "name": "analyze",
+          "line": 57,
+          "async": false,
+          "parameters": [
+            "input"
+          ],
+          "description": "Regex evaluation is isolated and terminable, including catastrophic patterns on hostile pages."
+        },
+        {
+          "name": "finish",
+          "line": 64,
+          "async": false,
+          "parameters": [
+            "result"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "node:worker_threads"
+      ]
+    },
+    {
+      "path": "src/services/technologySignatureWorker.js",
+      "functions": [
+        {
+          "name": "list",
+          "line": 7,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "own",
+          "line": 8,
+          "async": false,
+          "parameters": [
+            "object",
+            "key"
+          ],
+          "description": ""
+        },
+        {
+          "name": "safeVersion",
+          "line": 9,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "pattern",
+          "line": 10,
+          "async": false,
+          "parameters": [
+            "raw"
+          ],
+          "description": ""
+        },
+        {
+          "name": "add",
+          "line": 32,
+          "async": false,
+          "parameters": [
+            "name",
+            "version",
+            "confidence",
+            "evidence",
+            "inferred = false"
+          ],
+          "description": ""
+        },
+        {
+          "name": "match",
+          "line": 40,
+          "async": false,
+          "parameters": [
+            "name",
+            "raw",
+            "values",
+            "evidence"
+          ],
+          "description": ""
+        },
+        {
+          "name": "requirements",
+          "line": 94,
+          "async": false,
+          "parameters": [],
+          "description": "Conditional detections are pruned before and after implication expansion."
+        }
+      ],
+      "dependencies": [
+        "./technologySignatureService",
+        "node:worker_threads"
+      ]
+    },
+    {
+      "path": "src/services/technologyVulnerabilityService.js",
+      "functions": [
+        {
+          "name": "fail",
+          "line": 3,
+          "async": false,
+          "parameters": [
+            "message",
+            "status = 400"
+          ],
+          "description": ""
+        },
+        {
+          "name": "validate",
+          "line": 7,
+          "async": false,
+          "parameters": [
+            "input"
+          ],
+          "description": ""
+        },
+        {
+          "name": "requestJson",
+          "line": 25,
+          "async": false,
+          "parameters": [
+            "url"
+          ],
+          "description": ""
+        },
+        {
+          "name": "normalize",
+          "line": 68,
+          "async": false,
+          "parameters": [
+            "payload"
+          ],
+          "description": ""
+        },
+        {
+          "name": "lookup",
+          "line": 99,
+          "async": true,
+          "parameters": [
+            "input",
+            "dependencies = {}"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "node:https"
+      ]
+    },
+    {
       "path": "src/services/threatModelService.js",
       "functions": [
         {
@@ -22717,6 +24427,74 @@
           "async": false,
           "parameters": [
             "key"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "src/shared/technologyFingerprint.js",
+      "functions": [
+        {
+          "name": "detect",
+          "line": 23,
+          "async": false,
+          "parameters": [
+            "headers"
+          ],
+          "description": ""
+        },
+        {
+          "name": "attributes",
+          "line": 43,
+          "async": false,
+          "parameters": [
+            "tag"
+          ],
+          "description": ""
+        },
+        {
+          "name": "safeAssetUrl",
+          "line": 49,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "detectPage",
+          "line": 62,
+          "async": false,
+          "parameters": [
+            "headers",
+            "html = ''",
+            "setCookie = []",
+            "assets = []"
+          ],
+          "description": "Original local signatures inspired by passive web profiling; no Wappalyzer dataset or JS execution."
+        },
+        {
+          "name": "add",
+          "line": 64,
+          "async": false,
+          "parameters": [
+            "name",
+            "version",
+            "quadrant",
+            "evidence",
+            "source = 'scan'"
+          ],
+          "description": ""
+        },
+        {
+          "name": "assetUrls",
+          "line": 247,
+          "async": false,
+          "parameters": [
+            "html",
+            "base"
           ],
           "description": ""
         }

@@ -53,8 +53,10 @@ async function start() {
   await require('./services/auditFindingService').ensureStore();
   await require('./services/auditFindingReminderService').ensureStore();
   await require('./services/complianceService').ensureStore();
+  await require('./services/securityChecklistService').ensureStore();
   await require('./services/statementService').ensureStore();
   await require('./services/officeDesignService').ensureStore();
+  await require('./services/technologyAssetService').ensureStore();
   await ensureBackupRoot();
   await pool.query(await fs.readFile(usersFile, 'utf8'));
   await new Promise((resolve, reject) => {
