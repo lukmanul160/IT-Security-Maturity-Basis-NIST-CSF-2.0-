@@ -1,3 +1,7 @@
+ > **Docker HTTPS:** petunjuk Docker HTTP/port 5000 pada dokumen lama ini
+ > digantikan oleh [Nginx HTTPS dan arsitektur](DOCKER_HTTPS.md). Gunakan
+ > BLACKOWL_ADDRESS dan template Nginx; cookie Docker selalu Secure.
+
 # Panduan instalasi NIST Basis: Linux dan Windows
 
 Panduan disesuaikan dengan source aplikasi pada 2 Oktober 2026. Perintah dijalankan

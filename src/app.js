@@ -12,6 +12,9 @@ const { sessionCookieSecure } = require('./config/env');
 
 const app = express();
 app.disable('x-powered-by');
+// Only enable for a single trusted reverse proxy with no public backend port.
+// Nginx overwrites incoming forwarded headers before sending requests here.
+if (process.env.TRUST_PROXY_HOPS === '1') app.set('trust proxy', 1);
 // Compress code/styles and static page HTML; API data, downloads and images retain
 // their original response behavior. Keep compression CPU cost moderate.
 app.use(compression({

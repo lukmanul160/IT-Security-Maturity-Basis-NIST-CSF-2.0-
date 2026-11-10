@@ -20,7 +20,7 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 - [Pull terbaru, rebuild Docker, dan pemulihan login](docs/UPDATE_DOCKER.md):
   langkah update server dengan data lama tetap tersimpan.
-- [Akses jaringan 192.168.130.12:5000](docs/NETWORK_ACCESS.md): pengaturan binding,
+- [Akses jaringan HTTPS melalui IP VM](docs/NETWORK_ACCESS.md): pengaturan binding,
   firewall Windows/Linux, dan diagnosis akses LAN untuk Docker/manual.
 - [Instalasi langkah demi langkah: manual atau Docker](docs/INSTALL_STEP_BY_STEP.md):
   urutan instalasi baru dari prasyarat sampai login dan pemeriksaan hasil.
@@ -60,17 +60,22 @@ Perintah opsional `npm run admin:create` dijalankan di container melalui
 `docker compose exec`, sehingga tidak membutuhkan npm pada host.
 
 Nama aplikasi/container: **IT_Governance_BLACKOWL**. Database: **BlackOwl_DB_Gov**.
-Salin `docker.env.example` ke `.env.docker`, isi `BLACKOWL_DB_PASSWORD`, lalu:
+Salin `docker.env.example` ke `.env.docker`, isi `BLACKOWL_DB_PASSWORD`,
+set `BLACKOWL_ADDRESS` ke IP VM (sertifikat lokal default), lalu:
 
 ```bash
 docker compose --env-file .env.docker up -d --build
 ```
 
 Setelah startup aplikasi selesai, buka
-http://localhost:5000/login. PostgreSQL hanya diakses melalui `db:5432` di
+**https://IP-VM/login** (contoh https://192.168.130.12/login).
+Nginx menangani HTTPS; impor root CA Nginx pada setiap perangkat pengguna agar
+sertifikat IP dipercaya. Backend tidak membuka port host. PostgreSQL hanya diakses melalui `db:5432` di
 jaringan internal Docker, tanpa membuka port 5432 pada host. Database dan file
 memakai volume permanen.
-Lihat [panduan Docker](docs/DOCKER.md) untuk konfigurasi, HTTPS, backup, dan upgrade.
+Lihat [Docker HTTPS, gambar arsitektur, dan migrasi IP ke domain](docs/DOCKER_HTTPS.md)
+untuk langkah trust CA dan titik konfigurasi; [panduan Docker](docs/DOCKER.md)
+menjelaskan volume, backup, dan upgrade.
 
 ### Instalasi tanpa Docker
 

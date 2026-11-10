@@ -1,3 +1,6 @@
+> Deployment Docker terbaru: [Nginx HTTPS melalui IP/domain dan arsitektur](DOCKER_HTTPS.md).
+> Hanya Nginx membuka port host 80/443; app dan PostgreSQL tidak dipublikasikan.
+
 # High-Level Design — NIST Basis
 
 Pembaruan arsitektur dan dokumentasi lengkap 9 Oktober 2026: [Dokumentasi teknis terkini](technical-documentation/00-README.md).

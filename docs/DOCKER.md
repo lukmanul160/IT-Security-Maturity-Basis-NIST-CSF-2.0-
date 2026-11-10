@@ -1,5 +1,8 @@
 # Menjalankan IT_Governance_BLACKOWL dengan Docker
 
+Deployment sekarang wajib melalui **Nginx HTTPS**. Ikuti
+[setup IP, trust CA, gambar arsitektur dan migrasi domain](DOCKER_HTTPS.md).
+
 Gunakan Docker Engine atau Docker Desktop dengan Linux containers dan Docker
 Compose v2. Build mengunduh paket npm dan image sehingga membutuhkan internet.
 
@@ -36,8 +39,8 @@ cp docker.env.example .env.docker
 # Edit .env.docker dengan editor Anda.
 ```
 
-Isi `BLACKOWL_DB_PASSWORD` dengan password acak Anda sendiri. Biarkan port 5000
-atau ubah `BLACKOWL_PORT` bila sudah digunakan. Untuk nilai yang mengandung `$`
+Isi `BLACKOWL_DB_PASSWORD` dengan password acak Anda sendiri. Set
+`BLACKOWL_ADDRESS` ke IP VM. Sertifikat lokal dibuat pada startup. Port publik adalah 80/443. Untuk nilai yang mengandung `$`
 atau `#`, bungkus dengan petik tunggal agar dibaca secara literal oleh Compose.
 
 ```bash
@@ -85,32 +88,26 @@ Jika ada data operasional tambahan yang harus masuk, gunakan import/restore
 atau migrasi seed khusus sesuai format datanya. Docker tidak otomatis membaca
 semua file SQL/JSON tambahan dalam repository.
 
-Buka **http://localhost:5000/login** (sesuaikan dengan `BLACKOWL_PORT`). Docker
+Buka **https://IP-VM/login** setelah trust root CA pada perangkat pengguna. Docker
 menyediakan database baru; data instalasi non-Docker tidak otomatis dipindahkan.
 
 ## Konfigurasi dan penyimpanan
 
 Untuk akses dari komputer lain, ikuti [panduan jaringan LAN](NETWORK_ACCESS.md),
-termasuk contoh `192.168.130.12:5000`, binding port, dan pemeriksaan firewall.
+termasuk contoh `https://192.168.130.12`, binding port, dan pemeriksaan firewall.
 
 | Pengaturan | Default | Kegunaan |
 | --- | --- | --- |
 | `BLACKOWL_DB_PASSWORD` | wajib diisi | Password PostgreSQL |
-| `BLACKOWL_PORT` | `5000` | Port aplikasi pada host |
-| `BLACKOWL_BIND_IP` | `127.0.0.1` | Alamat host untuk port aplikasi |
-| `BLACKOWL_COOKIE_SECURE` | `false` | `false` untuk HTTP lokal, `true` untuk HTTPS |
+| `BLACKOWL_ADDRESS` | wajib diisi | IP VM atau domain tanpa skema/port |
+| `BLACKOWL_BIND_IP` | `0.0.0.0` | Interface host Nginx |
+| Template SSL | lokal default | Aktifkan SSL sendiri di deploy/nginx/templates/default.conf.template |
 
-Mode production tetap aktif. `SESSION_COOKIE_SECURE` hanya mengatur cookie
-login: nilai default aplikasi tetap Secure di production; Compose secara eksplisit
-mematikannya untuk HTTP lokal pada loopback. Untuk server yang diakses melalui
-jaringan, gunakan reverse proxy HTTPS, pertahankan Host asli, dan atur
-`BLACKOWL_COOKIE_SECURE=true`. Jika proxy berjalan di host yang sama, binding
-loopback tetap dapat dipakai. Docker Compose ini tidak menyediakan sertifikat TLS.
-
-Port host `5000` diteruskan ke port `8000` di container aplikasi. Aplikasi
-terhubung ke PostgreSQL melalui `db:5432` di jaringan Compose. PostgreSQL tidak
-membuka port ke host, sehingga tidak bentrok dengan PostgreSQL lain yang memakai
-port `5432` pada host atau container lain. Untuk memeriksa database:
+Mode production tetap aktif dan cookie Secure selalu aktif. Nginx melayani
+HTTPS 443 serta redirect HTTP 80, lalu meneruskan HTTP ke `app:8000` pada
+jaringan proxy. Backend tidak mempublikasikan port host. PostgreSQL hanya
+dapat diakses aplikasi melalui jaringan database pada `db:5432`.
+Untuk memeriksa database:
 
 ```bash
 docker compose --env-file .env.docker exec db psql -U blackowl -d BlackOwl_DB_Gov
@@ -122,6 +119,7 @@ docker compose --env-file .env.docker exec db psql -U blackowl -d BlackOwl_DB_Go
 | `app_data` | Seed JSON, kunci SMTP, dan antrean audit |
 | `uploads` | Evidence dan file unggahan lokal |
 | `backups` | Cadangan database dan file yang dibuat aplikasi |
+| `nginx_tls` | Sertifikat dan CA lokal; backup private key secara aman |
 
 Volume memiliki prefix project `it_governance_blackowl_` dan tetap ada setelah
 `docker compose down`. Jangan gunakan `down -v` kecuali ingin menghapus semua
@@ -132,8 +130,8 @@ unggahan, database backup, atau workbook operasional dari host.
 
 Untuk instalasi ulang atau rebuild, gunakan `.env.docker` yang sudah ada dan
 jalankan `docker compose --env-file .env.docker up -d --build`. Jangan menyalin
-template lagi ke `.env.docker` karena dapat menimpa konfigurasi/password lama.
-Compose memakai kembali keempat volume di atas; database yang sudah ada tidak
+template lagi ke `.env.docker` karena dapat menimpa konfigurasi/password lama. Tambahkan ADDRESS/template SSL sesuai panduan HTTPS.
+Compose memakai kembali volume data di atas; database yang sudah ada tidak
 dibuat ulang oleh PostgreSQL.
 
 Pertahankan nama project `it_governance_blackowl` dan jangan menjalankan dengan
@@ -187,8 +185,8 @@ di PostgreSQL dan evidence pada volume upload.
 ## Pemeriksaan masalah
 
 - `Set BLACKOWL_DB_PASSWORD`: isi `.env.docker` dan selalu pakai `--env-file`.
-- Port terpakai: ubah `BLACKOWL_PORT`, lalu jalankan `up -d` kembali.
-- Login pada HTTP gagal: pastikan `BLACKOWL_COOKIE_SECURE=false` untuk akses lokal.
+- Port 80/443 terpakai: selesaikan konflik layanan pada host sebelum menjalankan Nginx.
+- Peringatan sertifikat IP: pasang root CA Nginx pada perangkat pengguna; gunakan HTTPS.
 - `db` tidak healthy: periksa `docker compose --env-file .env.docker logs db`.
 - Aplikasi gagal startup: periksa log `app`; database harus healthy terlebih dahulu.
 - Pada Windows, pilih Linux containers di Docker Desktop.

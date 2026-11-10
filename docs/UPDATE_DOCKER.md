@@ -1,7 +1,7 @@
 # Pull versi terbaru dan perbaiki login Docker
 
 Panduan untuk server yang sudah menjalankan aplikasi melalui Docker Compose,
-contoh URL **http://192.168.130.12:5000/login**. Jalankan dari terminal server,
+contoh URL **https://192.168.130.12/login**. Jalankan dari terminal server,
 bukan komputer pengguna. Pertahankan database dan volume lama.
 
 ## 1. Masuk ke folder repository dan periksa perubahan
@@ -71,30 +71,29 @@ ditarik oleh server sebelum di-commit dan di-push ke repository.
 
 ## 4. Periksa akses LAN
 
-Edit `.env.docker` yang sudah ada. Untuk pengujian HTTP jaringan internal:
+Edit `.env.docker` yang sudah ada, pertahankan password database:
 
 ```dotenv
 BLACKOWL_BIND_IP=0.0.0.0
-BLACKOWL_PORT=5000
-BLACKOWL_COOKIE_SECURE=false
+BLACKOWL_ADDRESS=192.168.130.12
 ```
 
-Pertahankan `BLACKOWL_DB_PASSWORD` yang lama. Jika memakai HTTPS, gunakan
-cookie Secure sesuai konfigurasi reverse proxy. Detail firewall dan jaringan
-tersedia pada [panduan akses LAN](NETWORK_ACCESS.md).
+Gunakan IP VM sebenarnya. Port publik menjadi 80/443 melalui Nginx;
+BLACKOWL_PORT, BLACKOWL_TLS dan BLACKOWL_COOKIE_SECURE lama tidak lagi dipakai.
+Ikuti [trust CA dan migrasi HTTPS](DOCKER_HTTPS.md).
 
 ## 5. Rebuild dan jalankan aplikasi terbaru
 
 ```text
 docker compose --env-file .env.docker config --quiet
-docker compose --env-file .env.docker build --pull app
-docker compose --env-file .env.docker up -d --no-deps app
+docker compose --env-file .env.docker build --pull app nginx
+docker compose --env-file .env.docker up -d
 docker compose --env-file .env.docker ps
 docker compose --env-file .env.docker logs --tail 100 app db
 ```
 
-Tunggu database healthy dan startup selesai. Port aplikasi harus menampilkan
-`0.0.0.0:5000->8000/tcp` jika memakai konfigurasi LAN di atas.
+Tunggu database healthy dan startup selesai. Hanya Nginx mempublikasikan
+80/443; app/db tidak memiliki mapping port host.
 `git pull` saja tidak memperbarui kode dalam image; `--build` diperlukan.
 Startup menjalankan provisioning dan seed otomatis. Jangan gunakan `down -v`
 atau menghapus volume: data lama tetap diperlukan.
@@ -115,8 +114,8 @@ Password database pada volume lama harus cocok dengan `.env.docker`.
 
 ## 7. Login atau buat administrator pemulihan
 
-Buka **http://192.168.130.12:5000/login** dengan akun yang sudah ada.
-Instalasi baru tidak membuat akun/password bawaan. Akun lama tidak di-reset;
+Buka **https://192.168.130.12/login** dengan akun yang sudah ada.
+Instalasi baru membuat admin / admin saat tabel akun kosong; segera ganti password. Akun lama tidak di-reset;
 jika masih memakai password awal versi lama, ganti melalui Account Management.
 
 Jika password lama tidak diketahui, buat administrator baru melalui terminal
@@ -143,7 +142,7 @@ kembali akun yang diblokir sementara.
 ## 8. Verifikasi hasil
 
 1. Login berhasil dan workspace terbuka.
-2. Buka `http://192.168.130.12:5000/api/health/db` dari browser yang sudah login;
+2. Buka `https://192.168.130.12/api/health/db` dari browser yang sudah login;
    hasil harus memuat `connected: true`.
 3. Periksa data lama, modul framework, dan file evidence masih tersedia.
 4. Buat dan unduh backup setelah pembaruan berhasil.

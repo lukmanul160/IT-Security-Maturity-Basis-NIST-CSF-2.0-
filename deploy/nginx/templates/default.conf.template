@@ -1,0 +1,47 @@
+server {
+    listen 80;
+    server_name ${BLACKOWL_ADDRESS};
+    return 308 https://${BLACKOWL_ADDRESS}$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name ${BLACKOWL_ADDRESS};
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Default IP: local CA + certificate generated at container startup.
+    ssl_certificate /etc/nginx/generated/server.crt;
+    ssl_certificate_key /etc/nginx/generated/server.key;
+
+    # SSL SENDIRI: comment KEDUA baris ssl_certificate di atas,
+    # lalu uncomment KEDUA baris berikut. Set ADDRESS ke domain sertifikat.
+    # Tempatkan file PEM pada deploy/nginx/certs/ di host (read-only mount).
+    # ssl_certificate /etc/nginx/certs/fullchain.pem;
+    # ssl_certificate_key /etc/nginx/certs/private.key;
+    # Panduan lengkap: docs/DOCKER_HTTPS.md bagian SSL sendiri.
+
+    # Large backup/restore: stream requests without a proxy size cap.
+    # Application permissions and per-feature upload limits still apply.
+    client_max_body_size 0;
+    client_body_timeout 3600s;
+    send_timeout 3600s;
+
+    # Resolve app again after container recreation (Docker embedded DNS).
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $backend http://app:8000;
+    location / {
+        proxy_pass $backend;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        # Overwrite client-supplied forwarding headers at this sole ingress.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}

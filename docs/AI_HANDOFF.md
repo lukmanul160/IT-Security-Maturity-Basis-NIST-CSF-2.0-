@@ -515,3 +515,30 @@ scanner7/7 including non-terminating runtime fallback, UI Chrome fixture passed
 stream20->100/light Apply filters contrast/20-row paging/See more modal, and
 i18n/runtime/source26/26. Structure catalogue317 files/67 fragments and whitespace
 check passed. No organization-site or production data used for these tests.
+
+
+## Docker Nginx HTTPS (9 November 2026)
+
+Compose memakai
+image Nginx kustom (deploy/nginx) dengan OpenSSL. Hanya Nginx membuka 80/443;
+app dan db tidak mempublikasikan port. Empat volume data dan nama project lama
+tetap dipertahankan. Volume baru nginx_tls menyimpan CA lokal dan sertifikat.
+BLACKOWL_ADDRESS wajib IPv4/domain; BLACKOWL_TLS/PORT/COOKIE_SECURE lama diabaikan.
+Skrip startup membuat CA jika benar-benar belum ada, memperbarui leaf menjelang
+kedaluwarsa/ADDRESS berubah pada startup, tidak memiliki scheduler. CA yang
+kedaluwarsa/tidak lengkap menggagalkan startup. Template memuat contoh SSL
+sendiri sebagai komentar; folder certs diabaikan Git dan kedua build context.
+Proxy mengganti forwarded headers, menjaga Host, streaming body/response dan
+resolusi ulang app melalui DNS Docker. TRUST_PROXY_HOPS=1 dan cookie Secure
+Docker tetap aktif. Tidak boleh membuka backend langsung atau menambah hop
+proxy tanpa review. Lihat DOCKER_HTTPS.md dan architecture/docker-https.svg.
+Distribusikan CA Nginx ke perangkat pengguna jika memakai TLS lokal.
+Docker/Nginx/OpenSSL CLI belum tersedia melalui PATH lokal; belum menguji build
+image, nginx -t, TLS end-to-end atau konektivitas VM. Tidak membaca .env maupun
+data operasional. Sumber frontend tidak berubah, sehingga build frontend tidak
+diperlukan untuk perubahan ini; build image app tetap melakukan build frontend.
+
+Verifikasi akhir Nginx: 7/7 tes proxy HTTP fixture, config cookie dan
+inisialisasi volume lulus (--test-isolation=none). node --check src/app.js,
+parse XML gambar SVG, git diff --check dan git check-ignore cert/key lulus.
+Tes ini tidak menjalankan Nginx atau skrip OpenSSL dan bukan bukti TLS live.

@@ -26,3 +26,4 @@ frontend/public/vue
 .vscode
 docs
 test
+deploy/nginx/certs

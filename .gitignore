@@ -21,3 +21,7 @@ Cybersecurity Risk Register.xlsx
 /img/*.png
 
 /frontend/public/landing-media/
+
+# Local TLS certificates and private keys; never commit deployment secrets.
+/deploy/nginx/certs/*
+!/deploy/nginx/certs/.gitkeep

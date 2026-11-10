@@ -110,3 +110,11 @@ Referensi internal:
 - [Technology Asset dan browser scan](technology-asset.md).
 - [Checklist dan evidence](compliance-office-design.md).
 - [Batas benchmark sebelumnya](performance-modules-2026-10-19.md).
+
+## Tambahan deployment Nginx HTTPS
+
+Compose kini menyertakan Nginx dan volume nginx_tls untuk
+sertifikat, private key, CA dan state. Sertakan pada anggaran sistem/backup
+serta lindungi salinan private key. Port host hanya 80/443.
+Lihat [arsitektur dan operasi HTTPS](DOCKER_HTTPS.md). Anggaran CPU/RAM/storage
+di atas tetap estimasi awal dan belum diuji ulang dengan stack Nginx.
