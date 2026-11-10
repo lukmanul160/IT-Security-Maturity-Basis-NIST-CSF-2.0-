@@ -61,8 +61,7 @@ framework dan nama cookie. Maksimum 12 aset JS/CSS satu origin dibaca (128 KiB
 per aset) untuk mengenali banner versi, tanpa mengeksekusi kode. Signature lokal
 mengenali antara lain WordPress, Drupal, Joomla, WooCommerce, React, Vue, Angular,
 Next.js, Nuxt, jQuery, Bootstrap, Laravel, Django serta server/CDN dari header.
-Pendekatannya serupa fingerprinting Wappalyzer, bukan integrasi engine/database
-Wappalyzer dan tidak menjamin cakupan yang sama.
+Fingerprinting memakai aturan lokal dan tidak menjamin inventaris stack lengkap.
 
 Mendukung URL publik dan internal (RFC1918, CGNAT, IPv6 ULA), DNS internal dan
 port aplikasi khusus. Backend harus dapat menjangkau jaringan tujuan; scan internal
@@ -213,7 +212,7 @@ Batas sesi sekitar 25 detik setelah startup, paling banyak 40 request diperiksa,
 8 MiB payload yang diterima, 512 KiB HTML per dokumen, 2 MiB per JS/CSS. Tunggu
 sekitar 1,5 detik setelah load untuk marker runtime. Profile sementara dibersihkan
 setelah proses berhenti. Data mentah/variabel window lain tidak dikembalikan.
-Ini bukan engine/database Wappalyzer dan tidak menjamin deteksi identik.
+Detektor lokal memiliki cakupan terbatas dan tidak menjamin inventaris lengkap.
 
 `npm run test:technology-browser-scan` menguji Chrome nyata dengan respons website
 fixture yang diinjeksi: DOM tertunda Angular, globals Zone/lit, deduplikasi versi,
@@ -248,60 +247,22 @@ semua koneksi tetangga menjadi hasil baru. Search Knowledge Notes lama tetap
 menggunakan sintaks/operator catatan aslinya. Nama pengguna tidak diubah jadi wiki-link.
 
 
-## Community signature engine (supersedes earlier browser-only local signatures)
+## Project-owned browser detection
 
-**Scan browser (lebih lengkap)** now uses all 7,695 pinned community WebAppAnalyzer
-technology definitions in Wappalyzer format, in addition to original passive hints.
-This is a maintained open-source continuation, not the current proprietary browser
-extension/API. Current snapshot: c708f0b2894cee70bb3b2eddde37dcb05595800c. Source JSON,
-GPL-3.0 license, original README and SHA-256 manifest are in third_party/webappanalyzer.
-Runtime uses only local files; no page content is transmitted to an external engine.
-Docker runtime copies the data; installing/configuring Chromium remains required.
-Docker/cloud execution has not been tested directly.
+Browser scan uses original rules maintained in `src/shared/technologyRules.js`,
+with the existing passive detector and runtime observations. No external rule
+snapshot, subscription, API key, or updater is required. The initial local set
+contains 16 definitions; coverage is intentionally limited and does not promise
+complete technology inventory. Add observations and synthetic fixtures together.
 
-Supported observations: HTTP headers, cookie names (values omitted), URL, original
-and rendered HTML, meta, CSS, script URLs/content, inline scripts, known JS property
-paths and CSS selector DOM attributes/properties/text. JS paths are parsed as data,
-never eval; prototype/constructor traversal is rejected. React fiber/container and
-Angular context DOM markers supplement rules when window globals are absent.
-Requested resource hosts/paths can be observed even if loading is blocked; query
-strings are not collected for the request-URL channel. There is no extra DNS/TLS
-certificate/robots.txt probing, login or unrestricted XHR. Network restrictions
-from the earlier security review remain. No bypass of anti-bot/WAF is attempted.
-
-The adapter handles version capture, signature confidence, implies, excludes,
-requires/requiresCategory and wildcard cookie names. Categories/descriptions are
-upstream data and remain in their original language. One technology/version is one
-card with multiple category labels, so Next.js is not duplicated for each category.
-**Detail deteksi** expands description, score, direct/indirect origin and safe rule
-channel evidence. These details persist with the technology record after Save.
-Scores are rule weights, not statistical probabilities or proof. Implied technology
-versions are not invented. Labels GA4/UA are permitted; numeric lifecycle filtering
-still excludes nonnumeric versions from <, <=, > and >=.
-
-Regex evaluation runs in a Node Worker with 192MiB old-generation heap limit and
-6sec timeout; a failure yields partial results. Browser observation data is bounded
-at about150k characters, JS paths12 levels, at most10 DOM matches/selector,100 script
-URLs and50 inline script snippets of4096 chars. CDP retains its2MiB message limit.
-Original scan transport/body/request limits remain. Standard scan uses the original
-small passive rules; choose browser mode for the community engine.
-
-HTTP error/denial pages(status>=400) return header hints only, with an explicit UI
-message and partial/accessRestricted flags; challenge-page frameworks are not added
-to the application inventory. The BRIFinance URL supplied by the user returned403
-from this environment on2026-11-09, so its complete user-screenshot list has not
-been reproduced live. A rendered fixture proves simultaneous Cloudflare Browser
-Insights, Google Analytics GA4, styled-components6.3.8, React, Emotion, Next.js12.3.7,
-Font Awesome, PWA, Open Graph, Cloudflare, Google Tag Manager and Swiper detection.
-
-Validation: test:technology-signatures3/3; technology browser tests6/6 including the
-broad rendered fixture and403 filtering; technology service16/16 including persisted
-metadata validation. Live403 is a limitation, not evidence of detection parity.
-
-References: https://github.com/enthec/webappanalyzer and
-https://github.com/HTTPArchive/wappalyzer (the latter documents that the current
-Wappalyzer website/extension use separate closed-source code).
-
+Rules describe JS property paths, DOM selectors/attributes, headers, script URLs
+and script/HTML markers with native regular expressions and explicit version
+captures. Versions are reported only when observed; Next.js can imply React with
+an unknown version and an inferred flag. Evidence records observation names,
+not raw analytics identifiers. Regex evaluation retains the 192 MiB worker and
+six-second deadline. Existing browser isolation, network restrictions, partial
+results, and header-only handling of denial pages remain in place. Chromium is
+still required for browser mode. Docker/cloud have not been verified directly.
 
 ## Live scan progress and partial timeouts
 
@@ -336,3 +297,12 @@ Technology lists within register/search table cells show at most5 items. See mor
 filtering is respected and no record is changed. Application editor/scan cards keep
 full data. The Apply filters button explicitly uses a dark blue background/white
 text and visible focus outline, fixing light-mode contrast.
+
+
+Verification of local detector replacement (2026-11-10): browser fixtures 7/7,
+local detector plus structure/runtime/i18n checks 30/30, and temporary PostgreSQL
+inventory/service checks 17/17 passed. No live organization scan or Docker/cloud
+execution was used. No frontend source changed; backend restart is required.
+Detection confidence is a rule weight, not a statistical probability. Existing
+saved records are preserved, including historical source labels; new scans use
+NIST Basis metadata. DOM/JS observations remain bounded by the browser probe.

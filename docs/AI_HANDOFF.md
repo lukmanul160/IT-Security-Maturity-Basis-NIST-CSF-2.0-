@@ -406,7 +406,7 @@ pinned DNS, bounded HTML/gzip and up to three same-origin JS/CSS assets. Local
 fingerprints read generators, paths, framework markers, version banners and cookie
 names without executing scripts or attempting login. Supersedes earlier public-only
 HEAD limitation. Metadata/loopback stay blocked; public-to-internal redirects denied.
-No Wappalyzer engine/database integration. Internal reachability and trusted TLS CA
+No external engine/database integration. Internal reachability and trusted TLS CA
 are deployment prerequisites. Radar explains all four rings and zero counts in both
 languages. Register/editor show source remarks Scan result/Manual input per technology.
 Verification: 12 isolated service/PostgreSQL tests and 25 structure/i18n/access tests
@@ -471,31 +471,14 @@ terminology and search-neighbors props; default Knowledge Notes behavior preserv
 Technology graph labels avoid creating/parsing wiki-links from user-entered names.
 
 
-## Technology browser: broad community rule engine (2026-11-09)
+## Project-owned technology detection (2026-11-10)
 
-Replaced browser-only small signature coverage with 7,695 local pinned community
-Wappalyzer-format rules. New services: technologySignatureService/Worker and
-technologyBrowserProbe; source in third_party/webappanalyzer with upstream GPL-3.0,
-README, NOTICE, SOURCE hashes retained. Updater script fetches immutable commit,
-never runs during scanning. Docker runtime now copies the data, no Docker live test.
-Browser collects bounded JS/DOM/meta/script observations, regexes run in terminable
-192MiB/6sec worker; network controls remain. Implied/excluded/conditional rules,
-versions and categories handled. Details persist via validated detection metadata
-and display in expandable cards/editor, with English labels.403+ pages yield only
-header hints; no WAF bypass or challenge-stack attribution. BRIFinance returned403
-live, so its supplied full screenshot remains unverified. Synthetic rendered page
-proves listed12 technologies and stated GA4/Next/styled versions simultaneously.
-Tests: rules3/3, Chrome scanner6/6, inventory16/16. See technology-asset.md for caps,
-license/source and parity limitations. Prior statement 'no Wappalyzer dataset'
-applies to standard scan only, superseded for browser mode by community dataset.
-
-Final resumed verification: technology UI Chrome fixture passed including category
-badges, expandable descriptions and HTML-as-text escaping. i18n/source/runtime25/25
-passed; source catalogue314 files/67 fragments validated and diff whitespace check
-passed. Build completed from Vue source; standard legacy script/font/chunk warnings
-remain. An earlier auto-approval usage limit delayed these commands but the resumed
-run executed them successfully.
-
+External technology rule data and its downloader have been removed. Browser scan
+now uses original source rules in src/shared/technologyRules.js with the passive
+and runtime detectors. Initial browser rule coverage is 16 definitions, not a
+complete stack inventory. Worker memory/deadline and browser/network controls
+remain. Maintain rules with synthetic observations; no subscription or API key.
+See technology-asset.md for behavior and verification limitations.
 
 ## Scan progress, timeout resilience and table density
 
@@ -515,3 +498,9 @@ scanner7/7 including non-terminating runtime fallback, UI Chrome fixture passed
 stream20->100/light Apply filters contrast/20-row paging/See more modal, and
 i18n/runtime/source26/26. Structure catalogue317 files/67 fragments and whitespace
 check passed. No organization-site or production data used for these tests.
+
+
+Local detector replacement verification (2026-11-10): Chrome fixtures 7/7,
+detector/structure/runtime/i18n 30/30, temporary PostgreSQL inventory 17/17.
+No .env or operational data read; Docker/cloud and live sites not tested.
+No frontend changes; restart backend. Historical saved metadata is preserved.

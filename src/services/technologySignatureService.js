@@ -1,47 +1,21 @@
-/** Local Wappalyzer-format community rules; no target data is sent to an external API. */
-const fs = require('node:fs');
+/** Project-owned technology observations; no external rule database or API. */
 const path = require('node:path');
-const crypto = require('node:crypto');
 const { Worker } = require('node:worker_threads');
-let snapshot;
+const definitions = require('../shared/technologyRules');
 function load() {
-  if (snapshot) return snapshot;
-  const root = path.resolve(__dirname, '../../third_party/webappanalyzer');
-  const source = JSON.parse(fs.readFileSync(path.join(root, 'SOURCE.json'), 'utf8'));
-  const technologies = {};
-  let categories;
-  for (const [filename, hash] of Object.entries(source.files)) {
-    if (!/^src\/(categories\.json|technologies\/[a-z_]\.json)$/.test(filename)) continue;
-    const buffer = fs.readFileSync(path.join(root, filename));
-    if (crypto.createHash('sha256').update(buffer).digest('hex') !== hash)
-      throw Error('Technology signature integrity mismatch');
-    const value = JSON.parse(buffer);
-    if (filename === 'src/categories.json') categories = value;
-    else Object.assign(technologies, value);
-  }
-  snapshot = { technologies, categories, revision: source.revision, count: Object.keys(technologies).length };
-  return snapshot;
+  return { technologies: definitions, revision: 'nist-basis-1', count: definitions.length };
 }
 /** Build data-only read plans; selectors and JS paths are never evaluated as JavaScript code. */
 function browserPlan() {
   const js = new Set(),
     dom = new Map();
-  for (const definition of Object.values(load().technologies)) {
-    for (const key of Object.keys(definition.js || {})) if (key.length <= 300) js.add(key);
-    const definitions =
-      typeof definition.dom === 'string'
-        ? { [definition.dom]: { exists: '' } }
-        : Array.isArray(definition.dom)
-          ? Object.fromEntries(definition.dom.map((selector) => [selector, { exists: '' }]))
-          : definition.dom || {};
-    for (const [selector, raw] of Object.entries(definitions)) {
-      if (selector.length > 1000) continue;
-      const entry = dom.get(selector) || { selector, attributes: new Set(), properties: new Set() };
-      for (const rule of Array.isArray(raw) ? raw : [raw]) {
-        for (const key of Object.keys(rule.attributes || {})) entry.attributes.add(key);
-        for (const key of Object.keys(rule.properties || {})) entry.properties.add(key);
-      }
-      dom.set(selector, entry);
+  for (const definition of definitions) {
+    for (const observation of definition.observations) {
+      if (observation.field === 'js') js.add(observation.key);
+      if (observation.field !== 'dom') continue;
+      const entry = dom.get(observation.key) || { selector: observation.key, attributes: new Set(), properties: new Set() };
+      if (observation.attribute) entry.attributes.add(observation.attribute);
+      dom.set(observation.key, entry);
     }
   }
   return {

@@ -390,7 +390,7 @@ async function scan(url, dependencies = {}) {
           2500,
         );
     progress(85, 'signatures');
-    const community = await signatures.analyze({
+    const localDetections = await signatures.analyze({
       url: main.url.href,
       html: accessRestricted ? '' : (main.html || '') + '\n' + snapshot.html,
       headers: Object.fromEntries(
@@ -426,7 +426,7 @@ async function scan(url, dependencies = {}) {
         : assets.filter((asset) => asset.kind === 'Stylesheet').map((asset) => asset.text),
       xhr: accessRestricted ? [] : observedRequests,
     });
-    partial = partial || accessRestricted || community.partial || observations.truncated;
+    partial = partial || accessRestricted || localDetections.partial || observations.truncated;
     const markerHints = runtimeTechnologies({ react: observations.react, angular: observations.angular });
     for (const hint of markerHints) hint.evidence = 'Browser DOM property marker: ' + hint.name;
     const headers = Object.fromEntries(
@@ -443,8 +443,8 @@ async function scan(url, dependencies = {}) {
       accessRestricted,
       timeoutStage,
       partial,
-      engine: community.engine || {
-        name: 'WebAppAnalyzer',
+      engine: localDetections.engine || {
+        name: 'NIST Basis',
         signatures: signatures.load().count,
         revision: signatures.load().revision,
       },
@@ -459,7 +459,7 @@ async function scan(url, dependencies = {}) {
         accessRestricted ? [] : profile.detectPage({}, snapshot.html),
         accessRestricted ? [] : runtimeTechnologies(snapshot.signals),
         accessRestricted ? [] : markerHints,
-        community.technologies,
+        localDetections.technologies,
       ),
     };
   } catch (error) {

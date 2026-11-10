@@ -22995,7 +22995,7 @@
           "parameters": [
             "plan"
           ],
-          "description": "Build a bounded, data-only DOM/JS observation expression for community rules. No eval of rule text."
+          "description": "Build a bounded, data-only DOM/JS observation expression for project-owned rules. No eval of rule text."
         },
         {
           "name": "keep",
@@ -23272,21 +23272,21 @@
       "functions": [
         {
           "name": "load",
-          "line": 7,
+          "line": 5,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "browserPlan",
-          "line": 26,
+          "line": 9,
           "async": false,
           "parameters": [],
           "description": "Build data-only read plans; selectors and JS paths are never evaluated as JavaScript code."
         },
         {
           "name": "analyze",
-          "line": 57,
+          "line": 31,
           "async": false,
           "parameters": [
             "input"
@@ -23295,7 +23295,7 @@
         },
         {
           "name": "finish",
-          "line": 64,
+          "line": 38,
           "async": false,
           "parameters": [
             "result"
@@ -23304,8 +23304,7 @@
         }
       ],
       "dependencies": [
-        "node:crypto",
-        "node:fs",
+        "../shared/technologyRules",
         "node:path",
         "node:worker_threads"
       ]
@@ -23315,7 +23314,7 @@
       "functions": [
         {
           "name": "list",
-          "line": 7,
+          "line": 6,
           "async": false,
           "parameters": [
             "value"
@@ -23324,63 +23323,13 @@
         },
         {
           "name": "own",
-          "line": 8,
+          "line": 7,
           "async": false,
           "parameters": [
-            "object",
+            "value",
             "key"
           ],
           "description": ""
-        },
-        {
-          "name": "safeVersion",
-          "line": 9,
-          "async": false,
-          "parameters": [
-            "value"
-          ],
-          "description": ""
-        },
-        {
-          "name": "pattern",
-          "line": 10,
-          "async": false,
-          "parameters": [
-            "raw"
-          ],
-          "description": ""
-        },
-        {
-          "name": "add",
-          "line": 32,
-          "async": false,
-          "parameters": [
-            "name",
-            "version",
-            "confidence",
-            "evidence",
-            "inferred = false"
-          ],
-          "description": ""
-        },
-        {
-          "name": "match",
-          "line": 40,
-          "async": false,
-          "parameters": [
-            "name",
-            "raw",
-            "values",
-            "evidence"
-          ],
-          "description": ""
-        },
-        {
-          "name": "requirements",
-          "line": 94,
-          "async": false,
-          "parameters": [],
-          "description": "Conditional detections are pruned before and after implication expansion."
         }
       ],
       "dependencies": [
@@ -24473,7 +24422,7 @@
             "setCookie = []",
             "assets = []"
           ],
-          "description": "Original local signatures inspired by passive web profiling; no Wappalyzer dataset or JS execution."
+          "description": "Original local signatures inspired by passive web profiling; no external dataset or JS execution."
         },
         {
           "name": "add",
@@ -24495,6 +24444,55 @@
           "parameters": [
             "html",
             "base"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "src/shared/technologyRules.js",
+      "functions": [
+        {
+          "name": "js",
+          "line": 5,
+          "async": false,
+          "parameters": [
+            "key",
+            "version = false"
+          ],
+          "description": ""
+        },
+        {
+          "name": "dom",
+          "line": 6,
+          "async": false,
+          "parameters": [
+            "key",
+            "attribute"
+          ],
+          "description": ""
+        },
+        {
+          "name": "text",
+          "line": 7,
+          "async": false,
+          "parameters": [
+            "field",
+            "pattern",
+            "version"
+          ],
+          "description": ""
+        },
+        {
+          "name": "rule",
+          "line": 8,
+          "async": false,
+          "parameters": [
+            "name",
+            "categories",
+            "observations",
+            "implies = []"
           ],
           "description": ""
         }

@@ -5,7 +5,7 @@ Dibuat oleh `npm run docs:source`. Jangan edit tabel manual.
 `source-catalog.json` memuat nama fungsi, baris, parameter, komentar dan dependency statis.
 Indeks ini bukan call graph lengkap atau bukti bahwa semua fungsi telah memiliki dokumentasi bisnis.
 
-Cakupan: 317 file, 2396 fungsi bernama, 67 fragmen runtime.
+Cakupan: 318 file, 2395 fungsi bernama, 67 fragmen runtime.
 
 ## Urutan runtime
 
@@ -522,7 +522,7 @@ Cakupan: 317 file, 2396 fungsi bernama, 67 fragmen runtime.
 | [technologyBrowserScanService.js](../src/services/technologyBrowserScanService.js) | `delay`, `executable`, `runtimeTechnologies`, `mergeTechnologies`, `scan`, `progress`, `observation`, `paused`, `reject` |
 | [technologyHeaderScanService.js](../src/services/technologyHeaderScanService.js) | `fail`, `connectionError`, `publicAddress`, `internalAddress`, `allowedAddress`, `validateUrl`, `target`, `requestPage`, `finish`, `stop`, `failed`, `requestHeaders`, `scan`, `progress` |
 | [technologySignatureService.js](../src/services/technologySignatureService.js) | `load`, `browserPlan`, `analyze`, `finish` |
-| [technologySignatureWorker.js](../src/services/technologySignatureWorker.js) | `list`, `own`, `safeVersion`, `pattern`, `add`, `match`, `requirements` |
+| [technologySignatureWorker.js](../src/services/technologySignatureWorker.js) | `list`, `own` |
 | [technologyVulnerabilityService.js](../src/services/technologyVulnerabilityService.js) | `fail`, `validate`, `requestJson`, `normalize`, `lookup` |
 | [threatModelService.js](../src/services/threatModelService.js) | `invalid`, `validate`, `ensureStore`, `list`, `create`, `update`, `remove` |
 | [tprmGovernanceService.js](../src/services/tprmGovernanceService.js) | `reviewPolicy`, `eligibleUsers`, `assignments`, `requireAssigned`, `dependencies`, `vendorEvidence`, `contractDetails`, `acceptanceValid`, `acceptanceHash`, `acceptance`, `acceptanceChoices`, `reminders`, `add` |
@@ -542,4 +542,5 @@ Cakupan: 317 file, 2396 fungsi bernama, 67 fragmen runtime.
 | --- | --- |
 | [ikasScoring.js](../src/shared/ikasScoring.js) | `truncate`, `average`, `level`, `summarize`, `score`, `normalize`, `idFor` |
 | [technologyFingerprint.js](../src/shared/technologyFingerprint.js) | `detect`, `attributes`, `safeAssetUrl`, `detectPage`, `add`, `assetUrls` |
+| [technologyRules.js](../src/shared/technologyRules.js) | `js`, `dom`, `text`, `rule` |
 | [tprmWorkflow.js](../src/shared/tprmWorkflow.js) | `invalid`, `text`, `validDate`, `today`, `futureDate`, `cia`, `questionnaireScore`, `questionnaireReadiness`, `profileTier`, `riskLevel`, `riskSummary`, `fingerprint`, `stableJson`, `normalize`, `checkCritical` |
