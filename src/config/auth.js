@@ -90,10 +90,12 @@ function parseCookies(header = '') {
 function beginDatabaseRestore() {
 	if (restoring) throw Object.assign(new Error('Database restore sedang berlangsung.'), { status: 409 });
 	restoring = true;
+	require('../services/redisCacheService').invalidateDashboard();
 	sessionGeneration++;
 	sessions.clear();
 }
 function endDatabaseRestore() {
+	require('../services/redisCacheService').invalidateDashboard();
 	sessions.clear();
 	sessionGeneration++;
 	restoring = false;

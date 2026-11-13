@@ -13,7 +13,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-17 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-ENV NODE_ENV=production PORT=8000
+ENV NODE_ENV=production PORT=8000 NIST_DOCKER=true
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/frontend/public ./frontend/public
 COPY package.json package-lock.json ./

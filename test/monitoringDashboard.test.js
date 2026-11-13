@@ -4,6 +4,39 @@ const service = require('../src/services/monitoringDashboardService');
 const permissions = require('../src/services/permissionService');
 const { pool } = require('../src/config/database');
 
+test('Docker dashboard cache rechecks access and isolates identities and permission changes', async t => {
+  const cache = require('../src/services/redisCacheService');
+  const entries = new Map();
+  let reads = 0, checks = 0, access = { framework: {read: true} };
+  t.mock.method(cache, 'get', async (group, key) => entries.get(key) || null);
+  t.mock.method(cache, 'set', async (group, key, result) => entries.set(key, result));
+  t.mock.method(permissions, 'getRoleActions', async () => { checks++; return access; });
+  t.mock.method(pool, 'query', async () => { reads++; return {rows: [{id: 'csf'}]}; });
+  const user = {username: 'alice', role: 'viewer'};
+  await service.snapshot(user);
+  await service.snapshot(user);
+  assert.equal(reads, 1);
+  assert.equal(checks, 2);
+  await service.snapshot({...user, username: 'bob'});
+  assert.equal(reads, 2);
+  access = {};
+  assert.deepEqual((await service.snapshot(user)).modules, []);
+  access = { framework: {read: true} };
+  cache.invalidateDashboard();
+  await service.snapshot(user);
+  assert.equal(reads, 3);
+});
+
+test('unavailable dashboard modules are never cached', async t => {
+  const cache = require('../src/services/redisCacheService');
+  t.mock.method(cache, 'get', async () => null);
+  const writes = t.mock.method(cache, 'set', async () => {});
+  t.mock.method(permissions, 'getRoleActions', async () => ({framework: {read: true}}));
+  t.mock.method(pool, 'query', async () => {throw Error('Fixture outage');});
+  assert.equal((await service.snapshot({role: 'viewer'})).modules[0].state, 'unavailable');
+  assert.equal(writes.mock.callCount(), 0);
+});
+
 test('assessment monitoring includes explicit gaps without treating maturity shortfalls as findings',async t=>{
   t.mock.method(permissions,'getRoleActions',async()=>({csf:{read:true},assessment:{read:true}}));
   t.mock.method(pool,'query',async()=>({rows:[{code:'DE.AE-02',category:'Detect'}]}));

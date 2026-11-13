@@ -129,6 +129,11 @@ engine aplikasi tidak cukup untuk membangun frontend saat ini.
 
 ## Operasi dan pengembangan
 
+Deployment Docker menyediakan Redis hanya untuk ringkasan Monitoring Dashboard
+(15 detik) dan hasil kandidat CVE (5 menit). Instalasi langsung tidak memerlukan
+Redis. PostgreSQL tetap sumber utama, dan kegagalan Redis memakai alur semula.
+Lihat [cakupan, konfigurasi dan batas cache Docker](docs/DOCKER.md#redis-khusus-docker).
+
 ~~~bash
 npm run dev
 npm run dev:client

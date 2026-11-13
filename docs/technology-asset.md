@@ -1,5 +1,12 @@
 # Technology Asset
 
+Deployment Docker menambahkan cache Redis opsional untuk hasil sukses kandidat
+CVE NVD selama 5 menit, selain cache memori lokal. Identitas query mencakup nama,
+versi, filter recent dan halaman; `checkedAt` tetap waktu pencarian asal dan
+`cached: true` menandai hasil cache. Error dan scan website tidak disimpan ke Redis.
+Instalasi langsung memakai perilaku lama; gangguan Redis kembali ke cache lokal/
+NVD dengan throttle lama. Lihat [konfigurasi Redis Docker](DOCKER.md#redis-khusus-docker).
+
 Menu **Asset Management > Technology Asset** memetakan aplikasi ke teknologi dan
 versi. Register ini terpisah dari hardware Asset Register dan tidak mengubah data
 aset lama. Data tersimpan di PostgreSQL (`technology_assets`), bukan localStorage.

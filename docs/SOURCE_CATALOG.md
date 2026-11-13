@@ -5,7 +5,7 @@ Dibuat oleh `npm run docs:source`. Jangan edit tabel manual.
 `source-catalog.json` memuat nama fungsi, baris, parameter, komentar dan dependency statis.
 Indeks ini bukan call graph lengkap atau bukti bahwa semua fungsi telah memiliki dokumentasi bisnis.
 
-Cakupan: 318 file, 2395 fungsi bernama, 67 fragmen runtime.
+Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 
 ## Urutan runtime
 
@@ -500,6 +500,7 @@ Cakupan: 318 file, 2395 fungsi bernama, 67 fragmen runtime.
 | [policyReminderService.js](../src/services/policyReminderService.js) | `renderMessage`, `render`, `invalid`, `email`, `ensureStore`, `read`, `getSettings`, `validate`, `saveSettings`, `testEmail`, `nextReview`, `runReminders`, `startScheduler` |
 | [privacyService.js](../src/services/privacyService.js) | `getAll`, `create`, `update`, `remove` |
 | [questionnaireTemplateService.js](../src/services/questionnaireTemplateService.js) | `invalid`, `normalizeSections`, `parseMarkdownSections`, `flushSection`, `fallbackSectionsForTemplate`, `loadSectionsFromMarkdown`, `ensureStore`, `list`, `create`, `update`, `remove` |
+| [redisCacheService.js](../src/services/redisCacheService.js) | `createCache`, `reset`, `bounded`, `connection`, `get`, `key`, `set` |
 | [reminderRecipientService.js](../src/services/reminderRecipientService.js) | `ensureStore`, `validate`, `list`, `save`, `ownerKey`, `create`, `update`, `remove`, `registerOwners`, `emailMap` |
 | [reminderSchedule.js](../src/services/reminderSchedule.js) | `localDate`, `shiftDate`, `scheduleSlot`, `validateSchedule`, `invalid` |
 | [reminderScheduler.js](../src/services/reminderScheduler.js) | `startReminderScheduler`, `tick` |

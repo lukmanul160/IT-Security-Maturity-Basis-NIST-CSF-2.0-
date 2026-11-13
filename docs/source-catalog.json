@@ -13151,7 +13151,7 @@
       "functions": [
         {
           "name": "requireWordEditor",
-          "line": 56,
+          "line": 59,
           "async": true,
           "parameters": [
             "req",
@@ -13252,20 +13252,21 @@
         },
         {
           "name": "endDatabaseRestore",
-          "line": 96,
+          "line": 97,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "getOfficeSessions",
-          "line": 102,
+          "line": 104,
           "async": false,
           "parameters": [],
           "description": ""
         }
       ],
       "dependencies": [
+        "../services/redisCacheService",
         "./database",
         "bcryptjs",
         "crypto"
@@ -19474,7 +19475,7 @@
       "functions": [
         {
           "name": "day",
-          "line": 9,
+          "line": 10,
           "async": false,
           "parameters": [
             "value"
@@ -19483,7 +19484,7 @@
         },
         {
           "name": "todayInBangkok",
-          "line": 12,
+          "line": 13,
           "async": false,
           "parameters": [
             "now"
@@ -19492,7 +19493,7 @@
         },
         {
           "name": "validDay",
-          "line": 13,
+          "line": 14,
           "async": false,
           "parameters": [
             "value"
@@ -19501,7 +19502,7 @@
         },
         {
           "name": "ciaLevel",
-          "line": 17,
+          "line": 18,
           "async": false,
           "parameters": [
             "values"
@@ -19510,7 +19511,7 @@
         },
         {
           "name": "acceptanceStatus",
-          "line": 22,
+          "line": 23,
           "async": false,
           "parameters": [
             "row"
@@ -19519,7 +19520,7 @@
         },
         {
           "name": "issues",
-          "line": 28,
+          "line": 29,
           "async": false,
           "parameters": [
             "critical=0",
@@ -19530,7 +19531,7 @@
         },
         {
           "name": "distribution",
-          "line": 29,
+          "line": 30,
           "async": false,
           "parameters": [
             "rows",
@@ -19540,7 +19541,7 @@
         },
         {
           "name": "deadlines",
-          "line": 37,
+          "line": 38,
           "async": false,
           "parameters": [
             "rows",
@@ -19552,7 +19553,7 @@
         },
         {
           "name": "recordTrend",
-          "line": 49,
+          "line": 50,
           "async": false,
           "parameters": [
             "rows",
@@ -19562,7 +19563,7 @@
         },
         {
           "name": "metric",
-          "line": 65,
+          "line": 66,
           "async": false,
           "parameters": [
             "label",
@@ -19572,7 +19573,7 @@
         },
         {
           "name": "query",
-          "line": 66,
+          "line": 67,
           "async": true,
           "parameters": [
             "sql",
@@ -19582,7 +19583,7 @@
         },
         {
           "name": "buildSnapshot",
-          "line": 68,
+          "line": 69,
           "async": true,
           "parameters": [
             "user",
@@ -19593,7 +19594,7 @@
         },
         {
           "name": "can",
-          "line": 69,
+          "line": 70,
           "async": false,
           "parameters": [
             "key"
@@ -19602,7 +19603,7 @@
         },
         {
           "name": "add",
-          "line": 71,
+          "line": 72,
           "async": false,
           "parameters": [
             "id",
@@ -19616,7 +19617,7 @@
         },
         {
           "name": "summarize",
-          "line": 82,
+          "line": 83,
           "async": false,
           "parameters": [
             "rows",
@@ -19627,7 +19628,7 @@
         },
         {
           "name": "snapshot",
-          "line": 217,
+          "line": 218,
           "async": true,
           "parameters": [
             "user",
@@ -19643,7 +19644,8 @@
         "./assetDiagramService",
         "./evidenceAccessService",
         "./permissionService",
-        "./policyReminderService"
+        "./policyReminderService",
+        "./redisCacheService"
       ]
     },
     {
@@ -20647,6 +20649,78 @@
         "../config/database",
         "fs",
         "path"
+      ]
+    },
+    {
+      "path": "src/services/redisCacheService.js",
+      "functions": [
+        {
+          "name": "createCache",
+          "line": 5,
+          "async": false,
+          "parameters": [
+            "{ enabled = false, url, createClient, timeoutMs = 200, retryMs = 30000 } = {}"
+          ],
+          "description": ""
+        },
+        {
+          "name": "reset",
+          "line": 8,
+          "async": false,
+          "parameters": [],
+          "description": "Dashboard is isolated across app restarts/restores."
+        },
+        {
+          "name": "bounded",
+          "line": 14,
+          "async": true,
+          "parameters": [
+            "operation"
+          ],
+          "description": ""
+        },
+        {
+          "name": "connection",
+          "line": 22,
+          "async": true,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "get",
+          "line": 38,
+          "async": true,
+          "parameters": [
+            "group",
+            "identity"
+          ],
+          "description": ""
+        },
+        {
+          "name": "key",
+          "line": 47,
+          "async": false,
+          "parameters": [
+            "group",
+            "identity"
+          ],
+          "description": ""
+        },
+        {
+          "name": "set",
+          "line": 50,
+          "async": true,
+          "parameters": [
+            "group",
+            "identity",
+            "data"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "node:crypto",
+        "redis"
       ]
     },
     {
@@ -23342,7 +23416,7 @@
       "functions": [
         {
           "name": "fail",
-          "line": 3,
+          "line": 4,
           "async": false,
           "parameters": [
             "message",
@@ -23352,7 +23426,7 @@
         },
         {
           "name": "validate",
-          "line": 7,
+          "line": 8,
           "async": false,
           "parameters": [
             "input"
@@ -23361,7 +23435,7 @@
         },
         {
           "name": "requestJson",
-          "line": 25,
+          "line": 26,
           "async": false,
           "parameters": [
             "url"
@@ -23370,7 +23444,7 @@
         },
         {
           "name": "normalize",
-          "line": 68,
+          "line": 69,
           "async": false,
           "parameters": [
             "payload"
@@ -23379,7 +23453,7 @@
         },
         {
           "name": "lookup",
-          "line": 99,
+          "line": 100,
           "async": true,
           "parameters": [
             "input",
@@ -23389,6 +23463,7 @@
         }
       ],
       "dependencies": [
+        "./redisCacheService",
         "node:https"
       ]
     },

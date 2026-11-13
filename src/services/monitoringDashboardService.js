@@ -5,6 +5,7 @@
  */
 const { pool } = require('../config/database');
 const permissions = require('./permissionService');
+const redisCache = require('./redisCacheService');
 
 const day = value => value instanceof Date ? value.toISOString().slice(0, 10) : String(value || '').slice(0, 10);
 // Reuse ICU setup across rows and requests; retain Bangkok month/day boundaries.
@@ -211,15 +212,22 @@ async function buildSnapshot(user, now, access) {
   }));
   return { generatedAt: now.toISOString(), timezone: 'Asia/Bangkok', modules };
 }
-// Share only concurrent identical refreshes. Recheck permissions every time and
-// discard the result immediately after completion so later refreshes stay fresh.
+// Recheck permissions on every request. Docker may reuse a complete snapshot
+// for 15 seconds; direct installations only share concurrent identical refreshes.
 const pendingSnapshots = new Map();
 async function snapshot(user, now) {
   const access = await permissions.getRoleActions(user.role);
   if (now !== undefined) return buildSnapshot(user, now, access);
-  const key = JSON.stringify([user.id, user.username, user.role, access]);
+  const key = JSON.stringify([user.id, user.username, user.role, access, todayInBangkok(new Date()), redisCache.dashboardVersion()]);
   if (pendingSnapshots.has(key)) return pendingSnapshots.get(key);
-  const pending = buildSnapshot(user, new Date(), access);
+  const pending = (async () => {
+    const cached = await redisCache.get('dashboard', key);
+    if (cached) return cached;
+    const result = await buildSnapshot(user, new Date(), access);
+    // Retry unavailable modules on the next refresh instead of caching failures.
+    if (result.modules.every(module => module.state === 'ready')) await redisCache.set('dashboard', key, result);
+    return result;
+  })();
   if (pendingSnapshots.size >= 256) return pending;
   pendingSnapshots.set(key, pending);
   try { return await pending; }

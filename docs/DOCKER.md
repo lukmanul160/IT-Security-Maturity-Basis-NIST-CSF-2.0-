@@ -158,6 +158,56 @@ tambahkan environment kredensial atau mount service-account sendiri sesuai
 
 ## Operasi dan pembaruan
 
+### Redis khusus Docker
+
+Compose menjalankan Redis 7.4 pada jaringan `cache` internal, hanya terhubung
+ke aplikasi. Tidak ada port host, volume Redis, snapshot RDB atau AOF. Batas
+cache 128 MiB memakai `allkeys-lru`, dengan batas container 192 MiB.
+PostgreSQL tetap sumber data utama; Redis tidak perlu di-backup.
+
+Hanya dua fitur memakai Redis:
+
+| Fitur | Masa berlaku | Perilaku |
+| --- | --- | --- |
+| Monitoring Dashboard | 15 detik | Ringkasan lengkap per identitas, role, matriks izin dan tanggal Bangkok; hasil parsial/gagal tidak disimpan |
+| Kandidat CVE NVD | 5 menit | Hasil sukses nama/versi/filter/halaman; cache memori lokal yang sudah ada tetap berlaku |
+
+Izin diperiksa sebelum mengambil dashboard dari cache. Sesudah menyimpan data,
+ringkasan dashboard dapat tertinggal hingga 15 detik; refresh dalam jendela ini
+dapat memakai `generatedAt` yang sama. Detail/edit tetap membaca sumber utama.
+Cache dashboard dipisahkan tiap proses/restart serta dibatalkan pada restore
+database. Cache kandidat CVE dapat digunakan kembali setelah restart aplikasi.
+Session, password, permission store, formulir, isi Knowledge Notes, evidence,
+upload, scan website, backup dan operasi tulis tidak dipindahkan ke Redis.
+
+Image menetapkan `NIST_DOCKER=true`; Compose menetapkan
+`REDIS_CACHE_ENABLED=true`. Instalasi langsung tidak membuka koneksi Redis.
+Untuk menonaktifkan cache Docker, ubah `REDIS_CACHE_ENABLED` menjadi `"false"`
+di Compose dan recreate app. Redis bukan dependency wajib startup app: jika
+belum siap/mati, cache dilewati dan data diambil seperti sebelumnya. Koneksi
+dan setiap command dibatasi 200 ms, lalu kegagalan memicu jeda percobaan 30 detik.
+Payload cache dibatasi 512 KiB. Redis hanya berisi cache yang dapat dibuang.
+
+Update dengan perintah `docker compose --env-file .env.docker up -d --build`.
+Periksa Redis dengan `docker compose --env-file .env.docker exec redis redis-cli ping`.
+Workflow smoke juga memeriksa round-trip, TTL, invalidasi dan fallback Redis mati
+pada project fixture. Pengujian lokal menggunakan mock; Docker/Redis live perlu
+dikonfirmasi melalui job tersebut, bukan disimpulkan dari tes konfigurasi.
+
+Workflow GitHub Actions `Docker smoke` berjalan pada pull request, push (termasuk
+hasil merge), dan pemicu manual. Pemeriksaan membangun image app/Nginx,
+menjalankan PostgreSQL sementara, menunggu healthcheck, memeriksa konfigurasi
+Nginx, HTTPS dengan CA lokal, redirect HTTP, hasil build frontend, koneksi
+database/akun seed, serta ketersediaan pg_dump/pg_restore. Recreate aplikasi
+memeriksa bahwa penanda fixture dalam volume data tetap tersimpan dan proxy
+kembali melayani login. Project, jaringan, dan volume memakai nama khusus run;
+konfigurasi deployment dan data operasional tidak digunakan.
+
+Pastikan job `docker-smoke` lulus pada commit hasil merge sebelum update server.
+Atur sebagai required status check pada branch protection jika merge harus
+menunggu hasilnya. Pemeriksaan ini tidak menguji login interaktif, semua modul,
+restore database, atau konektivitas/TLS VM tujuan.
+
 Untuk urutan lengkap mulai dari pull repository, backup, rebuild, hingga
 pemulihan akun, ikuti [panduan update Docker dan login](UPDATE_DOCKER.md).
 

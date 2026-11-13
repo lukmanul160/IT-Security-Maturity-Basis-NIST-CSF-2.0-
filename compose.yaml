@@ -39,10 +39,12 @@ services:
       # HTTPS terminates at Nginx; no direct backend port is published.
       SESSION_COOKIE_SECURE: "true"
       TRUST_PROXY_HOPS: "1"
+      REDIS_CACHE_ENABLED: "true"
       TZ: Asia/Bangkok
     networks:
       - proxy
       - database
+      - cache
     volumes:
       - app_data:/app/data
       - uploads:/app/upload
@@ -51,6 +53,20 @@ services:
       db:
         condition: service_healthy
     stop_grace_period: 30s
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    # Disposable cache only, with no host port or persistent volume.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    mem_limit: 192m
+    networks:
+      - cache
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   db:
     # Internal Docker only: do not publish PostgreSQL's port to the host.
@@ -85,3 +101,5 @@ volumes:
 networks:
   proxy:
   database:
+  cache:
+    internal: true

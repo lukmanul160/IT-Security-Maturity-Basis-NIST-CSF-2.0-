@@ -34,11 +34,20 @@ bisa diatur untuk lokasi lain. Jangan commit .env atau password.
 
 Salin docker.env.example ke .env.docker dan isi BLACKOWL_DB_PASSWORD.
 Jalankan docker compose --env-file .env.docker up -d --build.
-Buka http://localhost:5000/login; periksa docker compose --env-file .env.docker ps.
+Buka https://IP-VM/login setelah trust CA Nginx; periksa docker compose --env-file .env.docker ps.
 Dockerfile membangun frontend dan memasang PostgreSQL client 17.
 Compose menjalankan PostgreSQL 17 dan volume database/data/upload/backup.
 Jangan gunakan down -v kecuali memang ingin menghapus seluruh volume.
 Lihat DOCKER.md dan INSTALLATION.md untuk deployment lengkap.
+
+Workflow `.github/workflows/docker-smoke.yml` memeriksa build/startup Compose,
+HTTPS Nginx, koneksi PostgreSQL, aset frontend dan persistensi volume saat app
+di-recreate pada PR/push/manual. Memakai project dan volume fixture terisolasi.
+Pada sesi penambahan workflow, 5 tes konfigurasi/volume lokal dan `npm run build`
+lulus (peringatan legacy script, font runtime dan chunk besar tetap ada; build
+memerlukan eskalasi spawn esbuild di sandbox). Docker tidak
+tersedia sehingga hasil container harus dikonfirmasi lewat job `docker-smoke`.
+Keberhasilan tes konfigurasi lokal bukan bukti deployment Docker berhasil.
 
 ## Backup dan restore
 
@@ -531,3 +540,32 @@ Local detector replacement verification (2026-11-10): Chrome fixtures 7/7,
 detector/structure/runtime/i18n 30/30, temporary PostgreSQL inventory 17/17.
 No .env or operational data read; Docker/cloud and live sites not tested.
 No frontend changes; restart backend. Historical saved metadata is preserved.
+
+## Redis cache khusus Docker (13 November 2026)
+
+Implementasi ada di src/services/redisCacheService.js; dependency redis mengikuti
+package-lock. Image Docker menetapkan NIST_DOCKER=true dan Compose mengaktifkan
+REDIS_CACHE_ENABLED. Instalasi langsung tidak mengimpor client atau membuka koneksi.
+Allowlist cache hanya dashboard (15 detik) dan cve (300 detik). Dashboard memeriksa
+izin setiap request dan membedakan identitas, role, matriks izin, tanggal Bangkok
+serta generasi cache. Hasil parsial tidak disimpan. Restore mengganti generasi pada
+awal/akhir sehingga snapshot sebelum restore tidak digunakan lagi. Respons detail
+CRUD tetap langsung ke sumber utama; ringkasan bisa tertinggal 15 detik setelah edit.
+CVE mempertahankan checkedAt/cached dan cache memori sebelumnya; hanya hasil sukses
+normalisasi disimpan. Cache CVE dapat dipakai setelah restart, dashboard tidak.
+
+Redis 7.4 hanya pada network internal cache yang dibagi dengan app; tanpa port host,
+volume, RDB/AOF. Maxmemory 128 MiB allkeys-lru, container 192 MiB. Tiap koneksi/command
+memiliki timeout 200 ms dan jeda percobaan 30 detik setelah gagal; cache gagal tidak
+menggagalkan fitur. Payload maksimum 512 KiB; key identitas di-hash. Session,
+permission store, data formulir/evidence, notes lengkap dan operasi tulis tetap
+menggunakan alur sebelumnya. Lihat DOCKER.md dan technology-asset.md.
+
+Verifikasi: npm ci mengikuti lockfile; 52 tes fixture terarah mencakup cache,
+CVE, dashboard/concurrency/izin, backup/restore, proxy/cookie, inisialisasi dan
+struktur. Katalog sumber diregenerasi dan check:structure lulus. Frontend tidak
+berubah sehingga tidak memerlukan build. Docker/redis-server tidak tersedia lokal;
+workflow Docker smoke ditambah round-trip/TTL/invalidation dan outage fallback
+untuk dijalankan CI. Belum ada pengukuran percepatan dengan Redis live, suite penuh,
+atau deployment Docker/cloud. Tidak membaca .env atau memakai data operasional.
+Node lokal 24.19.0 masih memunculkan peringatan engine package yang meminta Node 26.
