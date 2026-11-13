@@ -18,7 +18,6 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/frontend/public ./frontend/public
 COPY package.json package-lock.json ./
 COPY src ./src
-COPY third_party/webappanalyzer ./third_party/webappanalyzer
 COPY scripts ./scripts
 COPY database ./database
 COPY templates ./templates

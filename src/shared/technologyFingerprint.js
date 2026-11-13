@@ -58,7 +58,7 @@ function safeAssetUrl(value) {
     return { path: '', host: '', version: '' };
   }
 }
-/** Original local signatures inspired by passive web profiling; no Wappalyzer dataset or JS execution. */
+/** Original local signatures inspired by passive web profiling; no external dataset or JS execution. */
 function detectPage(headers, html = '', setCookie = [], assets = []) {
   const found = new Map();
   function add(name, version, quadrant, evidence, source = 'scan') {

@@ -172,7 +172,7 @@ test('numeric dotted version filters include four-part lower versions and suppor
 
 
 test('scan provenance details persist through inventory validation without unsafe metadata',()=>{
- const data=application();data.technologies[0].detection={engine:'WebAppAnalyzer',confidence:100,inferred:false,description:'PHP runtime',categories:['Programming languages']};
+ const data=application();data.technologies[0].detection={engine:'NIST Basis',confidence:100,inferred:false,description:'PHP runtime',categories:['Programming languages']};
  assert.deepEqual(service.validate(data).technologies[0].detection,data.technologies[0].detection);
  data.technologies[0].detection.confidence=101;assert.throws(()=>service.validate(data),{status:400});
 });

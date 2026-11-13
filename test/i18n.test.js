@@ -225,7 +225,7 @@ test('technology rule search, relationship graph and security messages are bilin
 });
 
 
-test('community detector details and restricted access messages support English',()=>{
+test('local detector details and restricted access messages support English',()=>{
  const {i18n}=load('en');assert.equal(i18n.t('Detail deteksi'),'Detection details');assert.equal(i18n.t('Deteksi tidak langsung'),'Indirect detection');assert.equal(i18n.t('Skor kecocokan signature'),'Signature match score');
 });
 

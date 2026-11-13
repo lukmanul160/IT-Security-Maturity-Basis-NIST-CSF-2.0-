@@ -1,4 +1,4 @@
-/** Build a bounded, data-only DOM/JS observation expression for community rules. No eval of rule text. */
+/** Build a bounded, data-only DOM/JS observation expression for project-owned rules. No eval of rule text. */
 function collect(plan) {
   let remaining = 150000,
     truncated = false;
