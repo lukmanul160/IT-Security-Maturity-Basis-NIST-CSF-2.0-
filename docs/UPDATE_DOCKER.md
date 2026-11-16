@@ -88,8 +88,8 @@ Ikuti [trust CA dan migrasi HTTPS](DOCKER_HTTPS.md).
 docker compose --env-file .env.docker config --quiet
 docker compose --env-file .env.docker build --pull app nginx
 docker compose --env-file .env.docker up -d
-docker compose --env-file .env.docker ps
-docker compose --env-file .env.docker logs --tail 100 app db
+docker compose --env-file .env.docker ps -a
+docker compose --env-file .env.docker logs --tail 100 nginx app db
 ```
 
 Tunggu database healthy dan startup selesai. Hanya Nginx mempublikasikan
@@ -97,6 +97,52 @@ Tunggu database healthy dan startup selesai. Hanya Nginx mempublikasikan
 `git pull` saja tidak memperbarui kode dalam image; `--build` diperlukan.
 Startup menjalankan provisioning dan seed otomatis. Jangan gunakan `down -v`
 atau menghapus volume: data lama tetap diperlukan.
+
+### Jika browser menampilkan refused to connect setelah update
+
+Jalankan dari folder repository di server Docker. Gunakan alamat
+**https://192.168.130.12/login**, sesuaikan IP dengan VM sebenarnya.
+Port lama `:5000` atau `:8000` tidak dipublikasikan pada konfigurasi sekarang.
+Push ke repository saja tidak memperbarui container; server perlu pull dan rebuild.
+
+Log `NIST CSF Express server: http://localhost:8000` menunjukkan backend
+sudah mendengarkan di dalam container, tetapi belum membuktikan Nginx atau
+akses HTTPS dari jaringan pengguna sudah tersedia. Jika log gabungan hanya
+menampilkan app tanpa Nginx, periksa status semua container, termasuk yang berhenti:
+
+```bash
+docker compose --env-file .env.docker ps -a
+docker compose --env-file .env.docker up -d --build nginx
+docker compose --env-file .env.docker logs --tail 80 nginx app
+curl -kI https://127.0.0.1/login
+```
+
+Perintah `up` tersebut membuat atau menjalankan service Nginx beserta dependensinya
+sesuai Compose, dengan volume lama tetap digunakan. Perhatikan error langsung
+dari perintah itu; log Nginx dapat kosong jika container belum berhasil dibuat.
+Nginx menunggu app healthy, dan app menunggu database healthy.
+
+| Hasil pemeriksaan | Langkah berikutnya |
+| --- | --- |
+| App/database unhealthy atau exited | Periksa log app/db dan selesaikan error startup sebelum mengulang `up`. |
+| Nginx exited/restarting | Periksa log Nginx untuk error konfigurasi atau sertifikat. |
+| `up` gagal karena port 80/443 sudah dipakai | Identifikasi service pemilik port sebelum mengubah konfigurasi; jangan hentikan service lain tanpa mengetahui fungsinya. |
+| Curl lokal mendapat respons HTTP, browser LAN tetap ditolak | Periksa mapping port Nginx pada `ps -a`, binding IP, IP VM, firewall dan routing sesuai [panduan jaringan](NETWORK_ACCESS.md). |
+| Curl lokal juga connection refused | Periksa status Nginx dan publikasi port 443 terlebih dahulu. |
+
+Opsi `-k` hanya untuk diagnosis sertifikat lokal pada perintah curl. Browser tetap
+perlu mempercayai root CA sesuai [panduan HTTPS](DOCKER_HTTPS.md).
+Respons HTTP lokal membuktikan listener HTTPS merespons, bukan keberhasilan login;
+respons 502/503 memerlukan pemeriksaan koneksi Nginx ke backend.
+
+Pesan `[policy-reminder] Pemeriksaan reminder gagal` perlu diperiksa terpisah
+melalui konfigurasi database/SMTP; pesan itu saja tidak membuktikan penyebab
+port HTTPS menolak koneksi. Jangan menghapus volume, mereset akun, atau restore
+database untuk menangani masalah listener Nginx.
+
+Setelah pulih, pastikan login dan workspace dapat dibuka dari perangkat pengguna.
+Jika meminta bantuan, sertakan output `ps -a`, error `up`, dan log relevan yang
+sudah disunting agar tidak memuat kredensial; jangan membagikan `.env.docker`.
 
 ## 6. Periksa koneksi database dari aplikasi
 
@@ -149,4 +195,8 @@ kembali akun yang diblokir sementara.
 
 Jika masih gagal, catat pesan login, hasil langkah 6, dan log aplikasi. Jangan
 menyertakan password, isi `.env.docker`, hash password, atau token session.
-Panduan ini belum dijalankan pada server `192.168.130.12` dari sesi ini.
+Pada 16 November 2026, pengguna melaporkan login kembali berhasil setelah
+diarahkan memeriksa dan menjalankan Nginx dengan langkah diagnosis di atas.
+Log yang dibagikan menunjukkan backend berjalan, tetapi output status Nginx,
+perintah pemulihan dan curl tidak dibagikan, sehingga akar penyebab belum
+dipastikan. Agen tidak menjalankan Docker atau menguji server tersebut secara langsung.

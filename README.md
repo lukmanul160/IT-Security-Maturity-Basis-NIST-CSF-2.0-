@@ -7,6 +7,15 @@ Tailwind, lalu disajikan oleh backend pada port default 8000.
 
 ## Dokumentasi
 
+### Memori proyek untuk AI
+
+Mulai dari [panduan knowledge graph](docs/KNOWLEDGE_GRAPH.md), lalu jalankan
+`npm run knowledge:query -- <topik>` (contoh `technology`, `backup`, `saveRisk`).
+Hasil dibatasi dan menunjuk sumber, fungsi, dependency, serta dokumentasi terkait.
+Baca hanya bagian handoff dan modul yang relevan. Graph diperbarui dengan
+`npm run knowledge:build`; query menolak graph yang kedaluwarsa.
+Ini memori repository lintas sesi, bukan memori otomatis pada layanan AI.
+
 - [Kebutuhan CPU, RAM, dan storage deployment](docs/DEPLOYMENT_REQUIREMENTS.md):
   estimasi spesifikasi awal, perhitungan kapasitas file/backup, dan batas verifikasi.
 

@@ -1,6 +1,11 @@
 # Panduan agen AI ? NIST Basis
 
-Baca README.md, docs/AI_HANDOFF.md, kemudian dokumentasi modul yang diubah.
+Baca README.md bagian "Memori proyek untuk AI", lalu docs/KNOWLEDGE_GRAPH.md.
+Jalankan `npm run knowledge:query -- <topik>` untuk memilih dokumentasi dan sumber.
+Baca bagian docs/AI_HANDOFF.md yang relevan dengan topik, lalu dokumentasi modul yang diubah;
+tidak perlu memuat seluruh handoff/katalog/graph JSON pada setiap sesi.
+Jika graph kedaluwarsa, jalankan `npm run knowledge:build` sebelum query.
+Setelah mengubah sumber/dokumentasi, perbarui graph dan jalankan `npm run knowledge:check`.
 
 - Pertahankan perubahan pengguna yang sudah ada; periksa git status sebelum mengedit.
 - Backend CommonJS Express 5 ada di src/. PostgreSQL adalah database wajib.

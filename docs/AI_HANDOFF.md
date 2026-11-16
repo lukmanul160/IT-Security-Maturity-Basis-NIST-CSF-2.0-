@@ -1,5 +1,15 @@
 # Panduan belajar dan melanjutkan proyek
 
+## Pemulihan akses Docker setelah update (16 November 2026)
+
+Panduan `UPDATE_DOCKER.md` kini mencakup refused to connect: status seluruh
+container, rebuild/start Nginx, log proxy/app dan curl HTTPS lokal, beserta
+interpretasi hasil. Langkah update rutin juga memeriksa log Nginx dan `ps -a`.
+Pengguna melaporkan login kembali berhasil; akar penyebab belum terkonfirmasi
+karena output pemulihan tidak dibagikan. Agen hanya memeriksa konfigurasi dan
+dokumentasi, tanpa menjalankan Docker/server live atau membaca environment rahasia.
+Perubahan dokumentasi saja; tidak memerlukan build frontend atau restart aplikasi.
+
 Tema dan bahasa lintas halaman: lihat [Shared theme and language controls](ui-theme-language.md).
 `npm run test:shared-controls-browser` memakai fixture offline seluruh komponen dan
 halaman publik untuk kontras tombol pada light/dark serta ID/EN, tanpa data operasional.
