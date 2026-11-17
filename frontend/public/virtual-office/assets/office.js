@@ -6,7 +6,7 @@ import { chooseActivity, createPlaceReservations, createCrowdGrid, canTraverseOf
 import { drawGameDisplay } from './game-display.js';
 const $ = id => document.getElementById(id);
 const uiText = value => window.NistI18n?.t(value) || value;
-const colors = { admin: '#596dad', approver: '#ab825c', editor: '#5c9d91', viewer: '#a081a8', user: '#708a5c' };
+const memberColor = '#596dad';
 let renderer, controls, camera, scene, room, navigation, ambient, sun, desks = [], avatars = new Map(), users = [], filter = 'all', selected = null, paused = matchMedia('(prefers-reduced-motion: reduce)').matches, capacity = 0, lastTime = 0, simTime = 0;
 const host = $('scene');
 const places=createPlaceReservations(),crowd=createCrowdGrid(),workPlaces=createPlaceReservations();
@@ -189,7 +189,7 @@ function makeAvatar(user,index) {
   const chatter=label(group,'',0,3,0,2.7);chatter.visible=false;
   group.traverse(object=>{if(object.isMesh)object.castShadow=false;});
   const shadow=new THREE.Mesh(shadowGeometry,shadowMaterial);shadow.rotation.x=-Math.PI/2;shadow.position.y=.065;shadow.scale.set(.55,.4,1);group.add(shadow);
-  const name=label(group,user.name,0,2.4,0,2,colors[user.role],false);
+  const name=label(group,user.name,0,2.4,0,2,memberColor,false);
   let spawn=waitingPosition(index);
   for(let offset=0;offset<capacity+18;offset++) {
     const candidate=waitingPosition((index+offset)%(capacity+18));
@@ -299,20 +299,20 @@ function updateGameDisplay(time) {
 }
 function renderPeople() {
   const query=$('search').value.toLowerCase();
-  const signature=JSON.stringify([query,filter,users.map(u=>[u.id,u.role,u.name,u.online,avatars.has(u.id)?activity(avatars.get(u.id)):u.activity])]);
+  const signature=JSON.stringify([query,filter,users.map(u=>[u.id,u.name,u.online,avatars.has(u.id)?activity(avatars.get(u.id)):u.activity])]);
   if(signature===peopleSignature)return;
   peopleSignature=signature;$('people').replaceChildren();
   for(const user of users) {
     if(!user.name.toLowerCase().includes(query)||filter==='online'&&!user.online||filter==='offline'&&user.online)continue;
     const a=avatars.get(user.id), button=document.createElement('button');button.className='person';button.setAttribute('aria-label',`${user.name}: ${activity(a)}`);
-    const icon=document.createElement('span');icon.className='avatar';icon.style.background=colors[user.role];icon.setAttribute('data-no-translate','');icon.textContent=user.name.trim().split(/\s+/).slice(0,2).map(part=>Array.from(part)[0]||'').join('').toUpperCase();
-    const content=document.createElement('span'),name=document.createElement('strong'),desc=document.createElement('small');name.setAttribute('data-no-translate','');name.textContent=user.name;desc.textContent=`${uiText(user.role).toUpperCase()} · ${activity(a)}`;content.append(name,desc);
+    const icon=document.createElement('span');icon.className='avatar';icon.style.background=memberColor;icon.setAttribute('data-no-translate','');icon.textContent=user.name.trim().split(/\s+/).slice(0,2).map(part=>Array.from(part)[0]||'').join('').toUpperCase();
+    const content=document.createElement('span'),name=document.createElement('strong'),desc=document.createElement('small');name.setAttribute('data-no-translate','');name.textContent=user.name;desc.textContent=activity(a);content.append(name,desc);
     const dot=document.createElement('i');dot.className=`dot ${user.online?'green':'amber'}`;button.append(icon,content,dot);button.onclick=()=>focusUser(user.id);$('people').append(button);
   }
   if(!users.length)$('people').textContent='Belum ada akun terdaftar.';
   if(selected!==null)showDetail();
 }
-function showDetail() {const a=avatars.get(selected);if(!a){selected=null;$('detail').textContent='Pilih anggota untuk melihat aktivitasnya.';return;}$('detail').setAttribute('data-no-translate','');$('detail').textContent=`${a.user.name} · ${uiText(a.user.online?'Sesi aktif':'Tanpa sesi')}\n${activity(a)}`;}
+function showDetail() {const a=avatars.get(selected);if(!a){selected=null;$('detail').textContent='Pilih anggota untuk melihat aktivitasnya.';return;}$('detail').setAttribute('data-no-translate','');$('detail').textContent=`${a.user.name}\n${activity(a)}`;}
 function focusUser(id) {selected=id;const a=avatars.get(id);if(!a)return;showDetail();controls.target.set(a.pos.x,0,a.pos.z);camera.position.set(a.pos.x+8,11,a.pos.z+10);controls.update();}
 function view(key='all') {
   const front=camera.userData.front||13;

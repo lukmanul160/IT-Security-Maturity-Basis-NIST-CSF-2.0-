@@ -9,7 +9,7 @@ const { permissions } = require('./permissionService');
 const labels = Object.fromEntries(permissions);
 labels.backups = 'Administration';
 async function snapshot() {
-  const { rows } = await pool.query('SELECT id, username, full_name, role FROM app_users ORDER BY id');
+  const { rows } = await pool.query('SELECT id, username, full_name FROM app_users ORDER BY id');
   const sessions = getOfficeSessions();
   const names = rows.filter(row => sessions.has(row.username)).map(row => row.username);
   const activityByUser = new Map();
@@ -28,9 +28,8 @@ async function snapshot() {
   return {
     updatedAt: new Date().toISOString(), capacity: Math.max(30, rows.length),
     users: rows.map(row => {
-      const role = ['admin', 'approver', 'editor', 'viewer', 'user'].includes(row.role) ? row.role : 'user';
       const session = sessions.get(row.username);
-      return { id: row.id, role, name: row.full_name?.trim() || row.username, online: Boolean(session), activity: session ? describeActivity(activityByUser.get(row.username)) : 'Aktivitas santai (simulasi)', activityAt: session && activityByUser.get(row.username)?.created_at ? new Date(activityByUser.get(row.username).created_at).toISOString() : null };
+      return { id: row.id, name: row.full_name?.trim() || row.username, online: Boolean(session), activity: session ? describeActivity(activityByUser.get(row.username)) : 'Aktivitas santai (simulasi)', activityAt: session && activityByUser.get(row.username)?.created_at ? new Date(activityByUser.get(row.username).created_at).toISOString() : null };
     }),
   };
 }

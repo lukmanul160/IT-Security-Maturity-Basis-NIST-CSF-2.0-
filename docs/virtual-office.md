@@ -2,7 +2,7 @@
 
 Buka `/virtual-office` pada alamat deployment NIST Basis. Halaman dan aset 3D dapat diakses tanpa login; API publik berada di `/api/public/virtual-office`. Tautan halaman tersedia pada landing page.
 
-Data akun dibaca dari `app_users` yang dikelola ADMINISTRATION, diurutkan berdasarkan ID. Publik menerima ID, role, nama tampilan pengguna, status sesi dan label modul. Nama di atas avatar memakai `full_name`, dengan fallback username jika nama lengkap kosong, sesuai permintaan untuk menampilkan nama pengguna. Password, token, isi dashboard dan izin akun tidak dipublikasikan. Perubahan nama ADMINISTRATION ikut diperbarui pada label avatar saat sinkronisasi berikutnya.
+Data akun dibaca dari `app_users` yang dikelola ADMINISTRATION, diurutkan berdasarkan ID. Publik menerima ID untuk animasi, nama tampilan pengguna, status sesi dan aktivitas. Role tidak dipilih dari database atau dikirim lewat API publik. Daftar dan detail anggota hanya menampilkan nama dan aktivitas. Nama di atas avatar memakai `full_name`, dengan fallback username jika nama lengkap kosong, sesuai permintaan untuk menampilkan nama pengguna. Password, token, isi dashboard dan izin akun tidak dipublikasikan. Perubahan nama ADMINISTRATION ikut diperbarui pada label avatar saat sinkronisasi berikutnya.
 
 Sesi valid membuat avatar duduk bekerja. Workspace melaporkan modul yang sedang terlihat melalui endpoint terautentikasi `/api/office-presence` setiap perubahan terdeteksi (interval 5 detik). Bila belum ada laporan, labelnya Account Management. Untuk beberapa tab, laporan terakhir dari tab terlihat menjadi aktivitas akun. Logout, pergantian sesi, perubahan keamanan akun dan kedaluwarsa sesi mengikuti sistem autentikasi yang sudah ada. Menutup browser tidak otomatis menghapus sesi; sesi tetap aktif hingga logout atau kedaluwarsa 8 jam.
 
@@ -12,9 +12,9 @@ Reservasi eksklusif melindungi 4 kursi kafetaria, 4 tempat sofa, 2 toilet dan 3 
 
 Jumlah meja awal 30; kapasitas dan kedalaman ruangan bertambah otomatis bila akun melebihi 30. Kapasitas meja mencukupi seluruh akun; pengguna aktif menempati meja yang direservasi secara acak. Data disinkronkan setiap 10 detik ketika halaman terlihat. Bila koneksi gagal, data terakhir dipertahankan disertai indikator kegagalan, tanpa menggantinya dengan data contoh.
 
-Avatar memiliki variasi visual perempuan/laki-laki, warna kulit, gaya rambut (pendek, bob, panjang, bun), dan outfit (blazer, kemeja, atasan kasual, celana, rok). Variasi dibuat secara deterministik dari ID akun sehingga tetap konsisten ketika daftar akun berubah. Ini adalah karakter visual, bukan data gender pengguna. Warna label nama mengikuti role, sedangkan warna outfit bervariasi.
+Avatar memiliki variasi visual perempuan/laki-laki, warna kulit, gaya rambut (pendek, bob, panjang, bun), dan outfit (blazer, kemeja, atasan kasual, celana, rok). Variasi dibuat secara deterministik dari ID akun sehingga tetap konsisten ketika daftar akun berubah. Ini adalah karakter visual, bukan data gender pengguna. Warna label nama dan ikon anggota seragam tanpa kaitan dengan role, sedangkan warna outfit bervariasi.
 
-Three.js disajikan lokal, tanpa CDN. `npm run prepare:client` menyalin modul Three.js beserta lisensinya melalui `scripts/prepare-virtual-office.js`; `npm run build` sudah menjalankan langkah tersebut. Browser harus mendukung WebGL 2 untuk gambar 3D; apabila tidak tersedia, daftar role dan aktivitas tetap ditampilkan.
+Three.js disajikan lokal, tanpa CDN. `npm run prepare:client` menyalin modul Three.js beserta lisensinya melalui `scripts/prepare-virtual-office.js`; `npm run build` sudah menjalankan langkah tersebut. Browser harus mendukung WebGL 2 untuk gambar 3D; apabila tidak tersedia, daftar nama dan aktivitas tetap ditampilkan.
 
 Kamera: pilih **Geser** (default) atau **Putar**, kemudian drag mouse/satu jari. Tombol mouse kanan memakai mode kebalikannya. Scroll, pinch dua jari, atau tombol +/− mengatur zoom. Tombol arah di dalam kanvas bisa ditekan/ditahan untuk menggerakkan kamera. Setelah kanvas mendapat fokus, WASD atau tombol panah juga menggeser kamera di bidang lantai. Kamera tetap bisa digerakkan ketika animasi dijeda.
 
@@ -35,3 +35,5 @@ Recreation wing: area PlayStation dengan controller, command center dengan layar
 Tombol Fullscreen di header kanvas membuka panel kantor memenuhi layar, termasuk kontrol kamera dan aktivitas. Keluar melalui tombol Keluar fullscreen atau Escape. Browser mobile tanpa Fullscreen API menggunakan tampilan panel memenuhi viewport.
 
 Layar PlayStation menampilkan ilustrasi balapan bergerak saat avatar sudah duduk bermain, dan gambar standby saat kosong. Tekstur canvas lokal diperbarui maksimum 8 FPS hanya selama permainan. Pengguna dengan sesi aktif mendapat meja kerja acak yang dipesan eksklusif; posisi tetap sepanjang sesi aktif dan pemilihan berikutnya mengutamakan meja berbeda setelah logout/login.
+
+Verifikasi pembatasan informasi anggota (2026-11-17): 8 tes Virtual Office/performa publik lulus dengan fixture dan mock database (`node --test --test-isolation=none test/virtualOffice.test.js test/publicPagePerformance.test.js`); build berhasil. Tes Chrome headless berhenti saat menunggu fullscreen, sebelum pemeriksaan daftar/detail lanjutan, sehingga verifikasi browser penuh belum lulus. Tidak menguji deployment atau database operasional.

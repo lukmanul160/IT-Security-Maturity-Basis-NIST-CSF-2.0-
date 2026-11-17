@@ -29,7 +29,8 @@ test('public office displays registered names and valid sessions without publish
   const service = require('../src/services/virtualOfficeService');
   const result = await service.snapshot();
   assert.equal(result.capacity, 30);
-  assert.deepEqual(result.users[0], { id: 1, role: 'admin', name: 'Maya Putri', online: true, activity: 'Viewing user accounts.', activityAt: '2026-10-11T01:00:00.000Z' });
+  assert.deepEqual(result.users[0], { id: 1, name: 'Maya Putri', online: true, activity: 'Viewing user accounts.', activityAt: '2026-10-11T01:00:00.000Z' });
+  for (const user of result.users) assert.equal(Object.hasOwn(user, 'role'), false);
   assert.equal(result.users[1].name, 'editor01');
   assert.equal(result.users[1].online, false);
   assert.ok(!JSON.stringify(result).includes('private.'));
