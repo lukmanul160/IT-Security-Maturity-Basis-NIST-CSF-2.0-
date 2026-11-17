@@ -20,6 +20,8 @@ Ini memori repository lintas sesi, bukan memori otomatis pada layanan AI.
   estimasi spesifikasi awal, perhitungan kapasitas file/backup, dan batas verifikasi.
 
 - [Review keamanan Technology Asset dan Compliance Security Checklist](docs/security-review-technology-checklist-2026-11-09.md).
+- [Hasil pemeriksaan keamanan otomatis 17 November 2026](docs/security-audit-2026-11-17.md):
+  hasil suite keamanan, keterbatasan PostgreSQL fixture, dan status audit dependensi.
 
 - [Struktur kode dan panduan pemeliharaan AI/manusia](docs/CODE_STRUCTURE.md).
 - [Katalog seluruh file dan fungsi sumber](docs/SOURCE_CATALOG.md) (JSON tersedia untuk tooling).

@@ -19,7 +19,8 @@ halaman publik untuk kontras tombol pada light/dark serta ID/EN, tanpa data oper
 Peta folder, kontrak fungsi, dan tahapan refactor: [CODE_STRUCTURE.md](CODE_STRUCTURE.md).
 
 
-NIST Basis menggunakan Express 5/CommonJS, PostgreSQL, Vue 3, Vite dan Tailwind.
+NIST Basis menggunakan Express 5/CommonJS, PostgreSQL, Redis cache khusus Docker, Vue 3, Vite dan Tailwind.
+Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login tetap berupa `Map` di proses Node.js, sehingga Redis saat ini belum menyatukan sesi antar-replica.
 Mulai dari package.json ? src/server.js ? src/app.js ? src/routes/index.js.
 Logika domain ada di src/services/; konfigurasi database/environment di src/config/.
 Schema dasar ada di database/; banyak service juga menjalankan inisialisasi saat startup.

@@ -22,7 +22,7 @@ Tema: tombol Dark mode/Light mode memakai pengaturan bersama `nist-basis-theme`.
 
 Performa: maksimum 30 FPS desktop atau 20 FPS untuk pointer sentuh/perangkat dengan ≤4 logical CPU. Pixel ratio dibatasi 1,25 desktop dan 1 untuk perangkat hemat daya. Furniture statis digabung menggunakan InstancedMesh; geometry/material dipakai bersama. Shadow map 512×512 dihitung ulang hanya saat tata ruang berubah; avatar memakai bayangan oval sederhana. Render berhenti ketika tab tersembunyi dan ketika animasi dijeda tanpa perubahan kamera/data. Daftar anggota dirender ulang hanya jika isinya berubah. Tidak ada video, model eksternal besar atau unduhan CDN.
 
-Halaman ini mengikuti hosting aplikasi Node/PostgreSQL yang sudah ada. Untuk akses dari internet, gunakan alamat deployment NIST Basis yang telah dipublikasikan; perubahan kode lokal tidak membuat deployment internet baru. Sesi disimpan pada proses aplikasi sesuai arsitektur autentikasi saat ini, sehingga replica tanpa penyimpanan sesi bersama akan memiliki status sesi berbeda.
+Halaman ini mengikuti hosting aplikasi Express/PostgreSQL, dengan Nginx HTTPS dan Redis cache pada deployment Docker. Redis hanya menyimpan cache ringkasan dashboard dan hasil CVE; data Virtual Office dibaca dari PostgreSQL dan sesi proses aplikasi. Lihat [arsitektur Docker terbaru](DOCKER_HTTPS.md). Untuk akses dari internet, gunakan alamat deployment NIST Basis yang telah dipublikasikan; perubahan kode lokal tidak membuat deployment internet baru. Sesi disimpan pada proses aplikasi sesuai arsitektur autentikasi saat ini, sehingga replica tanpa penyimpanan sesi bersama akan memiliki status sesi berbeda.
 
 Validasi: `node --test test/virtualOffice.test.js test/publicPagePerformance.test.js` dan `npm run build`.
 

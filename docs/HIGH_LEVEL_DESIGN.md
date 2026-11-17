@@ -60,6 +60,7 @@ flowchart TB
     end
     W -->|REST / JSON / multipart| H
     B --> DB[(PostgreSQL)]
+    B -->|Cache dashboard dan CVE - Docker| R[(Redis 7.4)]
     B --> FS[Filesystem persisten]
     J --> SMTP[SMTP]
     Build[Vite dan Tailwind build] --> Assets[frontend/public]
@@ -97,20 +98,23 @@ Assessment CSF menggunakan dokumen bersama ber-ID `default`, sedangkan Privacy m
 
 **Saat ini:** satu aplikasi Express menyajikan frontend hasil build sekaligus API. PostgreSQL dapat berjalan di host yang sama atau host terpisah sesuai konfigurasi. `upload/`, `backup/`, dan kunci SMTP membutuhkan penyimpanan yang tetap tersedia setelah restart. Session berada di memori dan hilang saat proses restart.
 
-**Usulan deployment operasional:**
+**Deployment Docker saat ini:**
 
 ```mermaid
 flowchart LR
-    U[Browser internal] -->|HTTPS| P[Reverse proxy TLS]
+    U[Browser internal] -->|HTTPS| P[Nginx reverse proxy TLS]
     P --> A[Satu instance aplikasi]
     A --> D[(PostgreSQL privat)]
+    A --> R[(Redis - jaringan cache internal)]
     A --> V[Volume upload dan kunci SMTP]
     A --> M[SMTP]
     D --> B[Cadangan database]
     V --> B2[Cadangan file dan kunci]
 ```
 
-Reverse proxy pada diagram adalah usulan. Menambahkan instance aplikasi memerlukan desain session bersama dan file bersama terlebih dahulu. Scheduler sudah memakai PostgreSQL advisory lock, tetapi itu tidak menyelesaikan kebutuhan session maupun storage bersama.
+Reverse proxy Nginx dan Redis sudah dikonfigurasi pada `compose.yaml`. Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login tetap berupa `Map` di proses Node.js, sehingga Redis saat ini belum menyatukan sesi antar-replica. Menambahkan instance aplikasi memerlukan desain session bersama dan file bersama terlebih dahulu. Scheduler sudah memakai PostgreSQL advisory lock, tetapi itu tidak menyelesaikan kebutuhan session maupun storage bersama.
+
+Pembaruan arsitektur 17 November 2026 berdasarkan source dan Compose; Docker/Redis live tidak diuji pada pembaruan dokumentasi ini. Diagram raster lama di bagian atas bersifat historis; diagram Mermaid dan [diagram Docker terbaru](architecture/docker-https.svg) mencakup Redis.
 
 ## 8. Kualitas sistem dan keterbatasan
 

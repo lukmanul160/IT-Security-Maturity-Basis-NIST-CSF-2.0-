@@ -1,10 +1,20 @@
 name: it_governance_blackowl
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   nginx:
     build: ./deploy/nginx
     image: it_governance_blackowl_nginx:local
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    logging: *default-logging
     environment:
       BLACKOWL_ADDRESS: ${BLACKOWL_ADDRESS:?Set BLACKOWL_ADDRESS to the VM IP or domain}
       NGINX_ENVSUBST_FILTER: "^BLACKOWL_ADDRESS$$"
@@ -27,6 +37,12 @@ services:
     container_name: IT_Governance_BLACKOWL
     init: true
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    logging: *default-logging
     environment:
       NODE_ENV: production
       PORT: "8000"
@@ -57,6 +73,10 @@ services:
   redis:
     image: redis:7.4-alpine
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    logging: *default-logging
     # Disposable cache only, with no host port or persistent volume.
     command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
     mem_limit: 192m
@@ -73,6 +93,10 @@ services:
     image: postgres:17-bookworm
     container_name: BlackOwl_DB_Gov
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    logging: *default-logging
     networks:
       - database
     environment:
@@ -101,5 +125,6 @@ volumes:
 networks:
   proxy:
   database:
+    internal: true
   cache:
     internal: true

@@ -9,6 +9,14 @@ Pembaruan arsitektur dan dokumentasi lengkap 9 Oktober 2026: [Dokumentasi teknis
 
 Tanggal: 10 September 2026. Basis: source workspace lokal, termasuk perubahan yang belum di-commit. Konteks arsitektur: [High-Level Design](HIGH_LEVEL_DESIGN.md). Label **usulan** berarti belum diimplementasikan.
 
+## Redis cache Docker (pembaruan 17 November 2026)
+
+Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login tetap berupa `Map` di proses Node.js, sehingga Redis saat ini belum menyatukan sesi antar-replica.
+
+Implementasi: `src/services/redisCacheService.js`, dipanggil oleh `monitoringDashboardService.js` dan `technologyVulnerabilityService.js`. Cache aktif hanya bila `NIST_DOCKER=true` dan `REDIS_CACHE_ENABLED=true`. Timeout koneksi/command 200 ms, jeda percobaan setelah kegagalan 30 detik, payload maksimum 512 KiB. Dashboard memeriksa izin sebelum menggunakan cache dan membedakan identitas, role, izin, tanggal Bangkok serta generasi cache. Restore mengganti generasi dashboard. Redis memakai maxmemory 128 MiB, allkeys-lru, tanpa RDB/AOF.
+
+Verifikasi pembaruan ini berupa pemeriksaan source dan Compose; tidak menjalankan Docker atau Redis live. Diagram raster lama di atas bersifat historis; lihat [diagram Docker terbaru](architecture/docker-https.svg).
+
 ## 1. Struktur implementasi
 
 | Lapisan | File/direktori | Kontrak tanggung jawab |

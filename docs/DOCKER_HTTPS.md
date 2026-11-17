@@ -2,7 +2,7 @@
 
 Deployment Docker menggunakan **Nginx** sebagai reverse proxy HTTPS.
 Hanya Nginx membuka port host 80/443. HTTP diarahkan ke HTTPS; backend dan
-PostgreSQL tidak membuka port host. Cookie sesi tetap Secure.
+PostgreSQL dan Redis tidak membuka port host. Cookie sesi tetap Secure.
 
 ## Arsitektur
 
@@ -14,6 +14,7 @@ flowchart LR
  subgraph VM[VM / Docker Compose]
  N -->|HTTP app:8000 - jaringan proxy| A[Express + Vue hasil build]
  A -->|db:5432 - jaringan database| DB[PostgreSQL 17]
+ A -->|redis:6379 - jaringan cache internal| R[Redis 7.4 - cache sementara]
  N --- TLS[(nginx_tls: CA lokal dan key)]
  N --- PEM[certs host: SSL sendiri, read-only]
  A --- DATA[(app_data / uploads / backups)]
@@ -26,6 +27,13 @@ Nginx mempertahankan Host dan mengganti forwarded headers dari klien. Aplikasi
 mempercayai satu hop proxy. Jangan membuka backend langsung, menambahkan proxy
 lain atau memasukkan container tidak tepercaya ke jaringan proxy tanpa meninjau
 konfigurasi trust. Database terpisah dari jaringan Nginx; koneksi DB tidak memakai TLS.
+
+Compose menandai jaringan database dan cache sebagai jaringan internal. Semua service
+memakai `no-new-privileges`, batas PID, serta rotasi log; app juga menjatuhkan seluruh
+Linux capabilities. Nginx menolak Host selain `BLACKOWL_ADDRESS`. Kontrol ini membatasi
+dampak kompromi, tetapi host Docker dan daemon tetap harus dibatasi hanya untuk admin.
+
+Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login tetap berupa `Map` di proses Node.js, sehingga Redis saat ini belum menyatukan sesi antar-replica.
 
 ## Instalasi baru: akses IP VM
 

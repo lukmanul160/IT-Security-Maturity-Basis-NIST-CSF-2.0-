@@ -1,13 +1,17 @@
 server {
     listen 80;
     server_name ${BLACKOWL_ADDRESS};
+    if ($host != "${BLACKOWL_ADDRESS}") { return 421; }
     return 308 https://${BLACKOWL_ADDRESS}$request_uri;
 }
 
 server {
     listen 443 ssl;
     server_name ${BLACKOWL_ADDRESS};
+    if ($host != "${BLACKOWL_ADDRESS}") { return 421; }
+    server_tokens off;
     ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_tickets off;
 
     # Default IP: local CA + certificate generated at container startup.
     ssl_certificate /etc/nginx/generated/server.crt;
