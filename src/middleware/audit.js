@@ -29,10 +29,11 @@ function classify(req, res) {
   if (['PUT', 'PATCH'].includes(req.method)) return 'data.update';
   return 'data.read';
 }
-function auditRequest(req, res, next) {
+async function auditRequest(req, res, next) {
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
-  const initialActor = req.user || getSession(parseCookies(req.headers.cookie)[sessionCookie]);
+  const initialActor = req.user || await getSession(parseCookies(req.headers.cookie)[sessionCookie]);
+  req.authSession = initialActor || null;
   req.requestId = requestId;
   res.set('X-Request-Id', requestId);
   let responseDetails;

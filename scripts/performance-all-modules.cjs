@@ -80,7 +80,7 @@ async function main() {
   if (noteColumns.rows.some(row => row.column_name === 'title')) {
     await pool.query("INSERT INTO knowledge_notes(title,content) SELECT 'Fixture ' || n, 'Synthetic performance fixture [[Fixture 1]]' FROM generate_series(1,1000) n");
   }
-  auth = require('../src/config/auth'); token = auth.createSession({ username: 'perf-admin', role: 'admin' });
+  auth = require('../src/config/auth'); token = (await auth.createSession({ username: 'perf-admin', role: 'admin' }));
   server = require('../src/app').listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   const base = 'http://127.0.0.1:' + server.address().port + '/api';
@@ -137,7 +137,7 @@ async function main() {
   }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
-  if (token) auth.destroySession(token);
+  if (token) (await auth.destroySession(token));
   if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
   if (pool) await pool.end();
   if (fs.existsSync(path.join(root, 'pg', 'postmaster.pid'))) {

@@ -12,7 +12,7 @@ module.exports = {
   publicRoot: path.join(projectRoot, 'frontend', 'public'),
   dataRoot: path.join(projectRoot, 'data'),
   schemaFile: path.join(projectRoot, 'database', 'schema.sql'),
-  usersFile: path.join(projectRoot, 'database', 'users.sql'),
+  usersFile: path.join(projectRoot, 'database', 'account-seed.sql'),
   uploadRoot: path.join(projectRoot, 'upload'),
   backupRoot: path.join(projectRoot, 'backup'),
   stateFile: path.join(projectRoot, 'data', 'assessment-state.json'),

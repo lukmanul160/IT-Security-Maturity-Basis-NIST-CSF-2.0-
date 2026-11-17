@@ -1,0 +1,1 @@
+ALTER TABLE risk_register ALTER COLUMN likelihood DROP NOT NULL, ALTER COLUMN impact DROP NOT NULL

@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS managed_assets(id UUID PRIMARY KEY, tag TEXT UNIQUE NOT NULL, data JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+ALTER TABLE managed_assets ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;
+UPDATE managed_assets SET created_at=updated_at WHERE created_at IS NULL;
+ALTER TABLE managed_assets ALTER COLUMN created_at SET DEFAULT NOW(), ALTER COLUMN created_at SET NOT NULL;
+ALTER TABLE managed_assets ADD COLUMN IF NOT EXISTS managed_vendor_id BIGINT GENERATED ALWAYS AS (NULLIF(data->>'managedVendorId','')::bigint) STORED REFERENCES tprm_risk_register(id) ON DELETE RESTRICT;
+CREATE INDEX IF NOT EXISTS managed_assets_vendor_idx ON managed_assets(managed_vendor_id);
+CREATE TABLE IF NOT EXISTS asset_racks(id UUID PRIMARY KEY, name TEXT UNIQUE NOT NULL, location TEXT NOT NULL, units INTEGER NOT NULL CHECK(units BETWEEN 1 AND 60));
+CREATE TABLE IF NOT EXISTS asset_rack_devices(asset_id UUID PRIMARY KEY REFERENCES managed_assets(id) ON DELETE RESTRICT, rack_id UUID NOT NULL REFERENCES asset_racks(id) ON DELETE RESTRICT, start_unit INTEGER NOT NULL, height INTEGER NOT NULL);
+ALTER TABLE asset_rack_devices ADD COLUMN IF NOT EXISTS facing TEXT NOT NULL DEFAULT 'front' CHECK(facing IN ('front','rear'));
+ALTER TABLE asset_rack_devices ADD COLUMN IF NOT EXISTS full_depth BOOLEAN NOT NULL DEFAULT TRUE;
+CREATE TABLE IF NOT EXISTS asset_relations(id UUID PRIMARY KEY, source_id UUID NOT NULL REFERENCES managed_assets(id) ON DELETE RESTRICT, target_id UUID NOT NULL REFERENCES managed_assets(id) ON DELETE RESTRICT, type TEXT NOT NULL, notes TEXT NOT NULL DEFAULT '', change_reference TEXT NOT NULL, CHECK(source_id <> target_id), UNIQUE(source_id,target_id,type));
+CREATE TABLE IF NOT EXISTS asset_related_risks(asset_id UUID NOT NULL REFERENCES managed_assets(id) ON DELETE CASCADE, risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE, PRIMARY KEY(asset_id,risk_id));
+CREATE TABLE IF NOT EXISTS asset_renewal_deliveries(asset_id UUID REFERENCES managed_assets(id) ON DELETE CASCADE, renewal_date DATE NOT NULL, recipient TEXT NOT NULL, sent_on DATE NOT NULL, PRIMARY KEY(asset_id,renewal_date,recipient,sent_on));

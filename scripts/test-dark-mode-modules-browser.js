@@ -7,7 +7,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  let server,chrome,ws;const profile=path.join(os.tmpdir(),'nist-dark-modules-'+Date.now());
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
  const port=9800+Math.floor(Math.random()*100);
  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -27,6 +27,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  for(const view of [...new Set(views)]){await evaluate("document.querySelector('.sidebar [data-view=\""+view+"\"]').click()");if(view==='csf')await wait("!!document.querySelector('#functionCards .coverage-score')");await scan(view);const tabs=await evaluate("[...document.querySelectorAll('.view.active-view button[aria-controls]')].filter(e=>e.checkVisibility()).map(e=>e.getAttribute('aria-controls'))");for(const id of tabs){await evaluate("document.querySelector('.view.active-view button[aria-controls=\""+id+"\"]').click()");await scan(view+' / '+id);}}
  await evaluate("document.getElementById('accountButton').click()");for(const tab of ['profile','permissions','matrix','users','audit','smtp','storage']){await evaluate("document.querySelector('[data-account-tab="+tab+"]').click()");await scan('account / '+tab);}
  fs.writeFileSync('output/dark-mode-module-audit.json',JSON.stringify(report,null,2));assert.deepEqual(report.filter(r=>r.light.length),[],'All module and tab surfaces follow dark mode');assert.deepEqual(errors,[]);console.log('PASS: '+report.length+' module/tab checks show no light surfaces in dark mode, no browser exceptions.');
- auth.destroySession(token);
+ (await auth.destroySession(token));
  }finally{ws?.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-dark-modules-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

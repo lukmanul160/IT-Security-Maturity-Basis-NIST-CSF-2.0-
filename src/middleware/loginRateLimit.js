@@ -1,28 +1,11 @@
-/**
- * Middleware Express: loginRateLimit.
- * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
- * Peta fungsi dan dependency: docs/source-catalog.json.
- */
-// Limit all attempts per peer, including rotating usernames and successful logins.
-function createLoginRateLimit({ limit = 30, windowMs = 15 * 60 * 1000, maxPeers = 10000, now = Date.now, key } = {}) {
-  const peers = new Map();
-  return (req, res, next) => {
-    const time = now();
-    for (const [peer, record] of peers) {
-      if (record.expires <= time) peers.delete(peer);
-    }
-    const peer = key ? key(req) : req.ip || req.socket?.remoteAddress || 'unknown';
-    let record = peers.get(peer);
-    if (!record) {
-      if (peers.size >= maxPeers) return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi nanti.' });
-      record = { count: 0, expires: time + windowMs };
-      peers.set(peer, record);
-    }
-    if (++record.count > limit) {
-      res.set('Retry-After', String(Math.ceil((record.expires - time) / 1000)));
-      return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi nanti.' });
-    }
-    return next();
-  };
+/** Shared fixed-window limits; endpoint namespaces are stable across replicas. */
+const { state } = require('../services/authStateService');
+function createLoginRateLimit({limit=30,windowMs=15*60*1000,namespace='login-ip',key}={}) {
+ return async(req,res,next)=>{
+  const peer=key?key(req):req.ip||req.socket?.remoteAddress||'unknown';
+  const record=await state.consume(namespace,peer,limit,windowMs);
+  if(!record.allowed){res.set('Retry-After',String(record.retryAfter));return res.status(429).json({error:'Terlalu banyak percobaan login. Coba lagi nanti.'});}
+  return next();
+ };
 }
-module.exports = { createLoginRateLimit };
+module.exports={createLoginRateLimit};

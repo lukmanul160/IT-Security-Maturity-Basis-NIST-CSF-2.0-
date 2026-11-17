@@ -24,7 +24,7 @@ async function start() {
   await provisionDatabase();
   await ensureUploadRoot();
   await initializeAssessmentStore();
-  await pool.query(await fs.readFile(require('path').join(__dirname, '../database/evidence-ownership.sql'), 'utf8'));
+
   await require('./services/storageService').ensureStore();
   await initializeFrameworks();
   await require('./services/assessmentGapService').ensureStore();

@@ -5,9 +5,7 @@ const fail = (message, status = 400) => Object.assign(new Error(message), { stat
 const rings = ['adopt', 'trial', 'assess', 'hold'],
   quadrants = ['framework', 'platform', 'data', 'tool'];
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS technology_assets (
-    id UUID PRIMARY KEY, name TEXT NOT NULL, data JSONB NOT NULL, version INTEGER NOT NULL DEFAULT 1,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  await require('./migrationService').ensureSchema();
 }
 function text(value, max, required = false) {
   if (typeof value !== 'string' || value.length > max || (required && !value.trim()))

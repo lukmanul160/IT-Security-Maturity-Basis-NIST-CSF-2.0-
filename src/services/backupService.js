@@ -36,8 +36,8 @@ async function resolvePgTool(name) {
 }
 
 function pgDumpArguments(outputPath) {
-  if (database.url) return ['--dbname', database.url, '--format=custom', '--file', outputPath];
-  return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, '--format=custom', '--file', outputPath];
+  if (database.url) return ['--dbname', database.url, '--exclude-table-data=auth_sessions', '--exclude-table-data=auth_rate_limits', '--format=custom', '--file', outputPath];
+  return ['--host', database.host, '--port', String(database.port), '--username', database.user, '--dbname', database.name, '--exclude-table-data=auth_sessions', '--exclude-table-data=auth_rate_limits', '--format=custom', '--file', outputPath];
 }
 
 async function createBackup({ partSizeMb = 500 } = {}) {
@@ -122,7 +122,7 @@ async function restoreBackup(file) {
   if (!database.url && database.password) environment.PGPASSWORD = database.password;
   let restoreStarted = false;
   try {
-    beginDatabaseRestore();
+    await beginDatabaseRestore();
     restoreStarted = true;
     if (path.extname(file.originalname).toLowerCase() === '.json') {
       await restoreJsonSnapshot(file.path);
@@ -140,8 +140,8 @@ async function restoreBackup(file) {
     failure.status = error.status || 500;
     throw failure;
   } finally {
-    if (restoreStarted) endDatabaseRestore();
-    await fs.rm(file.path, { force: true });
+    try { if (restoreStarted) await endDatabaseRestore(); }
+    finally { await fs.rm(file.path, { force: true }); }
   }
 }
 

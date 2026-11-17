@@ -7,7 +7,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  let server,chrome,ws;const profile=path.join(os.tmpdir(),'nist-theme-browser-'+Date.now());
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
  const port=9800+Math.floor(Math.random()*100);
  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -64,6 +64,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await call('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});await evaluate("document.querySelector('#galeri').scrollIntoView();");await delay(800);fs.writeFileSync('output/dark-mode-landing-gallery-preview.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
  await evaluate("document.querySelector('[data-theme-toggle]').click()");await wait("document.documentElement.dataset.theme==='light'");assert.notEqual(await evaluate("getComputedStyle(document.body).backgroundColor"),'rgb(16, 24, 39)');
  assert.equal(await evaluate("getComputedStyle(document.querySelector('.gallery-card')).backgroundColor"),'rgb(255, 255, 255)');assert.deepEqual(errors,[]);console.log('PASS: dark/light workspace and public pages, persistent shared theme, mobile toggle, dashboard and Knowledge surfaces, modal and CIA risk contrast, no browser exceptions.');
- auth.destroySession(token);
+ (await auth.destroySession(token));
  }finally{ws?.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-theme-browser-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

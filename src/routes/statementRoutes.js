@@ -14,21 +14,13 @@ function typeInput(req){if(req.is('multipart/form-data')){try{return JSON.parse(
 const employees=require('../services/statementEmployeeService');
 const publicRouter = express.Router();
 const {createLimit}=require('../middleware/statementRateLimit');
-publicRouter.use((req,res,next)=>{res.set('Cache-Control','no-store');next();},createLimit({limit:120}));
+publicRouter.use((req,res,next)=>{res.set('Cache-Control','no-store');next();},createLimit({limit:120,namespace:'statement-public-ip'}));
 publicRouter.use(require('./statementEmployeeRoutes').requireEmployee);
-publicRouter.use(createLimit({limit:30,key:req=>req.employee.nip}));
+publicRouter.use(createLimit({limit:30,namespace:'statement-employee',key:req=>req.employee.nip}));
 publicRouter.use(wrap(async(req,res,next)=>{const id=req.path.split('/').filter(Boolean)[0];req.assignmentYear=await employees.verify(req.employee.nip,id,req.method==='POST'?req.body?.assignmentYear:req.query.year);next();}));
 publicRouter.use((req,res,next) => { res.set('Cache-Control','no-store'); next(); });
 // Bound anonymous write traffic without retaining identity or submission data.
-const attempts = new Map();
-publicRouter.post('/:id', (req,res,next) => {
-  const now = Date.now();
-  for (const [key,value] of attempts) if (value.until < now) attempts.delete(key);
-  const key = req.ip;
-  const bucket = attempts.get(key) || { count: 0, until: now + 60000 };
-  if (bucket.count >= 10 || (!attempts.has(key) && attempts.size >= 10000)) return res.status(429).set('Retry-After','60').json({error:'Terlalu banyak pengiriman. Coba kembali satu menit lagi.'});
-  bucket.count++; attempts.set(key,bucket); next();
-}, wrap(async(req,res) => res.status(201).json(await service.submit(req.params.id,{...req.body,nip:req.employee.nip,nama:req.employee.name},{nip:req.employee.nip,year:req.assignmentYear,department:req.employee.department}))));
+publicRouter.post('/:id', createLimit({limit:10,namespace:'statement-submit-ip'}), wrap(async(req,res) => res.status(201).json(await service.submit(req.params.id,{...req.body,nip:req.employee.nip,nama:req.employee.name},{nip:req.employee.nip,year:req.assignmentYear,department:req.employee.department}))));
 publicRouter.get('/:id', wrap(async(req,res) => res.json(await service.getType(req.params.id,true).then(type=>({...type,employee:req.employee,assignmentYear:req.assignmentYear})))));
 publicRouter.get('/:id/document',wrap(async(req,res)=>sendDocument(res,await service.preview(req.params.id,{},true))));
 publicRouter.post('/:id/preview',wrap(async(req,res)=>sendDocument(res,await service.preview(req.params.id,{...req.body,nip:req.employee.nip,nama:req.employee.name},true))));

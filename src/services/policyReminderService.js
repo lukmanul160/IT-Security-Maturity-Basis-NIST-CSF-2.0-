@@ -20,13 +20,7 @@ const invalid = message => Object.assign(new Error(message), { status: 400 });
 const email = value => typeof value === 'string' && /^[^\s<>@,;]+@[^\s<>@,;]+\.[^\s<>@,;]+$/.test(value);
 
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS policy_reminder_settings (id INTEGER PRIMARY KEY CHECK (id = 1), settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT '')`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS policy_reminder_deliveries (policy_id BIGINT REFERENCES policy_register(id) ON DELETE CASCADE, due_date DATE NOT NULL, recipient TEXT NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(policy_id, due_date, recipient))`);
-  await pool.query(`ALTER TABLE policy_reminder_deliveries ADD COLUMN IF NOT EXISTS reminder_date DATE;
-    UPDATE policy_reminder_deliveries SET reminder_date=sent_at::date WHERE reminder_date IS NULL;
-    ALTER TABLE policy_reminder_deliveries ALTER COLUMN reminder_date SET NOT NULL;
-    ALTER TABLE policy_reminder_deliveries DROP CONSTRAINT IF EXISTS policy_reminder_deliveries_pkey;
-    ALTER TABLE policy_reminder_deliveries ADD PRIMARY KEY(policy_id,due_date,recipient,reminder_date)`);
+  await require('./migrationService').ensureSchema();
   await smtp.ensureStore();
 }
 async function read() {

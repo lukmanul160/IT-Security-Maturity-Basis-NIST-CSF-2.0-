@@ -11,11 +11,11 @@ const { requireAdmin } = require('../middleware/authorization');
 const router = express.Router();
 const mutationGuard = require('../middleware/mutationGuard').createMutationGuard();
 const { createLoginRateLimit } = require('../middleware/loginRateLimit');
-const passwordAccountLimit = createLoginRateLimit({ limit: 10, key: req => req.user.username });
-const passwordIpLimit = createLoginRateLimit({ limit: 30 });
+const passwordAccountLimit = createLoginRateLimit({ limit: 10, namespace: 'password-account', key: req => req.user.username });
+const passwordIpLimit = createLoginRateLimit({ limit: 30, namespace: 'password-ip' });
 function limitPasswordVerification(req, res, next) {
   if (req.path === '/me' && !['currentPassword', 'newPassword', 'confirmPassword'].some(field => req.body?.[field] !== undefined)) return next();
-  passwordIpLimit(req, res, () => passwordAccountLimit(req, res, next));
+  return passwordIpLimit(req, res, () => passwordAccountLimit(req, res, next));
 }
 router.post('/login', require('../middleware/loginRateLimit').createLoginRateLimit(), controller.login);
 router.post('/logout', controller.logout);

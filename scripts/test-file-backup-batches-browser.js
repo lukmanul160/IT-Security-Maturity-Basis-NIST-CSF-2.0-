@@ -8,7 +8,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
  const warm=[];try{for(let i=0;i<10;i++)warm.push(await pool.connect());}finally{warm.forEach(client=>client.release());}
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  const fixtureApp=require('express')();
  fixtureApp.post('/api/upload-progress-fixture',(req,res)=>{let total=0;req.on('data',chunk=>{total+=chunk.length;});req.on('end',()=>setTimeout(()=>res.json({receivedBytes:total}),1200));});
  fixtureApp.use(require('../src/app'));server=fixtureApp.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;

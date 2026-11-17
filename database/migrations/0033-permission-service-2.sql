@@ -1,0 +1,1 @@
+ALTER TABLE role_permissions ADD COLUMN IF NOT EXISTS actions JSONB

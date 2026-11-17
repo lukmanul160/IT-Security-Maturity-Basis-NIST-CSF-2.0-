@@ -11,7 +11,7 @@ Tanggal: 10 September 2026. Basis: source workspace lokal, termasuk perubahan ya
 
 ## Redis cache Docker (pembaruan 17 November 2026)
 
-Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login tetap berupa `Map` di proses Node.js, sehingga Redis saat ini belum menyatukan sesi antar-replica.
+Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login dan rate limit autentikasi disimpan bersama di PostgreSQL, bertahan saat proses restart, dan berlaku antar-replica. Redis tetap hanya cache opsional. Lihat `docs/architecture-hardening.md` untuk rollout dan batas deployment.
 
 Implementasi: `src/services/redisCacheService.js`, dipanggil oleh `monitoringDashboardService.js` dan `technologyVulnerabilityService.js`. Cache aktif hanya bila `NIST_DOCKER=true` dan `REDIS_CACHE_ENABLED=true`. Timeout koneksi/command 200 ms, jeda percobaan setelah kegagalan 30 detik, payload maksimum 512 KiB. Dashboard memeriksa izin sebelum menggunakan cache dan membedakan identitas, role, izin, tanggal Bangkok serta generasi cache. Restore mengganti generasi dashboard. Redis memakai maxmemory 128 MiB, allkeys-lru, tanpa RDB/AOF.
 
@@ -54,7 +54,7 @@ sequenceDiagram
     participant B as Browser
     participant A as Auth controller
     participant D as PostgreSQL
-    participant S as Session Map
+    participant S as PostgreSQL sessions
     U->>B: Isi username dan password
     B->>A: POST /api/auth/login
     A->>A: Periksa batas kegagalan login
@@ -69,7 +69,7 @@ sequenceDiagram
     end
 ```
 
-Session berlaku 8 jam sejak dibuat, disimpan dalam `Map`, dan tidak bertahan setelah restart. Cookie: HttpOnly, SameSite `lax`, Secure hanya pada production. Pembatasan login memakai key IP dan username; lima kegagalan memicu blokir 15 menit, response permintaan selama blokir adalah 429.
+Session berlaku delapan jam sejak dibuat dan disimpan di PostgreSQL sebagai hash token. Cookie: HttpOnly, SameSite `lax`, dan Secure sesuai konfigurasi HTTPS. Rate limit memakai waktu PostgreSQL dan UPSERT atomik: 30 percobaan per IP per 15 menit serta lima percobaan per pasangan IP/username per 15 menit. Login berhasil mereset penghitung pasangan; percobaan berlebih mengembalikan 429 dan Retry-After.
 
 `requirePermission(key, action)` memanggil `permissionService.has`. Admin diizinkan langsung; role lain membutuhkan `role_permissions.allowed` dan kecocokan matriks aksi. `requirePageAccess` adalah alias perilaku yang sama. `requireFrameworkEvidenceAccess` merupakan pengecualian: update evidence memakai pemeriksaan `read` pada key framework terkait. Ini dicatat sebagai kondisi aktual, bukan pola yang direkomendasikan untuk endpoint baru.
 

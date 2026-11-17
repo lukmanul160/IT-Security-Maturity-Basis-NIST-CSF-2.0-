@@ -1,73 +1,24 @@
-/**
- * Konfigurasi aplikasi: auth.
- * Pisahkan konfigurasi instalasi dari data bisnis. Jangan log kredensial atau menjadikan .env sebagai fixture pengujian.
- * Peta fungsi dan dependency: docs/source-catalog.json.
- */
-const crypto = require('crypto');
+/** Shared PostgreSQL authentication; public session operations return promises. */
 const bcrypt = require('bcryptjs');
 const { pool } = require('./database');
-const sessions = new Map();
-let restoring = false;
-let sessionGeneration = 0;
+const { state, restoreLock } = require('../services/authStateService');
 const sessionCookie = 'nist_session';
-const sessionLifetime = 8 * 60 * 60 * 1000;
-const dummyPasswordHash = '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a';
-
+let restoreClient;
 async function authenticate(username, password) {
-	const generation = sessionGeneration;
-	if (restoring) return null;
-	if (typeof username !== 'string' || typeof password !== 'string') return null;
-	if (!/^[a-zA-Z0-9._-]{3,50}$/.test(username) || Buffer.byteLength(password, 'utf8') > 72) return null;
-
-	const result = await pool.query(
-		'SELECT username, password_hash, role FROM app_users WHERE username = $1',
-		[username]
-	);
-	const user = result.rows[0];
-	const passwordHash = user?.password_hash || dummyPasswordHash;
-	if (!(await bcrypt.compare(password, passwordHash)) || !user) return null;
-
-	if (restoring || generation !== sessionGeneration) return null;
-	return { username: user.username, role: user.role };
+  if (await state.restoring()) return null;
+  if (typeof username !== 'string' || typeof password !== 'string') return null;
+  if (!/^[a-zA-Z0-9._-]{3,50}$/.test(username) || Buffer.byteLength(password, 'utf8') > 72) return null;
+  const user = (await pool.query('SELECT username,password_hash,role FROM app_users WHERE username=$1', [username])).rows[0];
+  const dummy = '$2b$12$f0T2r3sXfXLj7PQg1h7caeiRKR60H3EhfbqynU/iAmXcVSTtn4v5a';
+  if (!(await bcrypt.compare(password, user?.password_hash || dummy)) || !user || await state.restoring()) return null;
+  return { username: user.username, role: user.role, credentialHash: user.password_hash };
 }
-
-function createSession(user) {
-	if (restoring) throw Object.assign(new Error('Database restore sedang berlangsung. Coba login kembali nanti.'), { status: 503 });
-	for (const [token, session] of sessions) {
-		if (Date.now() - session.createdAt >= sessionLifetime) sessions.delete(token);
-	}
-	const token = crypto.randomBytes(32).toString('hex');
-	// A successful login replaces any previous login for the same account.
-	destroyUserSessions(user.username);
-	sessions.set(token, { username: user.username, role: user.role, createdAt: Date.now() });
-	return token;
-}
-
-function getSession(token) {
-	if (restoring) return null;
-	if (!token) return null;
-
-	const session = sessions.get(token);
-	if (!session) return null;
-
-	if (Date.now() - session.createdAt >= sessionLifetime) {
-		sessions.delete(token);
-		return null;
-	}
-
-	return session;
-}
-
-function destroySession(token) {
-	if (token) sessions.delete(token);
-}
-
-function destroyUserSessions(username) {
-	for (const [token, session] of sessions) {
-		if (session.username === username) sessions.delete(token);
-	}
-}
-
+const createSession = user => state.create(user);
+const getSession = token => state.get(token);
+const destroySession = token => state.remove(token);
+const destroyUserSessions = username => state.removeUser(username);
+const getOfficeSessions = () => state.office();
+const updateOfficePresence = (token, module) => state.presence(token, module);
 function parseCookies(header = '') {
 	const cookies = {};
 
@@ -87,26 +38,31 @@ function parseCookies(header = '') {
 	return cookies;
 }
 
-function beginDatabaseRestore() {
-	if (restoring) throw Object.assign(new Error('Database restore sedang berlangsung.'), { status: 409 });
-	restoring = true;
-	require('../services/redisCacheService').invalidateDashboard();
-	sessionGeneration++;
-	sessions.clear();
-}
-function endDatabaseRestore() {
-	require('../services/redisCacheService').invalidateDashboard();
-	sessions.clear();
-	sessionGeneration++;
-	restoring = false;
-}
 
-function getOfficeSessions() {
-	const active = new Map();
-	for (const [token] of sessions) {
-		const session = getSession(token);
-		if (session) active.set(session.username, { module: session.officeModule || 'account', createdAt: session.createdAt });
-	}
-	return active;
+async function beginDatabaseRestore() {
+  if (restoreClient) throw Object.assign(new Error('Database restore sedang berlangsung.'), {status:409});
+  const client = await pool.connect();
+  try {
+    if (!(await client.query('SELECT pg_try_advisory_lock($1) AS locked',[restoreLock])).rows[0].locked)
+      throw Object.assign(new Error('Database restore sedang berlangsung.'), {status:409});
+    restoreClient = client;
+    await client.query('DELETE FROM auth_sessions');
+    require('../services/redisCacheService').invalidateDashboard();
+  } catch(error) {
+    if (restoreClient === client) { restoreClient=undefined; await client.query('SELECT pg_advisory_unlock($1)',[restoreLock]); }
+    client.release(); throw error;
+  }
 }
-module.exports = { authenticate, createSession, getSession, destroySession, destroyUserSessions, parseCookies, sessionCookie, beginDatabaseRestore, endDatabaseRestore, getOfficeSessions };
+async function endDatabaseRestore() {
+  const client=restoreClient;
+  if (!client) return;
+  // Old backups may predate the ledger. Apply forward migrations before reopening access.
+  // Keep the lock held if recovery fails; restored sessions must never become valid.
+  await require('../services/migrationService').migrate(pool);
+  await client.query('DELETE FROM auth_sessions; DELETE FROM auth_rate_limits');
+  require('../services/redisCacheService').invalidateDashboard();
+  await client.query('SELECT pg_advisory_unlock($1)',[restoreLock]);
+  restoreClient=undefined;
+  client.release();
+}
+module.exports={authenticate,createSession,getSession,destroySession,destroyUserSessions,parseCookies,sessionCookie,beginDatabaseRestore,endDatabaseRestore,getOfficeSessions,updateOfficePresence};

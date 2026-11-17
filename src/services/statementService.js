@@ -58,7 +58,7 @@ function normalizeSubmission(input, fields = fieldService.defaults) {
 }
 function render(body, data) { return body.replace(/\{\{([a-z][a-z0-9_]{0,39})\}\}/g, (_, key) => data[key] || '-'); }
 async function ensureStore() {
-  await pool.query(await fs.readFile(path.join(__dirname,'../../database/statements.sql'),'utf8'));
+  await require('./migrationService').ensureSchema();
   const seeds = require('../../templates/statement-seeds.json');
   // Stable IDs make initialization idempotent even after templates are edited.
   for (const [index,seed] of seeds.entries()) await pool.query('INSERT INTO compliance_statement_types(id,title,body) VALUES($1,$2,$3) ON CONFLICT(id) DO NOTHING',[`b9e68b28-103a-4a95-81dd-${String(index+1).padStart(12,'0')}`,seed.title,seed.body]);

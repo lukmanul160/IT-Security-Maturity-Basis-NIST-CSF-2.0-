@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS reminder_recipient_register(owner_key TEXT PRIMARY KEY, owner TEXT NOT NULL,email TEXT NOT NULL,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())

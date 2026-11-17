@@ -1,3 +1,7 @@
+import { guardFormSubmission } from './services/submissionGuard.mjs';
+import { tprmNextSteps } from './services/tprmNextSteps.mjs';
+import { createAuditRecordIndex } from './services/auditRecordIndex.mjs';
+import { renderAuditFindingDetails } from './services/auditFindingDetails.mjs';
 import './styles/local-fonts.css';
 import '../../public/styles.css';
 import '../../public/modern.css';
@@ -36,6 +40,7 @@ window.NistProgressExcel = () => import('./services/moduleProgressWorkbook.mjs')
 window.NistStatementEditor = () => import('./services/statementWordEditor.js');
 
 async function bootstrap() {
+  window.NistWorkspaceModels = Object.freeze({guardFormSubmission,tprmNextSteps,createAuditRecordIndex,renderAuditFindingDetails});
   const runtimeReady=Promise.all([import('./workspace/runtime.js'),import('./workspace/generated/enhancements.js?raw')]);
   installUploadProgress();
   installMutationGuard();

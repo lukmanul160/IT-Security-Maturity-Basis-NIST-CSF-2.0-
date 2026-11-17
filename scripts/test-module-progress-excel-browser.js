@@ -13,7 +13,7 @@ async function run(){
   let server,chrome,cdp,token;
   try{
     const admin=(await pool.query("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];assert.ok(admin);
-    token=auth.createSession({username:admin.username,role:'admin'});
+    token=(await auth.createSession({username:admin.username,role:'admin'}));
     server=require('../src/app').listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
     const base=`http://127.0.0.1:${server.address().port}`,port=9700+Math.floor(Math.random()*100);
     chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu',`--remote-debugging-port=${port}`,`--user-data-dir=${path.join(temp,'chrome')}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -46,7 +46,7 @@ async function run(){
     assert.deepEqual(cdp.errors,[]);
     console.log('PASS: 11 module Excel template downloads, workbook reads, import previews, and cancellation without data writes.');
   }finally{
-    cdp?.socket.close();chrome?.kill();if(token)auth.destroySession(token);
+    cdp?.socket.close();chrome?.kill();if(token)(await auth.destroySession(token));
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await pool.end();
     const resolved=path.resolve(temp);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-progress-excel-')){await delay(1000);await fs.rm(resolved,{recursive:true,force:true}).catch(()=>{});}
   }

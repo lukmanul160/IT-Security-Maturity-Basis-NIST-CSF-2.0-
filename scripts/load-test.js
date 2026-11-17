@@ -12,7 +12,7 @@ if (process.argv.includes('--server')) {
     const auth = require('../src/config/auth');
     const user = (await pool.query("SELECT username, role FROM app_users WHERE role='admin' LIMIT 1")).rows[0];
     if (!user) throw Error('Existing admin required');
-    const token = auth.createSession(user);
+    const token = (await auth.createSession(user));
     const server = require('../src/app').listen(0, '127.0.0.1');
     await new Promise(r => server.once('listening', r));
     const histogram = monitorEventLoopDelay({ resolution: 20 }); histogram.enable();
@@ -29,7 +29,7 @@ if (process.argv.includes('--server')) {
         process.send({ metrics: { cpuPercentOneCore: (used.user + used.system) / ((performance.now() - start) * 10), peakRssMB: peak / 1048576, eventLoopP99Ms: histogram.percentile(99) / 1e6, dbWaiting: pool.waitingCount } });
       }
       if (message === 'stop') {
-        clearInterval(timer); auth.destroySession(token); server.closeAllConnections();
+        clearInterval(timer); (await auth.destroySession(token)); server.closeAllConnections();
         await new Promise(r => server.close(r)); await pool.end(); process.disconnect();
       }
     });

@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const test=require('node:test');const assert=require('node:assert/strict');
 const service=require('../src/services/reminderRecipientService');const {pool}=require('../src/config/database');
 test('recipient register validates names and email addresses',()=>{
@@ -24,13 +25,13 @@ test('register persists recipients and updates same name without duplicates',asy
  await service.registerOwners(['CISO','IT Governance','SOC Manager']);await service.registerOwners(['CISO']);assert.equal((await service.list()).filter(row=>row.owner==='CISO').length,1);assert.equal((await service.list()).find(row=>row.owner==='CISO').email,'');assert.equal((await service.list()).find(row=>row.owner==='soc manager').email,'replacement@example.com');
  const auth=require('../src/config/auth');
  const server=require('../src/app').listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
- const admin=auth.createSession({username:'recipient-test-admin',role:'admin'}),viewer=auth.createSession({username:'recipient-test-viewer',role:'viewer'});
+ const admin=(await auth.createSession({username:'recipient-test-admin',role:'admin'})),viewer=(await auth.createSession({username:'recipient-test-viewer',role:'viewer'}));
  try{const base='http://127.0.0.1:'+server.address().port+'/api/reminder-recipients';
  for(const method of ['POST','PUT','DELETE']){const url=base+(method==='POST'?'':'/SOC%20Manager');assert.equal((await fetch(url,{method,headers:{Cookie:auth.sessionCookie+'='+viewer,'Content-Type':'application/json'},body:method==='DELETE'?undefined:JSON.stringify({owner:'Protected',email:'safe@example.com'})})).status,403);}
  const headers={Cookie:auth.sessionCookie+'='+admin,'Content-Type':'application/json'};
  assert.equal((await fetch(base,{method:'POST',headers,body:JSON.stringify({owner:'Route Test',email:'route@example.com'})})).status,200);
  assert.equal((await fetch(base+'/Route%20Test',{method:'PUT',headers,body:JSON.stringify({owner:'Renamed Route',email:'updated@example.com'})})).status,200);
  assert.equal((await fetch(base+'/Renamed%20Route',{method:'DELETE',headers})).status,204);
- }finally{auth.destroySession(admin);auth.destroySession(viewer);server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+ }finally{(await auth.destroySession(admin));(await auth.destroySession(viewer));server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
  }finally{client.release(true);await pool.end();}
 });

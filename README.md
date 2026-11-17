@@ -138,6 +138,8 @@ engine aplikasi tidak cukup untuk membangun frontend saat ini.
 - Audit Finding Tracker, Uploaded files, akun/permission, audit, dan backup.
 - Compliance Security Checklist: dashboard, template checklist dengan kolom kustom dan impor/ekspor Excel, serta assignment asesmen berjudul aplikasi ke diri sendiri/pengguna lain. Mendukung modal, Indonesia/English dan upload evidence. Lihat [panduan Compliance](docs/compliance-office-design.md#compliance-security-checklist).
 
+Lihat [penguatan arsitektur](docs/architecture-hardening.md) untuk sesi PostgreSQL bersama, kontrak dependensi frontend, migrasi schema berversi, dan prosedur rollout.
+
 ## Operasi dan pengembangan
 
 Deployment Docker menyediakan Redis hanya untuk ringkasan Monitoring Dashboard

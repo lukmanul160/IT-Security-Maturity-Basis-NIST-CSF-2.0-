@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS tprm_questionnaire_history (id BIGSERIAL PRIMARY KEY, questionnaire_id BIGINT NOT NULL, actor TEXT NOT NULL, snapshot JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())

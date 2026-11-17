@@ -7,7 +7,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  let server,chrome,ws;const profile=path.join(os.tmpdir(),'nist-responsive-browser-'+Date.now());
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
  const port=9800+Math.floor(Math.random()*100);
  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -47,6 +47,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  }
  }
  fs.writeFileSync('output/responsive-probe.json',JSON.stringify(report,null,2));for(const r of report){assert.ok(r.scroll<=r.width+1,JSON.stringify(r));assert.ok([320,390,768,1024,1440].includes(r.width),'Viewport must retain requested device width: '+JSON.stringify(r));}assert.deepEqual(errors,[]);console.log('PASS: light/dark landing, login and dashboard at 320?1440px; asset lists, racks, modelling, Knowledge, risk, TPRM and files fit mobile/tablet; asset modal fits viewport; no browser exceptions.');
- auth.destroySession(token);
+ (await auth.destroySession(token));
  }finally{ws?.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-responsive-browser-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -24,17 +24,7 @@ const defaults = [
     id === 'status' ? ['Belum dinilai', 'Dalam proses', 'Sesuai', 'Tidak sesuai', 'Tidak berlaku'] : [],
 }));
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS compliance_security_checklists (
-    id UUID PRIMARY KEY, owner TEXT NOT NULL, title TEXT NOT NULL, assessor TEXT NOT NULL,
-    data JSONB NOT NULL, version INTEGER NOT NULL DEFAULT 1,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-  await pool.query(
-    "ALTER TABLE compliance_security_checklists ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'assignment', ADD COLUMN IF NOT EXISTS template_id UUID, ADD COLUMN IF NOT EXISTS template_title TEXT NOT NULL DEFAULT ''",
-  );
-  await pool.query(`CREATE TABLE IF NOT EXISTS compliance_security_checklist_files (
-    id UUID PRIMARY KEY, checklist_id UUID NOT NULL REFERENCES compliance_security_checklists(id) ON DELETE CASCADE,
-    row_id TEXT NOT NULL, column_id TEXT NOT NULL, name TEXT NOT NULL, mime_type TEXT NOT NULL,
-    content BYTEA NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  await require('./migrationService').ensureSchema();
 }
 function text(value, max, required = false) {
   if (typeof value !== 'string' || value.length > max || (required && !value.trim()))

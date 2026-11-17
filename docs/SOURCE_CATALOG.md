@@ -5,7 +5,7 @@ Dibuat oleh `npm run docs:source`. Jangan edit tabel manual.
 `source-catalog.json` memuat nama fungsi, baris, parameter, komentar dan dependency statis.
 Indeks ini bukan call graph lengkap atau bukti bahwa semua fungsi telah memiliki dokumentasi bisnis.
 
-Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
+Cakupan: 325 file, 2413 fungsi bernama, 67 fragmen runtime.
 
 ## Urutan runtime
 
@@ -96,6 +96,8 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 
 | File | Fungsi bernama |
 | --- | --- |
+| [auditFindingDetails.mjs](../frontend/client/src/services/auditFindingDetails.mjs) | `renderAuditFindingDetails` |
+| [auditRecordIndex.mjs](../frontend/client/src/services/auditRecordIndex.mjs) | `createAuditRecordIndex`, `ancestors` |
 | [canvasInteraction.mjs](../frontend/client/src/services/canvasInteraction.mjs) | `canvasShortcut` |
 | [moduleProgressWorkbook.mjs](../frontend/client/src/services/moduleProgressWorkbook.mjs) | `plain`, `forbidden`, `encode`, `decode`, `writeProgressWorkbook`, `readProgressWorkbook` |
 | [mutationGuard.js](../frontend/client/src/services/mutationGuard.js) | `stable`, `createMutationGuard`, `bodyKey`, `installMutationGuard` |
@@ -105,11 +107,13 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 | [securityChecklistWorkbookClient.mjs](../frontend/client/src/services/securityChecklistWorkbookClient.mjs) | `readChecklistWorkbookAsync`, `finish` |
 | [statementWordEditor.js](../frontend/client/src/services/statementWordEditor.js) | `loadLibrary`, `mount` |
 | [statusColors.mjs](../frontend/client/src/services/statusColors.mjs) | `normalize`, `statusTone`, `paint`, `refreshStatusColors`, `installStatusColors`, `schedule` |
+| [submissionGuard.mjs](../frontend/client/src/services/submissionGuard.mjs) | `guardFormSubmission` |
 | [tableResize.js](../frontend/client/src/services/tableResize.js) | `clamp`, `visibleCell`, `tableHeaderLayout`, `installTableResize`, `identity`, `savedWidths`, `persist`, `apply`, `autoFit`, `finish`, `handles`, `initialize`, `scan`, `schedule` |
 | [technologyAssetModel.mjs](../frontend/client/src/services/technologyAssetModel.mjs) | `technologyKey`, `technologyMap`, `versionComparison`, `radarPoints` |
 | [technologyAssetSearch.mjs](../frontend/client/src/services/technologyAssetSearch.mjs) | `compareNumericVersions`, `valid`, `matchesTechnology`, `searchTechnologyAssets` |
 | [technologyScanProgress.mjs](../frontend/client/src/services/technologyScanProgress.mjs) | `requestTechnologyScan`, `consume` |
 | [technologyTablePage.mjs](../frontend/client/src/services/technologyTablePage.mjs) | `technologyTablePage` |
+| [tprmNextSteps.mjs](../frontend/client/src/services/tprmNextSteps.mjs) | `tprmNextSteps`, `add` |
 | [uploadProgress.js](../frontend/client/src/services/uploadProgress.js) | `bytes`, `element`, `setOperationProgress`, `showOperationFiles`, `createTask`, `uploadRequest`, `notify`, `clean`, `fail`, `abort`, `server`, `installUploadProgress` |
 | [workspaceError.js](../frontend/client/src/services/workspaceError.js) | `renderWorkspaceError` |
 | [workspaceRuntime.js](../frontend/client/src/services/workspaceRuntime.js) | `runClassicScript`, `bootstrapWorkspaceRuntime` |
@@ -186,7 +190,7 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 | File | Fungsi bernama |
 | --- | --- |
 | [detail-view.js](../frontend/client/src/workspace/features/audit-finding/detail-view.js) | `renderAuditFindingDetails` |
-| [record-index.js](../frontend/client/src/workspace/features/audit-finding/record-index.js) | `createAuditRecordIndex`, `ancestors` |
+| [record-index.js](../frontend/client/src/workspace/features/audit-finding/record-index.js) | `createAuditRecordIndex` |
 | [tracker.js](../frontend/client/src/workspace/features/audit-finding/tracker.js) | `renderLibrary`, `loadLibrary`, `evidenceFiles`, `renderExistingFiles`, `ancestors`, `openCard`, `canWrite`, `canDelete`, `status`, `setTab`, `isOverdue`, `auditFindingDetails`, `request`, `afFindings`, `afScopedRows`, `afReset`, `afDrill`, `renderAuditDashboard`, `render`, `normalized`, `matches`, `load`, `openForm`, `reminderControls`, `previewReminder`, `render`, `populateReminder`, `loadReminder` |
 
 ## frontend/client/src/workspace/features/compliance
@@ -299,7 +303,7 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 | [questionnaire-templates.js](../frontend/client/src/workspace/features/tprm/questionnaire-templates.js) | `loadQuestionnaireTemplates`, `renderTemplates`, `normalizeTemplateSections`, `readTemplateSections`, `renderTemplateSections`, `resetTemplateForm`, `fillTemplateForm`, `saveTemplate`, `deleteTemplate`, `showTemplateSelectionModal`, `showTemplateView` |
 | [vendor-register.js](../frontend/client/src/workspace/features/tprm/vendor-register.js) | `renderTprmVendorOptions`, `syncTprmDueDiligenceRisk`, `ensureTprmRecordFields`, `setTprmAssessmentStatus`, `setTprmRelationshipStatus`, `tprmAssessmentStatusLabel`, `normalizeTprmRelationshipStatus`, `tprmRelationshipStatusLabel`, `resetTprmForm`, `fillTprmForm`, `questionnaireForTprm`, `tprmRiskSummary`, `renderTprmRows`, `ciaRiskTier`, `ensureTprmAssessmentNextReviewField`, `updateTprmAssessmentFromInputs`, `average`, `configureTprmAssessment`, `openTprmAssessment`, `chooseTprmAssessmentType`, `saveTprmAssessment`, `loadTprmRows`, `saveTprm`, `deleteTprm`, `ensureTprmRiskField`, `similarRiskText`, `normalize`, `ensureTprmRiskPickerFilters`, `ensureTprmRiskPicker`, `renderTprmRiskPicker`, `openRiskRegisterForTprm`, `ensureTprmRelatedRiskModal`, `openTprmRelatedRiskView`, `render` |
 | [workflow-guidance-view.js](../frontend/client/src/workspace/features/tprm/workflow-guidance-view.js) | `tprmNextStepsHtml` |
-| [workflow-guidance.js](../frontend/client/src/workspace/features/tprm/workflow-guidance.js) | `tprmNextSteps`, `add` |
+| [workflow-guidance.js](../frontend/client/src/workspace/features/tprm/workflow-guidance.js) | `tprmNextSteps` |
 
 ## frontend/client/src/workspace/features/uploaded-files
 
@@ -357,7 +361,7 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 
 | File | Fungsi bernama |
 | --- | --- |
-| [auth.js](../src/config/auth.js) | `authenticate`, `createSession`, `getSession`, `destroySession`, `destroyUserSessions`, `parseCookies`, `beginDatabaseRestore`, `endDatabaseRestore`, `getOfficeSessions` |
+| [auth.js](../src/config/auth.js) | `authenticate`, `createSession`, `getSession`, `destroySession`, `destroyUserSessions`, `getOfficeSessions`, `updateOfficePresence`, `parseCookies`, `beginDatabaseRestore`, `endDatabaseRestore` |
 | [database.js](../src/config/database.js) | `checkDatabaseConnection` |
 | [env.js](../src/config/env.js) | Markup / konfigurasi / binding |
 | [paths.js](../src/config/paths.js) | Markup / konfigurasi / binding |
@@ -368,7 +372,7 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 | File | Fungsi bernama |
 | --- | --- |
 | [assessmentController.js](../src/controllers/assessmentController.js) | `get`, `update`, `reset` |
-| [authController.js](../src/controllers/authController.js) | `loginKey`, `login`, `logout`, `currentUser`, `updateProfile`, `updatePassword`, `listUsers`, `createUser`, `updateUser`, `deleteUser`, `listPermissions`, `updatePermissions` |
+| [authController.js](../src/controllers/authController.js) | `login`, `logout`, `currentUser`, `updateProfile`, `updatePassword`, `listUsers`, `createUser`, `updateUser`, `deleteUser`, `listPermissions`, `updatePermissions` |
 | [backupController.js](../src/controllers/backupController.js) | `restoreBatch`, `list`, `create`, `download`, `remove`, `restore` |
 | [certificationRoadmapCatalogController.js](../src/controllers/certificationRoadmapCatalogController.js) | `wrap` |
 | [csfController.js](../src/controllers/csfController.js) | `list`, `create`, `update`, `remove` |
@@ -464,6 +468,7 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 | [auditRecoveryService.js](../src/services/auditRecoveryService.js) | `createAuditRecovery`, `serial`, `pending`, `recover`, `start`, `save` |
 | [auditRetentionService.js](../src/services/auditRetentionService.js) | `ensureStore`, `validate`, `read`, `save`, `cleanup`, `startScheduler` |
 | [auditService.js](../src/services/auditService.js) | `ensureStore`, `record`, `list`, `listRiskAcceptance`, `describeClient`, `csvCell`, `exportChunks` |
+| [authStateService.js](../src/services/authStateService.js) | `hash`, `unavailable`, `createAuthState` |
 | [backupService.js](../src/services/backupService.js) | `ensureBackupRoot`, `resolvePgTool`, `pgDumpArguments`, `createBackup`, `pgRestoreArguments`, `restoreJsonSnapshot`, `restoreBackup`, `listBackups`, `readBackup`, `deleteBackup`, `restoreBackupParts` |
 | [boundedUploadStorage.js](../src/services/boundedUploadStorage.js) | `createBoundedUploadStorage` |
 | [budgetService.js](../src/services/budgetService.js) | `fail`, `year`, `amount`, `fields`, `ensureStore`, `list`, `createYear`, `event`, `create`, `advance`, `update`, `settings`, `saveApprover` |
@@ -490,6 +495,7 @@ Cakupan: 319 file, 2402 fungsi bernama, 67 fragmen runtime.
 | [knowledgeImageService.js](../src/services/knowledgeImageService.js) | `fail`, `ensureStore`, `validate`, `store`, `list`, `read`, `validateId`, `move`, `remove` |
 | [knowledgeNoteService.js](../src/services/knowledgeNoteService.js) | `fail`, `validateFolder`, `storeFolder`, `validate`, `initializeStore`, `ensureStore`, `folders`, `createFolder`, `moveFolder`, `removeFolder`, `list`, `create`, `update`, `importNotes`, `remove` |
 | [maturityWorkbookService.js](../src/services/maturityWorkbookService.js) | `fail`, `escape`, `canonical`, `codeOf`, `subcategoryText`, `categoryKey`, `cell`, `score`, `parse`, `text`, `read`, `styledRow`, `insertRow`, `formula`, `write`, `writeSummary` |
+| [migrationService.js](../src/services/migrationService.js) | `checksum`, `definitions`, `migrate`, `ensureSchema` |
 | [monitoringDashboardService.js](../src/services/monitoringDashboardService.js) | `day`, `todayInBangkok`, `validDay`, `ciaLevel`, `acceptanceStatus`, `issues`, `distribution`, `deadlines`, `recordTrend`, `metric`, `query`, `buildSnapshot`, `can`, `add`, `summarize`, `snapshot` |
 | [officeDesignService.js](../src/services/officeDesignService.js) | `invalid`, `ensureStore`, `validate`, `list`, `read`, `save`, `remove` |
 | [permissionService.js](../src/services/permissionService.js) | `normalizeAction`, `canAccess`, `ensureStore`, `defaultActions`, `effectiveActions`, `list`, `getRoleActions`, `getRolePermissions`, `has`, `hasFileAction`, `canDeleteOwnedEvidence`, `update`, `invalid` |

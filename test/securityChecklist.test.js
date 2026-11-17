@@ -52,7 +52,7 @@ test('PostgreSQL CRUD, assignment isolation, restricted assessments and stale wr
     await client.query(`CREATE TEMP TABLE app_users(username TEXT PRIMARY KEY, full_name TEXT NOT NULL DEFAULT '',role TEXT NOT NULL);
       INSERT INTO app_users VALUES ('maker','Maker','editor'),('assessor','Assessor','user'),('other','Other','editor'),('viewer','Viewer','viewer');
       CREATE TEMP TABLE role_permissions(role TEXT,permission_key TEXT,allowed BOOLEAN,actions JSONB,updated_at TIMESTAMPTZ DEFAULT NOW(),PRIMARY KEY(role,permission_key));
-      CREATE TEMP TABLE compliance_security_checklists(id UUID PRIMARY KEY,owner TEXT,title TEXT,assessor TEXT,data JSONB,version INTEGER DEFAULT 1,updated_at TIMESTAMPTZ DEFAULT NOW());
+      CREATE TEMP TABLE compliance_security_checklists(id UUID PRIMARY KEY,owner TEXT,title TEXT,assessor TEXT,data JSONB,version INTEGER DEFAULT 1,kind TEXT NOT NULL DEFAULT 'assignment',template_id UUID,template_title TEXT NOT NULL DEFAULT '',updated_at TIMESTAMPTZ DEFAULT NOW());
       CREATE TEMP TABLE compliance_security_checklist_files(id UUID PRIMARY KEY,checklist_id UUID REFERENCES compliance_security_checklists(id) ON DELETE CASCADE,row_id TEXT,column_id TEXT,name TEXT,mime_type TEXT,content BYTEA,created_at TIMESTAMPTZ DEFAULT NOW());`);
     pool.query = (sql, ...args) => client.query(typeof sql === 'string' ? sql.replaceAll('CREATE TABLE IF NOT EXISTS', 'CREATE TEMP TABLE IF NOT EXISTS') : sql, ...args);
     pool.connect = async () => ({ query: (...args) => client.query(...args), release() {} });

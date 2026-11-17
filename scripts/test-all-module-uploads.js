@@ -7,7 +7,7 @@ const files = require('../src/services/fileService');
 async function run() {
   const user = (await pool.query("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];
   assert.ok(user, 'Existing administrator required');
-  const token = auth.createSession({ username: user.username, role: 'admin' });
+  const token = (await auth.createSession({ username: user.username, role: 'admin' }));
   const server = require('../src/app').listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -45,7 +45,7 @@ async function run() {
   } finally {
     for (const file of uploaded) await files.deleteFile(file.path, { library: true });
     if (noteId) await pool.query('DELETE FROM knowledge_notes WHERE id=$1', [noteId]);
-    auth.destroySession(token);
+    (await auth.destroySession(token));
     await new Promise(resolve => server.close(resolve));
   }
 }

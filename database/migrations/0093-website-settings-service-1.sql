@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS website_settings(id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL DEFAULT '{}'::jsonb)

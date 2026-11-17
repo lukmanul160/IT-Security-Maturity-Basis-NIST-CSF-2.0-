@@ -9,7 +9,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  try{
   settings.read=async()=>fixture;
   settings.save=async input=>{fixture={...fixture,...settings.validate(input)};return settings.publicSettings(fixture);};
-  const user=(await pool.query("SELECT username,role FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user);token=auth.createSession(user);
+  const user=(await pool.query("SELECT username,role FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user);token=(await auth.createSession(user));
   server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port,port=10300+Math.floor(Math.random()*200);
   chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
   let target;for(let i=0;i<100;i++){try{target=(await(await fetch('http://127.0.0.1:'+port+'/json')).json()).find(t=>t.type==='page');if(target)break;}catch{}await delay(100);}
@@ -32,6 +32,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
   assert.deepEqual(client.errors,[]);
   console.log('PASS: Website Settings loads default limits, saves all four fields, reloads saved values and updates client export checks without browser errors.');
  }finally{
-  settings.read=read;settings.save=save;client?.socket.close();chrome?.kill();if(token)auth.destroySession(token);if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();try{await fs.rm(profile,{recursive:true,force:true});}catch{}
+  settings.read=read;settings.save=save;client?.socket.close();chrome?.kill();if(token)(await auth.destroySession(token));if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();try{await fs.rm(profile,{recursive:true,force:true});}catch{}
  }
 })().catch(error=>{console.error(error);process.exitCode=1;});

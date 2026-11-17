@@ -16,8 +16,7 @@ function fields(input) {
   return { ...data, type: input.type, amount: amount(input.amount) };
 }
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS budget_approvers (requester TEXT PRIMARY KEY, approver TEXT NOT NULL, updated_by TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), CHECK(requester <> approver))`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS budget_years (year INTEGER PRIMARY KEY CHECK(year BETWEEN 2000 AND 2200), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()); CREATE TABLE IF NOT EXISTS budget_requests (id UUID PRIMARY KEY, year INTEGER NOT NULL REFERENCES budget_years(year), data JSONB NOT NULL); CREATE INDEX IF NOT EXISTS budget_requests_year ON budget_requests(year)`);
+  await require('./migrationService').ensureSchema();
 }
 async function list(value) { const y = year(value); return { years: (await pool.query('SELECT year FROM budget_years ORDER BY year DESC')).rows.map(r => r.year), requests: (await pool.query('SELECT data FROM budget_requests WHERE year=$1 ORDER BY data->>\'createdAt\' DESC', [y])).rows.map(r => r.data) }; }
 async function createYear(value) { const y = year(value); const result = await pool.query('INSERT INTO budget_years(year) VALUES($1) ON CONFLICT DO NOTHING RETURNING year', [y]); if (!result.rowCount) fail('Tahun anggaran sudah tersedia.', 409); return { year: y }; }

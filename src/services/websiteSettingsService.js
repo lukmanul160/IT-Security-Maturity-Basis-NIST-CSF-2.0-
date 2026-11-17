@@ -7,7 +7,7 @@ const {pool}=require('../config/database');
 const defaults={name:'Black Owl Governance',tagline:'Align Your IT With Business need'};
 const defaultFileLimits={uploadMb:100,importMb:500,exportMb:500,documentEditMb:50};
 let ready;
-function ensureStore(){if(!ready)ready=pool.query("CREATE TABLE IF NOT EXISTS website_settings(id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL DEFAULT '{}'::jsonb)").catch(error=>{ready=null;throw error;});return ready;}
+function ensureStore(){if(!ready)ready=require('./migrationService').ensureSchema().catch(error=>{ready=null;throw error;});return ready;}
 async function read(){await ensureStore();return {...defaults,...(await pool.query('SELECT settings FROM website_settings WHERE id=1')).rows[0]?.settings};}
 function fileLimits(data){return {...defaultFileLimits,...data.fileLimits};}
 function publicSettings(data){return {fileLimits:fileLimits(data),name:data.name,tagline:data.tagline,logoUrl:'/website-assets/logo?v='+encodeURIComponent(data.version||'default'),faviconUrl:'/website-assets/favicon?v='+encodeURIComponent(data.version||'default')};}

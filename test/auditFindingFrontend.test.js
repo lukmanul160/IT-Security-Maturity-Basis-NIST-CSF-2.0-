@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const context = vm.createContext({});
-for (const name of ['record-index', 'detail-view']) {
-  vm.runInContext(fs.readFileSync(`frontend/client/src/workspace/features/audit-finding/${name}.js`, 'utf8'), context);
+for (const name of ['auditRecordIndex', 'auditFindingDetails']) {
+  vm.runInContext(fs.readFileSync(`frontend/client/src/services/${name}.mjs`, 'utf8').replace('export function ', 'function '), context);
 }
 
 test('snapshot index preserves hierarchy, child ordering and fresh records after reload', () => {

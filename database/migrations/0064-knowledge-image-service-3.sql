@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS knowledge_note_images_evidence_path_idx ON knowledge_note_images(evidence_path)

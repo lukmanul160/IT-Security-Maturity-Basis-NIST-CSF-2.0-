@@ -7,38 +7,21 @@ const { authenticate, createSession, destroySession, parseCookies, sessionCookie
 const accountService = require('../services/accountService');
 const permissionService = require('../services/permissionService');
 const { sessionCookieSecure } = require('../config/env');
-const loginAttempts = new Map();
-const maxLoginFailures = 5;
-const loginWindow = 15 * 60 * 1000;
-
-function loginKey(req, username) { return `${req.ip}|${String(username || '').trim().toLowerCase()}`; }
-
+const { state } = require('../services/authStateService');
 async function login(req, res) {
   const { username, password } = req.body || {};
-  const key = loginKey(req, username);
-  const now = Date.now();
-  for (const [attemptKey, record] of loginAttempts) {
-    if (now - record.firstFailure > loginWindow && !(record.blockedUntil > now)) loginAttempts.delete(attemptKey);
-  }
-  const attempt = loginAttempts.get(key);
-  if (attempt && attempt.blockedUntil > now) return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi nanti.' });
-  if (attempt && now - attempt.firstFailure > loginWindow) loginAttempts.delete(key);
-  if (!loginAttempts.has(key) && loginAttempts.size >= 10000) return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi nanti.' });
-  const user = await authenticate(username, password);
-  if (!user) {
-    const current = loginAttempts.get(key) || { failures: 0, firstFailure: now };
-    current.failures += 1;
-    current.blockedUntil = current.failures >= maxLoginFailures ? now + loginWindow : 0;
-    loginAttempts.set(key, current);
-    return res.status(401).json({ error: 'Username atau password salah' });
-  }
-  loginAttempts.delete(key);
-  req.user = user;
-  const token = createSession(user);
-  res.cookie(sessionCookie, token, { httpOnly: true, sameSite: 'lax', secure: sessionCookieSecure, maxAge: 8 * 60 * 60 * 1000 });
-  return res.json({ username: user.username, role: user.role });
+  const key = `${req.ip}|${String(username || '').trim().toLowerCase()}`;
+  const attempt = await state.consume('login-account', key, 5, 15*60*1000);
+  if (!attempt.allowed) { res.set('Retry-After',String(attempt.retryAfter)); return res.status(429).json({error:'Terlalu banyak percobaan login. Coba lagi nanti.'}); }
+  const user = await authenticate(username,password);
+  if (!user) return res.status(401).json({error:'Username atau password salah'});
+  const token = await createSession(user);
+  await state.reset('login-account',key);
+  req.user = {username:user.username,role:user.role};
+  res.cookie(sessionCookie,token,{httpOnly:true,sameSite:'lax',secure:sessionCookieSecure,maxAge:8*60*60*1000});
+  return res.json(req.user);
 }
-function logout(req, res) { destroySession(parseCookies(req.headers.cookie)[sessionCookie]); res.clearCookie(sessionCookie); res.status(204).end(); }
+async function logout(req,res) { await destroySession(parseCookies(req.headers.cookie)[sessionCookie]);res.clearCookie(sessionCookie);res.status(204).end(); }
 async function currentUser(req, res) { const profile = await accountService.getProfile(req.user.username); profile.actions = await permissionService.getRoleActions(profile.role); profile.ownEvidenceDelete = await permissionService.canDeleteOwnedEvidence(profile.role); profile.permissions = Object.keys(profile.actions).filter(key=>profile.actions[key].read); res.json(profile); }
 async function updateProfile(req, res) { const data = req.body || {}; if (req.user.role !== 'admin' && Object.keys(data).some(field => field !== 'fullName')) return res.status(403).json({ error: 'Only administrators can change account security settings' }); res.json(await accountService.updateProfile(req.user.username, data)); }
 async function updatePassword(req, res) { res.json(await accountService.updatePassword(req.user.username, req.body || {})); }

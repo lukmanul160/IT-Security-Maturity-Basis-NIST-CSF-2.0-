@@ -1,0 +1,542 @@
+-- PostgreSQL schema for NIST CSF 2.0 Maturity Assessment
+-- Select the application database before running this file:
+-- \c nist_basis
+
+CREATE TABLE IF NOT EXISTS threat_models (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  diagram JSONB NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS assessment_state (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS risk_acceptance_forms (
+  id BIGSERIAL PRIMARY KEY,
+  requestor_name TEXT NOT NULL,
+  asset_name TEXT NOT NULL,
+  department TEXT NOT NULL,
+  previously_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+  risk_description TEXT NOT NULL,
+  benefit_justification TEXT NOT NULL,
+  mitigation_plan TEXT NOT NULL,
+  business_owner_decision TEXT NOT NULL CHECK (business_owner_decision IN ('temporary', 'one_year', 'denied')),
+  remediation_date DATE,
+  requestor_print_name TEXT NOT NULL DEFAULT '',
+  requestor_email_phone TEXT NOT NULL DEFAULT '',
+  requestor_signature TEXT NOT NULL DEFAULT '',
+  requestor_date DATE,
+  cio_comments TEXT NOT NULL DEFAULT '',
+  cio_name TEXT NOT NULL DEFAULT '',
+  cio_signature TEXT NOT NULL DEFAULT '',
+  cio_date DATE,
+  cis_decision TEXT NOT NULL CHECK (cis_decision IN ('approved', 'denied', 'conditional')),
+  cis_reason TEXT NOT NULL DEFAULT '',
+  cis_conditions TEXT NOT NULL DEFAULT '',
+  cis_name TEXT NOT NULL DEFAULT '',
+  cis_signature TEXT NOT NULL DEFAULT '',
+  cis_date DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS risk_acceptance_forms_updated_idx
+  ON risk_acceptance_forms (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS risk_indicators (
+  id BIGSERIAL PRIMARY KEY,
+  indicator_type TEXT NOT NULL,
+  score INTEGER,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS risk_indicators_type_idx
+  ON risk_indicators (indicator_type, sort_order);
+
+CREATE TABLE IF NOT EXISTS risk_register (
+  risk_id TEXT PRIMARY KEY,
+  third_party TEXT NOT NULL DEFAULT '',
+  risk_category TEXT NOT NULL,
+  effected_asset TEXT NOT NULL,
+  device_name TEXT NOT NULL DEFAULT '',
+  identification_risk TEXT NOT NULL,
+  risk_control TEXT NOT NULL DEFAULT '',
+  risk_cause TEXT NOT NULL DEFAULT '',
+  risk_analysis TEXT NOT NULL DEFAULT '',
+  asset_confidentiality INTEGER,
+  asset_integrity INTEGER,
+  asset_availability INTEGER,
+  asset_value INTEGER,
+  risk_owner TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
+  ref TEXT NOT NULL DEFAULT '',
+  likelihood INTEGER NOT NULL,
+  impact INTEGER NOT NULL,
+  risk_rating TEXT NOT NULL DEFAULT '',
+  treatment_action TEXT NOT NULL DEFAULT '',
+  acceptance_form_no TEXT NOT NULL DEFAULT '',
+  risk_treatment_description TEXT NOT NULL DEFAULT '',
+  owner_of_action TEXT NOT NULL DEFAULT '',
+  deadline DATE,
+  residual_risk_description TEXT NOT NULL DEFAULT '',
+  residual_likelihood INTEGER,
+  residual_impact INTEGER,
+  residual_rating TEXT NOT NULL DEFAULT '',
+  comment TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS third_party TEXT NOT NULL DEFAULT '';
+ALTER TABLE risk_register ADD COLUMN IF NOT EXISTS scenario_impact BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE risk_register ALTER COLUMN likelihood DROP NOT NULL, ALTER COLUMN impact DROP NOT NULL;
+
+CREATE TABLE IF NOT EXISTS risk_workflows (
+  risk_id TEXT PRIMARY KEY REFERENCES risk_register(risk_id) ON DELETE CASCADE,
+  data JSONB NOT NULL DEFAULT '{}',
+  version INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS risk_workflow_events (
+  id BIGSERIAL PRIMARY KEY,
+  risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE,
+  actor TEXT NOT NULL,
+  action TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  snapshot JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS risk_workflow_events_risk_idx ON risk_workflow_events (risk_id, id DESC);
+
+CREATE INDEX IF NOT EXISTS risk_register_rating_idx ON risk_register (risk_rating);
+CREATE INDEX IF NOT EXISTS risk_register_owner_idx ON risk_register (risk_owner);
+
+CREATE TABLE IF NOT EXISTS risk_dropdown_options (
+  id BIGSERIAL PRIMARY KEY,
+  field_name TEXT NOT NULL,
+  option_value TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT risk_dropdown_option_unique UNIQUE (field_name, option_value)
+);
+
+CREATE INDEX IF NOT EXISTS risk_dropdown_options_field_idx
+  ON risk_dropdown_options (field_name, sort_order, option_value);
+
+CREATE TABLE IF NOT EXISTS personnel_certifications (
+  certificate_file JSONB,
+  id BIGSERIAL PRIMARY KEY,
+  -- Backfilled, constrained and indexed by personnel-certification-links.sql during setup.
+  personnel_id BIGINT,
+  personnel_name TEXT NOT NULL,
+  employee_id TEXT NOT NULL DEFAULT '',
+  personnel_role TEXT NOT NULL DEFAULT '',
+  supervisor_name TEXT NOT NULL DEFAULT '',
+  certification_name TEXT NOT NULL,
+  issuer TEXT NOT NULL DEFAULT '',
+  reference_url TEXT NOT NULL DEFAULT '',
+  certification_level TEXT NOT NULL DEFAULT 'Intermediate',
+  status TEXT NOT NULL DEFAULT 'Planned',
+  issue_date DATE,
+  expiry_date DATE,
+  notes TEXT NOT NULL DEFAULT '',
+  on_canvas BOOLEAN NOT NULL DEFAULT FALSE,
+  position_x INTEGER NOT NULL DEFAULT 24,
+  position_y INTEGER NOT NULL DEFAULT 24,
+  card_width INTEGER NOT NULL DEFAULT 260,
+  card_height INTEGER NOT NULL DEFAULT 190,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS personnel_certifications_name_idx
+  ON personnel_certifications (personnel_name, certification_name);
+
+CREATE TABLE IF NOT EXISTS organization_personnel (
+  id BIGSERIAL PRIMARY KEY,
+  personnel_name TEXT NOT NULL,
+  employee_id TEXT NOT NULL DEFAULT '',
+  personnel_role TEXT NOT NULL DEFAULT '',
+  supervisor_name TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT organization_personnel_name_not_blank CHECK (btrim(personnel_name) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS organization_personnel_name_idx
+  ON organization_personnel (personnel_name, employee_id);
+
+CREATE TABLE IF NOT EXISTS certification_roadmap_catalog (
+  id BIGSERIAL PRIMARY KEY,
+  domain TEXT NOT NULL DEFAULT '',
+  certification_name TEXT NOT NULL,
+  issuer TEXT NOT NULL DEFAULT '',
+  reference_url TEXT NOT NULL DEFAULT '',
+  certification_level TEXT NOT NULL DEFAULT 'Intermediate',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT certification_roadmap_catalog_unique UNIQUE (certification_name)
+);
+
+CREATE INDEX IF NOT EXISTS certification_roadmap_catalog_domain_idx
+  ON certification_roadmap_catalog (domain, certification_level);
+
+CREATE TABLE IF NOT EXISTS tprm_risk_register (
+  id BIGSERIAL PRIMARY KEY,
+  third_party TEXT NOT NULL,
+  service_dependency TEXT NOT NULL,
+  risk_level TEXT NOT NULL,
+  assessment_status TEXT NOT NULL DEFAULT 'Not started',
+  relationship_status TEXT NOT NULL DEFAULT 'Active',
+  next_review DATE,
+  notes TEXT NOT NULL DEFAULT '',
+  risk_register_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS risk_register_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS relationship_status TEXT NOT NULL DEFAULT 'Active';
+
+CREATE INDEX IF NOT EXISTS tprm_risk_register_updated_idx
+  ON tprm_risk_register (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS tprm_related_risks (
+  tprm_id BIGINT NOT NULL REFERENCES tprm_risk_register(id) ON DELETE CASCADE,
+  risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE,
+  PRIMARY KEY (tprm_id, risk_id)
+);
+
+CREATE INDEX IF NOT EXISTS tprm_related_risks_risk_idx
+  ON tprm_related_risks (risk_id);
+
+CREATE TABLE IF NOT EXISTS policy_register (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  review_cycle TEXT NOT NULL,
+  approval_status TEXT NOT NULL,
+  last_review DATE,
+  attachment_name TEXT NOT NULL DEFAULT '',
+  attachment_path TEXT NOT NULL DEFAULT '',
+  attachment_type TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS policy_register_updated_idx
+  ON policy_register (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS policy_register_items (
+  id BIGSERIAL PRIMARY KEY,
+  policy_id BIGINT NOT NULL REFERENCES policy_register(id) ON DELETE CASCADE,
+  subtitle TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT policy_register_item_content_check CHECK (subtitle <> '' OR content <> '')
+);
+
+CREATE INDEX IF NOT EXISTS policy_register_items_policy_idx
+  ON policy_register_items (policy_id, sort_order, id);
+
+CREATE TABLE IF NOT EXISTS policy_register_dropdown_options (
+  id BIGSERIAL PRIMARY KEY,
+  field_name TEXT NOT NULL,
+  option_value TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT policy_register_dropdown_option_unique UNIQUE (field_name, option_value)
+);
+
+CREATE INDEX IF NOT EXISTS policy_register_dropdown_field_idx
+  ON policy_register_dropdown_options (field_name, sort_order, option_value);
+
+INSERT INTO policy_register_dropdown_options (field_name, option_value, sort_order)
+VALUES
+  ('categories', 'Cybersecurity', 0),
+  ('categories', 'IT Governance', 1),
+  ('categories', 'Privacy', 2),
+  ('categories', 'Risk Management', 3),
+  ('categories', 'HR & Compliance', 4),
+  ('owners', 'CISO', 0),
+  ('owners', 'IT Manager', 1),
+  ('owners', 'Data Protection Officer', 2),
+  ('owners', 'Security Manager', 3),
+  ('owners', 'Legal', 4),
+  ('owners', 'Procurement', 5),
+  ('reviewCycles', 'Annual', 0),
+  ('reviewCycles', 'Biannual', 1),
+  ('reviewCycles', 'Quarterly', 2),
+  ('reviewCycles', 'Ad hoc', 3),
+  ('approvalStatuses', 'Approved', 0),
+  ('approvalStatuses', 'Draft', 1),
+  ('approvalStatuses', 'Review due', 2),
+  ('approvalStatuses', 'Expired', 3)
+ON CONFLICT (field_name, option_value) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS questionnaire_templates (
+  id BIGSERIAL PRIMARY KEY,
+  template_name TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT '',
+  sections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  is_default BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS questionnaire_templates_default_idx
+  ON questionnaire_templates (is_default);
+
+CREATE TABLE IF NOT EXISTS tprm_due_diligence_questionnaires (
+  id BIGSERIAL PRIMARY KEY,
+  vendor_name TEXT NOT NULL,
+  template_id BIGINT,
+  assessment_status TEXT NOT NULL DEFAULT 'Draft',
+  review_date DATE,
+  assessment_result TEXT NOT NULL DEFAULT 'Pending',
+  reviewer TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  responses JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS tprm_questionnaires_updated_idx
+  ON tprm_due_diligence_questionnaires (updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS tprm_questionnaires_template_idx
+  ON tprm_due_diligence_questionnaires (template_id);
+
+ALTER TABLE tprm_risk_register
+  ADD COLUMN IF NOT EXISTS questionnaire_id BIGINT;
+
+ALTER TABLE tprm_risk_register
+  ADD COLUMN IF NOT EXISTS due_diligence_assessment JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'tprm_risk_register_questionnaire_fk'
+  ) THEN
+    ALTER TABLE tprm_risk_register
+      ADD CONSTRAINT tprm_risk_register_questionnaire_fk
+      FOREIGN KEY (questionnaire_id)
+      REFERENCES tprm_due_diligence_questionnaires(id)
+      ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS tprm_risk_register_questionnaire_idx
+  ON tprm_risk_register (questionnaire_id);
+
+CREATE TABLE IF NOT EXISTS evidence_files (
+  path TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  content BYTEA,
+  mime_type TEXT NOT NULL,
+  open_page INTEGER NOT NULL DEFAULT 1 CHECK (open_page >= 1),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS file_storage_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  mode TEXT NOT NULL CHECK (mode IN ('local', 'shared')),
+  directory TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Paths exposed by the API stay stable when the active upload destination changes.
+-- Empty root means this application's local upload directory; legacy files have no row.
+CREATE TABLE IF NOT EXISTS file_storage_locations (
+  path TEXT PRIMARY KEY,
+  root TEXT NOT NULL,
+  object_key TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE evidence_files
+  ALTER COLUMN content DROP NOT NULL;
+ALTER TABLE evidence_files ADD COLUMN IF NOT EXISTS open_page INTEGER NOT NULL DEFAULT 1 CHECK (open_page >= 1);
+
+CREATE INDEX IF NOT EXISTS evidence_files_name_idx
+  ON evidence_files (name);
+
+CREATE INDEX IF NOT EXISTS assessment_state_updated_idx
+  ON assessment_state (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS audit_events (
+  id BIGSERIAL PRIMARY KEY,
+  request_id TEXT NOT NULL,
+  actor_username TEXT NOT NULL DEFAULT '',
+  actor_role TEXT NOT NULL DEFAULT '',
+  event_type TEXT NOT NULL,
+  method TEXT NOT NULL,
+  path TEXT NOT NULL,
+  status_code INTEGER NOT NULL DEFAULT 200,
+  ip_address TEXT NOT NULL DEFAULT '',
+  user_agent TEXT NOT NULL DEFAULT '',
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS audit_events_created_idx ON audit_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS audit_events_actor_idx ON audit_events (actor_username, created_at DESC);
+CREATE INDEX IF NOT EXISTS audit_events_request_idx ON audit_events (request_id);
+
+CREATE INDEX IF NOT EXISTS evidence_files_updated_idx
+  ON evidence_files (updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS frameworks (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  version TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT frameworks_id_not_blank CHECK (btrim(id) <> ''),
+  CONSTRAINT frameworks_name_not_blank CHECK (btrim(name) <> ''),
+  CONSTRAINT frameworks_version_not_blank CHECK (btrim(version) <> '')
+);
+
+CREATE TABLE IF NOT EXISTS controls (
+  id BIGSERIAL PRIMARY KEY,
+  framework_id TEXT NOT NULL REFERENCES frameworks (id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  function TEXT NOT NULL,
+  category TEXT NOT NULL,
+  subcategory TEXT NOT NULL,
+  implementation TEXT NOT NULL DEFAULT '',
+  "references" TEXT NOT NULL DEFAULT '',
+  minimum_evidence TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  evidence JSONB NOT NULL DEFAULT '[]'::jsonb,
+  applicability TEXT NOT NULL DEFAULT 'Applicable',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT controls_framework_code_unique UNIQUE (framework_id, code),
+  CONSTRAINT controls_code_not_blank CHECK (btrim(code) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS controls_framework_idx
+  ON controls (framework_id);
+
+CREATE INDEX IF NOT EXISTS controls_function_idx
+  ON controls (framework_id, function);
+
+CREATE INDEX IF NOT EXISTS controls_category_idx
+  ON controls (framework_id, category);
+
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS minimum_evidence TEXT NOT NULL DEFAULT '';
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT '';
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS evidence JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE controls ADD COLUMN IF NOT EXISTS applicability TEXT NOT NULL DEFAULT 'Applicable';
+
+INSERT INTO frameworks (id, name, version, description)
+VALUES
+  ('csf', 'NIST Cybersecurity Framework', '2.0', 'NIST CSF 2.0 controls'),
+  ('privacy', 'NIST Privacy Framework', '1.0', 'NIST Privacy Framework controls')
+ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS framework_category_targets (
+  framework_id TEXT NOT NULL REFERENCES frameworks (id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  target_score NUMERIC(3,1) NOT NULL DEFAULT 3.0 CHECK (target_score >= 0 AND target_score <= 5),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (framework_id, category),
+  CONSTRAINT framework_category_targets_category_not_blank CHECK (btrim(category) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS framework_category_targets_framework_idx
+  ON framework_category_targets (framework_id, category);
+
+CREATE TABLE IF NOT EXISTS information_security_objectives (
+  id BIGSERIAL PRIMARY KEY,
+  objective_year INTEGER NOT NULL CHECK (objective_year BETWEEN 2000 AND 2100),
+  objective TEXT NOT NULL,
+  indicator TEXT NOT NULL DEFAULT '',
+  baseline TEXT NOT NULL DEFAULT '',
+  target_value TEXT NOT NULL DEFAULT '',
+  owner TEXT NOT NULL DEFAULT '',
+  evaluation_frequency TEXT NOT NULL DEFAULT 'monthly' CHECK (evaluation_frequency IN ('monthly', 'quarterly', 'semester', 'annual')),
+  period_targets JSONB NOT NULL DEFAULT '{}'::jsonb,
+  monthly_status TEXT NOT NULL DEFAULT 'Not started',
+  quarterly_status TEXT NOT NULL DEFAULT 'Not started',
+  semester_status TEXT NOT NULL DEFAULT 'Not started',
+  annual_status TEXT NOT NULL DEFAULT 'Not started',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT information_security_objective_text_not_blank CHECK (btrim(objective) <> '')
+);
+
+CREATE INDEX IF NOT EXISTS information_security_objectives_year_idx
+  ON information_security_objectives (objective_year, updated_at DESC);
+
+ALTER TABLE information_security_objectives
+  ADD COLUMN IF NOT EXISTS evaluation_frequency TEXT NOT NULL DEFAULT 'monthly';
+ALTER TABLE information_security_objectives
+  ADD COLUMN IF NOT EXISTS period_targets JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+DO $$
+BEGIN
+  IF to_regclass('csf_controls') IS NOT NULL THEN
+    INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references")
+    SELECT 'csf', id, function, category, subcategory, implementation, "references"
+    FROM csf_controls
+    ON CONFLICT (framework_id, code) DO NOTHING;
+    DROP TABLE csf_controls;
+  END IF;
+  IF to_regclass('privacy_controls') IS NOT NULL THEN
+    INSERT INTO controls (framework_id, code, function, category, subcategory, implementation, "references")
+    SELECT 'privacy', id, function, category, subcategory, implementation, "references"
+    FROM privacy_controls
+    ON CONFLICT (framework_id, code) DO NOTHING;
+    DROP TABLE privacy_controls;
+  END IF;
+END $$;
+
+INSERT INTO framework_category_targets (framework_id, category, target_score)
+SELECT framework_id, category, 3.0
+FROM controls
+WHERE framework_id IN ('csf', 'privacy')
+GROUP BY framework_id, category
+ON CONFLICT (framework_id, category) DO NOTHING;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'assessment_state_id_not_blank') THEN
+    ALTER TABLE assessment_state ADD CONSTRAINT assessment_state_id_not_blank CHECK (btrim(id) <> '');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'evidence_files_path_not_blank') THEN
+    ALTER TABLE evidence_files ADD CONSTRAINT evidence_files_path_not_blank CHECK (btrim(path) <> '');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'evidence_files_name_not_blank') THEN
+    ALTER TABLE evidence_files ADD CONSTRAINT evidence_files_name_not_blank CHECK (btrim(name) <> '');
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS role_permissions (
+  role TEXT NOT NULL CHECK (role IN ('admin', 'user')),
+  permission_key TEXT NOT NULL,
+  allowed BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (role, permission_key)
+);

@@ -96,46 +96,7 @@ function mapRow(row) {
 }
 
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS ${tableName} (
-    id BIGSERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    category TEXT NOT NULL,
-    owner TEXT NOT NULL,
-    review_cycle TEXT NOT NULL,
-    approval_status TEXT NOT NULL,
-    last_review DATE,
-    attachment_name TEXT NOT NULL DEFAULT '',
-    attachment_path TEXT NOT NULL DEFAULT '',
-    attachment_type TEXT NOT NULL DEFAULT '',
-    notes TEXT NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )`);
-
-  await pool.query("ALTER TABLE policy_register ADD COLUMN IF NOT EXISTS related_note_ids JSONB NOT NULL DEFAULT '[]'::jsonb");
-
-  await pool.query(`CREATE TABLE IF NOT EXISTS ${itemTableName} (
-    id BIGSERIAL PRIMARY KEY,
-    policy_id BIGINT NOT NULL REFERENCES ${tableName}(id) ON DELETE CASCADE,
-    subtitle TEXT NOT NULL DEFAULT '',
-    content TEXT NOT NULL DEFAULT '',
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT policy_register_item_content_check CHECK (subtitle <> '' OR content <> '')
-  )`);
-
-  await pool.query(`CREATE INDEX IF NOT EXISTS policy_register_items_policy_idx ON ${itemTableName} (policy_id, sort_order, id)`);
-
-  await pool.query(`CREATE TABLE IF NOT EXISTS ${dropdownTableName} (
-    id BIGSERIAL PRIMARY KEY,
-    field_name TEXT NOT NULL,
-    option_value TEXT NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT policy_register_dropdown_option_unique UNIQUE (field_name, option_value)
-  )`);
+  await require('./migrationService').ensureSchema();
 
   for (const [fieldName, options] of Object.entries(defaultDropdowns)) {
     const existing = await pool.query(`SELECT COUNT(*)::int AS count FROM ${dropdownTableName} WHERE field_name = $1`, [fieldName]);

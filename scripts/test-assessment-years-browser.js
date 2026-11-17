@@ -9,7 +9,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const auth=require('../src/config/auth');
   try {
     const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user);
-    token=auth.createSession({username:user.username,role:'admin'});
+    token=(await auth.createSession({username:user.username,role:'admin'}));
     server=require('../src/app').listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
     const base='http://127.0.0.1:'+server.address().port;
     const portProbe=require('node:net').createServer();portProbe.listen(0,'127.0.0.1');await new Promise(r=>portProbe.once('listening',r));const port=portProbe.address().port;await new Promise(r=>portProbe.close(r));
@@ -117,7 +117,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
     assert.deepEqual(errors,[]);
     console.log('PASS: annual selectors, Duplicate/New for CSF/Privacy/ISO/SOA, autosave isolation, reload persistence, historical data, year-aware exports, desktop/tablet/mobile. Assessment writes use browser fixtures only.');
   } finally {
-    if(token)auth.destroySession(token);ws?.close();chrome?.kill();
+    if(token)(await auth.destroySession(token));ws?.close();chrome?.kill();
     if(server){server.closeAllConnections();await Promise.race([new Promise(resolve=>server.close(resolve)),delay(3000)]);}await Promise.race([pool.end(),delay(3000)]);
     const resolved=path.resolve(profile);
     if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-assessment-years-'))await fs.promises.rm(resolved,{recursive:true,force:true}).catch(()=>{});

@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const service=require('../src/services/assessmentGapService');
@@ -48,7 +49,7 @@ test('gap endpoints enforce assessment read/update/delete permissions and reject
   const auth=require('../src/config/auth');
   t.mock.method(permissions,'has',async(role,key,action)=>role==='viewer'&&key==='assessment'&&action==='read');
   t.mock.method(service,'list',async()=>[]);
-  const token=auth.createSession({username:'gap-test-viewer',role:'viewer'});
+  const token=(await auth.createSession({username:'gap-test-viewer',role:'viewer'}));
   const server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));
   try {
     const base='http://127.0.0.1:'+server.address().port+'/api/assessment-gaps';
@@ -62,7 +63,7 @@ test('gap endpoints enforce assessment read/update/delete permissions and reject
     t.mock.method(require('../src/services/assessmentPeriodService'),'periodMetadata',async()=>({legacy:true}));
     for(const [method,url] of [['POST','/csf/DE.AE-02'],['PUT','/csf/DE.AE-02/id'],['DELETE','/csf/DE.AE-02/id'],['GET','/privacy']])assert.equal((await fetch(base+url,{method,headers})).status,403);
     assert.equal((await fetch(base+'/unknown',{headers})).status,404);
-  }finally{auth.destroySession(token);server.closeAllConnections();await new Promise(r=>server.close(r));}
+  }finally{(await auth.destroySession(token));server.closeAllConnections();await new Promise(r=>server.close(r));}
 });
 test('gap save locks number allocation before reading used numbers and rejects duplicate manual values',async t=>{
  const calls=[],writes=[];

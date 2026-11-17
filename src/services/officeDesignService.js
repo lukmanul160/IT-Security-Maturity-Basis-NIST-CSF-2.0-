@@ -8,9 +8,7 @@ const { pool } = require('../config/database');
 const invalid = (message, status = 400) => Object.assign(new Error(message), { status });
 const types = ['cctv', 'access', 'alarm', 'extinguisher', 'smoke', 'exit', 'assembly', 'room', 'wall', 'door', 'window', 'desk', 'meeting', 'chair', 'sofa', 'toilet', 'sink', 'plant', 'label'];
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS office_designs (
-    id UUID PRIMARY KEY, name TEXT NOT NULL, layout JSONB NOT NULL,
-    version INTEGER NOT NULL DEFAULT 1, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  await require('./migrationService').ensureSchema();
 }
 function validate(input) {
   if (!input || typeof input.name !== 'string' || !input.name.trim() || input.name.trim().length > 150) throw invalid('Nama denah wajib diisi, maksimum 150 karakter.');

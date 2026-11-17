@@ -11,9 +11,8 @@ const cookie='statement_employee',options=req=>({httpOnly:true,sameSite:'strict'
 const token=req=>parseCookies(req.headers.cookie)[cookie];
 async function requireEmployee(req,res,next){res.set('Cache-Control','no-store');try{req.employee=await service.session(token(req));next();}catch(error){if(error.status===401)return res.status(401).json({error:error.message});next(error);}}
 const publicRouter=express.Router();publicRouter.use((req,res,next)=>{res.set('Cache-Control','no-store');next();});
-publicRouter.post('/login',require('../middleware/statementRateLimit').createLimit({limit:10,key:req=>typeof req.body?.nip==='string'?req.body.nip.trim():'invalid'}));
-const attempts=new Map();
-publicRouter.post('/login',wrap(async(req,res)=>{const now=Date.now();for(const [k,v]of attempts)if(v.until<now)attempts.delete(k);const key=req.ip,bucket=attempts.get(key)||{count:0,until:now+60000};if(bucket.count>=10||attempts.size>=10000&&!attempts.has(key))return res.status(429).set('Retry-After','60').json({error:'Terlalu banyak percobaan. Coba satu menit lagi.'});bucket.count++;attempts.set(key,bucket);const value=await service.login(req.body);res.cookie(cookie,value,options(req)).json({ok:true});}));
+publicRouter.post('/login',require('../middleware/statementRateLimit').createLimit({limit:10,namespace:'employee-login-nip',key:req=>typeof req.body?.nip==='string'?req.body.nip.trim():'invalid'}));
+publicRouter.post('/login',require('../middleware/statementRateLimit').createLimit({limit:10,namespace:'employee-login-ip'}),wrap(async(req,res)=>{const value=await service.login(req.body);res.cookie(cookie,value,options(req)).json({ok:true});}));
 publicRouter.post('/logout',wrap(async(req,res)=>{await service.logout(token(req));res.clearCookie(cookie,{path:'/api/public/'}).json({ok:true});}));
 publicRouter.use(requireEmployee);
 publicRouter.get('/me',wrap(async(req,res)=>res.json({employee:req.employee,assignments:await service.portal(req.employee.nip)})));

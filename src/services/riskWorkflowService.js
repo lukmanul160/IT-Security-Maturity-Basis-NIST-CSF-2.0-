@@ -13,9 +13,7 @@ const hash = value => crypto.createHash('sha256').update(JSON.stringify(value)).
 const assessmentHash = row => hash(riskFields.map(key => row[key] instanceof Date ? row[key].toISOString().slice(0, 10) : row[key] ?? null));
 const camel = row => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.replace(/_([a-z])/g, (_, c) => c.toUpperCase()), value instanceof Date ? value.toISOString().slice(0, 10) : value]));
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS risk_workflows (risk_id TEXT PRIMARY KEY REFERENCES risk_register(risk_id) ON DELETE CASCADE, data JSONB NOT NULL DEFAULT '{}', version INTEGER NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS risk_workflow_events (id BIGSERIAL PRIMARY KEY, risk_id TEXT NOT NULL REFERENCES risk_register(risk_id) ON DELETE CASCADE, actor TEXT NOT NULL, action TEXT NOT NULL, reason TEXT NOT NULL, snapshot JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-  await pool.query('CREATE INDEX IF NOT EXISTS risk_workflow_events_risk_idx ON risk_workflow_events (risk_id, id DESC)');
+  await require('./migrationService').ensureSchema();
 }
 async function users() {
   const rows = (await pool.query('SELECT username, role FROM app_users ORDER BY username')).rows;

@@ -9,7 +9,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const profile=path.join(os.tmpdir(),'nist-canvas-editors-'+Date.now());
  try{
   const user=(await pool.query("SELECT username,role FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user);
-  token=auth.createSession(user);server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));
+  token=(await auth.createSession(user));server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));
   const base='http://127.0.0.1:'+server.address().port,port=10100+Math.floor(Math.random()*200);
   chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
   let target;for(let i=0;i<100;i++){try{target=(await(await fetch('http://127.0.0.1:'+port+'/json')).json()).find(t=>t.type==='page');if(target)break;}catch{}await delay(100);}
@@ -148,7 +148,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   console.log('PASS: All three canvas viewports remain usable at desktop, tablet and mobile widths.');
   assert.deepEqual(client.errors,[]);console.log('PASS: Threat resize, duplicate, Mac undo, redo and save; no browser exceptions.');
  }finally{
-  client?.socket.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}if(token)auth.destroySession(token);await pool.end();
+  client?.socket.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}if(token)(await auth.destroySession(token));await pool.end();
   try{await fs.rm(profile,{recursive:true,force:true});}catch{}
  }
 })().catch(error=>{console.error(error);process.exitCode=1;});

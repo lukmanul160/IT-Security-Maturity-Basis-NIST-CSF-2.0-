@@ -26,13 +26,15 @@ function load(error, databaseOverrides = {}, fileSize = 100) {
   return { api: context.module.exports, calls, splits, removed, restoreLifecycle, queries: () => queries };
 }
 
-test('backup dumps the whole configured database without table or schema exclusions', async () => {
+test('backup includes business schema and excludes reusable authentication state', async () => {
   const { api, calls } = load();
   const result = await api.createBackup();
   assert.equal(calls[0].file, 'configured-pg-dump');
   assert.ok(calls[0].args.includes('--format=custom'));
   assert.equal(calls[0].args[calls[0].args.indexOf('--dbname') + 1], 'application');
-  assert.ok(!calls[0].args.some(arg => /--(?:schema|table|exclude|data-only|schema-only)/.test(arg)));
+  assert.ok(calls[0].args.includes('--exclude-table-data=auth_sessions'));
+  assert.ok(calls[0].args.includes('--exclude-table-data=auth_rate_limits'));
+  assert.ok(!calls[0].args.some(arg => /--(?:schema=|table=|exclude-table=|data-only|schema-only)/.test(arg)));
   assert.equal(result.format, 'PostgreSQL custom dump');
   assert.match(result.scope, /Seluruh schema/);
 });

@@ -39,17 +39,9 @@ async function registeredPersonnel(client, data) {
 }
 
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS personnel_certifications (id BIGSERIAL PRIMARY KEY, personnel_name TEXT NOT NULL, employee_id TEXT NOT NULL DEFAULT '', personnel_role TEXT NOT NULL DEFAULT '', supervisor_name TEXT NOT NULL DEFAULT '', certification_name TEXT NOT NULL, issuer TEXT NOT NULL DEFAULT '', reference_url TEXT NOT NULL DEFAULT '', certification_level TEXT NOT NULL DEFAULT 'Intermediate', status TEXT NOT NULL DEFAULT 'Planned', issue_date DATE, expiry_date DATE, notes TEXT NOT NULL DEFAULT '', on_canvas BOOLEAN NOT NULL DEFAULT FALSE, position_x INTEGER NOT NULL DEFAULT 24, position_y INTEGER NOT NULL DEFAULT 24, card_width INTEGER NOT NULL DEFAULT 260, card_height INTEGER NOT NULL DEFAULT 190, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS organization_personnel (id BIGSERIAL PRIMARY KEY, personnel_name TEXT NOT NULL, employee_id TEXT NOT NULL DEFAULT '', personnel_role TEXT NOT NULL DEFAULT '', supervisor_name TEXT NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-  await pool.query('ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS reference_url TEXT NOT NULL DEFAULT \'\'');
-  await pool.query('ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS certification_level TEXT NOT NULL DEFAULT \'Intermediate\'');
-  await pool.query('ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS on_canvas BOOLEAN NOT NULL DEFAULT FALSE');
-  await pool.query('ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS supervisor_name TEXT NOT NULL DEFAULT \'\'');
-  await pool.query("ALTER TABLE personnel_certifications ADD COLUMN IF NOT EXISTS certificate_file JSONB");
+  await require('./migrationService').ensureSchema();
   // Roadmap catalog rows now live in certification_roadmap_catalog; drop any legacy leftovers here.
   await pool.query("DELETE FROM personnel_certifications WHERE status = 'Catalog'");
-  const migration = await fs.readFile(path.join(__dirname, '../../database/personnel-certification-links.sql'), 'utf8');
-  await transaction(client => client.query(migration));
 }
 
 async function list() {

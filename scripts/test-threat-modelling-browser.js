@@ -36,7 +36,7 @@ async function run() {
     await require('../src/services/threatModelService').ensureStore();
     const admin = (await originalQuery("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];
     assert.ok(admin, 'Existing admin needed for profile read');
-    const token = createSession({ username: admin.username, role: 'admin' });
+    const token = (await createSession({ username: admin.username, role: 'admin' }));
     server = require('../src/app').listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
     const base = `http://127.0.0.1:${server.address().port}`;
     const debugPort = 9600 + Math.floor(Math.random() * 100);
@@ -170,7 +170,7 @@ async function run() {
     const screenshot = await client.send('Page.captureScreenshot', { format: 'png' });
     await fs.writeFile('output/threat-modelling/preview.png', Buffer.from(screenshot.data, 'base64'));
     // Read-only or unassigned roles cannot mutate the module.
-    const viewerToken = createSession({ username: admin.username, role: 'viewer' });
+    const viewerToken = (await createSession({ username: admin.username, role: 'viewer' }));
     const denied = await fetch(`${base}/api/threat-modelling`, { method: 'POST', headers: { Cookie: `nist_session=${viewerToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(saved[0]) });
     assert.equal(denied.status, 403);
     assert.deepEqual(client.errors, []);

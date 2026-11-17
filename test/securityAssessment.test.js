@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const express = require('express');
@@ -77,7 +78,7 @@ test('real application: SQLi, session forgery, unauthenticated routes, role esca
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /SameSite=Lax/i);
   const token = cookie.match(/nist_session=([^;]+)/)[1];
-  t.after(() => { auth.destroySession(token); return pool.end(); });
+  t.after(async () => { (await auth.destroySession(token)); return pool.end(); });
   for (const [route, method, body] of [
     ['/api/auth/users', 'GET'], ['/api/backups', 'GET'], ['/api/auth/users', 'POST', { username: 'evil', role: 'admin', password: 'FakePassword123' }],
     ['/api/auth/me', 'PUT', { role: 'admin' }],
@@ -87,6 +88,6 @@ test('real application: SQLi, session forgery, unauthenticated routes, role esca
   }
   const logout = await fetch(base + '/api/auth/logout', { method: 'POST', headers: { cookie: `nist_session=${token}`, origin: base } });
   assert.equal(logout.status, 204);
-  assert.equal(auth.getSession(token), null);
+  assert.equal((await auth.getSession(token)), null);
   assert.equal(calls.length, 1, 'authorization blocks privileged database operations');
 });

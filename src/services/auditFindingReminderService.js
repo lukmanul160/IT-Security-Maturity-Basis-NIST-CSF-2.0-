@@ -13,16 +13,7 @@ const templateDefaults = {
 const defaults = { ...templateDefaults, smtpAccountId: 'default', enabled: false, daysBefore: 7, repeatDaily: false, startUnit: 'days', repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, recipients: [], owners: [], recipientMode: 'owners' };
 const invalid = message => Object.assign(new Error(message), { status: 400 });
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS audit_finding_reminder_settings (id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS audit_finding_reminder_deliveries (
-    finding_id UUID REFERENCES audit_finding_records(id) ON DELETE CASCADE,
-    due_date DATE NOT NULL, recipient TEXT NOT NULL, sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY(finding_id,due_date,recipient))`);
-  await pool.query(`ALTER TABLE audit_finding_reminder_deliveries ADD COLUMN IF NOT EXISTS reminder_date DATE;
-    UPDATE audit_finding_reminder_deliveries SET reminder_date=sent_at::date WHERE reminder_date IS NULL;
-    ALTER TABLE audit_finding_reminder_deliveries ALTER COLUMN reminder_date SET NOT NULL;
-    ALTER TABLE audit_finding_reminder_deliveries DROP CONSTRAINT IF EXISTS audit_finding_reminder_deliveries_pkey;
-    ALTER TABLE audit_finding_reminder_deliveries ADD PRIMARY KEY(finding_id,due_date,recipient,reminder_date)`);
+  await require('./migrationService').ensureSchema();
 }
 async function read() {
   const result = await pool.query('SELECT settings FROM audit_finding_reminder_settings WHERE id=1');

@@ -31,7 +31,7 @@ function mapRow(row) {
 }
 const select = `SELECT id, ${fields.join(', ')}, created_at, updated_at FROM risk_acceptance_forms`;
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS risk_acceptance_forms (id BIGSERIAL PRIMARY KEY, requestor_name TEXT NOT NULL, asset_name TEXT NOT NULL, department TEXT NOT NULL, previously_accepted BOOLEAN NOT NULL DEFAULT FALSE, risk_description TEXT NOT NULL, benefit_justification TEXT NOT NULL, mitigation_plan TEXT NOT NULL, business_owner_decision TEXT NOT NULL CHECK (business_owner_decision IN ('temporary', 'one_year', 'denied')), remediation_date DATE, requestor_print_name TEXT NOT NULL DEFAULT '', requestor_email_phone TEXT NOT NULL DEFAULT '', requestor_signature TEXT NOT NULL DEFAULT '', requestor_date DATE, cio_comments TEXT NOT NULL DEFAULT '', cio_name TEXT NOT NULL DEFAULT '', cio_signature TEXT NOT NULL DEFAULT '', cio_date DATE, cis_decision TEXT NOT NULL CHECK (cis_decision IN ('approved', 'denied', 'conditional')), cis_reason TEXT NOT NULL DEFAULT '', cis_conditions TEXT NOT NULL DEFAULT '', cis_name TEXT NOT NULL DEFAULT '', cis_signature TEXT NOT NULL DEFAULT '', cis_date DATE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  await require('./migrationService').ensureSchema();
 }
 async function list() { const result = await pool.query(`${select} ORDER BY updated_at DESC`); return result.rows.map(mapRow); }
 async function create(data) { validate(data); const result = await pool.query(`INSERT INTO risk_acceptance_forms (${fields.join(', ')}) VALUES (${fields.map((_, index) => `$${index + 1}`).join(', ')}) RETURNING *`, values(data)); return mapRow(result.rows[0]); }

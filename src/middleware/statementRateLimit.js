@@ -3,16 +3,12 @@
  * Alur request harus meneruskan next atau menyelesaikan response secara tepat; error tetap mengikuti pipeline Express.
  * Peta fungsi dan dependency: docs/source-catalog.json.
  */
-const { createHash } = require('node:crypto');
-function createLimit({ limit = 30, windowMs = 60000, key = req => req.ip } = {}) {
-  const buckets = new Map();
-  return (req, res, next) => {
-    const now = Date.now();
-    for (const [id, bucket] of buckets) if (bucket.until <= now) buckets.delete(id);
-    const id = createHash('sha256').update(String(key(req))).digest('hex');
-    const bucket = buckets.get(id) || { count: 0, until: now + windowMs };
-    if (bucket.count >= limit || (!buckets.has(id) && buckets.size >= 10000)) return res.status(429).set('Retry-After', String(Math.ceil((bucket.until - now) / 1000))).json({ error: 'Terlalu banyak permintaan. Coba kembali satu menit lagi.' });
-    bucket.count++; buckets.set(id, bucket); next();
+const { state } = require('../services/authStateService');
+function createLimit({ limit = 30, windowMs = 60000, namespace = 'statement-request', key = req => req.ip } = {}) {
+  return async (req, res, next) => {
+    const result = await state.consume(namespace, String(key(req)), limit, windowMs);
+    if (!result.allowed) return res.status(429).set('Retry-After', String(result.retryAfter)).json({ error: 'Terlalu banyak permintaan. Coba kembali satu menit lagi.' });
+    return next();
   };
 }
 module.exports = { createLimit };

@@ -7,7 +7,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  let server,chrome,ws;const profile=path.join(os.tmpdir(),'nist-rack-workspace-'+Date.now());
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
  const port=9800+Math.floor(Math.random()*100);
  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -65,6 +65,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  }
  }
  assert.deepEqual(errors,[]);console.log('PASS: asset and TPRM dashboards use actual APIs, drill to existing tables, mobile widths pass, no browser exceptions.');
- auth.destroySession(token);
+ (await auth.destroySession(token));
  }finally{ws?.close();chrome?.kill();if(server)await new Promise(r=>server.close(r));await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-rack-workspace-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

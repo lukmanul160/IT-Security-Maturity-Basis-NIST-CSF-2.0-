@@ -5,8 +5,8 @@
  */
 const { getSession, parseCookies, sessionCookie } = require('../config/auth');
 
-function requireAuth(req, res, next) {
-  const session = getSession(parseCookies(req.headers.cookie)[sessionCookie]);
+async function requireAuth(req, res, next) {
+  const session = req.authSession !== undefined ? req.authSession : await getSession(parseCookies(req.headers.cookie)[sessionCookie]);
   if (!session) {
     if (req.originalUrl.startsWith('/api/')) return res.status(401).json({ error: 'Authentication required' });
     return res.redirect('/login');

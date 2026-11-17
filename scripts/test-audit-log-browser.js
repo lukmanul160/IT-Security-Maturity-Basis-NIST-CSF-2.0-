@@ -8,7 +8,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
  const warmed=await Promise.all(Array.from({length:8},()=>pool.connect()));warmed.forEach(c=>c.release());
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
  const port=9800+Math.floor(Math.random()*100);
  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -34,6 +34,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  assert.equal((await evaluate("fetch('/api/audit/retention').then(r=>r.status)")),200);
  const result=await evaluate("fetch('/api/audit/export?format=csv&actor=__audit_browser_nonexistent__').then(async r=>({status:r.status,text:await r.text(),disposition:r.headers.get('Content-Disposition')}))");
  assert.equal(result.status,200);assert.ok(result.text.includes('User agent'));assert.ok(result.disposition.includes('.csv'));
- assert.deepEqual(errors,[]);console.log('PASS: retention controls, IP/device/browser columns and filtered CSV download in Application activity. No retention settings changed or log records deleted.');auth.destroySession(token);
+ assert.deepEqual(errors,[]);console.log('PASS: retention controls, IP/device/browser columns and filtered CSV download in Application activity. No retention settings changed or log records deleted.');(await auth.destroySession(token));
  }finally{ws?.close();chrome?.kill();if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-theme-browser-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

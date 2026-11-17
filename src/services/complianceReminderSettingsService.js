@@ -14,7 +14,7 @@ const templateDefaults = {
 const defaults = { ...templateDefaults, enabled: false, smtpAccountId: 'default', daysBefore: 7, startUnit: 'days', repeatDaily: true, repeatEvery: 1, repeatUnit: 'days', maxDeliveries: 366, unlimited: true, continueOverdue: true, recipientMode: 'owners', owners: [], recipients: [] };
 async function read(client = pool) {
   // Also support application entry points that mount routes without server.js.
-  await client.query('CREATE TABLE IF NOT EXISTS compliance_reminder_settings (id INTEGER PRIMARY KEY CHECK(id=1), settings JSONB NOT NULL)');
+  await require('./migrationService').ensureSchema();
   const result = await client.query('SELECT settings FROM compliance_reminder_settings WHERE id=1');
   return { ...defaults, ...result.rows[0]?.settings };
 }

@@ -13,7 +13,7 @@ async function run() {
   const profile = path.join(os.tmpdir(), `nist-governance-dashboard-${Date.now()}`);
   try {
     const admin = (await pool.query("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];
-    const token = createSession({ username: admin.username, role: 'admin' });
+    const token = (await createSession({ username: admin.username, role: 'admin' }));
     server = require('../src/app').listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
     const base = `http://127.0.0.1:${server.address().port}`, debugPort = 9700 + Math.floor(Math.random() * 100);
     chrome = spawn(process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', '--disable-extensions', '--no-first-run', `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });

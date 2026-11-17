@@ -5,7 +5,7 @@
  */
 const {pool}=require('../config/database');
 const defaults={enabled:false,days:90};
-async function ensureStore(){await pool.query(`CREATE TABLE IF NOT EXISTS audit_retention_settings(id INTEGER PRIMARY KEY CHECK(id=1),settings JSONB NOT NULL,last_cleanup_at TIMESTAMPTZ,last_deleted_count INTEGER NOT NULL DEFAULT 0)`);}
+async function ensureStore(){await require('./migrationService').ensureSchema();}
 function validate(input){if(typeof input?.enabled!=='boolean'||!Number.isInteger(input.days)||input.days<1||input.days>36500)throw Object.assign(new Error('Retensi harus 1-36500 hari dan status aktivasi harus valid.'),{status:400});return {enabled:input.enabled,days:input.days};}
 async function read(){await ensureStore();const row=(await pool.query('SELECT settings,last_cleanup_at AS "lastCleanupAt",last_deleted_count AS "lastDeletedCount" FROM audit_retention_settings WHERE id=1')).rows[0];return {...defaults,...row?.settings,lastCleanupAt:row?.lastCleanupAt||null,lastDeletedCount:row?.lastDeletedCount||0};}
 async function save(input){const settings=validate(input);await ensureStore();await pool.query('INSERT INTO audit_retention_settings(id,settings) VALUES(1,$1) ON CONFLICT(id) DO UPDATE SET settings=EXCLUDED.settings',[settings]);return read();}

@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -7,10 +8,10 @@ const app = require('../src/app');
 test('workspace bundles are compressed and cached without bypassing authentication', async t => {
   t.mock.method(require('../src/services/auditService'), 'record', async () => {});
   const auth = require('../src/config/auth');
-  const token = auth.createSession({ username: 'performance-test', role: 'admin' });
+  const token = (await auth.createSession({ username: 'performance-test', role: 'admin' }));
   const server = app.listen(0, '127.0.0.1');
   await new Promise(resolve => server.once('listening', resolve));
-  t.after(async () => { auth.destroySession(token); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
+  t.after(async () => { (await auth.destroySession(token)); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const html = await fs.readFile(path.join(__dirname, '../frontend/public/vue/index.html'), 'utf8');
   const bundle = html.match(/src="(\/vue\/assets\/[^" ]+\.js)"/)[1];

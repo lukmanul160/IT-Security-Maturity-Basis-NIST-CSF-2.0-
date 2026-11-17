@@ -20,7 +20,7 @@ Peta folder, kontrak fungsi, dan tahapan refactor: [CODE_STRUCTURE.md](CODE_STRU
 
 
 NIST Basis menggunakan Express 5/CommonJS, PostgreSQL, Redis cache khusus Docker, Vue 3, Vite dan Tailwind.
-Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login tetap berupa `Map` di proses Node.js, sehingga Redis saat ini belum menyatukan sesi antar-replica.
+Redis 7.4 pada deployment Docker menjadi cache sementara untuk ringkasan Monitoring Dashboard (TTL 15 detik) dan hasil CVE (TTL 300 detik). PostgreSQL tetap sumber data utama. Redis hanya terhubung ke app melalui jaringan internal `cache`, tanpa port host atau volume persisten; kegagalan cache memakai alur sumber semula. Sesi login dan rate limit autentikasi disimpan bersama di PostgreSQL, bertahan saat proses restart, dan berlaku antar-replica. Redis tetap hanya cache opsional. Lihat `docs/architecture-hardening.md` untuk rollout dan batas deployment.
 Mulai dari package.json ? src/server.js ? src/app.js ? src/routes/index.js.
 Logika domain ada di src/services/; konfigurasi database/environment di src/config/.
 Schema dasar ada di database/; banyak service juga menjalankan inisialisasi saat startup.
@@ -580,3 +580,7 @@ workflow Docker smoke ditambah round-trip/TTL/invalidation dan outage fallback
 untuk dijalankan CI. Belum ada pengukuran percepatan dengan Redis live, suite penuh,
 atau deployment Docker/cloud. Tidak membaca .env atau memakai data operasional.
 Node lokal 24.19.0 masih memunculkan peringatan engine package yang meminta Node 26.
+
+## Penguatan arsitektur: sesi, runtime, migrasi (17 November 2026)
+
+Lihat [architecture-hardening.md](architecture-hardening.md). Autentikasi kini async dan memakai PostgreSQL; seluruh pemanggil harus await. SQL startup dipindahkan ke database/migrations dan dijalankan migrationService sebelum server menerima request. Jangan mengubah migrasi yang telah diterapkan; tambah versi baru. Empat model/utilitas frontend dipindahkan ke services/*.mjs, adapter classic tetap mempertahankan nama fungsi dan ID DOM. Build memeriksa runtime-contracts.json. Batas shared scope legacy masih ada; belum merupakan konversi seluruh frontend ke Vue deklaratif.

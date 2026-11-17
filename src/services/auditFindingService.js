@@ -36,14 +36,7 @@ function normalize(kind, data) {
   return result;
 }
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS audit_finding_records (
-    id UUID PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('audit','finding','followup','evidence')),
-    parent_id UUID REFERENCES audit_finding_records(id) ON DELETE RESTRICT,
-    data JSONB NOT NULL, filename TEXT, content BYTEA, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), CHECK ((kind = 'audit') = (parent_id IS NULL))
-  )`);
-  await pool.query('CREATE INDEX IF NOT EXISTS audit_finding_parent_idx ON audit_finding_records(parent_id)');
-  await pool.query(await fs.readFile(path.join(__dirname, '../../database/audit-evidence-files.sql'), 'utf8'));
+  await require('./migrationService').ensureSchema();
   await pool.query(`UPDATE audit_finding_records a SET data=jsonb_set(a.data,'{status}',to_jsonb(CASE
     WHEN NOT EXISTS(SELECT 1 FROM audit_finding_records f WHERE f.parent_id=a.id AND f.kind='finding') THEN 'Open'
     WHEN NOT EXISTS(SELECT 1 FROM audit_finding_records f WHERE f.parent_id=a.id AND f.kind='finding' AND f.data->>'status' IS DISTINCT FROM 'Closed') THEN 'Closed'

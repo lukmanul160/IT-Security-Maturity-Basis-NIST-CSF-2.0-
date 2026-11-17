@@ -73,7 +73,7 @@ app.post('/api/office-presence', requireAuth, async (req, res, next) => {
 		if (typeof key !== 'string' || !Object.hasOwn(service.labels, key)) return res.status(400).json({ error: 'Invalid module' });
 		if (key !== 'backups' && !(await require('./services/permissionService').has(req.user.role, key, 'read'))) return res.status(403).json({ error: 'Forbidden' });
 		if (key === 'backups' && req.user.role !== 'admin') return res.sendStatus(403);
-		req.user.officeModule = key;
+		await require('./config/auth').updateOfficePresence(parseCookies(req.headers.cookie)[sessionCookie], key);
 		res.sendStatus(204);
 	} catch (error) { next(error); }
 });
@@ -99,9 +99,9 @@ app.get('/tailwind.css', (req, res) => res.sendFile(path.join(publicRoot, 'tailw
 app.get('/theme.js', (req, res) => res.sendFile(path.join(publicRoot, 'theme.js')));
 app.get('/theme.css', (req, res) => res.sendFile(path.join(publicRoot, 'theme.css')));
 app.get('/i18n.js', (req, res) => res.sendFile(path.join(publicRoot, 'i18n.js')));
-app.get('/login', (req, res) => {
+app.get('/login', async (req, res) => {
 	const token = parseCookies(req.headers.cookie)[sessionCookie];
-	if (getSession(token)) return res.redirect('/app');
+	if (await getSession(token)) return res.redirect('/app');
 
 	res.set('Cache-Control', 'no-store');
 	return res.sendFile(path.join(publicRoot, 'login.html'));

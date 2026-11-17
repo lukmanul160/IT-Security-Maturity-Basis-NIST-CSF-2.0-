@@ -9,7 +9,7 @@ const smtp=require('./smtpService');
 
 let ready;
 
-function ensureStore(){if(!ready)ready=pool.query(`CREATE TABLE IF NOT EXISTS reminder_recipient_register(owner_key TEXT PRIMARY KEY, owner TEXT NOT NULL,email TEXT NOT NULL,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`).catch(error=>{ready=null;throw error;});return ready;}
+function ensureStore(){if(!ready)ready=require('./migrationService').ensureSchema().catch(error=>{ready=null;throw error;});return ready;}
 
 function validate(data){const owner=String(data?.owner||'').trim(),email=String(data?.email||'').trim().toLowerCase();if(!owner||owner.length>160||(email&&!smtp.email(email))||email.length>254)throw Object.assign(new Error('Isi nama/jabatan dan alamat email yang valid.'),{status:400});return {owner,email};}
 

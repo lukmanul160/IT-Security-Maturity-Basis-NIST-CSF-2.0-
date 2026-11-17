@@ -25,7 +25,7 @@ async function saveAssessment(assessment, id = 'default') {
 }
 
 async function initializeAssessmentStore() {
-  await pool.query(await fs.readFile(schemaFile, 'utf8'));
+  await require('./migrationService').ensureSchema();
   const existing = await pool.query('SELECT 1 FROM assessment_state WHERE id = $1', ['default']);
   if (existing.rowCount) return;
   try {

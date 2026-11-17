@@ -31,7 +31,7 @@ async function run() {
     server = require('../src/app').listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
     const base = `http://127.0.0.1:${server.address().port}`;
     const actors = { author: { username: 'wf-author', role: 'admin' }, chief: { username: 'wf-chief', role: 'approver' }, reviewer: { username: 'wf-reviewer', role: 'editor' }, viewer: { username: 'wf-viewer', role: 'viewer' } };
-    const tokens = Object.fromEntries(Object.entries(actors).map(([key, actor]) => [key, createSession(actor)]));
+    const tokens = Object.fromEntries(await Promise.all(Object.entries(actors).map(async ([key, actor]) => [key, await createSession(actor)])));
     const api = async (url, body, actor = 'author', method = body ? 'POST' : 'GET') => {
       const response = await fetch(base + '/api/risk-management' + url, { method, headers: { Cookie: `nist_session=${tokens[actor]}`, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
       const data = await response.json().catch(() => ({})); return { status: response.status, data };

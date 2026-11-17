@@ -13,3 +13,6 @@ const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'nist-security-'));
 const paths = require('../src/config/paths');
 for (const key of ['dataRoot', 'uploadRoot', 'backupRoot']) paths[key] = path.join(directory, key);
 process.on('exit', () => fs.rmSync(directory, { recursive: true, force: true }));
+
+require('../test/helpers/auth-state.cjs');
+require('../src/services/migrationService').ensureSchema=async()=>{};

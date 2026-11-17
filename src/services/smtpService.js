@@ -46,7 +46,7 @@ async function ensureStore() {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query(`CREATE TABLE IF NOT EXISTS app_smtp_settings (id INTEGER PRIMARY KEY CHECK (id = 1), settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT '')`);
+    await require('./migrationService').ensureSchema();
     // Called after the legacy policy table is ensured. Copy ciphertext unchanged; its key stays the same.
     await client.query(`INSERT INTO app_smtp_settings (id, settings, secret)
       SELECT 1, jsonb_build_object('host', COALESCE(settings->>'host', ''), 'port', COALESCE((settings->>'port')::int, 587),
@@ -54,7 +54,7 @@ async function ensureStore() {
       FROM policy_reminder_settings WHERE id = 1 ON CONFLICT (id) DO NOTHING`);
     await client.query(`UPDATE policy_reminder_settings SET settings = settings - ARRAY['host','port','security','username','from'], secret = ''
       WHERE id = 1 AND EXISTS (SELECT 1 FROM app_smtp_settings WHERE id = 1)`);
-    await client.query(`CREATE TABLE IF NOT EXISTS app_smtp_accounts (id UUID PRIMARY KEY, settings JSONB NOT NULL, secret TEXT NOT NULL DEFAULT '')`);
+    await require('./migrationService').ensureSchema();
     await client.query('COMMIT');
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }

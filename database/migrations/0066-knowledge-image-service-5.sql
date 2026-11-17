@@ -1,0 +1,1 @@
+DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname='note_uploaded_file_sync' AND tgrelid='evidence_files'::regclass) THEN CREATE TRIGGER note_uploaded_file_sync AFTER INSERT OR UPDATE OR DELETE ON evidence_files FOR EACH ROW EXECUTE FUNCTION sync_note_uploaded_file(); END IF; END $$

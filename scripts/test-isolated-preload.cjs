@@ -17,3 +17,8 @@ for (const key of ['stateFile', 'privacyData', 'riskIndicatorsData']) paths[key]
 // Cold PostgreSQL handshakes on this host exceed the application pool's 5s limit.
 // Increase only the isolated test pool; production configuration stays unchanged.
 require('../src/config/database').pool.options.connectionTimeoutMillis = 30000;
+// Pure/source tests also run schema setup; idle fixture sockets must not keep each worker alive for 30 seconds.
+require('../src/config/database').pool.options.allowExitOnIdle = true;
+
+// Complete schema setup before individual tests install query/connection mocks.
+require('node:test').before(() => require('../src/services/migrationService').ensureSchema());

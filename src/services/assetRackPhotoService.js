@@ -11,26 +11,12 @@ let ready;
 function ensureStore(){return ready||=(async()=>{
  await assets.ensureStore();
  for(const [key,value] of Object.entries(tables)){
-  await pool.query(`CREATE TABLE IF NOT EXISTS ${value.table}(${value.column} UUID NOT NULL REFERENCES ${value.parent}(id) ON DELETE CASCADE,side TEXT NOT NULL CHECK(side IN ('front','rear')),mime_type TEXT NOT NULL,content BYTEA NOT NULL CHECK(octet_length(content)<=5242880),version UUID NOT NULL,PRIMARY KEY(${value.column},side))`);
-  await pool.query(`ALTER TABLE ${value.table} ADD COLUMN IF NOT EXISTS evidence_path TEXT`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS ${value.table}_evidence_path_idx ON ${value.table}(evidence_path)`);
+  await require('./migrationService').ensureSchema();
   await pool.query(`UPDATE ${value.table} SET evidence_path='Asset Management/${key}/'||${value.column}||'/'||side||'/'||version||'/photo.'||CASE mime_type WHEN 'image/png' THEN 'png' WHEN 'image/webp' THEN 'webp' ELSE 'jpg' END WHERE evidence_path IS NULL`);
   await pool.query(`INSERT INTO evidence_files(path,name,content,mime_type) SELECT evidence_path,split_part(evidence_path,'/',6),content,mime_type FROM ${value.table} ON CONFLICT(path) DO NOTHING`);
  }
  // Keep binary originals in the database even when file restore writes to external storage.
- await pool.query(`CREATE OR REPLACE FUNCTION sync_asset_uploaded_file() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
-  IF TG_OP='DELETE' THEN
-   DELETE FROM managed_asset_photos WHERE evidence_path=OLD.path;
-   DELETE FROM asset_rack_photos WHERE evidence_path=OLD.path;
-   RETURN OLD;
-  END IF;
-  IF NEW.content IS NOT NULL THEN
-   UPDATE managed_asset_photos SET content=NEW.content,mime_type=NEW.mime_type,version=gen_random_uuid() WHERE evidence_path=NEW.path AND (content IS DISTINCT FROM NEW.content OR mime_type IS DISTINCT FROM NEW.mime_type);
-   UPDATE asset_rack_photos SET content=NEW.content,mime_type=NEW.mime_type,version=gen_random_uuid() WHERE evidence_path=NEW.path AND (content IS DISTINCT FROM NEW.content OR mime_type IS DISTINCT FROM NEW.mime_type);
-  END IF;
-  RETURN NEW;
- END $$`);
- await pool.query(`DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname='asset_uploaded_file_sync' AND tgrelid='evidence_files'::regclass) THEN CREATE TRIGGER asset_uploaded_file_sync AFTER INSERT OR UPDATE OR DELETE ON evidence_files FOR EACH ROW EXECUTE FUNCTION sync_asset_uploaded_file(); END IF; END $$`);
+ await require('./migrationService').ensureSchema();
 })().catch(e=>{ready=null;throw e;});}
 function validateFile(file){
  if(!file||!Buffer.isBuffer(file.buffer)||!file.buffer.length||file.buffer.length>5*1024*1024)throw fail('Foto maksimum 5 MB per sisi.');

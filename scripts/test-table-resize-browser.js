@@ -7,7 +7,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  let server,chrome,ws;const profile=path.join(os.tmpdir(),'nist-table-resize-'+Date.now());
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
  const port=9800+Math.floor(Math.random()*100);
  chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
@@ -61,6 +61,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await evaluate("document.querySelector('#qaAuditResizeDialog').close();document.querySelector('#qaAuditResizeDialog').remove()");
  await call('Emulation.setDeviceMetricsOverride',{width:390,height:900,deviceScaleFactor:1,mobile:true});await showPolicy();await delay(100);const mobile=await evaluate("({client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth,table:document.querySelector('#policyRegisterBody').closest('table').getBoundingClientRect().width})");assert.ok(mobile.scroll<=mobile.client+2,JSON.stringify(mobile));assert.ok(mobile.table>mobile.client,'Table scrolls within its container');
  await evaluate("document.documentElement.dataset.theme='dark'");const color=await evaluate("getComputedStyle(document.querySelector('#policyRegisterBody').closest('table').querySelector('.nr-column-handle'),'::after').backgroundColor");assert.equal(color,'rgb(100, 125, 158)');assert.deepEqual(errors,[]);
- console.log('PASS: all visible list tables get resize handles; Policy defaults, drag, keyboard, auto-fit, reset, reload persistence, merged/dynamic headers, TPRM, mobile scrolling and dark theme');auth.destroySession(token);
+ console.log('PASS: all visible list tables get resize handles; Policy defaults, drag, keyboard, auto-fit, reset, reload persistence, merged/dynamic headers, TPRM, mobile scrolling and dark theme');(await auth.destroySession(token));
  }finally{ws?.close();chrome?.kill();if(server)await new Promise(r=>server.close(r));await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-table-resize-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

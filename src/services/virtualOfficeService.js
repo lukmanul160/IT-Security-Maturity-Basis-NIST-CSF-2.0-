@@ -10,7 +10,7 @@ const labels = Object.fromEntries(permissions);
 labels.backups = 'Administration';
 async function snapshot() {
   const { rows } = await pool.query('SELECT id, username, full_name FROM app_users ORDER BY id');
-  const sessions = getOfficeSessions();
+  const sessions = await getOfficeSessions();
   const names = rows.filter(row => sessions.has(row.username)).map(row => row.username);
   const activityByUser = new Map();
   if (names.length) {

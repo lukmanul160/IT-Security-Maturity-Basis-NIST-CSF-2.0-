@@ -7,7 +7,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  let server,chrome,ws;const profile=path.join(os.tmpdir(),'nist-rack-workspace-'+Date.now());
  try{
  const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user,'Existing administrator available');
- const auth=require('../src/config/auth'),token=auth.createSession({username:user.username,role:'admin'});
+ const auth=require('../src/config/auth'),token=(await auth.createSession({username:user.username,role:'admin'}));
  const paginationOnly=process.argv.includes('--pagination-only');
  if(paginationOnly){
    const service=require('../src/services/assetManagementService'),originalList=service.list;
@@ -53,7 +53,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
    await wait("document.querySelector('.asset-pagination').textContent.includes('20 aset per halaman')");
    assert.deepEqual(errors,[]);
    console.log('PASS: compiled Asset Register renders 20/20/5 rows, paginates without overlap, and resets pagination after search and filtering. Fixture records stay in memory.');
-   auth.destroySession(token);return;
+   (await auth.destroySession(token));return;
  }
  await wait("!document.querySelector('#assetManagementView [role=status]').textContent.includes('Memuat')");
  const status=await evaluate("document.querySelector('#assetManagementView [role=status]').textContent");assert.equal(status,'');
@@ -64,6 +64,6 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await evaluate("document.querySelector('[data-view=\"asset-register\"]').click()");await wait("!document.querySelector('#assetManagementView [role=status]').textContent.includes('Memuat')");await wait("Array.from(document.querySelectorAll('#assetManagementView .asset-table th')).some(e=>['related risk','risiko terkait'].includes(e.textContent.trim().toLowerCase()))");assert.equal(await evaluate("fetch('/api/asset-management/risk-catalog').then(r=>r.status)"),200);await evaluate("Array.from(document.querySelectorAll('#assetManagementView [role=tab]')).find(b=>b.textContent.includes('SMTP')).click()");await wait("!!document.querySelector('#assetManagementView .asset-email-preview')");assert.equal(await evaluate("fetch('/api/asset-management/reminder-settings').then(r=>r.status)"),200);
  await evaluate("document.querySelector('[data-view=\"server-racks\"]').click()");await wait("document.querySelector('#assetManagementView.active-view .page-heading h2')?.textContent==='Rak Server'");await delay(400);const shot=await call('Page.captureScreenshot',{format:'png'});fs.writeFileSync('output/asset-rack-workspace-check.png',Buffer.from(shot.data,'base64'));
  assert.deepEqual(errors,[]);console.log('PASS: compiled workspace restores Rak Server, all three asset pages navigate, actual rack/photos APIs load, visible toolbar and rack elevations, no browser exceptions.');
- auth.destroySession(token);
+ (await auth.destroySession(token));
  }finally{ws?.close();chrome?.kill();if(server)await new Promise(r=>server.close(r));await pool.end();const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-rack-workspace-')){try{await fs.promises.rm(resolved,{recursive:true,force:true});}catch{}}}
 })().catch(e=>{console.error(e);process.exitCode=1;});

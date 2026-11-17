@@ -26,6 +26,7 @@ function implicitButtons(source, filename) {
 }
 
 function checkStructure() {
+  require('./lib/runtime-contracts.cjs').checkContracts();
   const catalog = buildCatalog();
   const errors = [], seen = new Set();
   for (const part of catalog.runtime) {
@@ -37,6 +38,22 @@ function checkStructure() {
   // Compile the assembled shared scope to detect lexical collisions/order breakage.
   new vm.Script(catalog.runtime.map(part => fs.readFileSync(path.join(projectRoot, part.path), 'utf8')).join(''), { filename: 'workspace-assembled.js' });
   for (const file of catalog.files) {
+    if (file.path.startsWith('src/services/') && file.path !== 'src/services/migrationService.js') {
+      const ast = require('@babel/parser').parse(fs.readFileSync(path.join(projectRoot, file.path), 'utf8'), { sourceType: 'script' });
+      function inspect(node) {
+        if (!node || typeof node !== 'object') return;
+        if (node.type === 'CallExpression' && node.callee.type === 'MemberExpression' && node.callee.property.name === 'query') {
+          const input = node.arguments[0];
+          const sql = input?.type === 'StringLiteral' ? input.value : input?.type === 'TemplateLiteral' ? input.quasis[0].value.cooked : '';
+          if (/^\s*(CREATE|ALTER|DROP|DO\s*\$)/i.test(sql || '')) errors.push(`${file.path}:${node.loc.start.line}: schema changes belong in database/migrations.`);
+        }
+        for (const [key, value] of Object.entries(node)) if (key !== 'loc') {
+          if (Array.isArray(value)) value.forEach(inspect);
+          else if (value && typeof value === 'object') inspect(value);
+        }
+      }
+      inspect(ast);
+    }
     if (file.path.includes('/workspace/features/') && file.path.endsWith('.js') && !seen.has(file.path)) errors.push(`Feature source is missing from runtime: ${file.path}`);
     if (!file.path.endsWith('.vue')) continue;
     for (const issue of implicitButtons(fs.readFileSync(path.join(projectRoot, file.path), 'utf8'), file.path)) errors.push(`${file.path}:${issue.line}: button needs explicit type (${issue.intendedType}).`);

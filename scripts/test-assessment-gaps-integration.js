@@ -9,7 +9,7 @@ const gaps=require('../src/services/assessmentGapService');
   try{
     await gaps.ensureStore();
     const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user);
-    token=auth.createSession({...user,role:'admin'});
+    token=(await auth.createSession({...user,role:'admin'}));
     for(const framework of Object.keys(gaps.permissionKeys))await pool.query('INSERT INTO controls(framework_id,code,function,category,subcategory,implementation,"references") VALUES($1,$2,$3,$4,$5,$6,$7)',[framework,code,'Gap Test','Gap Test',code+': fixture','','']);
     server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));
     const base='http://127.0.0.1:'+server.address().port;
@@ -40,7 +40,7 @@ const gaps=require('../src/services/assessmentGapService');
   }finally{
     await pool.query('DELETE FROM controls WHERE code=$1 AND framework_id=ANY($2::text[])',[code,Object.keys(gaps.permissionKeys)]);
     if(file)await require('../src/services/fileService').deleteFile(file.path,{library:true});
-    if(token)auth.destroySession(token);
+    if(token)(await auth.destroySession(token));
     if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}
     await pool.end();
   }

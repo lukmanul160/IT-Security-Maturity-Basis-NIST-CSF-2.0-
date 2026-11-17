@@ -7,7 +7,7 @@ async function run(){
  try{
   const before=(await pool.query("SELECT framework_id,COUNT(*)::int AS count FROM controls WHERE framework_id IN ('csf','privacy') GROUP BY framework_id ORDER BY framework_id")).rows;
   const admin=(await pool.query("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];assert.ok(admin);
-  token=auth.createSession({username:admin.username,role:'admin'});server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base=`http://127.0.0.1:${server.address().port}`,port=9840+Math.floor(Math.random()*50);
+  token=(await auth.createSession({username:admin.username,role:'admin'}));server=require('../src/app').listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base=`http://127.0.0.1:${server.address().port}`,port=9840+Math.floor(Math.random()*50);
   chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu',`--remote-debugging-port=${port}`,`--user-data-dir=${path.join(temp,'chrome')}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
   let target;for(let i=0;i<100;i++){try{target=await(await fetch(`http://127.0.0.1:${port}/json/new?about:blank`,{method:'PUT'})).json();break;}catch{await delay(100);}}assert.ok(target);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.connect();await cdp.send('Runtime.enable');await cdp.send('Page.enable');await cdp.send('DOM.enable');
   await cdp.send('Network.setCookie',{name:auth.sessionCookie,value:token,url:base,httpOnly:true});await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:temp});
@@ -30,6 +30,6 @@ async function run(){
    await cdp.evaluate('document.querySelector("dialog.module-import-dialog [data-cancel]").click()');
   }
   const after=(await pool.query("SELECT framework_id,COUNT(*)::int AS count FROM controls WHERE framework_id IN ('csf','privacy') GROUP BY framework_id ORDER BY framework_id")).rows;assert.deepEqual(after,before);assert.deepEqual(cdp.errors,[]);console.log('PASS: CSF and Privacy Excel downloads, readable bilingual previews, cancellation, and unchanged production controls.');
- }finally{cdp?.socket.close();chrome?.kill();if(token)auth.destroySession(token);if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();const resolved=path.resolve(temp);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-maturity-excel-')){await delay(1000);await fs.rm(resolved,{recursive:true,force:true}).catch(()=>{});}}
+ }finally{cdp?.socket.close();chrome?.kill();if(token)(await auth.destroySession(token));if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await pool.end();const resolved=path.resolve(temp);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-maturity-excel-')){await delay(1000);await fs.rm(resolved,{recursive:true,force:true}).catch(()=>{});}}
 }
 run().catch(error=>{console.error(error.stack);process.exitCode=1;});

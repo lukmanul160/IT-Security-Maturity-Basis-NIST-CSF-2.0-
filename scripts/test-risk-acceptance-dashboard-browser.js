@@ -21,7 +21,7 @@ async function run() {
     }
     pool.query = (sql,...args)=>query(sql.replace(/\b(risk_acceptance_forms|audit_events)\b/g,`"${schema}".$1`),...args);
     const admin = (await query("SELECT username FROM app_users WHERE role='admin' ORDER BY id LIMIT 1")).rows[0];
-    const token = createSession({ username: admin.username, role: 'admin' });
+    const token = (await createSession({ username: admin.username, role: 'admin' }));
     server = require('../src/app').listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
     const base = `http://127.0.0.1:${server.address().port}`;
     const debugPort = 9800 + Math.floor(Math.random() * 100);

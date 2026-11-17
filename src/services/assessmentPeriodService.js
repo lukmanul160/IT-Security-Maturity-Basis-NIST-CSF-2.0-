@@ -16,8 +16,9 @@ const validId = value => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 let ready;
 function ensureStore() {
-  if (!ready) ready = fs.readFile(path.join(__dirname, '../../database/assessment-periods.sql'), 'utf8')
-    .then(async sql => {await pool.query(sql);await require('./ikasService').initializePeriods(pool);}).catch(error => { ready = null; throw error; });
+  if (!ready) ready = require('./migrationService').ensureSchema()
+    .then(() => require('./ikasService').initializePeriods(pool))
+    .catch(error => { ready = null; throw error; });
   return ready;
 }
 function validateYear(value) {

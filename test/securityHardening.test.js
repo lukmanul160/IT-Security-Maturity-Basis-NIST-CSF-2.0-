@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const auth = require('../src/config/auth');
@@ -7,18 +8,18 @@ const { createLoginRateLimit } = require('../src/middleware/loginRateLimit');
 test.after(() => pool.end());
 
 test('database restore revokes old sessions and prevents authentication until completed', async t => {
-  const token = auth.createSession({ username: 'restore-target', role: 'admin' });
-  auth.beginDatabaseRestore();
+  const token = (await auth.createSession({ username: 'restore-target', role: 'admin' }));
+  (await auth.beginDatabaseRestore());
   try {
-    assert.equal(auth.getSession(token), null);
-    assert.throws(() => auth.createSession({ username: 'restore-target', role: 'admin' }), { status: 503 });
-    assert.throws(() => auth.beginDatabaseRestore(), { status: 409 });
+    assert.equal((await auth.getSession(token)), null);
+    await assert.rejects(async () => (await auth.createSession({ username: 'restore-target', role: 'admin' })), { status: 503 });
+    await assert.rejects(async () => (await auth.beginDatabaseRestore()), { status: 409 });
     assert.equal(await auth.authenticate('restore-target', 'Password123'), null);
-  } finally { auth.endDatabaseRestore(); }
-  assert.equal(auth.getSession(token), null);
-  const fresh = auth.createSession({ username: 'restore-target', role: 'viewer' });
-  assert.equal(auth.getSession(fresh).role, 'viewer');
-  auth.destroySession(fresh);
+  } finally { (await auth.endDatabaseRestore()); }
+  assert.equal((await auth.getSession(token)), null);
+  const fresh = (await auth.createSession({ username: 'restore-target', role: 'viewer' }));
+  assert.equal((await auth.getSession(fresh)).role, 'viewer');
+  (await auth.destroySession(fresh));
 });
 
 test('password verification rejects oversized current password before bcrypt', async t => {
@@ -30,79 +31,68 @@ test('password verification rejects oversized current password before bcrypt', a
   assert.equal(comparisons, 0);
 });
 
-test('new login replaces same account session without affecting other accounts', () => {
-  const first = auth.createSession({ username: 'single-device', role: 'user' });
-  const other = auth.createSession({ username: 'independent-device', role: 'viewer' });
-  const latest = auth.createSession({ username: 'single-device', role: 'user' });
-  assert.equal(auth.getSession(first), null);
-  assert.equal(auth.getSession(latest).username, 'single-device');
-  assert.equal(auth.getSession(other).username, 'independent-device');
-  auth.destroySession(first);
-  assert.ok(auth.getSession(latest), 'old device logout cannot end new login');
-  auth.destroySession(latest);
-  auth.destroySession(other);
+test('new login replaces same account session without affecting other accounts', async () => {
+  const first = (await auth.createSession({ username: 'single-device', role: 'user' }));
+  const other = (await auth.createSession({ username: 'independent-device', role: 'viewer' }));
+  const latest = (await auth.createSession({ username: 'single-device', role: 'user' }));
+  assert.equal((await auth.getSession(first)), null);
+  assert.equal((await auth.getSession(latest)).username, 'single-device');
+  assert.equal((await auth.getSession(other)).username, 'independent-device');
+  (await auth.destroySession(first));
+  assert.ok((await auth.getSession(latest)), 'old device logout cannot end new login');
+  (await auth.destroySession(latest));
+  (await auth.destroySession(other));
 });
 
 test('failed login does not revoke active device', async t => {
   const bcrypt = require('bcryptjs');
   const passwordHash = await bcrypt.hash('ValidPassword123', 4);
   t.mock.method(pool, 'query', async () => ({ rows: [{ username: 'single-device', password_hash: passwordHash, role: 'user' }] }));
-  const token = auth.createSession({ username: 'single-device', role: 'user' });
+  const token = (await auth.createSession({ username: 'single-device', role: 'user' }));
   assert.equal(await auth.authenticate('single-device', 'WrongPassword123'), null);
-  assert.ok(auth.getSession(token));
-  auth.destroySession(token);
+  assert.ok((await auth.getSession(token)));
+  (await auth.destroySession(token));
 });
 
 test('role changes and deletion revoke every session for the affected account', async t => {
   t.mock.method(pool, 'query', async () => ({ rowCount: 1, rows: [{ id: 1, username: 'target', role: 'viewer' }] }));
-  const unaffected = auth.createSession({ username: 'other', role: 'user' });
-  const first = auth.createSession({ username: 'target', role: 'admin' });
-  const second = auth.createSession({ username: 'target', role: 'admin' });
+  const unaffected = (await auth.createSession({ username: 'other', role: 'user' }));
+  const first = (await auth.createSession({ username: 'target', role: 'admin' }));
+  const second = (await auth.createSession({ username: 'target', role: 'admin' }));
   await accounts.updateUser(1, { role: 'viewer' });
-  assert.equal(auth.getSession(first), null);
-  assert.equal(auth.getSession(second), null);
-  assert.ok(auth.getSession(unaffected));
-  const deleted = auth.createSession({ username: 'target', role: 'viewer' });
+  assert.equal((await auth.getSession(first)), null);
+  assert.equal((await auth.getSession(second)), null);
+  assert.ok((await auth.getSession(unaffected)));
+  const deleted = (await auth.createSession({ username: 'target', role: 'viewer' }));
   await accounts.deleteUser(1, 'other');
-  assert.equal(auth.getSession(deleted), null);
-  auth.destroySession(unaffected);
+  assert.equal((await auth.getSession(deleted)), null);
+  (await auth.destroySession(unaffected));
 });
 
 test('password change revokes existing sessions', async t => {
   const bcrypt = require('bcryptjs');
   const passwordHash = await bcrypt.hash('Original123', 4);
   t.mock.method(pool, 'query', async () => ({ rowCount: 1, rows: [{ id: 1, username: 'target', password_hash: passwordHash, role: 'user' }] }));
-  const token = auth.createSession({ username: 'target', role: 'user' });
+  const token = (await auth.createSession({ username: 'target', role: 'user' }));
   await accounts.updatePassword('target', { currentPassword: 'Original123', newPassword: 'Replacement123', confirmPassword: 'Replacement123' });
-  assert.equal(auth.getSession(token), null);
+  assert.equal((await auth.getSession(token)), null);
 });
 
 test('bcrypt passwords exceeding 72 UTF-8 bytes are rejected before database writes', async () => {
   await assert.rejects(accounts.createUser({ username: 'target', password: 'Aa1' + 'é'.repeat(35) }), { status: 400 });
 });
 
-test('login limit cannot be bypassed by rotating usernames and expires', () => {
-  let time = 0;
-  const middleware = createLoginRateLimit({ limit: 2, windowMs: 1000, maxPeers: 2, now: () => time });
-  let passed = 0;
-  const res = { status(code) { this.code = code; return this; }, set(name, value) { this[name] = value; }, json() {} };
-  for (const username of ['one', 'two', 'three']) middleware({ ip: 'peer', body: { username } }, res, () => passed++);
-  assert.equal(passed, 2);
-  assert.equal(res.code, 429);
-  assert.equal(res['Retry-After'], '1');
-  time = 1000;
-  middleware({ ip: 'peer' }, res, () => passed++);
-  assert.equal(passed, 3);
+test('shared middleware enforces the store decision and exposes retry timing',async t=>{
+ const state=require('../src/services/authStateService').state;let calls=0;
+ t.mock.method(state,'consume',async(namespace,key,limit,windowMs)=>{assert.equal(namespace,'login-ip');assert.equal(key,'peer');assert.equal(limit,2);return {allowed:++calls<=2,retryAfter:60};});
+ const middleware=createLoginRateLimit({limit:2});let passed=0;
+ const res={status(code){this.code=code;return this;},set(name,value){this[name]=value;},json(){}};
+ for(const username of ['one','two','three'])await middleware({ip:'peer',body:{username}},res,()=>passed++);
+ assert.equal(passed,2);assert.equal(res.code,429);assert.equal(res['Retry-After'],'60');
 });
-
-test('login limiter bounds peer storage without evicting active limits', () => {
-  const middleware = createLoginRateLimit({ maxPeers: 1 });
-  let passed = 0;
-  const res = { status(code) { this.code = code; return this; }, json() {} };
-  middleware({ ip: 'first' }, res, () => passed++);
-  middleware({ ip: 'second' }, res, () => passed++);
-  assert.equal(passed, 1);
-  assert.equal(res.code, 429);
+test('a failed shared limiter never grants access',async t=>{
+ const state=require('../src/services/authStateService').state;t.mock.method(state,'consume',async()=>{throw Error('unavailable');});
+ await assert.rejects(createLoginRateLimit()({ip:'peer'},{},()=>assert.fail('must not grant access')),/unavailable/);
 });
 
 test('uploaded content is sandboxed even when stored MIME type claims HTML', async t => {

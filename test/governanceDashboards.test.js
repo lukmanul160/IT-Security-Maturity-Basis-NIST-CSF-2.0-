@@ -60,7 +60,7 @@ test('audit finding filters preserve only matching findings and their audit, fol
     { id: 'evidence', kind: 'evidence', parentId: 'followup', data: {} }
   ] });
   const source = read('audit-finding/tracker.js');
-  vm.runInContext(read('audit-finding/record-index.js'), ctx);
+  vm.runInContext(fs.readFileSync('frontend/client/src/services/auditRecordIndex.mjs','utf8').replace('export function ','function '), ctx);
   vm.runInContext('const recordIndex = createAuditRecordIndex(rows); const ancestors = row => recordIndex.ancestors(row);', ctx);
   vm.runInContext(source.slice(source.indexOf('  function afFindings('), source.indexOf('  function afReset(')), ctx);
   inputs.afSeverity.value = 'Critical'; inputs.afReview.value = 'overdue';

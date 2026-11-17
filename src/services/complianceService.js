@@ -68,7 +68,7 @@ function table(kind) {
   return stores[kind];
 }
 async function ensureStore() {
-  await pool.query(await fs.readFile(path.join(__dirname, '../../database/compliance.sql'), 'utf8'));
+  await require('./migrationService').ensureSchema();
 }
 async function list(kind) {
   const result = await pool.query(`SELECT id, data, created_at AS "createdAt", updated_at AS "updatedAt" FROM ${table(kind)} ORDER BY created_at DESC, id`);

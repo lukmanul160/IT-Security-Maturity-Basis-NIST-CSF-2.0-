@@ -42,7 +42,7 @@ function validate(model) {
   return model;
 }
 async function ensureStore() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS threat_models (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, diagram JSONB NOT NULL, version INTEGER NOT NULL DEFAULT 1, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  await require('./migrationService').ensureSchema();
 }
 const selection = 'id, name, diagram, version, updated_at AS "updatedAt"';
 async function list() { return (await pool.query(`SELECT ${selection} FROM threat_models ORDER BY updated_at DESC, id DESC`)).rows; }

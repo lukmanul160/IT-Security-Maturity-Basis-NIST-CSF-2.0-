@@ -12,10 +12,7 @@ const access = require('./evidenceAccessService');
 const permissionKeys = { csf:'assessment', privacy:'privacy-assessment', ikas:'ikas-assessment', iso27001:'iso27001', 'iso27001-soa':'iso27001-soa' };
 const fail = (message,status=400) => Object.assign(new Error(message),{status});
 let ready;
-function ensureStore() {
-  if (!ready) ready = fs.readFile(path.join(__dirname,'../../database/assessment-gaps.sql'),'utf8').then(sql=>pool.query(sql)).catch(error=>{ready=null;throw error;});
-  return ready;
-}
+function ensureStore() { return require('./migrationService').ensureSchema(); }
 function validate(data) {
   if (!data || typeof data.description!=='string' || !data.description.trim() || data.description.trim().length>4000) throw fail('Deskripsi gap wajib diisi (maksimal 4000 karakter).');
   if (!['Open','Closed'].includes(data.status)) throw fail('Status gap harus Open atau Closed.');

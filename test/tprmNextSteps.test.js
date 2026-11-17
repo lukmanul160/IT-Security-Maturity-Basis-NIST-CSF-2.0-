@@ -2,7 +2,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const source=fs.readFileSync('frontend/client/src/workspace/features/tprm/workflow-guidance.js','utf8');
+const source=fs.readFileSync('frontend/client/src/services/tprmNextSteps.mjs','utf8').replace('export function ', 'function ');
 const context=vm.createContext({});
 vm.runInContext(source,context);
 context.tprmCriticalLabels={access:'Access',encryption:'Encryption',incident:'Incident',continuity:'Continuity'};

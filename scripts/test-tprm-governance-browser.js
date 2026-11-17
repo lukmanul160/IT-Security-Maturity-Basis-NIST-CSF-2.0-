@@ -4,7 +4,8 @@ const {spawn}=require('node:child_process'),{Cdp}=require('./test-threat-modelli
 (async()=>{let server,chrome,client;const profile=await fs.mkdtemp(path.join(os.tmpdir(),'nist-tprm-governance-'));try{
  const component=await fs.readFile('frontend/client/src/workspace/components/TprmRegisterView.vue','utf8');
  const template=component.match(/<template>([\s\S]*)<\/template>/)[1].replace(' v-pre','');
- const lifecycle=require('./lib/runtime-manifest.cjs').readSourceGroup('tprm-lifecycle');
+ const model=(await fs.readFile('frontend/client/src/services/tprmNextSteps.mjs','utf8')).replace('export function ','function ');
+ const lifecycle='window.NistWorkspaceModels={tprmNextSteps:(()=>{'+model+';return tprmNextSteps;})()};'+require('./lib/runtime-manifest.cjs').readSourceGroup('tprm-lifecycle');
  const vendor=await fs.readFile('frontend/client/src/workspace/features/tprm/vendor-register.js','utf8');
  const tabs=vendor.slice(vendor.indexOf("document.querySelectorAll('[data-tprm-register-tab]')"),vendor.indexOf(" $('tprmDashboardOpenRegister')"));
  const app=express();

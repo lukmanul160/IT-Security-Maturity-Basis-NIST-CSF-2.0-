@@ -78,7 +78,7 @@ test('guarded acceptance save sends a request even when submission guard already
   const context = vm.createContext({ WeakSet, $: id => fields[id], fetch: async () => { context.writes++; return { ok: true }; }, writes: 0, riskFormData: () => ({}), resetRiskAcceptanceForm() {}, loadRiskAcceptanceForms: async () => {} });
   const source = fs.readFileSync('frontend/client/src/workspace/features/risk-acceptance/forms.js', 'utf8');
   vm.runInContext(source.slice(source.indexOf('async function saveRiskAcceptanceForm'), source.indexOf('function deleteRiskAcceptanceForm')), context);
-  vm.runInContext(fs.readFileSync('frontend/client/src/workspace/features/shared/submission-guard.js', 'utf8'), context);
+  vm.runInContext(fs.readFileSync('frontend/client/src/services/submissionGuard.mjs', 'utf8').replace('export function ', 'function '), context);
   const button = fields.riskAcceptanceSubmit; button.type = 'submit';
   context.event = { preventDefault() {}, currentTarget: { elements: [button], getAttribute: () => null, setAttribute() {}, removeAttribute() {} } };
   await vm.runInContext('guardFormSubmission(saveRiskAcceptanceForm)(event)', context);

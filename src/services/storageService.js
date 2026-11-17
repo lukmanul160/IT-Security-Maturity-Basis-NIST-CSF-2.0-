@@ -27,21 +27,7 @@ function createStorageService({ db = pool, localRoot = uploadRoot, applicationRo
   let ready;
   async function ensureStore() {
     if (!ready) ready = (async () => {
-      await db.query(`CREATE TABLE IF NOT EXISTS file_storage_settings (
-        id INTEGER PRIMARY KEY CHECK (id = 1), mode TEXT NOT NULL CHECK (mode IN ('local', 'shared')),
-        directory TEXT NOT NULL DEFAULT '', updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-      await db.query(`CREATE TABLE IF NOT EXISTS file_storage_locations (
-        path TEXT PRIMARY KEY, root TEXT NOT NULL, object_key TEXT NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-      await db.query(`DO $$ BEGIN
-        LOCK TABLE file_storage_settings IN ACCESS EXCLUSIVE MODE;
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'file_storage_settings'::regclass
-          AND conname = 'file_storage_settings_mode_check' AND pg_get_constraintdef(oid) LIKE '%s3%') THEN
-          ALTER TABLE file_storage_settings DROP CONSTRAINT IF EXISTS file_storage_settings_mode_check;
-          ALTER TABLE file_storage_settings ADD CONSTRAINT file_storage_settings_mode_check CHECK (mode IN ('local', 'shared', 's3', 'gcs'));
-        END IF;
-      END $$`);
-      await db.query(`ALTER TABLE file_storage_settings ADD COLUMN IF NOT EXISTS cloud_config JSONB NOT NULL DEFAULT '{}'::jsonb`);
+      await require('./migrationService').ensureSchema();
     })().catch(error => { ready = undefined; throw error; });
     return ready;
   }

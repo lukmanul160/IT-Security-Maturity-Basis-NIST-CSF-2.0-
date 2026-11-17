@@ -8,8 +8,7 @@ const rules = require('../shared/tprmWorkflow');
 const { text, invalid, futureDate, validDate } = rules;
 
 async function ensureStore() {
-  await pool.query("ALTER TABLE tprm_risk_register ADD COLUMN IF NOT EXISTS workflow JSONB NOT NULL DEFAULT '{}'::jsonb");
-  await pool.query(`CREATE TABLE IF NOT EXISTS tprm_workflow_events (id BIGSERIAL PRIMARY KEY, tprm_id BIGINT NOT NULL REFERENCES tprm_risk_register(id) ON DELETE CASCADE, action TEXT NOT NULL, actor TEXT NOT NULL, snapshot JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  await require('./migrationService').ensureSchema();
 }
 function record(row) {
   return { ...row, thirdParty: row.third_party, serviceDependency: row.service_dependency, questionnaireId: row.questionnaire_id, dueDiligenceAssessment: row.due_diligence_assessment || {}, workflow: row.workflow || {} };

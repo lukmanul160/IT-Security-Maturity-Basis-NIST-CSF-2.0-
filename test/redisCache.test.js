@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createCache } = require('../src/services/redisCacheService');
@@ -95,13 +96,13 @@ test('Redis reconnects after a failed attempt and the cooldown has elapsed', asy
   cache.close();
 });
 
-test('database restore invalidates dashboard cache at both restore boundaries', () => {
+test('database restore invalidates dashboard cache at both restore boundaries', async () => {
   const cache = require('../src/services/redisCacheService');
   const auth = require('../src/config/auth');
   const before = cache.dashboardVersion();
-  auth.beginDatabaseRestore();
+  (await auth.beginDatabaseRestore());
   const during = cache.dashboardVersion();
   assert.notEqual(during, before);
-  auth.endDatabaseRestore();
+  (await auth.endDatabaseRestore());
   assert.notEqual(cache.dashboardVersion(), during);
 });

@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -112,8 +113,8 @@ test('password limiter shares account budget across both routes without limiting
   const user = 'password-limit-test';
   t.mock.method(accounts, 'updatePassword', async () => { throw Object.assign(new Error('Password saat ini salah'), { status: 400 }); });
   t.mock.method(accounts, 'updateProfile', async () => ({ fullName: 'Updated' }));
-  const token = auth.createSession({ username: user, role: 'admin' });
-  t.after(() => { auth.destroySession(token); return pool.end(); });
+  const token = (await auth.createSession({ username: user, role: 'admin' }));
+  t.after(async () => { (await auth.destroySession(token)); return pool.end(); });
   const app = express(); app.use(express.json());
   app.use('/auth', require('../src/routes/authRoutes'));
   app.use((error, req, res, next) => res.status(error.status || 500).json({ error: error.message }));

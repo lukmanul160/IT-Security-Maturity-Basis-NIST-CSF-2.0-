@@ -1,3 +1,4 @@
+require('./helpers/auth-state.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
@@ -29,13 +30,17 @@ test('yearly assessments copy all results, start empty, isolate mutations, and p
       CREATE TABLE assessment_state(id TEXT PRIMARY KEY,data JSONB,updated_at TIMESTAMPTZ DEFAULT NOW());
       CREATE TABLE evidence_files(path TEXT PRIMARY KEY,name TEXT,mime_type TEXT,uploaded_by INT);
       CREATE TABLE app_users(id INT,username TEXT);
+      CREATE TABLE website_settings(id INTEGER PRIMARY KEY,settings JSONB NOT NULL DEFAULT '{}'::jsonb);
       CREATE TABLE information_security_objectives(id INT,objective_year INT,objective TEXT,indicator TEXT,baseline TEXT,target_value TEXT,owner TEXT,evaluation_frequency TEXT,period_targets JSONB,monthly_status TEXT,quarterly_status TEXT,semester_status TEXT,annual_status TEXT,notes TEXT);
       INSERT INTO app_users VALUES(1,'period-admin'),(2,'period-editor');
       INSERT INTO evidence_files VALUES('test/evidence.pdf','evidence.pdf','application/pdf',1);
     `);
     t.mock.method(pool,'query',scoped.query.bind(scoped));
     t.mock.method(pool,'connect',scoped.connect.bind(scoped));
-    await service.ensureStore();await require('../src/services/assessmentGapService').ensureStore();
+    // This deliberately minimal scoped fixture owns its schema; service startup now uses the central migration ledger.
+    await scoped.query(require('node:fs').readFileSync(require('node:path').join(__dirname,'../database/assessment-periods.sql'),'utf8'));
+    await scoped.query(require('node:fs').readFileSync(require('node:path').join(__dirname,'../database/assessment-gaps.sql'),'utf8'));
+    await service.ensureStore();
     const file={path:'upload/test/evidence.pdf',name:'evidence.pdf',type:'application/pdf'};
     const state={scores:{one:4},policyScores:{one:3},practiceScores:{one:4},notes:{one:'Original reasoning'},attachments:{one:[file]},targetScores:{Category:4}};
     for(const framework of ['csf','privacy','iso27001','iso27001-soa']) {
@@ -51,7 +56,7 @@ test('yearly assessments copy all results, start empty, isolate mutations, and p
     app.use(require('../src/middleware/errorHandler').errorHandler);
     server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
     const base='http://127.0.0.1:'+server.address().port+'/api';
-    const token=auth.createSession({username:'period-admin',role:'admin'}),viewer=auth.createSession({username:'period-viewer',role:'viewer'}),editor=auth.createSession({username:'period-editor',role:'editor'});tokens.push(token,viewer,editor);
+    const token=(await auth.createSession({username:'period-admin',role:'admin'})),viewer=(await auth.createSession({username:'period-viewer',role:'viewer'})),editor=(await auth.createSession({username:'period-editor',role:'editor'}));tokens.push(token,viewer,editor);
     const request=async(url,method='GET',body,session=token)=>{
       const response=await fetch(base+url,{method,headers:{cookie:auth.sessionCookie+'='+session,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
       return {status:response.status,body:response.status===204?null:await response.json()};
@@ -205,7 +210,7 @@ test('yearly assessments copy all results, start empty, isolate mutations, and p
     const roundTrip=maturity.read(Buffer.from(await exportedMaturity.arrayBuffer()),'csf');assert.equal(roundTrip.practiceScores['GV-OC-01'],4);assert.equal(roundTrip.policyScores['GV-OC-01'],0);
     assert.equal((await fetch(base+'/maturity-workbook/csf?assessmentYear=2099',{headers:{cookie:auth.sessionCookie+'='+token}})).status,404);
   } finally {
-    tokens.forEach(token=>auth.destroySession(token));
+    await Promise.all(tokens.map(token=>auth.destroySession(token)));
     if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
     if(scoped)await scoped.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);admin.release();await pool.end();
   }

@@ -8,7 +8,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   let server,chrome,ws,token;const profile=path.join(os.tmpdir(),'nist-ikas-'+Date.now()),auth=require('../src/config/auth');
   try{
     const user=(await pool.query("SELECT username FROM app_users WHERE role='admin' LIMIT 1")).rows[0];assert.ok(user);
-    token=auth.createSession({username:user.username,role:'admin'});server=require('../src/app').listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+    token=(await auth.createSession({username:user.username,role:'admin'}));server=require('../src/app').listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
     const base='http://127.0.0.1:'+server.address().port,probe=require('node:net').createServer();probe.listen(0,'127.0.0.1');await new Promise(resolve=>probe.once('listening',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));
     chrome=spawn(process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--disable-gpu','--remote-debugging-port='+port,'--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
     for(let i=0;i<80;i++){try{const tabs=await(await fetch('http://127.0.0.1:'+port+'/json')).json();ws=new WebSocket(tabs.find(tab=>tab.type==='page').webSocketDebuggerUrl);break;}catch{await delay(100);}}
@@ -84,7 +84,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
     const overviewShot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(__dirname,'../output/ikas-overview-preview.png'),Buffer.from(overviewShot.data,'base64'));
     assert.deepEqual(errors,[]);console.log('PASS: IKAS 181 controls, single maturity index and Keterangan, multiline autosave, Manage edits, New/Duplicate/delete year, isolated history, JSON export, desktop/tablet/mobile.');
   }finally{
-    if(token)auth.destroySession(token);ws?.close();chrome?.kill();if(server){server.closeAllConnections();await Promise.race([new Promise(resolve=>server.close(resolve)),delay(3000)]);}await Promise.race([pool.end(),delay(3000)]);
+    if(token)(await auth.destroySession(token));ws?.close();chrome?.kill();if(server){server.closeAllConnections();await Promise.race([new Promise(resolve=>server.close(resolve)),delay(3000)]);}await Promise.race([pool.end(),delay(3000)]);
     const resolved=path.resolve(profile);if(path.dirname(resolved)===path.resolve(os.tmpdir())&&path.basename(resolved).startsWith('nist-ikas-'))await fs.promises.rm(resolved,{recursive:true,force:true}).catch(()=>{});
   }
 })().catch(error=>{console.error(error);process.exitCode=1;});

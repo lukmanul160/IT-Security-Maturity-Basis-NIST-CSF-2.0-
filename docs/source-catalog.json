@@ -308,7 +308,7 @@
       "functions": [
         {
           "name": "bootstrap",
-          "line": 38,
+          "line": 42,
           "async": true,
           "parameters": [],
           "description": ""
@@ -322,10 +322,14 @@
         "../../public/tailwind.css",
         "../../public/theme.css",
         "./App.vue",
+        "./services/auditFindingDetails.mjs",
+        "./services/auditRecordIndex.mjs",
         "./services/canvasInteraction.mjs",
         "./services/mutationGuard",
         "./services/statusColors.mjs",
+        "./services/submissionGuard.mjs",
         "./services/tableResize",
+        "./services/tprmNextSteps.mjs",
         "./services/uploadProgress",
         "./services/workspaceError",
         "./services/workspaceRuntime",
@@ -357,6 +361,46 @@
         "./workspace/components/KnowledgeNotesView.vue",
         "vue"
       ]
+    },
+    {
+      "path": "frontend/client/src/services/auditFindingDetails.mjs",
+      "functions": [
+        {
+          "name": "renderAuditFindingDetails",
+          "line": 8,
+          "async": false,
+          "parameters": [
+            "audit",
+            "{ findings: scopedFindings, children, isOverdue, escapeHtml }"
+          ],
+          "description": "Render detail finding dari record aktif dan referensi evidence; teks pengguna harus melalui escaping."
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/services/auditRecordIndex.mjs",
+      "functions": [
+        {
+          "name": "createAuditRecordIndex",
+          "line": 8,
+          "async": false,
+          "parameters": [
+            "records"
+          ],
+          "description": "Bangun lookup record/folder agar tampilan detail dapat menelusuri referensi tanpa mengubah data sumber."
+        },
+        {
+          "name": "ancestors",
+          "line": 18,
+          "async": false,
+          "parameters": [
+            "record"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
     },
     {
       "path": "frontend/client/src/services/canvasInteraction.mjs",
@@ -693,6 +737,21 @@
       "dependencies": []
     },
     {
+      "path": "frontend/client/src/services/submissionGuard.mjs",
+      "functions": [
+        {
+          "name": "guardFormSubmission",
+          "line": 8,
+          "async": false,
+          "parameters": [
+            "handler"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": []
+    },
+    {
       "path": "frontend/client/src/services/tableResize.js",
       "functions": [
         {
@@ -947,6 +1006,35 @@
             "requestedPage = 1"
           ],
           "description": "All inventory tables have a fixed maximum of twenty displayed rows."
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "frontend/client/src/services/tprmNextSteps.mjs",
+      "functions": [
+        {
+          "name": "tprmNextSteps",
+          "line": 14,
+          "async": false,
+          "parameters": [
+            "data",
+            "tab",
+            "actor",
+            "writable",
+            "criticalLabels = {}"
+          ],
+          "description": "Menghasilkan langkah {target, message} sesuai tab, kelengkapan, dan aktor."
+        },
+        {
+          "name": "add",
+          "line": 16,
+          "async": false,
+          "parameters": [
+            "target",
+            "message"
+          ],
+          "description": ""
         }
       ],
       "dependencies": []
@@ -5273,13 +5361,12 @@
       "functions": [
         {
           "name": "renderAuditFindingDetails",
-          "line": 8,
+          "line": 2,
           "async": false,
           "parameters": [
-            "audit",
-            "{ findings: scopedFindings, children, isOverdue, escapeHtml }"
+            "...args"
           ],
-          "description": "Render detail finding dari record aktif dan referensi evidence; teks pengguna harus melalui escaping."
+          "description": "Compatibility adapter; implementation is an ES module with explicit dependencies."
         }
       ],
       "dependencies": []
@@ -5289,21 +5376,12 @@
       "functions": [
         {
           "name": "createAuditRecordIndex",
-          "line": 8,
+          "line": 2,
           "async": false,
           "parameters": [
-            "records"
+            "...args"
           ],
-          "description": "Bangun lookup record/folder agar tampilan detail dapat menelusuri referensi tanpa mengubah data sumber."
-        },
-        {
-          "name": "ancestors",
-          "line": 18,
-          "async": false,
-          "parameters": [
-            "record"
-          ],
-          "description": ""
+          "description": "Compatibility adapter; implementation is an ES module with explicit dependencies."
         }
       ],
       "dependencies": []
@@ -10311,12 +10389,12 @@
       "functions": [
         {
           "name": "guardFormSubmission",
-          "line": 8,
+          "line": 2,
           "async": false,
           "parameters": [
-            "handler"
+            "...args"
           ],
-          "description": ""
+          "description": "Compatibility adapter; implementation is an ES module with explicit dependencies."
         }
       ],
       "dependencies": []
@@ -11347,26 +11425,12 @@
       "functions": [
         {
           "name": "tprmNextSteps",
-          "line": 14,
+          "line": 2,
           "async": false,
           "parameters": [
-            "data",
-            "tab",
-            "actor",
-            "writable",
-            "criticalLabels = {}"
+            "...args"
           ],
-          "description": "Menghasilkan langkah {target, message} sesuai tab, kelengkapan, dan aktor."
-        },
-        {
-          "name": "add",
-          "line": 16,
-          "async": false,
-          "parameters": [
-            "target",
-            "message"
-          ],
-          "description": ""
+          "description": "Compatibility adapter; implementation is an ES module with explicit dependencies."
         }
       ],
       "dependencies": []
@@ -13190,7 +13254,7 @@
       "functions": [
         {
           "name": "authenticate",
-          "line": 16,
+          "line": 7,
           "async": true,
           "parameters": [
             "username",
@@ -13200,7 +13264,7 @@
         },
         {
           "name": "createSession",
-          "line": 34,
+          "line": 16,
           "async": false,
           "parameters": [
             "user"
@@ -13209,7 +13273,7 @@
         },
         {
           "name": "getSession",
-          "line": 46,
+          "line": 17,
           "async": false,
           "parameters": [
             "token"
@@ -13218,7 +13282,7 @@
         },
         {
           "name": "destroySession",
-          "line": 61,
+          "line": 18,
           "async": false,
           "parameters": [
             "token"
@@ -13227,7 +13291,7 @@
         },
         {
           "name": "destroyUserSessions",
-          "line": 65,
+          "line": 19,
           "async": false,
           "parameters": [
             "username"
@@ -13235,8 +13299,25 @@
           "description": ""
         },
         {
+          "name": "getOfficeSessions",
+          "line": 20,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "updateOfficePresence",
+          "line": 21,
+          "async": false,
+          "parameters": [
+            "token",
+            "module"
+          ],
+          "description": ""
+        },
+        {
           "name": "parseCookies",
-          "line": 71,
+          "line": 22,
           "async": false,
           "parameters": [
             "header = ''"
@@ -13245,31 +13326,25 @@
         },
         {
           "name": "beginDatabaseRestore",
-          "line": 90,
-          "async": false,
+          "line": 42,
+          "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "endDatabaseRestore",
-          "line": 97,
-          "async": false,
-          "parameters": [],
-          "description": ""
-        },
-        {
-          "name": "getOfficeSessions",
-          "line": 104,
-          "async": false,
+          "line": 56,
+          "async": true,
           "parameters": [],
           "description": ""
         }
       ],
       "dependencies": [
+        "../services/authStateService",
+        "../services/migrationService",
         "../services/redisCacheService",
         "./database",
-        "bcryptjs",
-        "crypto"
+        "bcryptjs"
       ]
     },
     {
@@ -13351,18 +13426,8 @@
       "path": "src/controllers/authController.js",
       "functions": [
         {
-          "name": "loginKey",
-          "line": 14,
-          "async": false,
-          "parameters": [
-            "req",
-            "username"
-          ],
-          "description": ""
-        },
-        {
           "name": "login",
-          "line": 16,
+          "line": 11,
           "async": true,
           "parameters": [
             "req",
@@ -13372,8 +13437,8 @@
         },
         {
           "name": "logout",
-          "line": 41,
-          "async": false,
+          "line": 24,
+          "async": true,
           "parameters": [
             "req",
             "res"
@@ -13382,7 +13447,7 @@
         },
         {
           "name": "currentUser",
-          "line": 42,
+          "line": 25,
           "async": true,
           "parameters": [
             "req",
@@ -13392,7 +13457,7 @@
         },
         {
           "name": "updateProfile",
-          "line": 43,
+          "line": 26,
           "async": true,
           "parameters": [
             "req",
@@ -13402,7 +13467,7 @@
         },
         {
           "name": "updatePassword",
-          "line": 44,
+          "line": 27,
           "async": true,
           "parameters": [
             "req",
@@ -13412,7 +13477,7 @@
         },
         {
           "name": "listUsers",
-          "line": 45,
+          "line": 28,
           "async": true,
           "parameters": [
             "req",
@@ -13422,7 +13487,7 @@
         },
         {
           "name": "createUser",
-          "line": 46,
+          "line": 29,
           "async": true,
           "parameters": [
             "req",
@@ -13432,7 +13497,7 @@
         },
         {
           "name": "updateUser",
-          "line": 47,
+          "line": 30,
           "async": true,
           "parameters": [
             "req",
@@ -13442,7 +13507,7 @@
         },
         {
           "name": "deleteUser",
-          "line": 48,
+          "line": 31,
           "async": true,
           "parameters": [
             "req",
@@ -13452,7 +13517,7 @@
         },
         {
           "name": "listPermissions",
-          "line": 49,
+          "line": 32,
           "async": true,
           "parameters": [
             "req",
@@ -13462,7 +13527,7 @@
         },
         {
           "name": "updatePermissions",
-          "line": 50,
+          "line": 33,
           "async": true,
           "parameters": [
             "req",
@@ -13475,6 +13540,7 @@
         "../config/auth",
         "../config/env",
         "../services/accountService",
+        "../services/authStateService",
         "../services/permissionService"
       ]
     },
@@ -14368,7 +14434,7 @@
         {
           "name": "auditRequest",
           "line": 32,
-          "async": false,
+          "async": true,
           "parameters": [
             "req",
             "res",
@@ -14378,7 +14444,7 @@
         },
         {
           "name": "record",
-          "line": 42,
+          "line": 43,
           "async": false,
           "parameters": [
             "aborted = false"
@@ -14399,7 +14465,7 @@
         {
           "name": "requireAuth",
           "line": 8,
-          "async": false,
+          "async": true,
           "parameters": [
             "req",
             "res",
@@ -14534,15 +14600,17 @@
       "functions": [
         {
           "name": "createLoginRateLimit",
-          "line": 7,
+          "line": 3,
           "async": false,
           "parameters": [
-            "{ limit = 30, windowMs = 15 * 60 * 1000, maxPeers = 10000, now = Date.now, key } = {}"
+            "{limit=30,windowMs=15*60*1000,namespace='login-ip',key}={}"
           ],
-          "description": "Limit all attempts per peer, including rotating usernames and successful logins."
+          "description": ""
         }
       ],
-      "dependencies": []
+      "dependencies": [
+        "../services/authStateService"
+      ]
     },
     {
       "path": "src/middleware/mutationGuard.js",
@@ -14665,13 +14733,13 @@
           "line": 7,
           "async": false,
           "parameters": [
-            "{ limit = 30, windowMs = 60000, key = req => req.ip } = {}"
+            "{ limit = 30, windowMs = 60000, namespace = 'statement-request', key = req => req.ip } = {}"
           ],
           "description": ""
         }
       ],
       "dependencies": [
-        "node:crypto"
+        "../services/authStateService"
       ]
     },
     {
@@ -15570,8 +15638,7 @@
         "./services/threatModelService",
         "./services/tprmQuestionnaireService",
         "./services/tprmService",
-        "fs",
-        "path"
+        "fs"
       ]
     },
     {
@@ -15698,7 +15765,7 @@
         },
         {
           "name": "validate",
-          "line": 19,
+          "line": 16,
           "async": false,
           "parameters": [
             "data"
@@ -15707,7 +15774,7 @@
         },
         {
           "name": "linkedDetails",
-          "line": 40,
+          "line": 37,
           "async": false,
           "parameters": [
             "framework",
@@ -15719,7 +15786,7 @@
         },
         {
           "name": "list",
-          "line": 47,
+          "line": 44,
           "async": true,
           "parameters": [
             "framework"
@@ -15728,7 +15795,7 @@
         },
         {
           "name": "save",
-          "line": 55,
+          "line": 52,
           "async": true,
           "parameters": [
             "framework",
@@ -15741,7 +15808,7 @@
         },
         {
           "name": "remove",
-          "line": 89,
+          "line": 86,
           "async": true,
           "parameters": [
             "framework",
@@ -15754,7 +15821,7 @@
         },
         {
           "name": "summary",
-          "line": 102,
+          "line": 99,
           "async": false,
           "parameters": [
             "rows"
@@ -15763,7 +15830,7 @@
         },
         {
           "name": "importGaps",
-          "line": 106,
+          "line": 103,
           "async": true,
           "parameters": [
             "framework",
@@ -15777,6 +15844,7 @@
         "../config/database",
         "./evidenceAccessService",
         "./gapNumberService",
+        "./migrationService",
         "crypto",
         "fs/promises",
         "path"
@@ -15839,7 +15907,7 @@
         },
         {
           "name": "validateYear",
-          "line": 23,
+          "line": 24,
           "async": false,
           "parameters": [
             "value"
@@ -15848,7 +15916,7 @@
         },
         {
           "name": "validateFramework",
-          "line": 27,
+          "line": 28,
           "async": false,
           "parameters": [
             "framework"
@@ -15857,14 +15925,14 @@
         },
         {
           "name": "emptyAssessment",
-          "line": 31,
+          "line": 32,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "list",
-          "line": 32,
+          "line": 33,
           "async": true,
           "parameters": [
             "framework"
@@ -15873,7 +15941,7 @@
         },
         {
           "name": "period",
-          "line": 36,
+          "line": 37,
           "async": true,
           "parameters": [
             "framework",
@@ -15885,7 +15953,7 @@
         },
         {
           "name": "periodMetadata",
-          "line": 42,
+          "line": 43,
           "async": true,
           "parameters": [
             "framework",
@@ -15895,7 +15963,7 @@
         },
         {
           "name": "legacySnapshot",
-          "line": 48,
+          "line": 49,
           "async": true,
           "parameters": [
             "framework",
@@ -15905,7 +15973,7 @@
         },
         {
           "name": "prepareSnapshot",
-          "line": 64,
+          "line": 65,
           "async": false,
           "parameters": [
             "source",
@@ -15917,7 +15985,7 @@
         },
         {
           "name": "references",
-          "line": 82,
+          "line": 83,
           "async": false,
           "parameters": [
             "data"
@@ -15926,7 +15994,7 @@
         },
         {
           "name": "persist",
-          "line": 87,
+          "line": 88,
           "async": true,
           "parameters": [
             "client",
@@ -15938,7 +16006,7 @@
         },
         {
           "name": "create",
-          "line": 98,
+          "line": 99,
           "async": true,
           "parameters": [
             "framework",
@@ -15949,7 +16017,7 @@
         },
         {
           "name": "remove",
-          "line": 118,
+          "line": 119,
           "async": true,
           "parameters": [
             "framework",
@@ -15959,7 +16027,7 @@
         },
         {
           "name": "mutate",
-          "line": 142,
+          "line": 143,
           "async": true,
           "parameters": [
             "framework",
@@ -15970,7 +16038,7 @@
         },
         {
           "name": "validateAssessment",
-          "line": 155,
+          "line": 156,
           "async": true,
           "parameters": [
             "next",
@@ -15981,7 +16049,7 @@
         },
         {
           "name": "canonicalEvidence",
-          "line": 167,
+          "line": 168,
           "async": true,
           "parameters": [
             "files",
@@ -15993,7 +16061,7 @@
         },
         {
           "name": "controlMutation",
-          "line": 179,
+          "line": 180,
           "async": true,
           "parameters": [
             "data",
@@ -16007,7 +16075,7 @@
         },
         {
           "name": "gapMutation",
-          "line": 213,
+          "line": 214,
           "async": true,
           "parameters": [
             "data",
@@ -16021,7 +16089,7 @@
         },
         {
           "name": "execute",
-          "line": 243,
+          "line": 244,
           "async": true,
           "parameters": [
             "owner",
@@ -16036,7 +16104,7 @@
         },
         {
           "name": "fileReferenceCount",
-          "line": 295,
+          "line": 296,
           "async": true,
           "parameters": [
             "normalized"
@@ -16045,7 +16113,7 @@
         },
         {
           "name": "detachFile",
-          "line": 299,
+          "line": 300,
           "async": true,
           "parameters": [
             "client",
@@ -16055,7 +16123,7 @@
         },
         {
           "name": "keep",
-          "line": 302,
+          "line": 303,
           "async": false,
           "parameters": [
             "files"
@@ -16064,7 +16132,7 @@
         },
         {
           "name": "importIkas",
-          "line": 309,
+          "line": 310,
           "async": true,
           "parameters": [
             "year",
@@ -16075,7 +16143,7 @@
         },
         {
           "name": "workbookSnapshot",
-          "line": 341,
+          "line": 342,
           "async": true,
           "parameters": [
             "framework",
@@ -16087,7 +16155,7 @@
         },
         {
           "name": "mergeMaturityWorkbook",
-          "line": 350,
+          "line": 351,
           "async": false,
           "parameters": [
             "data",
@@ -16098,7 +16166,7 @@
         },
         {
           "name": "importMaturityWorkbook",
-          "line": 371,
+          "line": 372,
           "async": true,
           "parameters": [
             "framework",
@@ -16117,6 +16185,7 @@
         "./frameworkService",
         "./gapNumberService",
         "./ikasService",
+        "./migrationService",
         "./permissionService",
         "crypto",
         "fs/promises",
@@ -16156,6 +16225,7 @@
       "dependencies": [
         "../config/database",
         "../config/paths",
+        "./migrationService",
         "fs"
       ]
     },
@@ -16270,6 +16340,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "node:crypto"
       ]
     },
@@ -16295,7 +16366,7 @@
         },
         {
           "name": "text",
-          "line": 29,
+          "line": 15,
           "async": false,
           "parameters": [
             "value",
@@ -16307,7 +16378,7 @@
         },
         {
           "name": "date",
-          "line": 30,
+          "line": 16,
           "async": false,
           "parameters": [
             "value",
@@ -16317,7 +16388,7 @@
         },
         {
           "name": "validateAsset",
-          "line": 31,
+          "line": 17,
           "async": false,
           "parameters": [
             "d"
@@ -16326,7 +16397,7 @@
         },
         {
           "name": "validatePlacement",
-          "line": 32,
+          "line": 18,
           "async": false,
           "parameters": [
             "d",
@@ -16337,7 +16408,7 @@
         },
         {
           "name": "transaction",
-          "line": 33,
+          "line": 19,
           "async": true,
           "parameters": [
             "fn"
@@ -16346,7 +16417,7 @@
         },
         {
           "name": "list",
-          "line": 34,
+          "line": 20,
           "async": true,
           "parameters": [
             "kind"
@@ -16355,14 +16426,14 @@
         },
         {
           "name": "managedVendorCatalog",
-          "line": 35,
+          "line": 21,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "validateManagedVendor",
-          "line": 36,
+          "line": 22,
           "async": true,
           "parameters": [
             "c",
@@ -16372,7 +16443,7 @@
         },
         {
           "name": "saveAsset",
-          "line": 37,
+          "line": 23,
           "async": true,
           "parameters": [
             "id",
@@ -16383,7 +16454,7 @@
         },
         {
           "name": "saveRack",
-          "line": 38,
+          "line": 24,
           "async": true,
           "parameters": [
             "id",
@@ -16393,7 +16464,7 @@
         },
         {
           "name": "place",
-          "line": 39,
+          "line": 25,
           "async": true,
           "parameters": [
             "d"
@@ -16402,7 +16473,7 @@
         },
         {
           "name": "relate",
-          "line": 40,
+          "line": 26,
           "async": true,
           "parameters": [
             "d",
@@ -16412,7 +16483,7 @@
         },
         {
           "name": "remove",
-          "line": 41,
+          "line": 27,
           "async": true,
           "parameters": [
             "kind",
@@ -16422,7 +16493,7 @@
         },
         {
           "name": "validateRiskIds",
-          "line": 42,
+          "line": 28,
           "async": false,
           "parameters": [
             "ids"
@@ -16431,7 +16502,7 @@
         },
         {
           "name": "saveRiskLinks",
-          "line": 43,
+          "line": 29,
           "async": true,
           "parameters": [
             "id",
@@ -16441,7 +16512,7 @@
         },
         {
           "name": "due",
-          "line": 44,
+          "line": 30,
           "async": false,
           "parameters": [
             "asset",
@@ -16451,7 +16522,7 @@
         },
         {
           "name": "runReminders",
-          "line": 46,
+          "line": 32,
           "async": true,
           "parameters": [
             "now=new Date()"
@@ -16460,7 +16531,7 @@
         },
         {
           "name": "startScheduler",
-          "line": 64,
+          "line": 50,
           "async": false,
           "parameters": [],
           "description": ""
@@ -16472,6 +16543,7 @@
         "./assetReminderSettingsService",
         "./assetRiskAssessmentService",
         "./evidenceAccessService",
+        "./migrationService",
         "./reminderRecipientService",
         "./reminderScheduler",
         "./smtpService",
@@ -16501,7 +16573,7 @@
         },
         {
           "name": "validateFile",
-          "line": 35,
+          "line": 21,
           "async": false,
           "parameters": [
             "file"
@@ -16510,7 +16582,7 @@
         },
         {
           "name": "kind",
-          "line": 44,
+          "line": 30,
           "async": false,
           "parameters": [
             "value"
@@ -16519,7 +16591,7 @@
         },
         {
           "name": "side",
-          "line": 45,
+          "line": 31,
           "async": false,
           "parameters": [
             "value"
@@ -16528,7 +16600,7 @@
         },
         {
           "name": "list",
-          "line": 46,
+          "line": 32,
           "async": true,
           "parameters": [
             "scope"
@@ -16537,7 +16609,7 @@
         },
         {
           "name": "read",
-          "line": 47,
+          "line": 33,
           "async": true,
           "parameters": [
             "type",
@@ -16548,7 +16620,7 @@
         },
         {
           "name": "prepareChanges",
-          "line": 48,
+          "line": 34,
           "async": false,
           "parameters": [
             "files",
@@ -16559,7 +16631,7 @@
         },
         {
           "name": "applyChanges",
-          "line": 54,
+          "line": 40,
           "async": true,
           "parameters": [
             "c",
@@ -16572,7 +16644,7 @@
         },
         {
           "name": "save",
-          "line": 65,
+          "line": 51,
           "async": true,
           "parameters": [
             "type",
@@ -16588,6 +16660,7 @@
         "../config/database",
         "./assetManagementService",
         "./evidenceAccessService",
+        "./migrationService",
         "crypto",
         "path"
       ]
@@ -16667,6 +16740,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./reminderSchedule",
         "./smtpService"
       ]
@@ -16773,21 +16847,21 @@
         },
         {
           "name": "read",
-          "line": 27,
+          "line": 18,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "getSettings",
-          "line": 32,
+          "line": 23,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "validate",
-          "line": 36,
+          "line": 27,
           "async": false,
           "parameters": [
             "data"
@@ -16796,7 +16870,7 @@
         },
         {
           "name": "saveSettings",
-          "line": 70,
+          "line": 61,
           "async": true,
           "parameters": [
             "data"
@@ -16805,7 +16879,7 @@
         },
         {
           "name": "renderMessage",
-          "line": 79,
+          "line": 70,
           "async": false,
           "parameters": [
             "row",
@@ -16815,7 +16889,7 @@
         },
         {
           "name": "render",
-          "line": 81,
+          "line": 72,
           "async": false,
           "parameters": [
             "template"
@@ -16824,7 +16898,7 @@
         },
         {
           "name": "reminderSlot",
-          "line": 87,
+          "line": 78,
           "async": false,
           "parameters": [
             "row",
@@ -16835,7 +16909,7 @@
         },
         {
           "name": "eligible",
-          "line": 91,
+          "line": 82,
           "async": false,
           "parameters": [
             "row",
@@ -16846,7 +16920,7 @@
         },
         {
           "name": "testEmail",
-          "line": 94,
+          "line": 85,
           "async": true,
           "parameters": [
             "to"
@@ -16855,7 +16929,7 @@
         },
         {
           "name": "runReminders",
-          "line": 102,
+          "line": 93,
           "async": true,
           "parameters": [
             "now = new Date()"
@@ -16864,14 +16938,14 @@
         },
         {
           "name": "startScheduler",
-          "line": 132,
+          "line": 123,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "recipientsFor",
-          "line": 135,
+          "line": 126,
           "async": false,
           "parameters": [
             "row",
@@ -16883,6 +16957,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./reminderRecipientService",
         "./reminderSchedule",
         "./reminderScheduler",
@@ -16921,7 +16996,7 @@
         },
         {
           "name": "syncAuditStatus",
-          "line": 53,
+          "line": 46,
           "async": true,
           "parameters": [
             "client",
@@ -16931,7 +17006,7 @@
         },
         {
           "name": "attachments",
-          "line": 64,
+          "line": 57,
           "async": false,
           "parameters": [
             "row"
@@ -16940,7 +17015,7 @@
         },
         {
           "name": "list",
-          "line": 68,
+          "line": 61,
           "async": true,
           "parameters": [
             "user"
@@ -16949,7 +17024,7 @@
         },
         {
           "name": "save",
-          "line": 77,
+          "line": 70,
           "async": true,
           "parameters": [
             "kind",
@@ -16963,7 +17038,7 @@
         },
         {
           "name": "remove",
-          "line": 150,
+          "line": 143,
           "async": true,
           "parameters": [
             "id",
@@ -16973,7 +17048,7 @@
         },
         {
           "name": "download",
-          "line": 174,
+          "line": 167,
           "async": true,
           "parameters": [
             "id",
@@ -16987,6 +17062,7 @@
         "../config/database",
         "./evidenceAccessService",
         "./fileService",
+        "./migrationService",
         "./permissionService",
         "./smtpService",
         "node:crypto",
@@ -17106,7 +17182,8 @@
         }
       ],
       "dependencies": [
-        "../config/database"
+        "../config/database",
+        "./migrationService"
       ]
     },
     {
@@ -17121,7 +17198,7 @@
         },
         {
           "name": "record",
-          "line": 29,
+          "line": 12,
           "async": true,
           "parameters": [
             "event"
@@ -17130,7 +17207,7 @@
         },
         {
           "name": "list",
-          "line": 39,
+          "line": 22,
           "async": true,
           "parameters": [
             "{ limit = 100, offset = 0, actor = '', eventType = '', from = '', to = '', before = null } = {}"
@@ -17139,7 +17216,7 @@
         },
         {
           "name": "listRiskAcceptance",
-          "line": 56,
+          "line": 39,
           "async": true,
           "parameters": [
             "id",
@@ -17149,7 +17226,7 @@
         },
         {
           "name": "describeClient",
-          "line": 67,
+          "line": 50,
           "async": false,
           "parameters": [
             "userAgent=''"
@@ -17158,7 +17235,7 @@
         },
         {
           "name": "csvCell",
-          "line": 74,
+          "line": 57,
           "async": false,
           "parameters": [
             "value"
@@ -17167,7 +17244,7 @@
         },
         {
           "name": "exportChunks",
-          "line": 75,
+          "line": 58,
           "async": true,
           "parameters": [
             "filters={}",
@@ -17177,7 +17254,42 @@
         }
       ],
       "dependencies": [
-        "../config/database"
+        "../config/database",
+        "./migrationService"
+      ]
+    },
+    {
+      "path": "src/services/authStateService.js",
+      "functions": [
+        {
+          "name": "hash",
+          "line": 5,
+          "async": false,
+          "parameters": [
+            "value"
+          ],
+          "description": ""
+        },
+        {
+          "name": "unavailable",
+          "line": 6,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "createAuthState",
+          "line": 7,
+          "async": false,
+          "parameters": [
+            "db"
+          ],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../config/database",
+        "node:crypto"
       ]
     },
     {
@@ -17361,7 +17473,7 @@
         },
         {
           "name": "list",
-          "line": 22,
+          "line": 21,
           "async": true,
           "parameters": [
             "value"
@@ -17370,7 +17482,7 @@
         },
         {
           "name": "createYear",
-          "line": 23,
+          "line": 22,
           "async": true,
           "parameters": [
             "value"
@@ -17379,7 +17491,7 @@
         },
         {
           "name": "event",
-          "line": 24,
+          "line": 23,
           "async": false,
           "parameters": [
             "user",
@@ -17390,7 +17502,7 @@
         },
         {
           "name": "create",
-          "line": 25,
+          "line": 24,
           "async": true,
           "parameters": [
             "input",
@@ -17400,7 +17512,7 @@
         },
         {
           "name": "advance",
-          "line": 31,
+          "line": 30,
           "async": false,
           "parameters": [
             "record",
@@ -17411,7 +17523,7 @@
         },
         {
           "name": "update",
-          "line": 42,
+          "line": 41,
           "async": true,
           "parameters": [
             "id",
@@ -17422,14 +17534,14 @@
         },
         {
           "name": "settings",
-          "line": 59,
+          "line": 58,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "saveApprover",
-          "line": 65,
+          "line": 64,
           "async": true,
           "parameters": [
             "input",
@@ -17440,6 +17552,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./permissionService",
         "node:crypto"
       ]
@@ -17604,6 +17717,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "fs",
         "path"
       ]
@@ -17917,6 +18031,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./reminderSchedule",
         "./smtpService"
       ]
@@ -18014,6 +18129,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./smtpService",
         "node:crypto",
         "node:fs/promises",
@@ -19083,7 +19199,7 @@
         },
         {
           "name": "validate",
-          "line": 22,
+          "line": 14,
           "async": false,
           "parameters": [
             "image"
@@ -19092,7 +19208,7 @@
         },
         {
           "name": "store",
-          "line": 36,
+          "line": 28,
           "async": true,
           "parameters": [
             "client",
@@ -19102,14 +19218,14 @@
         },
         {
           "name": "list",
-          "line": 45,
+          "line": 37,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "read",
-          "line": 46,
+          "line": 38,
           "async": true,
           "parameters": [
             "id"
@@ -19118,7 +19234,7 @@
         },
         {
           "name": "validateId",
-          "line": 47,
+          "line": 39,
           "async": false,
           "parameters": [
             "id"
@@ -19127,7 +19243,7 @@
         },
         {
           "name": "move",
-          "line": 48,
+          "line": 40,
           "async": true,
           "parameters": [
             "id",
@@ -19137,7 +19253,7 @@
         },
         {
           "name": "remove",
-          "line": 73,
+          "line": 65,
           "async": true,
           "parameters": [
             "id"
@@ -19148,6 +19264,7 @@
       "dependencies": [
         "../config/database",
         "./knowledgeNoteService",
+        "./migrationService",
         "node:crypto"
       ]
     },
@@ -19201,21 +19318,21 @@
         },
         {
           "name": "ensureStore",
-          "line": 33,
+          "line": 26,
           "async": false,
           "parameters": [],
           "description": ""
         },
         {
           "name": "folders",
-          "line": 38,
+          "line": 31,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "createFolder",
-          "line": 39,
+          "line": 32,
           "async": true,
           "parameters": [
             "path"
@@ -19224,7 +19341,7 @@
         },
         {
           "name": "moveFolder",
-          "line": 40,
+          "line": 33,
           "async": true,
           "parameters": [
             "source",
@@ -19234,7 +19351,7 @@
         },
         {
           "name": "removeFolder",
-          "line": 61,
+          "line": 54,
           "async": true,
           "parameters": [
             "path",
@@ -19244,14 +19361,14 @@
         },
         {
           "name": "list",
-          "line": 76,
+          "line": 69,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "create",
-          "line": 77,
+          "line": 70,
           "async": true,
           "parameters": [
             "data"
@@ -19260,7 +19377,7 @@
         },
         {
           "name": "update",
-          "line": 83,
+          "line": 76,
           "async": true,
           "parameters": [
             "id",
@@ -19270,7 +19387,7 @@
         },
         {
           "name": "importNotes",
-          "line": 93,
+          "line": 86,
           "async": true,
           "parameters": [
             "notes",
@@ -19282,7 +19399,7 @@
         },
         {
           "name": "remove",
-          "line": 125,
+          "line": 118,
           "async": true,
           "parameters": [
             "id"
@@ -19293,7 +19410,8 @@
       "dependencies": [
         "../config/database",
         "./knowledgeDocumentService",
-        "./knowledgeImageService"
+        "./knowledgeImageService",
+        "./migrationService"
       ]
     },
     {
@@ -19468,6 +19586,50 @@
         "node:fs",
         "node:path",
         "xlsx"
+      ]
+    },
+    {
+      "path": "src/services/migrationService.js",
+      "functions": [
+        {
+          "name": "checksum",
+          "line": 7,
+          "async": false,
+          "parameters": [
+            "sql"
+          ],
+          "description": ""
+        },
+        {
+          "name": "definitions",
+          "line": 8,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        },
+        {
+          "name": "migrate",
+          "line": 12,
+          "async": true,
+          "parameters": [
+            "db",
+            "{ through, statusOnly = false, plan = definitions() } = {}"
+          ],
+          "description": ""
+        },
+        {
+          "name": "ensureSchema",
+          "line": 45,
+          "async": false,
+          "parameters": [],
+          "description": ""
+        }
+      ],
+      "dependencies": [
+        "../config/database",
+        "node:crypto",
+        "node:fs",
+        "node:path"
       ]
     },
     {
@@ -19670,7 +19832,7 @@
         },
         {
           "name": "validate",
-          "line": 15,
+          "line": 13,
           "async": false,
           "parameters": [
             "input"
@@ -19679,14 +19841,14 @@
         },
         {
           "name": "list",
-          "line": 37,
+          "line": 35,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "read",
-          "line": 40,
+          "line": 38,
           "async": true,
           "parameters": [
             "id"
@@ -19695,7 +19857,7 @@
         },
         {
           "name": "save",
-          "line": 45,
+          "line": 43,
           "async": true,
           "parameters": [
             "id",
@@ -19705,7 +19867,7 @@
         },
         {
           "name": "remove",
-          "line": 52,
+          "line": 50,
           "async": true,
           "parameters": [
             "id",
@@ -19716,6 +19878,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "node:crypto"
       ]
     },
@@ -19751,7 +19914,7 @@
         },
         {
           "name": "defaultActions",
-          "line": 100,
+          "line": 97,
           "async": false,
           "parameters": [
             "role",
@@ -19761,7 +19924,7 @@
         },
         {
           "name": "effectiveActions",
-          "line": 103,
+          "line": 100,
           "async": false,
           "parameters": [
             "role",
@@ -19772,14 +19935,14 @@
         },
         {
           "name": "list",
-          "line": 109,
+          "line": 106,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "getRoleActions",
-          "line": 113,
+          "line": 110,
           "async": true,
           "parameters": [
             "role"
@@ -19788,7 +19951,7 @@
         },
         {
           "name": "getRolePermissions",
-          "line": 117,
+          "line": 114,
           "async": true,
           "parameters": [
             "role"
@@ -19797,7 +19960,7 @@
         },
         {
           "name": "has",
-          "line": 118,
+          "line": 115,
           "async": true,
           "parameters": [
             "role",
@@ -19808,7 +19971,7 @@
         },
         {
           "name": "hasFileAction",
-          "line": 124,
+          "line": 121,
           "async": true,
           "parameters": [
             "role",
@@ -19818,7 +19981,7 @@
         },
         {
           "name": "canDeleteOwnedEvidence",
-          "line": 125,
+          "line": 122,
           "async": true,
           "parameters": [
             "role"
@@ -19827,7 +19990,7 @@
         },
         {
           "name": "update",
-          "line": 126,
+          "line": 123,
           "async": true,
           "parameters": [
             "role",
@@ -19837,7 +20000,7 @@
         },
         {
           "name": "invalid",
-          "line": 127,
+          "line": 124,
           "async": false,
           "parameters": [
             "message"
@@ -19846,7 +20009,8 @@
         }
       ],
       "dependencies": [
-        "../config/database"
+        "../config/database",
+        "./migrationService"
       ]
     },
     {
@@ -20003,14 +20167,14 @@
         },
         {
           "name": "list",
-          "line": 55,
+          "line": 47,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "create",
-          "line": 61,
+          "line": 53,
           "async": true,
           "parameters": [
             "data"
@@ -20019,7 +20183,7 @@
         },
         {
           "name": "update",
-          "line": 70,
+          "line": 62,
           "async": true,
           "parameters": [
             "id",
@@ -20029,7 +20193,7 @@
         },
         {
           "name": "updateLayout",
-          "line": 83,
+          "line": 75,
           "async": true,
           "parameters": [
             "id",
@@ -20039,7 +20203,7 @@
         },
         {
           "name": "remove",
-          "line": 84,
+          "line": 76,
           "async": true,
           "parameters": [
             "id"
@@ -20048,7 +20212,7 @@
         },
         {
           "name": "employeeMap",
-          "line": 85,
+          "line": 77,
           "async": false,
           "parameters": [
             "row"
@@ -20057,7 +20221,7 @@
         },
         {
           "name": "validateEmployee",
-          "line": 86,
+          "line": 78,
           "async": false,
           "parameters": [
             "data"
@@ -20066,14 +20230,14 @@
         },
         {
           "name": "listOrganizationPersonnel",
-          "line": 87,
+          "line": 79,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "createOrganizationPersonnel",
-          "line": 88,
+          "line": 80,
           "async": true,
           "parameters": [
             "data"
@@ -20082,7 +20246,7 @@
         },
         {
           "name": "updateOrganizationPersonnel",
-          "line": 89,
+          "line": 81,
           "async": true,
           "parameters": [
             "id",
@@ -20092,7 +20256,7 @@
         },
         {
           "name": "removeOrganizationPersonnel",
-          "line": 99,
+          "line": 91,
           "async": true,
           "parameters": [
             "id"
@@ -20102,6 +20266,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "node:fs/promises",
         "node:path"
       ]
@@ -20230,14 +20395,14 @@
         },
         {
           "name": "listDropdowns",
-          "line": 153,
+          "line": 114,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "createDropdown",
-          "line": 158,
+          "line": 119,
           "async": true,
           "parameters": [
             "data"
@@ -20246,7 +20411,7 @@
         },
         {
           "name": "updateDropdown",
-          "line": 172,
+          "line": 133,
           "async": true,
           "parameters": [
             "id",
@@ -20256,7 +20421,7 @@
         },
         {
           "name": "removeDropdown",
-          "line": 190,
+          "line": 151,
           "async": true,
           "parameters": [
             "id"
@@ -20265,7 +20430,7 @@
         },
         {
           "name": "syncDropdownValues",
-          "line": 198,
+          "line": 159,
           "async": true,
           "parameters": [
             "data"
@@ -20274,7 +20439,7 @@
         },
         {
           "name": "getItems",
-          "line": 216,
+          "line": 177,
           "async": true,
           "parameters": [
             "policyIds"
@@ -20283,7 +20448,7 @@
         },
         {
           "name": "syncItems",
-          "line": 230,
+          "line": 191,
           "async": true,
           "parameters": [
             "policyId",
@@ -20293,7 +20458,7 @@
         },
         {
           "name": "validateItem",
-          "line": 240,
+          "line": 201,
           "async": false,
           "parameters": [
             "data"
@@ -20302,7 +20467,7 @@
         },
         {
           "name": "listItems",
-          "line": 246,
+          "line": 207,
           "async": true,
           "parameters": [
             "policyId"
@@ -20311,7 +20476,7 @@
         },
         {
           "name": "createItem",
-          "line": 254,
+          "line": 215,
           "async": true,
           "parameters": [
             "policyId",
@@ -20321,7 +20486,7 @@
         },
         {
           "name": "updateItem",
-          "line": 265,
+          "line": 226,
           "async": true,
           "parameters": [
             "policyId",
@@ -20332,7 +20497,7 @@
         },
         {
           "name": "removeItem",
-          "line": 275,
+          "line": 236,
           "async": true,
           "parameters": [
             "policyId",
@@ -20342,14 +20507,14 @@
         },
         {
           "name": "list",
-          "line": 281,
+          "line": 242,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "create",
-          "line": 287,
+          "line": 248,
           "async": true,
           "parameters": [
             "data"
@@ -20358,7 +20523,7 @@
         },
         {
           "name": "update",
-          "line": 309,
+          "line": 270,
           "async": true,
           "parameters": [
             "id",
@@ -20368,7 +20533,7 @@
         },
         {
           "name": "remove",
-          "line": 365,
+          "line": 326,
           "async": true,
           "parameters": [
             "id"
@@ -20378,6 +20543,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./reminderRecipientService"
       ]
     },
@@ -20431,21 +20597,21 @@
         },
         {
           "name": "read",
-          "line": 32,
+          "line": 26,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "getSettings",
-          "line": 36,
+          "line": 30,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "validate",
-          "line": 40,
+          "line": 34,
           "async": false,
           "parameters": [
             "data"
@@ -20454,7 +20620,7 @@
         },
         {
           "name": "saveSettings",
-          "line": 71,
+          "line": 65,
           "async": true,
           "parameters": [
             "data"
@@ -20463,7 +20629,7 @@
         },
         {
           "name": "testEmail",
-          "line": 81,
+          "line": 75,
           "async": true,
           "parameters": [
             "to"
@@ -20472,7 +20638,7 @@
         },
         {
           "name": "nextReview",
-          "line": 89,
+          "line": 83,
           "async": false,
           "parameters": [
             "row"
@@ -20481,7 +20647,7 @@
         },
         {
           "name": "runReminders",
-          "line": 101,
+          "line": 95,
           "async": true,
           "parameters": [
             "now = new Date()"
@@ -20490,7 +20656,7 @@
         },
         {
           "name": "startScheduler",
-          "line": 135,
+          "line": 129,
           "async": false,
           "parameters": [],
           "description": ""
@@ -20498,6 +20664,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./reminderRecipientService",
         "./reminderSchedule",
         "./reminderScheduler",
@@ -20816,6 +20983,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./smtpService"
       ]
     },
@@ -21090,6 +21258,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "pdf-lib"
       ]
     },
@@ -21242,28 +21411,28 @@
         },
         {
           "name": "refreshCalculatedValues",
-          "line": 54,
+          "line": 49,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "seedIndicators",
-          "line": 58,
+          "line": 53,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "listIndicators",
-          "line": 59,
+          "line": 54,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "syncDropdownValues",
-          "line": 60,
+          "line": 55,
           "async": true,
           "parameters": [
             "data"
@@ -21272,14 +21441,14 @@
         },
         {
           "name": "listDropdowns",
-          "line": 61,
+          "line": 56,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "validateDropdown",
-          "line": 62,
+          "line": 57,
           "async": false,
           "parameters": [
             "data"
@@ -21288,7 +21457,7 @@
         },
         {
           "name": "dropdownFailure",
-          "line": 66,
+          "line": 61,
           "async": false,
           "parameters": [
             "error"
@@ -21297,7 +21466,7 @@
         },
         {
           "name": "createDropdown",
-          "line": 67,
+          "line": 62,
           "async": true,
           "parameters": [
             "data"
@@ -21306,7 +21475,7 @@
         },
         {
           "name": "getDropdown",
-          "line": 72,
+          "line": 67,
           "async": true,
           "parameters": [
             "id"
@@ -21315,7 +21484,7 @@
         },
         {
           "name": "dropdownInUse",
-          "line": 77,
+          "line": 72,
           "async": true,
           "parameters": [
             "row"
@@ -21324,7 +21493,7 @@
         },
         {
           "name": "updateDropdown",
-          "line": 83,
+          "line": 78,
           "async": true,
           "parameters": [
             "id",
@@ -21334,7 +21503,7 @@
         },
         {
           "name": "removeDropdown",
-          "line": 89,
+          "line": 84,
           "async": true,
           "parameters": [
             "id"
@@ -21343,7 +21512,7 @@
         },
         {
           "name": "createIndicator",
-          "line": 94,
+          "line": 89,
           "async": true,
           "parameters": [
             "data"
@@ -21352,7 +21521,7 @@
         },
         {
           "name": "updateIndicator",
-          "line": 95,
+          "line": 90,
           "async": true,
           "parameters": [
             "id",
@@ -21362,7 +21531,7 @@
         },
         {
           "name": "removeIndicator",
-          "line": 96,
+          "line": 91,
           "async": true,
           "parameters": [
             "id"
@@ -21371,14 +21540,14 @@
         },
         {
           "name": "listRegister",
-          "line": 97,
+          "line": 92,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "create",
-          "line": 104,
+          "line": 99,
           "async": true,
           "parameters": [
             "data"
@@ -21387,7 +21556,7 @@
         },
         {
           "name": "update",
-          "line": 105,
+          "line": 100,
           "async": true,
           "parameters": [
             "id",
@@ -21398,7 +21567,7 @@
         },
         {
           "name": "remove",
-          "line": 122,
+          "line": 117,
           "async": true,
           "parameters": [
             "id"
@@ -21407,21 +21576,21 @@
         },
         {
           "name": "resetRegister",
-          "line": 123,
+          "line": 118,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "nextRiskId",
-          "line": 134,
+          "line": 129,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "dashboard",
-          "line": 135,
+          "line": 130,
           "async": true,
           "parameters": [],
           "description": ""
@@ -21430,6 +21599,7 @@
       "dependencies": [
         "../config/database",
         "../config/paths",
+        "./migrationService",
         "./riskWorkflowRules",
         "./riskWorkflowService",
         "fs"
@@ -21582,14 +21752,14 @@
         },
         {
           "name": "users",
-          "line": 20,
+          "line": 18,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "checkUser",
-          "line": 26,
+          "line": 24,
           "async": true,
           "parameters": [
             "client",
@@ -21600,7 +21770,7 @@
         },
         {
           "name": "acceptance",
-          "line": 31,
+          "line": 29,
           "async": true,
           "parameters": [
             "client",
@@ -21611,7 +21781,7 @@
         },
         {
           "name": "decorate",
-          "line": 40,
+          "line": 38,
           "async": true,
           "parameters": [
             "client",
@@ -21622,7 +21792,7 @@
         },
         {
           "name": "get",
-          "line": 53,
+          "line": 51,
           "async": true,
           "parameters": [
             "id"
@@ -21631,7 +21801,7 @@
         },
         {
           "name": "mutate",
-          "line": 61,
+          "line": 59,
           "async": true,
           "parameters": [
             "id",
@@ -21643,7 +21813,7 @@
         },
         {
           "name": "invalidateRegister",
-          "line": 101,
+          "line": 99,
           "async": true,
           "parameters": [
             "client",
@@ -21657,6 +21827,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "./permissionService",
         "./riskWorkflowRules",
         "node:crypto"
@@ -21684,7 +21855,7 @@
         },
         {
           "name": "text",
-          "line": 39,
+          "line": 29,
           "async": false,
           "parameters": [
             "value",
@@ -21695,7 +21866,7 @@
         },
         {
           "name": "validate",
-          "line": 44,
+          "line": 34,
           "async": false,
           "parameters": [
             "input"
@@ -21704,7 +21875,7 @@
         },
         {
           "name": "manages",
-          "line": 88,
+          "line": 78,
           "async": false,
           "parameters": [
             "row",
@@ -21714,7 +21885,7 @@
         },
         {
           "name": "authorize",
-          "line": 89,
+          "line": 79,
           "async": false,
           "parameters": [
             "row",
@@ -21725,7 +21896,7 @@
         },
         {
           "name": "authorizeUpload",
-          "line": 97,
+          "line": 87,
           "async": true,
           "parameters": [
             "id",
@@ -21736,7 +21907,7 @@
         },
         {
           "name": "validateFileSignature",
-          "line": 107,
+          "line": 97,
           "async": false,
           "parameters": [
             "name",
@@ -21746,7 +21917,7 @@
         },
         {
           "name": "starts",
-          "line": 109,
+          "line": 99,
           "async": false,
           "parameters": [
             "bytes"
@@ -21755,14 +21926,14 @@
         },
         {
           "name": "users",
-          "line": 127,
+          "line": 117,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "list",
-          "line": 137,
+          "line": 127,
           "async": true,
           "parameters": [
             "user"
@@ -21771,7 +21942,7 @@
         },
         {
           "name": "parseInput",
-          "line": 153,
+          "line": 143,
           "async": false,
           "parameters": [
             "body"
@@ -21780,7 +21951,7 @@
         },
         {
           "name": "validateUploads",
-          "line": 161,
+          "line": 151,
           "async": false,
           "parameters": [
             "uploads",
@@ -21790,7 +21961,7 @@
         },
         {
           "name": "download",
-          "line": 199,
+          "line": 189,
           "async": true,
           "parameters": [
             "id",
@@ -21801,7 +21972,7 @@
         },
         {
           "name": "save",
-          "line": 210,
+          "line": 200,
           "async": true,
           "parameters": [
             "id",
@@ -21814,7 +21985,7 @@
         },
         {
           "name": "columnFor",
-          "line": 307,
+          "line": 297,
           "async": false,
           "parameters": [
             "columnId"
@@ -21823,7 +21994,7 @@
         },
         {
           "name": "createAssignment",
-          "line": 361,
+          "line": 351,
           "async": true,
           "parameters": [
             "input",
@@ -21833,7 +22004,7 @@
         },
         {
           "name": "updateAssignment",
-          "line": 429,
+          "line": 419,
           "async": true,
           "parameters": [
             "id",
@@ -21844,7 +22015,7 @@
         },
         {
           "name": "createTemplate",
-          "line": 444,
+          "line": 434,
           "async": true,
           "parameters": [
             "input",
@@ -21855,7 +22026,7 @@
         },
         {
           "name": "remove",
-          "line": 447,
+          "line": 437,
           "async": true,
           "parameters": [
             "id",
@@ -21868,6 +22039,7 @@
       "dependencies": [
         "../config/database",
         "./fileService",
+        "./migrationService",
         "./permissionService",
         "node:crypto"
       ]
@@ -22039,6 +22211,7 @@
       "dependencies": [
         "../config/database",
         "../config/paths",
+        "./migrationService",
         "node:crypto",
         "node:fs/promises",
         "node:path",
@@ -22768,6 +22941,7 @@
         "../../templates/statement-seeds.json",
         "../../templates/statements/previous-hashes.json",
         "../config/database",
+        "./migrationService",
         "./statementDocumentService",
         "./statementFields",
         "node:crypto",
@@ -22866,14 +23040,14 @@
         },
         {
           "name": "getSettings",
-          "line": 48,
+          "line": 34,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "validateSettings",
-          "line": 53,
+          "line": 39,
           "async": false,
           "parameters": [
             "data"
@@ -22882,7 +23056,7 @@
         },
         {
           "name": "testSettings",
-          "line": 79,
+          "line": 65,
           "async": true,
           "parameters": [
             "data"
@@ -22891,7 +23065,7 @@
         },
         {
           "name": "saveSettings",
-          "line": 120,
+          "line": 106,
           "async": true,
           "parameters": [
             "data"
@@ -22900,7 +23074,7 @@
         },
         {
           "name": "location",
-          "line": 128,
+          "line": 114,
           "async": true,
           "parameters": [
             "relativePath",
@@ -22910,7 +23084,7 @@
         },
         {
           "name": "physicalPath",
-          "line": 135,
+          "line": 121,
           "async": true,
           "parameters": [
             "loc",
@@ -22920,7 +23094,7 @@
         },
         {
           "name": "read",
-          "line": 152,
+          "line": 138,
           "async": true,
           "parameters": [
             "relativePath"
@@ -22929,7 +23103,7 @@
         },
         {
           "name": "exists",
-          "line": 161,
+          "line": 147,
           "async": true,
           "parameters": [
             "relativePath"
@@ -22938,7 +23112,7 @@
         },
         {
           "name": "openRead",
-          "line": 167,
+          "line": 153,
           "async": true,
           "parameters": [
             "relativePath"
@@ -22947,7 +23121,7 @@
         },
         {
           "name": "removePhysical",
-          "line": 178,
+          "line": 164,
           "async": true,
           "parameters": [
             "loc"
@@ -22956,7 +23130,7 @@
         },
         {
           "name": "put",
-          "line": 183,
+          "line": 169,
           "async": true,
           "parameters": [
             "relativePath",
@@ -22967,7 +23141,7 @@
         },
         {
           "name": "remove",
-          "line": 228,
+          "line": 214,
           "async": true,
           "parameters": [
             "relativePath",
@@ -22980,6 +23154,7 @@
         "../config/database",
         "../config/paths",
         "./cloudStorageService",
+        "./migrationService",
         "node:crypto",
         "node:fs",
         "node:fs/promises",
@@ -23008,7 +23183,7 @@
         },
         {
           "name": "text",
-          "line": 12,
+          "line": 10,
           "async": false,
           "parameters": [
             "value",
@@ -23019,7 +23194,7 @@
         },
         {
           "name": "validate",
-          "line": 17,
+          "line": 15,
           "async": false,
           "parameters": [
             "input"
@@ -23028,14 +23203,14 @@
         },
         {
           "name": "list",
-          "line": 88,
+          "line": 86,
           "async": true,
           "parameters": [],
           "description": ""
         },
         {
           "name": "save",
-          "line": 92,
+          "line": 90,
           "async": true,
           "parameters": [
             "id",
@@ -23045,7 +23220,7 @@
         },
         {
           "name": "remove",
-          "line": 107,
+          "line": 105,
           "async": true,
           "parameters": [
             "id",
@@ -23056,6 +23231,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "node:crypto"
       ]
     },
@@ -23533,7 +23709,8 @@
       ],
       "dependencies": [
         "../config/database",
-        "../shared/threatStencils.json"
+        "../shared/threatStencils.json",
+        "./migrationService"
       ]
     },
     {
@@ -23879,7 +24056,8 @@
       ],
       "dependencies": [
         "../config/database",
-        "../shared/tprmWorkflow"
+        "../shared/tprmWorkflow",
+        "./migrationService"
       ]
     },
     {
@@ -24113,6 +24291,7 @@
       "dependencies": [
         "../config/database",
         "../shared/tprmWorkflow",
+        "./migrationService",
         "./tprmWorkflowService"
       ]
     },
@@ -24128,7 +24307,7 @@
         },
         {
           "name": "record",
-          "line": 14,
+          "line": 13,
           "async": false,
           "parameters": [
             "row"
@@ -24137,7 +24316,7 @@
         },
         {
           "name": "context",
-          "line": 18,
+          "line": 17,
           "async": true,
           "parameters": [
             "id",
@@ -24148,7 +24327,7 @@
         },
         {
           "name": "describe",
-          "line": 27,
+          "line": 26,
           "async": false,
           "parameters": [
             "{ row, questionnaire, risks }"
@@ -24157,7 +24336,7 @@
         },
         {
           "name": "get",
-          "line": 48,
+          "line": 47,
           "async": true,
           "parameters": [
             "id",
@@ -24167,7 +24346,7 @@
         },
         {
           "name": "conditions",
-          "line": 62,
+          "line": 61,
           "async": false,
           "parameters": [
             "value = []"
@@ -24176,7 +24355,7 @@
         },
         {
           "name": "requireReviewer",
-          "line": 70,
+          "line": 69,
           "async": false,
           "parameters": [
             "actor"
@@ -24185,7 +24364,7 @@
         },
         {
           "name": "requireApprover",
-          "line": 73,
+          "line": 72,
           "async": false,
           "parameters": [
             "actor"
@@ -24194,7 +24373,7 @@
         },
         {
           "name": "act",
-          "line": 77,
+          "line": 76,
           "async": true,
           "parameters": [
             "id",
@@ -24205,7 +24384,7 @@
         },
         {
           "name": "enforceStage",
-          "line": 94,
+          "line": 93,
           "async": false,
           "parameters": [
             "allowed"
@@ -24216,6 +24395,7 @@
       "dependencies": [
         "../config/database",
         "../shared/tprmWorkflow",
+        "./migrationService",
         "./permissionService",
         "./tprmGovernanceService"
       ]
@@ -24232,7 +24412,7 @@
         },
         {
           "name": "describeActivity",
-          "line": 37,
+          "line": 36,
           "async": false,
           "parameters": [
             "event"
@@ -24321,6 +24501,7 @@
       ],
       "dependencies": [
         "../config/database",
+        "./migrationService",
         "node:crypto"
       ]
     },

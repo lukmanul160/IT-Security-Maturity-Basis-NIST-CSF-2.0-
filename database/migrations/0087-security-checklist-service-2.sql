@@ -1,0 +1,1 @@
+ALTER TABLE compliance_security_checklists ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'assignment', ADD COLUMN IF NOT EXISTS template_id UUID, ADD COLUMN IF NOT EXISTS template_title TEXT NOT NULL DEFAULT ''
