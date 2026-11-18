@@ -84,6 +84,20 @@ Ikuti [trust CA dan migrasi HTTPS](DOCKER_HTTPS.md).
 
 ## 5. Rebuild dan jalankan aplikasi terbaru
 
+Jika build gagal dengan `Cannot find module '/app/scripts/lib/runtime-contracts.cjs'`,
+pastikan Dockerfile menyalin `scripts/lib` pada tahap `build`, sebelum
+`RUN npm run build && npm prune --omit=dev`:
+
+```dockerfile
+COPY scripts/lib ./scripts/lib
+```
+
+Folder ini berisi pemeriksa kontrak runtime dan helper manifest yang diperlukan
+build frontend. Setelah memperbarui Dockerfile, ulangi build di bawah; container
+yang sedang berjalan tidak perlu dihentikan selama build. Perbaikan ini tidak
+memerlukan penghapusan volume atau restore database. Build container tetap harus
+diverifikasi pada host Docker; build frontend lokal saja tidak membuktikan image berhasil.
+
 ```text
 docker compose --env-file .env.docker config --quiet
 docker compose --env-file .env.docker build --pull app nginx

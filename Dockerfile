@@ -4,6 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY frontend ./frontend
 COPY src/shared ./src/shared
+COPY scripts/lib ./scripts/lib
 COPY scripts/prepare-vue-client.js ./scripts/prepare-vue-client.js
 COPY scripts/prepare-virtual-office.js ./scripts/prepare-virtual-office.js
 RUN npm run build && npm prune --omit=dev
