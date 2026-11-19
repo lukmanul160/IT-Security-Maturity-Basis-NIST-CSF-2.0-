@@ -121,7 +121,6 @@
     },
     "globals": [
       "Array",
-      "Boolean",
       "Date",
       "Error",
       "JSON",
@@ -188,7 +187,6 @@
       "permissionFallback",
       "persistCategoryTarget",
       "personnelCertifications",
-      "policyRegisterActions",
       "policyRegisterFiles",
       "policyReviewCalendarDate",
       "policyScoreFor",

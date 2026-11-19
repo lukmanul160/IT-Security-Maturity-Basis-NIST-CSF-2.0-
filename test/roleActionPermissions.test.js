@@ -3,6 +3,69 @@ const assert=require('node:assert/strict');
 const {pool}=require('../src/config/database');
 const permissions=require('../src/services/permissionService');
 
+test('frontend controls require explicit action booleans even when role is forged',()=>{
+  const vm=require('node:vm');
+  const source=require('node:fs').readFileSync('frontend/client/src/workspace/features/shared/state-and-access.js','utf8');
+  const fn=source.slice(source.indexOf('function canPerform('),source.indexOf('const permissionFallback'));
+  const context=vm.createContext({currentUserRole:'admin',currentUserActions:{}});
+  vm.runInContext(fn,context);
+  assert.equal(vm.runInContext("canPerform('budget')",context),false);
+  for(const read of [false,'true','false',1,null]) {
+    context.currentUserActions={budget:{read,update:true}};
+    assert.equal(vm.runInContext("canPerform('budget','update')",context),false);
+  }
+  context.currentUserActions={budget:{read:true,update:false}};
+  assert.equal(vm.runInContext("canPerform('budget')",context),true);
+  assert.equal(vm.runInContext("canPerform('budget','update')",context),false);
+  assert.equal(vm.runInContext("canPerform('files')",context),false);
+});
+
+test('permission decisions reject truthy non-booleans and unknown identities',()=>{
+  const denied={read:false,create:false,update:false,delete:false};
+  for(const value of ['true','false',1,{},[]]) {
+    assert.deepEqual(permissions.effectiveActions('user','risk-management',{allowed:value,actions:{read:true}}),denied);
+    assert.deepEqual(permissions.effectiveActions('user','risk-management',{allowed:true,actions:{read:value}}),denied);
+    assert.equal(permissions.effectiveActions('user','risk-management',{allowed:true,actions:{read:true,update:value}}).update,false);
+  }
+  assert.deepEqual(permissions.effectiveActions('unknown','account',{allowed:true}),denied);
+  assert.deepEqual(permissions.effectiveActions('admin','unknown',{allowed:true}),denied);
+});
+
+test('forged auth JSON cannot grant module access or change server permissions',async t=>{
+  const express=require('express');
+  const {state}=require('../src/services/authStateService');
+  // An opaque cookie resolves to an ordinary user, independently of client JSON.
+  t.mock.method(state,'get',async token=>token==='ordinary-session'?{username:'ordinary',role:'user'}:null);
+  let assigned=false;
+  t.mock.method(require('../src/services/knowledgeNoteService'),'ensureStore',async()=>{});
+  const periods=require('../src/services/assessmentPeriodService');
+  t.mock.method(periods,'ensureStore',async()=>{});
+  t.mock.method(periods,'periodMetadata',async()=>({legacy:true}));
+  t.mock.method(pool,'query',async sql=>{
+    assert.match(sql,/^SELECT .*FROM role_permissions/,'no account or permission mutation reaches the database');
+    return {rows:[{allowed:assigned,actions:{read:true,create:true,update:true,delete:true}}]};
+  });
+  const app=express();app.use(express.json());
+  app.use('/api/auth',require('../src/routes/authRoutes'));
+  app.use('/api',require('../src/middleware/auth').requireAuth,require('../src/routes'));
+  const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+  t.after(()=>new Promise(resolve=>server.close(resolve)));
+  const base=`http://127.0.0.1:${server.address().port}/api`;
+  const forged={role:'admin',username:'admin',permissions:permissions.permissions.map(([key])=>key),actions:Object.fromEntries(permissions.permissions.map(([key])=>[key,{read:true,create:true,update:true,delete:true}]))};
+  const headers={cookie:'nist_session=ordinary-session','Content-Type':'application/json','X-Role':'admin','X-Permissions':JSON.stringify(forged.actions)};
+  for(const path of ['budget','monitoring-dashboard','technology-assets','asset-management/assets','asset-management/racks','asset-management/diagram','knowledge-notes','threat-modelling','csf','privacy','privacy/assessment','assessment','frameworks','frameworks/iso27001/controls','frameworks/iso27001-soa/controls','ikas-template','ikas-workbook','risk-management','risk-acceptance','tprm','tprm-questionnaires','policy-register','personnel-certifications','questionnaire-templates','files','audit-finding-tracker','office-design','compliance/security-checklists','compliance/reports','compliance/contacts','statements/types']) {
+    const response=await fetch(`${base}/${path}?role=admin&read=true&permissions=all`,{headers});
+    assert.equal(response.status,403,path);
+  }
+  for(const path of ['auth/permissions/user','auth/users/897'])assert.equal((await fetch(`${base}/${path}`,{method:'PUT',headers,body:JSON.stringify(forged)})).status,403,path);
+  assert.equal((await fetch(`${base}/risk-management`,{headers:{'X-Role':'admin'}})).status,401);
+  // The next request observes revocation without requiring a new login.
+  assigned=true;
+  assert.equal(await permissions.has('user','risk-management'),true);
+  assigned=false;
+  assert.equal((await fetch(`${base}/risk-management`,{headers})).status,403);
+});
+
 test('configured actions override role defaults but require read access',async t=>{
   let row={allowed:true,actions:{read:true,create:false,update:false,delete:true}};
   t.mock.method(pool,'query',async()=>({rows:[row]}));

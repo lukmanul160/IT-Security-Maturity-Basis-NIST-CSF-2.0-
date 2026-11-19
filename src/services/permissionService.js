@@ -98,10 +98,13 @@ function defaultActions(role,key) {
   return Object.fromEntries(actions.map(action=>[action, role === 'admin' || (key === 'account' ? action === 'read' : key === 'personnel-certification' && role === 'user' && action === 'create' ? true : key === 'files' && ['read','update','delete'].includes(action) ? true : canAccess(role,key,action))]));
 }
 function effectiveActions(role,key,row) {
+  // Fail closed: only known roles/modules and literal database booleans grant access.
+  // In particular, strings such as "false" must never become an affirmative permission.
+  if (!validRoles.includes(role) || !permissions.some(([value]) => value === key)) return Object.fromEntries(actions.map(action=>[action,false]));
   const base = {...defaultActions(role,key),...(row?.actions || {})};
   if (role === 'admin') return Object.fromEntries(actions.map(action=>[action,true]));
   if (key === 'account') for(const action of ['create','update','delete']) base[action]=false;
-  return Object.fromEntries(actions.map(action=>[action,Boolean(row?.allowed && base.read && base[action])]));
+  return Object.fromEntries(actions.map(action=>[action,row?.allowed === true && base.read === true && base[action] === true]));
 }
 async function list() {
   const result=await pool.query('SELECT role, permission_key AS "permissionKey", allowed, actions FROM role_permissions ORDER BY role, permission_key');
@@ -113,8 +116,8 @@ async function getRoleActions(role) {
 }
 async function getRolePermissions(role) { const values=await getRoleActions(role); return Object.keys(values).filter(key=>values[key].read); }
 async function has(role,key,action='read') {
-  if(role==='admin') return true;
   if(!validRoles.includes(role) || !permissions.some(([value])=>value===key)) return false;
+  if(role==='admin') return true;
   const result=await pool.query('SELECT allowed, actions FROM role_permissions WHERE role=$1 AND permission_key=$2',[role,key]);
   return effectiveActions(role,key,result.rows[0])[normalizeAction(action)];
 }

@@ -1,5 +1,13 @@
 # Panduan belajar dan melanjutkan proyek
 
+## Pengamanan auth dan izin modul (19 November 2026)
+
+Lihat [pengamanan izin modul](auth-permission-hardening.md): izin backend memakai
+boolean literal dan menolak role/modul tidak dikenal; frontend menghapus fallback
+role pada canPerform, navigasi dan Policy Register. Regresi pemalsuan role/read
+memakai router asli dengan sesi/database fixture, bukan PostgreSQL operasional.
+Role profil bukan kredensial; otoritas akses tetap cookie sesi dan izin database.
+
 ## Pemulihan akses Docker setelah update (16 November 2026)
 
 Panduan `UPDATE_DOCKER.md` kini mencakup refused to connect: status seluruh
